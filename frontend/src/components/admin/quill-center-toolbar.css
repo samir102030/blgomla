@@ -1,0 +1,9 @@
+.ql-toolbar.ql-snow {
+  display: flex;
+  justify-content: center;
+  border-radius: 8px 8px 0 0;
+}
+.ql-container.ql-snow {
+  min-height: 100px !important;
+  border-radius: 0 0 8px 8px;
+} 

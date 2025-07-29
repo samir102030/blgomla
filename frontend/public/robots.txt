@@ -1,0 +1,61 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://egy-chem-hub.netlify.app/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /products/
+Allow: /news-events/
+Allow: /industries/
+Allow: /contact-us/
+Allow: /request-sample/
+
+# Crawl delay (optional)
+Crawl-delay: 1
+
+# Additional rules for better SEO
+Allow: /images/
+Allow: /public/
+Allow: /favicon.ico
+Allow: /manifest.json
+
+# Block search and filter pages that might create duplicate content
+Disallow: /*?search=
+Disallow: /*?filter=
+Disallow: /*?sort=
+
+# Specific rules for different bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
