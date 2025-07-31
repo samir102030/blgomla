@@ -6,9 +6,7 @@ import connectDB from "./config/db.js";
 import { rateLimit } from "express-rate-limit";
 import systemRoutes from "./routes/system.route.js";
 
-
 dotenv.config();
-
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -16,9 +14,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-    ],
+    origin: ["http://localhost:5173"],
     credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -28,7 +24,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per window
@@ -36,5 +31,8 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use("/api", systemRoutes);
+app.get("/", (req, res) => {
+  res.send("Welcome to Belgomla API");
+});
 
 app.listen(port, () => console.log(`Server running on port ${port}`));

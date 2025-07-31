@@ -1,19 +1,36 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { products } from '../data/productsData';
-
-
-const featuredProducts = products.slice(0, 8);
+import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { useProductStore } from "../stores/product.store";
+import { useUserStore } from "../stores/user.store";
+import type { User, UserLoveItem } from "../types/user.type";
 
 const FeaturedProducts: React.FC = () => {
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const fetchFeaturedProducts = useProductStore(
+    (state) => state.fetchFeaturedProducts
+  );
+  const products = useProductStore((state) => state.products);
 
-  const toggleWishlist = (productId: string) => {
-    setWishlist(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
+  // User store for wishlist (love)
+  const user = useUserStore((s) => s.user) as
+    | (User & { love?: UserLoveItem[] })
+    | undefined;
+  const updateUser = useUserStore((s) => s.updateUser);
+
+  useEffect(() => {
+    fetchFeaturedProducts();
+  }, [fetchFeaturedProducts]);
+
+  // Toggle love (wishlist) for a product
+  const toggleLove = async (productId: string) => {
+    if (!user || !user._id) return;
+    const love: UserLoveItem[] = Array.isArray(user.love) ? user.love : [];
+    let newLove: UserLoveItem[];
+    if (love.some((item) => item.product === productId)) {
+      newLove = love.filter((item) => item.product !== productId);
+    } else {
+      newLove = [...love, { product: productId }];
+    }
+    await updateUser(user._id, { love: newLove });
   };
 
   const renderStars = (rating: number) => {
@@ -23,20 +40,26 @@ const FeaturedProducts: React.FC = () => {
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <span key={i} className="text-yellow-400">★</span>
+        <span key={i} className="text-yellow-400">
+          ★
+        </span>
       );
     }
 
     if (hasHalfStar) {
       stars.push(
-        <span key="half" className="text-yellow-400">☆</span>
+        <span key="half" className="text-yellow-400">
+          ☆
+        </span>
       );
     }
 
     const remainingStars = 5 - Math.ceil(rating);
     for (let i = 0; i < remainingStars; i++) {
       stars.push(
-        <span key={`empty-${i}`} className="text-gray-300">☆</span>
+        <span key={`empty-${i}`} className="text-gray-300">
+          ☆
+        </span>
       );
     }
 
@@ -47,8 +70,10 @@ const FeaturedProducts: React.FC = () => {
     <section className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
-          
+          <h2 className="text-3xl font-bold text-gray-900">
+            Featured Products
+          </h2>
+
           {/* Promotional banners */}
           <div className="hidden lg:flex space-x-4">
             <div className="bg-blue-100 rounded-lg p-4 w-48">
@@ -69,34 +94,49 @@ const FeaturedProducts: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {featuredProducts.map((product) => (
-            <div key={product.id} className="group relative bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+          {products.map((product) => (
+            <div
+              key={product._id}
+              className="group relative bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+            >
               {/* Product Image */}
               <div className="relative overflow-hidden rounded-t-lg bg-gray-100 aspect-square">
                 {/* Badges */}
                 <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
-                  {product.isNew && (
-                    <span className="bg-black text-white text-xs px-2 py-1 rounded">New</span>
-                  )}
-                  {product.isOnSale && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">Sale</span>
+                  {product.saleActive && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+                      Sale
+                    </span>
                   )}
                 </div>
 
                 {/* Wishlist Button */}
                 <button
-                  onClick={() => toggleWishlist(product.id)}
+                  onClick={() => toggleLove(product._id!)}
                   className="absolute top-2 right-2 z-10 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow"
+                  disabled={!user}
                 >
-                  <span className={`text-lg ${wishlist.includes(product.id) ? 'text-red-500' : 'text-gray-400'}`}>
-                    {wishlist.includes(product.id) ? '❤️' : '🤍'}
+                  <span
+                    className={`text-lg ${
+                      user &&
+                      Array.isArray(user.love) &&
+                      user.love.some((item) => item.product === product._id!)
+                        ? "text-red-500"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {user &&
+                    Array.isArray(user.love) &&
+                    user.love.some((item) => item.product === product._id!)
+                      ? "❤️"
+                      : "🤍"}
                   </span>
                 </button>
 
                 {/* Product Image */}
-                <Link to={`/product/${product.id}`}>
+                <Link to={`/product/${product._id}`}>
                   <img
-                    src={product.image}
+                    src={product.images?.[0]?.url || ""}
                     alt={product.name}
                     className="w-full h-full object-contain cursor-pointer hover:opacity-90 transition-opacity"
                   />
@@ -108,25 +148,29 @@ const FeaturedProducts: React.FC = () => {
 
               {/* Product Info */}
               <div className="p-4">
-                <Link to={`/product/${product.id}`}>
+                <Link to={`/product/${product._id}`}>
                   <h3 className="text-sm font-medium text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer">
                     {product.name}
                   </h3>
                 </Link>
-                
+
                 <div className="flex items-center mb-2">
                   <div className="flex items-center">
                     {renderStars(product.rating)}
                   </div>
-                  <span className="text-xs text-gray-500 ml-2">({product.reviews})</span>
+                  <span className="text-xs text-gray-500 ml-2">
+                    ({product.reviews?.length || 0})
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg font-bold text-gray-900">
-                      {product.price} {product.currency}
+                      {product.saleActive && product.salePrice !== undefined
+                        ? product.salePrice
+                        : product.price}
                     </span>
-                    {product.isOnSale && (
+                    {product.saleActive && (
                       <span className="text-sm bg-red-100 text-red-800 px-2 py-1 rounded">
                         Sale
                       </span>

@@ -1,0 +1,180 @@
+import express from "express";
+import {
+  protectRoute,
+  adminOrStoreRoute,
+  storeRoute,
+} from "../middleware/auth.middleware.js";
+import {
+  addProductAttribute,
+  addProductFeature,
+  addProductReview,
+  createProduct,
+  deleteProduct,
+  deleteProductAttribute,
+  deleteProductFeature,
+  deleteProductReview,
+  filterProducts,
+  getAllProducts,
+  getBestSellers,
+  getFeaturedProducts,
+  getMostRatedProducts,
+  getNewestProducts,
+  getProductAttributes,
+  getProductById,
+  getProductFeatures,
+  getProductsByBrand,
+  getProductsByCategory,
+  getSaleProducts,
+  getStoreProducts,
+  restoreProduct,
+  softDeleteProduct,
+  toggleFeaturedProduct,
+  toggleSaleProduct,
+  updateProduct,
+  updateProductAttribute,
+  updateProductFeature,
+  updateProductReview,
+  updateProductStock,
+} from "../controllers/product.controller.js";
+
+import {
+  validateCreateProduct,
+  validateUpdateProduct,
+  // validateProductId,
+  validateUpdateStock,
+  validateAddReview,
+  validateUpdateReview,
+  validateAddFeature,
+  validateUpdateFeature,
+  validateAddAttribute,
+  validateUpdateAttribute,
+  validateGetAllProducts,
+  validateFilterProducts,
+} from "../validations/product.validate.js";
+
+const router = express.Router();
+
+// Public routes
+router.get("/", validateGetAllProducts, getAllProducts); // can search also
+router.get("/featured", getFeaturedProducts);
+router.get("/category/:categoryId", getProductsByCategory); // not tested
+router.get("/brand/:brandId", getProductsByBrand); // not tested
+router.get("/store/:storeId", getStoreProducts);
+router.get("/saleProducts", getSaleProducts);
+router.get("/filter", validateFilterProducts, filterProducts); // Filter products based on criteria [price, category, brand, etc.]
+
+// filter products
+
+// Protected routes (admin)
+router.post(
+  "/",
+  protectRoute,
+  storeRoute,
+  validateCreateProduct,
+  createProduct
+); // Create product
+router.put(
+  "/:productId",
+  protectRoute,
+  adminOrStoreRoute,
+  validateUpdateProduct,
+  updateProduct
+); // Update product
+router.put(
+  "/sale/:productId",
+  protectRoute,
+  adminOrStoreRoute,
+  toggleSaleProduct
+); // Toggle sale status
+router.put(
+  "/featured/:productId",
+  protectRoute,
+  adminOrStoreRoute,
+  toggleFeaturedProduct
+); // Toggle featured status
+router.put(
+  "/stock/:productId",
+  protectRoute,
+  adminOrStoreRoute,
+  validateUpdateStock,
+  updateProductStock
+); // Update product stock
+router.delete(
+  "/delete/:productId",
+  protectRoute,
+  adminOrStoreRoute,
+  softDeleteProduct
+); // Soft delete product
+router.put(
+  "/restore/:productId",
+  protectRoute,
+  adminOrStoreRoute,
+  restoreProduct
+); // Restore soft deleted product
+router.delete("/:productId", protectRoute, adminOrStoreRoute, deleteProduct); // Delete product
+
+// Reviews (authenticated users)
+router.post(
+  "/:productId/reviews",
+  protectRoute,
+  validateAddReview,
+  addProductReview
+); // Add review to product
+router.put(
+  "/:productId/reviews/:reviewId",
+  protectRoute,
+  validateUpdateReview,
+  updateProductReview
+); // Update product review
+router.delete(
+  "/:productId/reviews/:reviewId",
+  protectRoute,
+  deleteProductReview
+); // Delete product review
+
+// features of the product
+router.get("/:productId/features", getProductFeatures); // Get product features
+router.post(
+  "/:productId/features",
+  protectRoute,
+  adminOrStoreRoute,
+  validateAddFeature,
+  addProductFeature
+); // Add feature to product
+router.put(
+  "/:productId/features",
+  protectRoute,
+  adminOrStoreRoute,
+  validateUpdateFeature,
+  updateProductFeature
+); // Update product feature
+
+// attributes of the product
+router.get("/:productId/attributes", getProductAttributes); // Get product attributes
+router.post(
+  "/:productId/attributes",
+  protectRoute,
+  adminOrStoreRoute,
+  validateAddAttribute,
+  addProductAttribute
+); // Add attribute to product
+router.put(
+  "/:productId/attributes/:attributeId",
+  protectRoute,
+  adminOrStoreRoute,
+  validateUpdateAttribute,
+  updateProductAttribute
+); // Update product attribute
+router.delete(
+  "/:productId/attributes/:attributeId",
+  protectRoute,
+  adminOrStoreRoute,
+  deleteProductAttribute
+); // Delete product attribute
+
+router.get("/newest", getNewestProducts); // Get newest products
+router.get("/bestSellers", getBestSellers); // Get best sellers products
+router.get("/mostRated", getMostRatedProducts); // Get Most rated products
+
+router.get("/:productId", getProductById);
+export default router;

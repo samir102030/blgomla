@@ -1,52 +1,68 @@
-import React, { useState } from 'react';
-import BrandSidebar from './BrandSidebar';
-import ProductCard from './ProductCard';
-import { products, type Product } from '../data/productsData';
-
-
+import React, { useEffect, useState } from "react";
+import BrandSidebar from "./BrandSidebar";
+import { useBrandStore } from "../stores/brand.store";
+import ProductCard from "./ProductCard";
+import { useProductStore } from "../stores/product.store";
 
 const BrandsContent: React.FC = () => {
-  const [selectedBrand, setSelectedBrand] = useState<string>('');
-  const [displayedProducts, setDisplayedProducts] = useState<Product[]>(products);
-  const [sortBy, setSortBy] = useState<string>('name');
+  const [selectedBrand, setSelectedBrand] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>("name");
+  const fetchProducts = useProductStore((state) => state.fetchProducts);
+  const products = useProductStore((state) => state.products);
+  const loading = useProductStore((state) => state.loading);
+  const error = useProductStore((state) => state.error);
+  const fetchBrands = useBrandStore((state) => state.fetchBrands);
+  const brands = useBrandStore((state) => state.brands);
 
-  const handleBrandSelect = (brandId: string) => {
-    setSelectedBrand(brandId);
-    if (brandId) {
-      const filteredProducts = products.filter(product => product.brand === brandId);
-      setDisplayedProducts(filteredProducts);
-    } else {
-      setDisplayedProducts(products);
-    }
-  };
+  useEffect(() => {
+    fetchBrands();
+    fetchProducts();
+  }, [fetchBrands, fetchProducts]);
+
+  // Filter by brand
+  const filteredProducts = selectedBrand
+    ? products.filter((product) => product.brand === selectedBrand)
+    : products;
 
   // Sort products
-  const sortedProducts = [...displayedProducts].sort((a, b) => {
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
-      case 'price-low':
+      case "price-low":
         return a.price - b.price;
-      case 'price-high':
+      case "price-high":
         return b.price - a.price;
-      case 'rating':
+      case "rating":
         return b.rating - a.rating;
       default:
         return a.name.localeCompare(b.name);
     }
   });
 
+  const handleBrandSelect = (brandId: string) => {
+    setSelectedBrand(brandId);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Networking Brands</h1>
-          <p className="text-gray-600">Discover networking equipment from top brands worldwide</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Networking Brands
+          </h1>
+          <p className="text-gray-600">
+            Discover networking equipment from top brands worldwide
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <BrandSidebar selectedBrand={selectedBrand} onBrandSelect={handleBrandSelect} />
+            <BrandSidebar
+              brands={brands}
+              selectedBrand={selectedBrand}
+              onBrandSelect={handleBrandSelect}
+            />
           </div>
 
           {/* Main Content */}
@@ -58,12 +74,18 @@ const BrandsContent: React.FC = () => {
                   Showing {sortedProducts.length} products
                   {selectedBrand && (
                     <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                      {selectedBrand}
+                      {/* {selectedBrand} */}
+                      {
+                        brands[brands.findIndex((b) => b._id === selectedBrand)]
+                          .name
+                      }
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <label htmlFor="sort" className="text-sm text-gray-600">Sort by:</label>
+                  <label htmlFor="sort" className="text-sm text-gray-600">
+                    Sort by:
+                  </label>
                   <select
                     id="sort"
                     value={sortBy}
@@ -81,29 +103,47 @@ const BrandsContent: React.FC = () => {
 
             {/* Products Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {sortedProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  id={product.id}
-                  name={product.name}
-                  price={product.price}
-                  currency={product.currency}
-                  originalPrice={undefined}
-                  image={product.image}
-                  rating={product.rating}
-                  description={product.description}
-                  isNew={product.isNew}
-                  isOnSale={product.isOnSale}
-                />
-              ))}
+              {loading ? (
+                <div className="text-center py-12 text-gray-500">
+                  Loading...
+                </div>
+              ) : error ? (
+                <div className="text-center py-12 text-red-500">{error}</div>
+              ) : (
+                sortedProducts.map((product) => (
+                  <ProductCard
+                    key={product._id}
+                    id={product._id!}
+                    name={product.name}
+                    price={
+                      product.saleActive && product.salePrice !== undefined
+                        ? product.salePrice
+                        : product.price
+                    }
+                    originalPrice={
+                      product.saleActive && product.salePrice !== undefined
+                        ? product.price
+                        : undefined
+                    }
+                    image={product.images?.[0]?.url || ""}
+                    rating={product.rating}
+                    description={product?.description}
+                    isOnSale={product.saleActive}
+                  />
+                ))
+              )}
             </div>
 
             {/* No Products Message */}
             {sortedProducts.length === 0 && (
               <div className="text-center py-12">
                 <div className="text-gray-400 text-6xl mb-4">📡</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-600">Try selecting a different brand or clear your selection.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No products found
+                </h3>
+                <p className="text-gray-600">
+                  Try selecting a different brand or clear your selection.
+                </p>
               </div>
             )}
           </div>

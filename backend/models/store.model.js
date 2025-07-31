@@ -5,7 +5,7 @@ const storeSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, "Store name is required"],
-      unique: true,
+      unique: [true, "Store name already exists"],
       trim: true,
     },
     description: {
@@ -21,14 +21,6 @@ const storeSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    email: {
-      type: String,
-      trim: true,
-    },
     logo: {
       type: String,
       trim: true,
@@ -41,6 +33,12 @@ const storeSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    subscribers: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
   },
   { timestamps: true }
 );

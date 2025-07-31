@@ -29,8 +29,6 @@ const userSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      required: [true, "Phone number is required"],
-      unique: [true, "Phone number already in use"],
     },
     profilePicture: {
       type: String,
@@ -47,18 +45,16 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
-    love:[
+    love: [
       {
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
       },
     ],
     role: {
       type: String,
       enum: ["customer", "store", "admin"],
-      default: "user",
+      default: "customer",
     },
     deleted: { type: Boolean, default: false },
     active: { type: Boolean, default: false },

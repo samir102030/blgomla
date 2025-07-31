@@ -64,8 +64,7 @@ export const mixRoute = (roles) => {
 
 // Aliases for compatibility with route imports
 export const verifyToken = protectRoute;
-export const isAdmin = roleRoute("admin");
-export const isAdminOrStore = mixRoute(["admin", "store", "storeAdmin"]);
 export const customerRoute = roleRoute("customer");
-export const storeRoute = roleRoute("storeAdmin");
+export const storeRoute = roleRoute("store");
 export const adminRoute = roleRoute("admin");
+export const adminOrStoreRoute = mixRoute(["admin", "store"]);

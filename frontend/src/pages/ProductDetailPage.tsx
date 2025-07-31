@@ -1,26 +1,47 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { getProductById } from '../data/productsData';
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { useProductStore } from "../stores/product.store";
 
 const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
-  // Get product from our data
-  const product = productId ? getProductById(productId) : null;
+  const fetchProductById = useProductStore((state) => state.fetchProductById);
+  const product = useProductStore((state) => state.product);
+  const loading = useProductStore((state) => state.loading);
+  const error = useProductStore((state) => state.error);
 
-  if (!product) {
+  useEffect(() => {
+    if (productId) fetchProductById(productId);
+  }, [productId, fetchProductById]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <span className="text-lg text-gray-600">Loading...</span>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
         <main className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
-            <p className="text-gray-600 mb-8">The product you're looking for doesn't exist.</p>
-            <Link to="/brands" className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Product Not Found
+            </h1>
+            <p className="text-gray-600 mb-8">
+              The product you're looking for doesn't exist.
+            </p>
+            <Link
+              to="/brands"
+              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+            >
               Browse Products
             </Link>
           </div>
@@ -30,18 +51,25 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  // Create multiple product images from the single image
-  const productImages = [product.image, product.image, product.image, product.image];
+  // Use images array from product, fallback to empty array
+  const productImages =
+    product.images && product.images.length > 0
+      ? product.images.map((img) => img.url)
+      : ["/placeholder.png"];
 
   // Generate specifications based on product data
   const specifications = [
-    `${product.brand.toUpperCase()} ${product.model}`,
-    `Category: ${product.category.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`,
-    `Price: ${product.price} ${product.currency}`,
-    `Brand: ${product.brand.toUpperCase()}`,
-    `Model: ${product.model}`,
-    product.inStock ? 'In Stock' : 'Out of Stock'
-  ];
+    product.brand ? `Brand: ${product.brand}` : undefined,
+    product.Category ? `Category: ${product.Category}` : undefined,
+    `Price: ${
+      product.saleActive && product.salePrice !== undefined
+        ? product.salePrice
+        : product.price
+    }`,
+    product.stock > 0 ? "In Stock" : "Out of Stock",
+    ...(product.features || []).map((f) => `Feature: ${f}`),
+    ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),
+  ].filter(Boolean);
 
   const handleQuantityChange = (change: number) => {
     const newQuantity = quantity + change;
@@ -52,7 +80,12 @@ const ProductDetailPage: React.FC = () => {
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={`text-lg ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}>
+      <span
+        key={i}
+        className={`text-lg ${
+          i < rating ? "text-yellow-400" : "text-gray-300"
+        }`}
+      >
         ★
       </span>
     ));
@@ -61,20 +94,27 @@ const ProductDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      
+
       <main className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <nav className="flex mb-8" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-4">
               <li>
-                <Link to="/" className="text-gray-500 hover:text-gray-700">Home</Link>
+                <Link to="/" className="text-gray-500 hover:text-gray-700">
+                  Home
+                </Link>
               </li>
               <li>
                 <span className="text-gray-500">/</span>
               </li>
               <li>
-                <Link to="/brands" className="text-gray-500 hover:text-gray-700">Products</Link>
+                <Link
+                  to="/brands"
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Products
+                </Link>
               </li>
               <li>
                 <span className="text-gray-500">/</span>
@@ -102,7 +142,9 @@ const ProductDetailPage: React.FC = () => {
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={`w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border-2 ${
-                      selectedImage === index ? 'border-blue-500' : 'border-transparent'
+                      selectedImage === index
+                        ? "border-blue-500"
+                        : "border-transparent"
                     }`}
                   >
                     <img
@@ -117,20 +159,28 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Product Info */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
-              
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                {product.name}
+              </h1>
+
               {/* Rating */}
               <div className="flex items-center mb-4">
                 <div className="flex items-center">
                   {renderStars(Math.floor(product.rating))}
                 </div>
-                <span className="ml-2 text-gray-600">({product.reviews} reviews)</span>
+                <span className="ml-2 text-gray-600">
+                  ({product.reviews?.length || 0} reviews)
+                </span>
               </div>
 
               {/* Price */}
               <div className="mb-6">
-                <span className="text-3xl font-bold text-gray-900">{product.price} {product.currency}</span>
-                {product.isOnSale && (
+                <span className="text-3xl font-bold text-gray-900">
+                  {product.saleActive && product.salePrice !== undefined
+                    ? product.salePrice
+                    : product.price}
+                </span>
+                {product.saleActive && (
                   <span className="ml-3 bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
                     Sale
                   </span>
@@ -162,7 +212,9 @@ const ProductDetailPage: React.FC = () => {
                   >
                     -
                   </button>
-                  <span className="text-lg font-medium w-12 text-center">{quantity}</span>
+                  <span className="text-lg font-medium w-12 text-center">
+                    {quantity}
+                  </span>
                   <button
                     onClick={() => handleQuantityChange(1)}
                     className="w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50"
@@ -175,7 +227,7 @@ const ProductDetailPage: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex space-x-4 mb-8">
                 <button className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors">
-                   Add to Cart
+                  Add to Cart
                 </button>
                 <button className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-md hover:bg-gray-50 transition-colors">
                   ❤️ Add to Wishlist
@@ -184,12 +236,22 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Share */}
               <div className="border-t pt-6">
-                <span className="text-sm font-medium text-gray-700 mr-4">Share:</span>
+                <span className="text-sm font-medium text-gray-700 mr-4">
+                  Share:
+                </span>
                 <div className="inline-flex space-x-2">
-                  <button className="text-blue-600 hover:text-blue-700">Facebook</button>
-                  <button className="text-blue-400 hover:text-blue-500">Twitter</button>
-                  <button className="text-pink-600 hover:text-pink-700">Instagram</button>
-                  <button className="text-red-600 hover:text-red-700">Google+</button>
+                  <button className="text-blue-600 hover:text-blue-700">
+                    Facebook
+                  </button>
+                  <button className="text-blue-400 hover:text-blue-500">
+                    Twitter
+                  </button>
+                  <button className="text-pink-600 hover:text-pink-700">
+                    Instagram
+                  </button>
+                  <button className="text-red-600 hover:text-red-700">
+                    Google+
+                  </button>
                 </div>
               </div>
             </div>
@@ -198,10 +260,14 @@ const ProductDetailPage: React.FC = () => {
           {/* Product Description */}
           <div className="mt-16">
             <div className="border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 pb-4">Product Description</h2>
+              <h2 className="text-2xl font-bold text-gray-900 pb-4">
+                Product Description
+              </h2>
             </div>
             <div className="py-8">
-              <p className="text-gray-700 leading-relaxed">{product.description}</p>
+              <p className="text-gray-700 leading-relaxed">
+                {product.description}
+              </p>
             </div>
           </div>
         </div>

@@ -85,9 +85,65 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
     },
+    featured: {
+      type: Boolean,
+      default: false,
+    },
+    tags: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    soldCount: {
+      type: Number,
+      default: 0,
+    },
+    features: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    attributes: [
+      {
+        name: { type: String, required: true },
+        value: { type: String, required: true },
+      },
+    ],
   },
   { timestamps: true }
 );
+
+productSchema.index({ name: "text", description: "text" }); // Full-text search
+productSchema.index({ price: 1, rating: -1 }); // For sorting/filtering
+
+productSchema.virtual("salePrice").get(function () {
+  return this.saleActive
+    ? this.price * (1 - this.salePercentage / 100)
+    : this.price;
+});
+// method to update calculate rating after a review is added or updated
+productSchema.methods.calculateRating = function () {
+  if (this.reviews.length === 0) {
+    this.rating = 0;
+    return;
+  }
+  const totalRating = this.reviews.reduce(
+    (acc, review) => acc + review.rating,
+    0
+  );
+  this.rating = totalRating / this.reviews.length;
+};
+// rated
+productSchema.virtual("averageRating").get(function () {
+  if (this.reviews.length === 0) return 0;
+  const totalRating = this.reviews.reduce(
+    (acc, review) => acc + review.rating,
+    0
+  );
+  return totalRating / this.reviews.length;
+});
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;
