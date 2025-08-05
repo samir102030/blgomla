@@ -43,11 +43,14 @@ interface UserStore {
   forgotPassword: (email: string) => Promise<boolean>;
   resetPassword: (token: string, password: string) => Promise<boolean>;
   loveProduct: (productId: string) => Promise<boolean>;
+  toggleLoveProduct: (productId: string) => Promise<boolean>;
+  fetchCart: () => Promise<void>;
+  getLovedProducts: () => Promise<void>;
 }
 
 export const useUserStore = create<UserStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       users: [],
       user: undefined,
       deletedUsers: [],
@@ -291,7 +294,7 @@ export const useUserStore = create<UserStore>()(
       loveProduct: async (productId) => {
         set({ loading: true, error: undefined });
         try {
-          const res = await axiosInstance.put<{
+          const res = await axiosInstance.post<{
             success: boolean;
             user: User;
           }>(`/users/loveProduct/${productId}`);
@@ -305,7 +308,70 @@ export const useUserStore = create<UserStore>()(
           return false;
         }
       },
+      toggleLoveProduct: async (productId) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.put<{
+            success: boolean;
+            user: User;
+          }>(`/users/loveProduct/${productId}`);
+          set({  loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+      fetchCart: async () => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.get<{ cart: any }>(
+            "/products/cart"
+          );
+          const currentUser = get().user;
+          if (currentUser) {
+            set({
+              user: {
+                ...currentUser,
+                cart: data.cart,
+              },
+              loading: false,
+            });
+          }
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      getLovedProducts: async () => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.get("/users/loveProducts");
+          const currentUser = get().user;
+          if (currentUser) {
+            set({
+              user: {
+                ...currentUser,
+                love: data.love,
+              },
+              loading: false,
+            });
+          }
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
     }),
+
     {
       name: "user-store",
     }

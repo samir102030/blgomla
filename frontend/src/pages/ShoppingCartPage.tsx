@@ -1,47 +1,36 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useUserStore } from '../stores/user.store';
+import { useProductStore } from '../stores/product.store';
+import { axiosInstance } from '../lib/axios';
+import toast from 'react-hot-toast';
 
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
+interface CartItemWithProduct {
+  _id?: string;
+  product: string; // Product ID
   quantity: number;
+  productDetails?: {
+    _id: string;
+    name: string;
+    price: number;
+    salePrice?: number;
+    saleActive: boolean;
+    images: Array<{ url: string; alt?: string }>;
+  };
 }
 
 const ShoppingCartPage: React.FC = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 'tp-link-m7200',
-      name: 'TP-Link M7200 4G LTE Mobile Wi-Fi',
-      price: 2220,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop',
-      quantity: 1
-    },
-    {
-      id: 'mercusys-ma30h',
-      name: 'MERCUSYS MA30H Dual-band Adapter',
-      price: 675,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop',
-      quantity: 2
-    },
-    {
-      id: 'tapo-c110',
-      name: 'Tapo C110 3MP Security Camera',
-      price: 1025,
-      image: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=100&h=100&fit=crop',
-      quantity: 1
-    },
-    {
-      id: '4',
-      name: 'MERCUSYS Halo H30 Mesh Wi-Fi System',
-      price: 3300,
-      image: 'https://images.unsplash.com/photo-1606904825846-647eb07f5be2?w=100&h=100&fit=crop',
-      quantity: 1
-    }
-  ]);
+  const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [updatingItem, setUpdatingItem] = useState<string | null>(null);
+
+  const user = useUserStore((state) => state.user);
+  const fetchCart = useUserStore((state) => state.fetchCart);
+  const updateCartItem = useProductStore((state) => state.updateCartItem);
+  const removeFromCart = useProductStore((state) => state.removeFromCart);
 
   const [shippingInfo, setShippingInfo] = useState({
     country: 'Bangladesh',
@@ -51,22 +40,182 @@ const ShoppingCartPage: React.FC = () => {
 
   const [couponCode, setCouponCode] = useState('');
 
-  const updateQuantity = (id: string, newQuantity: number) => {
+    // Fetch cart and product details
+  useEffect(() => {
+    const loadCart = async () => {
+      try {
+        setLoading(true);
+        await fetchCart();
+        
+        // Fetch product details for each cart item
+        if (user?.cart) {
+          const itemsWithDetails = await Promise.all(
+            user.cart.map(async (item) => {
+              try {
+                // Fetch product details using axiosInstance
+                const { data } = await axiosInstance.get(`/products/${item.product}`);
+                return {
+                  ...item,
+                  productDetails: data.data?.[0] || null
+                };
+              } catch (error) {
+                console.error('Error fetching product details:', error);
+                return item;
+              }
+            })
+          );
+          setCartItems(itemsWithDetails);
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+        toast.error('Failed to load cart');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCart();
+  }, [fetchCart]); // Removed user?.cart from dependencies
+
+  // Handle cart updates when user cart changes (but only after initial load)
+  useEffect(() => {
+    if (!loading && user?.cart) {
+      const updateCartItems = async () => {
+        const itemsWithDetails = await Promise.all(
+          user.cart.map(async (item) => {
+            try {
+              const { data } = await axiosInstance.get(`/products/${item.product}`);
+              return {
+                ...item,
+                productDetails: data.data?.[0] || null
+              };
+            } catch (error) {
+              console.error('Error fetching product details:', error);
+              return item;
+            }
+          })
+        );
+        setCartItems(itemsWithDetails);
+      };
+      
+      updateCartItems();
+    }
+  }, [user?.cart, loading]);
+
+  const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    setCartItems(items =>
-      items.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
+    
+    try {
+      setUpdatingItem(productId);
+      await updateCartItem(productId, newQuantity);
+      toast.success('Cart updated successfully');
+      
+      // Refresh cart data and update local state
+      await fetchCart();
+      // Update local cart items after successful update
+      setCartItems(prevItems => 
+        prevItems.map(item => 
+          item.product === productId 
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      toast.error('Failed to update quantity');
+    } finally {
+      setUpdatingItem(null);
+    }
   };
 
-  const removeItem = (id: string) => {
-    setCartItems(items => items.filter(item => item.id !== id));
+  const removeItem = async (productId: string) => {
+    try {
+      await removeFromCart(productId);
+      toast.success('Item removed from cart');
+      
+      // Update local state immediately
+      setCartItems(prevItems => prevItems.filter(item => item.product !== productId));
+    } catch (error) {
+      console.error('Error removing item:', error);
+      toast.error('Failed to remove item');
+    }
   };
 
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const getItemPrice = (item: CartItemWithProduct) => {
+    if (!item.productDetails) return 0;
+    return item.productDetails.saleActive && item.productDetails.salePrice 
+      ? item.productDetails.salePrice 
+      : item.productDetails.price;
+  };
+
+  const getItemTotal = (item: CartItemWithProduct) => {
+    return getItemPrice(item) * item.quantity;
+  };
+
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
+
+  const subtotal = cartItems.reduce((sum, item) => sum + getItemTotal(item), 0);
   const shippingCost = 0.00;
   const grandTotal = subtotal + shippingCost;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading cart...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Login</h2>
+            <p className="text-gray-600 mb-6">You need to be logged in to view your cart.</p>
+            <Link
+              to="/login"
+              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+            >
+              Login
+            </Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Cart is Empty</h2>
+            <p className="text-gray-600 mb-6">Add some products to your cart to get started.</p>
+            <Link
+              to="/brands"
+              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+            >
+              Browse Products
+            </Link>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -118,34 +267,50 @@ const ShoppingCartPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {cartItems.map((item) => (
-                    <tr key={item.id}>
+                    <tr key={item.product}>
+                                             <td className="px-6 py-4">
+                         <button
+                           onClick={() => handleProductClick(item.product)}
+                           className="cursor-pointer hover:opacity-80 transition-opacity"
+                         >
+                           <img
+                             src={item.productDetails?.images?.[0]?.url || '/placeholder.png'}
+                             alt={item.productDetails?.name || 'Product'}
+                             className="w-16 h-16 object-cover rounded-lg"
+                           />
+                         </button>
+                       </td>
                       <td className="px-6 py-4">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover rounded-lg"
-                        />
+                        <div className="text-sm font-medium text-gray-900">
+                          {item.productDetails?.name || 'Product Name Not Available'}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">${item.price}</div>
+                        <div className="text-sm text-gray-900">
+                          ${getItemPrice(item).toFixed(2)}
+                          {item.productDetails?.saleActive && (
+                            <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
+                              Sale
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50"
+                            onClick={() => updateQuantity(item.product, item.quantity - 1)}
+                            disabled={updatingItem === item.product}
+                            className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50"
                           >
                             -
                           </button>
                           <span className="px-4 py-1 border-t border-b border-gray-300 bg-white">
-                            {item.quantity}
+                            {updatingItem === item.product ? '...' : item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50"
+                            onClick={() => updateQuantity(item.product, item.quantity + 1)}
+                            disabled={updatingItem === item.product}
+                            className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50"
                           >
                             +
                           </button>
@@ -153,13 +318,14 @@ const ShoppingCartPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900">
-                          ${(item.price * item.quantity).toFixed(2)}
+                          ${getItemTotal(item).toFixed(2)}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => removeItem(item.id)}
-                          className="text-red-600 hover:text-red-800"
+                          onClick={() => removeItem(item.product)}
+                          disabled={updatingItem === item.product}
+                          className="text-red-600 hover:text-red-800 disabled:opacity-50"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -259,7 +425,10 @@ const ShoppingCartPage: React.FC = () => {
                 >
                   CHECKOUT
                 </Link>
-                <button className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+                <button 
+                  onClick={() => fetchCart()}
+                  className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                >
                   UPDATE CART
                 </button>
               </div>

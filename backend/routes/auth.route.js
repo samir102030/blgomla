@@ -10,6 +10,7 @@ import {
   getAllUsers,
   getAllUsersType,
   getDeletedUsers,
+  getLovedProducts,
   login,
   logout,
   loveProduct,
@@ -18,6 +19,7 @@ import {
   restoreUser,
   safeDeleteUser,
   signup,
+  toggleLoveProduct,
   updateUser,
   verifyEmail,
 } from "../controllers/auth.controller.js";
@@ -30,12 +32,15 @@ import {
 } from "../validations/auth.validate.js";
 const router = express.Router();
 
-
 // Tested
 // users
 router.post("/signup", validateSignup, signup);
 router.post("/login", validateLogin, login);
 router.post("/logout", logout);
+
+router.post("/loveProduct/:productId", protectRoute, loveProduct);
+router.get("/loveProducts", protectRoute, getLovedProducts);
+router.put("/loveProduct/:productId", protectRoute, toggleLoveProduct); // Toggle love status
 
 // not tested
 router.put("/verifyEmail", verifyEmail);
@@ -64,7 +69,5 @@ router.put("/activateUser/:userId", protectRoute, adminRoute, activateUser);
 router.put("/deactivateUser/:userId", protectRoute, adminRoute, deActivateUser);
 router.put("/restoreUser/:userId", protectRoute, adminRoute, restoreUser);
 router.get("/deletedUsers", protectRoute, adminRoute, getDeletedUsers);
-
-router.post("/loveProduct/:productId", protectRoute, loveProduct);
 
 export default router;

@@ -707,7 +707,7 @@ export const addProductToCart = controllerWrapper(
 
 export const getCart = controllerWrapper("getCart", async (req, res) => {
   const userId = req.user._id;
-  const user = await User.findById(userId).populate("cart.product");
+  const user = await User.findById(userId);
   if (!user)
     return res.status(404).json({ success: false, message: "User not found" });
   res.status(200).json({ success: true, cart: user.cart });
@@ -715,22 +715,24 @@ export const getCart = controllerWrapper("getCart", async (req, res) => {
 
 // Update Cart
 export const updateCart = controllerWrapper("updateCart", async (req, res) => {
-  const { productId, quantity } = req.body;
+  const { quantity } = req.body;
+  const { productId } = req.params;
   const userId = req.user._id;
   const user = await User.findById(userId);
   if (!user)
     return res.status(404).json({ success: false, message: "User not found" });
   // Update cart logic here
   // Assuming you have a User model with a cart field
+  console.log(user.cart[0].product.toString());
   const cartItemIndex = user.cart.findIndex(
     (item) => item.product.toString() === productId
   );
-  if (cartItemIndex === -1) {
+  if (cartItemIndex === -1)
     return res.status(404).json({
       success: false,
       message: "Product not found in cart",
     });
-  }
+
   user.cart[cartItemIndex].quantity = quantity;
   await user.save();
   res.status(200).json({ success: true, cart: user.cart });

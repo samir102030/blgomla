@@ -1,3 +1,5 @@
+import type { Product } from "./product.type";
+
 export interface UserCartItem {
   product: string; // ObjectId as string
   quantity: number;
@@ -20,7 +22,8 @@ export interface User {
   phoneNumber?: string;
   profilePicture?: string;
   cart: UserCartItem[];
-  love: UserLoveItem[];
+  love: Product[];
+  // love: UserLoveItem[];
   role: UserRole;
   deleted: boolean;
   active: boolean;

@@ -3,8 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useProductStore } from "../stores/product.store";
+import { useUserStore } from "../stores/user.store";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const ProductDetailPage: React.FC = () => {
+  const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -13,10 +17,72 @@ const ProductDetailPage: React.FC = () => {
   const product = useProductStore((state) => state.product);
   const loading = useProductStore((state) => state.loading);
   const error = useProductStore((state) => state.error);
+  const addToCart = useProductStore((state) => state.addToCart);
+  const fetchCart = useUserStore((state) => state.fetchCart);
+  const toggleLoveProduct = useUserStore((state) => state.toggleLoveProduct);
+  const getLovedProducts = useUserStore((state) => state.getLovedProducts);
+  const user = useUserStore((state) => state.user);
+
+  useEffect(() => {
+    fetchCart();
+    getLovedProducts();
+  }, [fetchCart, getLovedProducts]);
 
   useEffect(() => {
     if (productId) fetchProductById(productId);
   }, [productId, fetchProductById]);
+
+  // Check if product is already in cart
+  const isProductInCart = () => {
+    if (!user?.cart || !productId) return false;
+    return user.cart.some((item) => item.product === productId);
+  };
+
+  // Get current quantity in cart
+  const getCartQuantity = () => {
+    if (!user?.cart || !productId) return 0;
+    const cartItem = user.cart.find((item) => item.product === productId);
+    return cartItem ? cartItem.quantity : 0;
+  };
+
+  // Check if product is in loved products
+  const isProductLoved = () => {
+    if (!user?.love || !productId) return false;
+    return user.love.some((item) => item._id === productId);
+  };
+
+  const handleLoveProduct = async () => {
+    if (!productId) return;
+    
+    try {
+      await toggleLoveProduct(productId);
+      await getLovedProducts();
+      toast.success(isProductLoved() ? 'Removed from wishlist' : 'Added to wishlist');
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
+      toast.error('Failed to update wishlist');
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!productId) return;
+    if (isProductInCart()) {
+      toast("Product already in cart!");
+
+      navigate("/cart");
+      return;
+    }
+
+    try {
+      await addToCart(productId, quantity);
+      navigate("/cart");
+
+      // You could add a success notification here
+      // console.log("Product added to cart successfully!");
+    } catch (error) {
+      console.error("Failed to add product to cart:", error);
+    }
+  };
 
   if (loading) {
     return (
@@ -226,13 +292,43 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex space-x-4 mb-8">
-                <button className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-md hover:bg-blue-700 transition-colors">
-                  Add to Cart
+                <button
+                  onClick={handleAddToCart}
+                  disabled={loading}
+                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${
+                    isProductInCart()
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                  } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {loading
+                    ? "Adding..."
+                    : isProductInCart()
+                    ? "In Cart"
+                    : "Add to Cart"}
                 </button>
-                <button className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-md hover:bg-gray-50 transition-colors">
-                  ❤️ Add to Wishlist
+                <button 
+                  onClick={handleLoveProduct}
+                  disabled={loading}
+                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${
+                    isProductLoved()
+                      ? "bg-red-600 text-white hover:bg-red-700"
+                      : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {isProductLoved() ? "❤️ Remove from Wishlist" : "❤️ Add to Wishlist"}
                 </button>
               </div>
+
+              {/* Cart Status */}
+              {isProductInCart() && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-green-800 text-sm">
+                    This item is already in your cart ({getCartQuantity()}{" "}
+                    quantity)
+                  </p>
+                </div>
+              )}
 
               {/* Share */}
               <div className="border-t pt-6">

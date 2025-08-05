@@ -1,5 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import HomePage from './pages/HomePage';
 import ContactPage from './pages/ContactPage';
 import BrandsPage from './pages/BrandsPage';
@@ -26,6 +27,7 @@ function App() {
         <Route path="/account" element={<MyAccountPage />} />
         <Route path="/about" element={<AboutUsPage />} />
       </Routes>
+      <Toaster />
     </Router>
   );
 }

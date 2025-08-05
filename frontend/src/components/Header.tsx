@@ -100,7 +100,7 @@ const Header: React.FC = () => {
                 <span className="text-xl mb-1">🛒</span>
                 <span className="text-xs hidden sm:block">Cart</span>
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  3
+                  {user?.cart.reduce((acc, item) => acc + item.quantity, 0)}
                 </span>
               </Link>
             </div>

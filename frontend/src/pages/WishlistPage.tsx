@@ -1,69 +1,124 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
-
-interface WishlistItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-}
+import { useUserStore } from '../stores/user.store';
+import { useProductStore } from '../stores/product.store';
+import type { Product } from '../types/product.type';
 
 const WishlistPage: React.FC = () => {
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([
-    {
-      id: 'tp-link-m7200',
-      name: 'TP-Link M7200 4G LTE Mobile Wi-Fi',
-      price: 2220,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop'
-    },
-    {
-      id: 'mercusys-ma30h',
-      name: 'MERCUSYS MA30H Dual-band Adapter',
-      price: 675,
-      image: 'https://images.unsplash.com/photo-1606904825846-647eb07f5be2?w=100&h=100&fit=crop'
-    },
-    {
-      id: 'tapo-c110',
-      name: 'Tapo C110 3MP Security Camera',
-      price: 1025,
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop'
-    },
-    {
-      id: 'mercusys-halo-h30',
-      name: 'MERCUSYS Halo H30 Mesh Wi-Fi System',
-      price: 3300,
-      image: 'https://images.unsplash.com/photo-1606904825846-647eb07f5be2?w=100&h=100&fit=crop'
-    }
-  ]);
+  const { user, getLovedProducts, toggleLoveProduct, loading: userLoading } = useUserStore();
+  const { addToCart, loading: productLoading } = useProductStore();
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [lovedProducts, setLovedProducts] = useState<Product[]>([]);
 
-  const [quantities, setQuantities] = useState<Record<string, number>>({
-    'tp-link-m7200': 1,
-    'mercusys-ma30h': 1,
-    'tapo-c110': 1,
-    'mercusys-halo-h30': 1
-  });
+  useEffect(() => {
+    getLovedProducts();
+  },[getLovedProducts])
+
+  useEffect(() => {
+    if (user) {
+      setLovedProducts(user.love);
+    }
+  },[user])
+  // Fetch loved products from store
+  // useEffect(() => {
+  //   const fetchLovedProducts = async () => {
+  //     if (user) {
+  //       try {
+  //         // Get the updated loved products from the store
+  //         await getLovedProducts();
+          
+  //         // Set the loved products directly from user.love
+  //         if (user.love && user.love.length > 0) {
+  //           setLovedProducts(user.love);
+
+  //           // Initialize quantities for all products
+  //           const initialQuantities: Record<string, number> = {};
+  //           user.love.forEach(product => {
+  //             if (product._id) {
+  //               initialQuantities[product._id] = 1;
+  //             }
+  //           });
+  //           setQuantities(initialQuantities);
+  //         } else {
+  //           setLovedProducts([]);
+  //           setQuantities({});
+  //         }
+  //       } catch (error) {
+  //         console.error('Error fetching loved products:', error);
+  //         setLovedProducts([]);
+  //         setQuantities({});
+  //       }
+  //     } else {
+  //       setLovedProducts([]);
+  //       setQuantities({});
+  //     }
+  //   };
+
+  //   fetchLovedProducts();
+  // }, [user, getLovedProducts]);
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     setQuantities(prev => ({ ...prev, [id]: newQuantity }));
   };
 
-  const removeItem = (id: string) => {
-    setWishlistItems(items => items.filter(item => item.id !== id));
-    setQuantities(prev => {
-      const newQuantities = { ...prev };
-      delete newQuantities[id];
-      return newQuantities;
-    });
+  const handleAddToCart = async (productId: string) => {
+    try {
+      const quantity = quantities[productId] || 1;
+      await addToCart(productId, quantity);
+      alert('Item added to cart!');
+    } catch (error) {
+      console.error('Error adding item to cart:', error);
+      alert('Failed to add item to cart');
+    }
   };
 
-  const addToCart = (id: string) => {
-    console.log(`Adding item ${id} to cart with quantity ${quantities[id]}`);
-    // Here you would typically add the item to cart
-    alert('Item added to cart!');
+  const handleAddAllToCart = async () => {
+    try {
+      for (const product of lovedProducts) {
+        if (product._id) {
+          const quantity = quantities[product._id] || 1;
+          await addToCart(product._id, quantity);
+        }
+      }
+      alert('All items added to cart!');
+    } catch (error) {
+      console.error('Error adding all items to cart:', error);
+      alert('Failed to add some items to cart');
+    }
   };
+
+  const handleClearWishlist = async () => {
+    try {
+      for (const product of lovedProducts) {
+        if (product._id) {
+          await toggleLoveProduct(product._id);
+        }
+      }
+      setLovedProducts([]);
+      setQuantities({});
+    } catch (error) {
+      console.error('Error clearing wishlist:', error);
+    }
+  };
+
+  const handleToggleLove = async (productId: string) => {
+    try {
+      await toggleLoveProduct(productId);
+      setLovedProducts(prev => prev.filter(item => item._id !== productId));
+      setQuantities(prev => {
+        const newQuantities = { ...prev };
+        delete newQuantities[productId];
+        return newQuantities;
+      });
+    } catch (error) {
+      console.error('Error toggling love:', error);
+    }
+  };
+
+  const isLoading = userLoading || productLoading;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,7 +154,24 @@ const WishlistPage: React.FC = () => {
       <main className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {wishlistItems.length === 0 ? (
+          {!user ? (
+            <div className="text-center py-16">
+              <div className="text-gray-400 text-6xl mb-4">🔒</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Login</h2>
+              <p className="text-gray-600 mb-8">You need to be logged in to view your wishlist.</p>
+              <Link
+                to="/login"
+                className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
+              >
+                Login
+              </Link>
+            </div>
+          ) : isLoading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading your wishlist...</p>
+            </div>
+          ) : lovedProducts.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-gray-400 text-6xl mb-4">💝</div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Wishlist is Empty</h2>
@@ -126,35 +198,47 @@ const WishlistPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {wishlistItems.map((item) => (
-                      <tr key={item.id}>
+                    {lovedProducts.map((item) => (
+                      <tr key={item._id}>
                         <td className="px-6 py-4">
                           <img
-                            src={item.image}
+                            src={item.images?.[0]?.url || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop'}
                             alt={item.name}
                             className="w-16 h-16 object-cover rounded-lg"
                           />
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                          <div className="text-xs text-gray-500">{item.description}</div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">${item.price}</div>
+                          <div className="text-sm text-gray-900">
+                            {item.saleActive && item.salePrice ? (
+                              <div>
+                                <span className="line-through text-gray-400">${item.price}</span>
+                                <span className="ml-2 font-bold text-red-600">${item.salePrice}</span>
+                              </div>
+                            ) : (
+                              `$${item.price}`
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center">
                             <button
-                              onClick={() => updateQuantity(item.id, quantities[item.id] - 1)}
+                              onClick={() => updateQuantity(item._id!, quantities[item._id!] - 1)}
                               className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50"
+                              disabled={isLoading}
                             >
                               -
                             </button>
                             <span className="px-4 py-1 border-t border-b border-gray-300 bg-white">
-                              {quantities[item.id]}
+                              {quantities[item._id!] || 1}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item.id, quantities[item.id] + 1)}
+                              onClick={() => updateQuantity(item._id!, quantities[item._id!] + 1)}
                               className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50"
+                              disabled={isLoading}
                             >
                               +
                             </button>
@@ -162,16 +246,18 @@ const WishlistPage: React.FC = () => {
                         </td>
                         <td className="px-6 py-4">
                           <button
-                            onClick={() => addToCart(item.id)}
-                            className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                            onClick={() => handleAddToCart(item._id!)}
+                            className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
+                            disabled={isLoading}
                           >
                             ADD TO CART
                           </button>
                         </td>
                         <td className="px-6 py-4">
                           <button
-                            onClick={() => removeItem(item.id)}
-                            className="text-red-600 hover:text-red-800"
+                            onClick={() => handleToggleLove(item._id!)}
+                            className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                            disabled={isLoading}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -194,19 +280,16 @@ const WishlistPage: React.FC = () => {
                 </Link>
                 <div className="space-x-4">
                   <button
-                    onClick={() => {
-                      wishlistItems.forEach(item => addToCart(item.id));
-                    }}
-                    className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                    onClick={handleAddAllToCart}
+                    className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
+                    disabled={isLoading}
                   >
                     Add All to Cart
                   </button>
                   <button
-                    onClick={() => {
-                      setWishlistItems([]);
-                      setQuantities({});
-                    }}
-                    className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                    onClick={handleClearWishlist}
+                    className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                    disabled={isLoading}
                   >
                     Clear Wishlist
                   </button>
@@ -216,7 +299,7 @@ const WishlistPage: React.FC = () => {
           )}
 
           {/* Related Products or Recommendations */}
-          {wishlistItems.length > 0 && (
+          {user && lovedProducts.length > 0 && (
             <div className="mt-16">
               <h2 className="text-2xl font-bold text-gray-900 mb-8">You Might Also Like</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

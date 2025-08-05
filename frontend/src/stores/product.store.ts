@@ -13,12 +13,19 @@ interface PaginatedResult<T> {
   success: boolean;
 }
 
+interface CartItem {
+  product: Product | string;
+  quantity: number;
+  _id?: string;
+}
+
 interface ProductStore {
   products: Product[];
   product?: Product;
   paginated?: PaginatedResult<Product>;
   loading: boolean;
   error?: string;
+  cart: CartItem[];
   fetchProducts: (params?: Record<string, any>) => Promise<void>;
   fetchProductById: (productId: string) => Promise<void>;
   fetchFeaturedProducts: () => Promise<void>;
@@ -32,6 +39,12 @@ interface ProductStore {
     data: Partial<Product>
   ) => Promise<Product | undefined>;
   deleteProduct: (productId: string) => Promise<boolean>;
+  // Cart actions
+  fetchCart: () => Promise<void>;
+  addToCart: (productId: string, quantity?: number) => Promise<void>;
+  updateCartItem: (cartItemId: string, quantity: number) => Promise<void>;
+  removeFromCart: (cartItemId: string) => Promise<void>;
+  clearCart: () => Promise<void>;
   // ...add more actions as needed (reviews, features, attributes)
 }
 
@@ -44,6 +57,84 @@ export const useProductStore = create<ProductStore>()(
       paginated: undefined,
       loading: false,
       error: undefined,
+      cart: [],
+      // CART ACTIONS
+      fetchCart: async () => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.get<{ cart: CartItem[] }>(
+            "/products/cart"
+          );
+          set({ cart: data.cart, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      addToCart: async (productId: string, quantity = 1) => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.post<{ cart: CartItem[] }>(
+            "/products/cart",
+            { productId, quantity }
+          );
+          set({ cart: data.cart, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      updateCartItem: async (cartItemId: string, quantity: number) => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.put<{ cart: CartItem[] }>(
+            `/products/cart/${cartItemId}`,
+            { quantity }
+          );
+          set({ cart: data.cart, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      removeFromCart: async (cartItemId: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.delete<{ cart: CartItem[] }>(
+            `/products/cart/${cartItemId}`
+          );
+          set({ cart: data.cart, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      clearCart: async () => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.delete<{ cart: CartItem[] }>(
+            "/cart"
+          );
+          set({ cart: data.cart, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
 
       fetchProducts: async (params = {}) => {
         set({ loading: true, error: undefined });

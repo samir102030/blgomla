@@ -457,3 +457,75 @@ export const loveProduct = controllerWrapper(
     });
   }
 );
+export const toggleLoveProduct = controllerWrapper(
+  "toggleLoveProduct",
+  async (req, res) => {
+    const { productId } = req.params;
+    const userId = req.user._id;
+
+    // Validate productId format
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
+      });
+    }
+
+    // Check if product exists
+    const productExists = await Product.exists({ _id: productId });
+    if (!productExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // Check current love status
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const productIndex = user.love.indexOf(productId);
+    let message;
+
+    if (productIndex > -1) {
+      // Product is in favorites - remove it
+      user.love.splice(productIndex, 1);
+      message = "Product removed from favorites";
+    } else {
+      // Product is not in favorites - add it
+      user.love.push(productId);
+      message = "Product added to favorites";
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message,
+      love: user.love,
+    });
+  }
+);
+
+export const getLovedProducts = controllerWrapper(
+  "getLovedProducts",
+  async (req, res) => {
+    const userId = req.user._id;
+    const user = await User.findOne({ _id: userId }).populate("love");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      love: user.love, // Return the loved products
+    });
+  }
+);
