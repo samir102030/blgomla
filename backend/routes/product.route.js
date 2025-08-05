@@ -8,6 +8,7 @@ import {
   addProductAttribute,
   addProductFeature,
   addProductReview,
+  addProductToCart,
   createProduct,
   deleteProduct,
   deleteProductAttribute,
@@ -16,6 +17,7 @@ import {
   filterProducts,
   getAllProducts,
   getBestSellers,
+  getCart,
   getFeaturedProducts,
   getMostRatedProducts,
   getNewestProducts,
@@ -26,10 +28,12 @@ import {
   getProductsByCategory,
   getSaleProducts,
   getStoreProducts,
+  removeFromCart,
   restoreProduct,
   softDeleteProduct,
   toggleFeaturedProduct,
   toggleSaleProduct,
+  updateCart,
   updateProduct,
   updateProductAttribute,
   updateProductFeature,
@@ -40,7 +44,6 @@ import {
 import {
   validateCreateProduct,
   validateUpdateProduct,
-  // validateProductId,
   validateUpdateStock,
   validateAddReview,
   validateUpdateReview,
@@ -175,6 +178,12 @@ router.delete(
 router.get("/newest", getNewestProducts); // Get newest products
 router.get("/bestSellers", getBestSellers); // Get best sellers products
 router.get("/mostRated", getMostRatedProducts); // Get Most rated products
+
+// cart for user
+router.post("/cart", protectRoute, addProductToCart); // Add product to cart
+router.get("/cart", protectRoute, getCart); // Get cart
+router.put("/cart/:productId", protectRoute, updateCart); // Update cart
+router.delete("/cart/:productId", protectRoute, removeFromCart); // Remove product from cart
 
 router.get("/:productId", getProductById);
 export default router;

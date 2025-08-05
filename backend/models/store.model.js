@@ -8,6 +8,14 @@ const storeSchema = new mongoose.Schema(
       unique: [true, "Store name already exists"],
       trim: true,
     },
+    email: {
+      type: String,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
     description: {
       type: String,
       trim: true,
@@ -18,6 +26,10 @@ const storeSchema = new mongoose.Schema(
       required: true,
     },
     address: {
+      type: String,
+      trim: true,
+    },
+    location: {
       type: String,
       trim: true,
     },
@@ -37,6 +49,70 @@ const storeSchema = new mongoose.Schema(
       {
         type: String,
         trim: true,
+      },
+    ],
+    slider: [
+      {
+        image: {
+          type: String,
+          trim: true,
+        },
+        title: {
+          type: String,
+          trim: true,
+        },
+        description: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+    socialLinks: [
+      {
+        platform: {
+          type: String,
+          trim: true,
+        },
+        url: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+    features: [
+      {
+        title: {
+          type: String,
+          trim: true,
+        },
+        description: {
+          type: String,
+          trim: true,
+        },
+        icon: {
+          type: String,
+          trim: true,
+        },
+      },
+    ],
+    about: {
+      type: String,
+      trim: true,
+    },
+    story: {
+      type: String,
+      trim: true,
+    },
+    achievements: [
+      {
+        number: {
+          type: Number,
+          required: true,
+        },
+        name: {
+          type: String,
+          trim: true,
+        },
       },
     ],
   },

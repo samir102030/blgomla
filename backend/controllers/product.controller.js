@@ -1,6 +1,7 @@
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
+import User from "../models/user.model.js";
 
 // Create Product
 export const createProduct = controllerWrapper(
@@ -648,5 +649,110 @@ export const getMostRatedProducts = controllerWrapper(
     const mongooseQuery = Product.find(query).sort({ rating: -1 });
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
+  }
+);
+
+// cart
+export const addProductToCart = controllerWrapper(
+  "addProductToCart",
+  async (req, res) => {
+    const { productId, quantity = 1 } = req.body;
+    const userId = req.user._id;
+
+    // Validate product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // Find user and validate
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if product already in cart
+    const existingItemIndex = user.cart.findIndex(
+      (item) => item.product.toString() === productId
+    );
+
+    if (existingItemIndex > -1) {
+      // Update quantity if exists
+      user.cart[existingItemIndex].quantity += quantity;
+    } else {
+      // Add new item if doesn't exist
+      user.cart.push({
+        product: productId, // Note: using 'product' not 'productId'
+        quantity,
+      });
+    }
+
+    await user.save();
+
+    // Populate product details in response if needed
+    const populatedUser = await User.findById(userId).populate("cart.product");
+
+    res.status(201).json({
+      success: true,
+      cart: populatedUser.cart,
+    });
+  }
+);
+
+export const getCart = controllerWrapper("getCart", async (req, res) => {
+  const userId = req.user._id;
+  const user = await User.findById(userId).populate("cart.product");
+  if (!user)
+    return res.status(404).json({ success: false, message: "User not found" });
+  res.status(200).json({ success: true, cart: user.cart });
+});
+
+// Update Cart
+export const updateCart = controllerWrapper("updateCart", async (req, res) => {
+  const { productId, quantity } = req.body;
+  const userId = req.user._id;
+  const user = await User.findById(userId);
+  if (!user)
+    return res.status(404).json({ success: false, message: "User not found" });
+  // Update cart logic here
+  // Assuming you have a User model with a cart field
+  const cartItemIndex = user.cart.findIndex(
+    (item) => item.product.toString() === productId
+  );
+  if (cartItemIndex === -1) {
+    return res.status(404).json({
+      success: false,
+      message: "Product not found in cart",
+    });
+  }
+  user.cart[cartItemIndex].quantity = quantity;
+  await user.save();
+  res.status(200).json({ success: true, cart: user.cart });
+});
+
+export const removeFromCart = controllerWrapper(
+  "removeFromCart",
+  async (req, res) => {
+    const { productId } = req.params;
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    // Remove from cart logic here
+    // Assuming you have a User model with a cart field
+    user.cart = user.cart.filter(
+      (item) => item.product.toString() !== productId
+    );
+    await user.save();
+    console.log(user.cart);
+    res.status(200).json({ success: true, cart: user.cart });
   }
 );

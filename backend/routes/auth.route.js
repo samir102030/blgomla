@@ -30,6 +30,7 @@ import {
 } from "../validations/auth.validate.js";
 const router = express.Router();
 
+
 // Tested
 // users
 router.post("/signup", validateSignup, signup);

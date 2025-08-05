@@ -308,7 +308,6 @@ export const useUserStore = create<UserStore>()(
     }),
     {
       name: "user-store",
-      skipHydration: true,
     }
   )
 );

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useUserStore } from "../stores/user.store";
 
 const Header: React.FC = () => {
+  const user = useUserStore((state) => state.user);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -17,7 +19,7 @@ const Header: React.FC = () => {
             <div className="flex space-x-6 text-gray-600">
               <span className="flex items-center">
                 <span className="mr-2">📞</span>
-                (+20)1009353639 
+                (+20)1009353639
               </span>
               <span className="flex items-center">
                 <span className="mr-2">✉️</span>
@@ -37,13 +39,18 @@ const Header: React.FC = () => {
           <div className="flex items-center justify-between gap-4">
             {/* Logo */}
             <div className="flex-shrink-0">
-              <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+              <Link
+                to="/"
+                className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+              >
                 <img
                   src="/logo.png"
                   alt="Belgomla Logo"
                   className="w-10 h-10 object-contain"
                 />
-                <span className="text-2xl font-bold text-gray-900">Belgomla</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  Belgomla
+                </span>
               </Link>
             </div>
 
@@ -63,22 +70,38 @@ const Header: React.FC = () => {
 
             {/* Header actions */}
             <div className="flex items-center space-x-6">
-              <Link to="/login" className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors">
-                <span className="text-xl mb-1">🔑</span>
-                <span className="text-xs hidden sm:block">Login</span>
-              </Link>
-              <Link to="/account" className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors">
+              {!user && (
+                <Link
+                  to="/login"
+                  className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
+                >
+                  <span className="text-xl mb-1">🔑</span>
+                  <span className="text-xs hidden sm:block">Login</span>
+                </Link>
+              )}
+              <Link
+                to="/account"
+                className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 <span className="text-xl mb-1">👤</span>
                 <span className="text-xs hidden sm:block">Account</span>
               </Link>
-              <Link to="/wishlist" className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors">
+              <Link
+                to="/wishlist"
+                className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
+              >
                 <span className="text-xl mb-1">❤️</span>
                 <span className="text-xs hidden sm:block">Wishlist</span>
               </Link>
-              <Link to="/cart" className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors relative">
+              <Link
+                to="/cart"
+                className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors relative"
+              >
                 <span className="text-xl mb-1">🛒</span>
                 <span className="text-xs hidden sm:block">Cart</span>
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  3
+                </span>
               </Link>
             </div>
 
@@ -110,13 +133,45 @@ const Header: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <nav className={`bg-gray-900 text-white ${isMenuOpen ? 'block' : 'hidden'} md:block`}>
+      <nav
+        className={`bg-gray-900 text-white ${
+          isMenuOpen ? "block" : "hidden"
+        } md:block`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ul className="flex flex-col md:flex-row md:space-x-8">
-            <li><Link to="/" className="block py-3 px-2 hover:bg-gray-700 transition-colors">Home</Link></li>
-            <li><Link to="/brands" className="block py-3 px-2 hover:bg-gray-700 transition-colors">Brands</Link></li>
-            <li><Link to="/about" className="block py-3 px-2 hover:bg-gray-700 transition-colors">About Us</Link></li>
-            <li><Link to="/contact" className="block py-3 px-2 hover:bg-gray-700 transition-colors">Contact</Link></li>
+            <li>
+              <Link
+                to="/"
+                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/brands"
+                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+              >
+                Brands
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/about"
+                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+              >
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/contact"
+                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+              >
+                Contact
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>
