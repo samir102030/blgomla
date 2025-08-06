@@ -45,6 +45,10 @@ interface ProductStore {
   updateCartItem: (cartItemId: string, quantity: number) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
+  // Review actions
+  addReview: (productId: string, review: { rating: number; comment: string }) => Promise<void>;
+  updateReview: (productId: string, reviewId: string, review: { rating: number; comment: string }) => Promise<void>;
+  deleteReview: (productId: string, reviewId: string) => Promise<void>;
   // ...add more actions as needed (reviews, features, attributes)
 }
 
@@ -154,11 +158,16 @@ export const useProductStore = create<ProductStore>()(
       fetchProductById: async (productId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<PaginatedResult<Product>>(
+          const { data } = await axiosInstance.get<any>(
             `/products/${productId}`
           );
-          set({ product: data.data?.[0], loading: false });
+          console.log("fetchProductById response:", data);
+          
+          // Handle different response formats
+          const product = data.product || data.data?.[0] || data;
+          set({ product, loading: false });
         } catch (error: any) {
+          console.error("fetchProductById error:", error);
           set({
             error: error?.response?.data?.message || error.message,
             loading: false,
@@ -287,6 +296,63 @@ export const useProductStore = create<ProductStore>()(
             loading: false,
           });
           return false;
+        }
+      },
+
+      // Review actions
+      addReview: async (productId: string, review: { rating: number; comment: string }) => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.post<any>(
+            `/products/${productId}/reviews`,
+            review
+          );
+          console.log("addReview response:", data);
+          const product = data.product || data.data?.[0] || data;
+          set({ product, loading: false });
+        } catch (error: any) {
+          console.error("addReview error:", error);
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      updateReview: async (productId: string, reviewId: string, review: { rating: number; comment: string }) => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.put<any>(
+            `/products/${productId}/reviews/${reviewId}`,
+            review
+          );
+          console.log("updateReview response:", data);
+          const product = data.product || data.data?.[0] || data;
+          set({ product, loading: false });
+        } catch (error: any) {
+          console.error("updateReview error:", error);
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      deleteReview: async (productId: string, reviewId: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.delete<any>(
+            `/products/${productId}/reviews/${reviewId}`
+          );
+          console.log("deleteReview response:", data);
+          const product = data.product || data.data?.[0] || data;
+          set({ product, loading: false });
+        } catch (error: any) {
+          console.error("deleteReview error:", error);
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
         }
       },
     }),

@@ -1,5 +1,8 @@
+import type { User } from "./user.type";
+
 export interface ProductReview {
-  user: string; // ObjectId as string
+  _id: string;
+  user: User; // ObjectId as string
   rating: number;
   comment?: string;
   createdAt?: string;

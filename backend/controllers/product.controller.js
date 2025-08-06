@@ -64,7 +64,9 @@ export const getProductById = controllerWrapper(
     const { productId } = req.params;
     const { page = 1, limit = 20 } = req.query;
     // For a single product, pagination is not typical, but for consistency:
-    const mongooseQuery = Product.find({ _id: productId });
+    const mongooseQuery = Product.find({ _id: productId }).populate(
+      "reviews.user"
+    );
     const result = await paginateQuery(page, limit, mongooseQuery);
     if (!result.data || result.data.length === 0)
       return res
