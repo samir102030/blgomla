@@ -4,31 +4,33 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 const AboutUsPage: React.FC = () => {
+
+
   const teamMembers = [
     {
-      name: 'John Smith',
+      name: ' Halafawy',
       position: 'CEO & Founder',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
-      description: 'Photography enthusiast with 15+ years of experience in the camera industry.'
+      image: 'public/uncle.enc',
+      description: 'Enthusiast with 15+ years of experience in the Network industry.'
     },
-    {
-      name: 'Sarah Johnson',
-      position: 'Head of Product',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop',
-      description: 'Expert in camera technology and product development with a passion for innovation.'
-    },
-    {
-      name: 'Mike Chen',
-      position: 'Technical Director',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop',
-      description: 'Professional photographer and technical specialist with expertise in all camera types.'
-    },
-    {
-      name: 'Emily Davis',
-      position: 'Customer Experience Manager',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop',
-      description: 'Dedicated to ensuring every customer has the best shopping experience possible.'
-    }
+    //{
+    //  name: 'person2',
+    //  position: 'Head of Product',
+    //  image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop',
+    //  description: 'Expert in camera technology and product development with a passion for innovation.'
+    //},
+    //{
+      //name: 'person3',
+      //position: 'Technical Director',
+     // image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop',
+     // description: 'Professional photographer and technical specialist with expertise in all camera types.'
+    //},
+   // {
+    //  name: 'person4',
+     // position: 'Customer Experience Manager',
+     // image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop',
+     // description: 'Dedicated to ensuring every customer has the best shopping experience possible.'
+   // }
   ];
 
   const stats = [
@@ -69,7 +71,7 @@ const AboutUsPage: React.FC = () => {
       <div className="relative bg-gray-100 py-20">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=600&fit=crop"
+            src="public/net1.jpeg"
             alt="Camera Store"
             className="w-full h-full object-cover opacity-30"
           />
@@ -77,8 +79,8 @@ const AboutUsPage: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">About Belgomla</h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-8">
-            Your trusted partner in capturing life's precious moments. We've been serving photography enthusiasts 
-            and professionals for over 15 years with the finest camera equipment and expert advice.
+            Your trusted partner in building seamless connections.
+For over 15 years, we've supported IT professionals and businesses with top-tier networking equipment and expert guidance to keep you connected and secure.
           </p>
           <nav className="text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">Home</Link>
@@ -97,25 +99,23 @@ const AboutUsPage: React.FC = () => {
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Story</h2>
                 <div className="space-y-4 text-gray-600">
                   <p>
-                    Founded in 2009, Belgomla started as a small camera shop with a big dream: to make 
-                    professional photography equipment accessible to everyone. What began as a passion project 
-                    by photography enthusiasts has grown into one of the most trusted camera retailers in the region.
+                    Founded in 2009, Belgomla began as a small networking gear provider with a bold vision: to make high-quality network infrastructure accessible to everyone.
+What started as a passion project by tech enthusiasts has grown into one of the region’s most trusted names in networking solutions, serving professionals, businesses, and IT teams with reliable equipment and expert support.
                   </p>
                   <p>
-                    We believe that every moment deserves to be captured beautifully. Whether you're a 
-                    professional photographer, an aspiring artist, or someone who simply loves taking pictures, 
-                    we have the perfect camera and accessories to help you tell your story.
+                    We believe that every connection should be fast, secure, and reliable.
+Whether you're an IT professional, a growing business, or a home user looking to upgrade your setup, we offer the right networking equipment and solutions to keep you connected and in control.
                   </p>
                   <p>
                     Our commitment to quality, customer service, and competitive pricing has earned us the 
                     trust of thousands of customers. We're not just selling cameras; we're helping people 
                     preserve their memories and express their creativity.
-                  </p>
+                  </p> 
                 </div>
               </div>
               <div className="relative">
                 <img
-                  src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop"
+                  src="public/net2.jpeg"
                   alt="Camera Store Interior"
                   className="rounded-lg shadow-lg"
                 />
@@ -199,8 +199,7 @@ const AboutUsPage: React.FC = () => {
             <div className="bg-blue-600 rounded-2xl p-12 text-center text-white">
               <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
               <p className="text-xl mb-8 max-w-4xl mx-auto">
-                To empower photographers of all levels with the finest camera equipment, expert guidance, 
-                and exceptional service, helping them capture and share their unique vision with the world.
+                To empower users of all levels with high-quality networking equipment, expert support, and outstanding service—enabling them to build, manage, and secure reliable connections in a fast-moving digital world.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
@@ -277,7 +276,7 @@ const AboutUsPage: React.FC = () => {
               </div>
               <div>
                 <img
-                  src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&h=400&fit=crop"
+                  src="public/net3.jpeg"
                   alt="Customer Service"
                   className="rounded-lg shadow-lg"
                 />

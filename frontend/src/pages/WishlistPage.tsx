@@ -128,7 +128,7 @@ const WishlistPage: React.FC = () => {
       <div className="relative bg-gray-100 py-16">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=400&fit=crop"
+            src="public/net3.jpeg"
             alt="Camera"
             className="w-full h-full object-cover opacity-20"
           />
@@ -144,7 +144,7 @@ const WishlistPage: React.FC = () => {
         {/* Camera Image positioned on the right */}
         <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
           <img
-            src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=400&fit=crop"
+            src="public/net3.jpeg"
             alt="Professional Camera"
             className="h-full w-full object-contain"
           />
@@ -202,7 +202,7 @@ const WishlistPage: React.FC = () => {
                       <tr key={item._id}>
                         <td className="px-6 py-4">
                           <img
-                            src={item.images?.[0]?.url || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=100&h=100&fit=crop'}
+                            src={item.images?.[0]?.url || 'public/net3.jpeg'}
                             alt={item.name}
                             className="w-16 h-16 object-cover rounded-lg"
                           />
@@ -307,7 +307,7 @@ const WishlistPage: React.FC = () => {
                   <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="aspect-square bg-gray-100">
                       <img
-                        src={`https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=300&h=300&fit=crop&sig=${i}`}
+                        src={`/public/p1.jpeg?random=${i}`}
                         alt={`Recommended Product ${i}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />

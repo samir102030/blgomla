@@ -17,7 +17,7 @@ const slides: Slide[] = [
     subtitle: "Smart Home",
     buttonText: "BUY NOW",
     buttonLink: "/brands",
-    image: "/api/placeholder/600/400", 
+    image: "/ban1.png", 
     bgColor: "bg-gradient-to-r from-gray-100 to-gray-200"
   },
   {
@@ -26,7 +26,7 @@ const slides: Slide[] = [
     subtitle: "Networking Equipment",
     buttonText: "SHOP NOW",
     buttonLink: "/brands",
-    image: "/api/placeholder/600/400", // Placeholder for router image
+    image: "/ban2.jpg",
     bgColor: "bg-gradient-to-r from-blue-50 to-blue-100"
   },
   {
@@ -35,7 +35,7 @@ const slides: Slide[] = [
     subtitle: "Security Cameras",
     buttonText: "EXPLORE",
     buttonLink: "/brands",
-    image: "/api/placeholder/600/400", 
+    image: "/ban3.jpg", 
     bgColor: "bg-gradient-to-r from-purple-50 to-purple-100"
   }
 ];
@@ -97,15 +97,11 @@ const HeroSlider: React.FC = () => {
                 {/* Image */}
                 <div className="flex justify-center lg:justify-end">
                   <div className="relative">
-                    {/* Placeholder camera image */}
-                    <div className="w-80 h-64 md:w-96 md:h-80 bg-gray-300 rounded-lg flex items-center justify-center">
-                      <div className="text-center text-gray-600">
-                        <div className="text-6xl mb-4">📷</div>
-                        <p className="text-lg font-medium">Professional Camera</p>
-                        <p className="text-sm">High Quality Equipment</p>
-                      </div>
-                    </div>
-                    
+                    <img
+                      src={slide.image}
+                      alt={slide.subtitle}
+                      className="w-80 h-64 md:w-96 md:h-80 object-cover rounded-lg shadow-lg"
+                    />
                     {/* Decorative elements */}
                     <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-500 rounded-full opacity-20"></div>
                     <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-purple-500 rounded-full opacity-20"></div>

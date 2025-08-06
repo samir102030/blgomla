@@ -57,8 +57,8 @@ const Contact: React.FC = () => {
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Address</h3>
                 <div className="text-gray-700 space-y-1">
-                  <p>256, Centerl Town, Main Street</p>
-                  <p>Hilton Tower, New Yourk</p>
+                  <p></p>
+                  <p>October, Egypt</p>
                 </div>
               </div>
 
@@ -70,10 +70,9 @@ const Contact: React.FC = () => {
                 <div className="text-gray-700 space-y-2">
                   <p>
                     <a href="tel:+8801265897568" className="text-blue-600 hover:text-blue-800 transition-colors">
-                      +8801265 897 568
+                      (+20)1009353639
                     </a>
                   </p>
-                  <p>+8801235 598 656</p>
                 </div>
               </div>
 
@@ -85,12 +84,12 @@ const Contact: React.FC = () => {
                 <div className="text-gray-700 space-y-2">
                   <p>
                     <a href="mailto:info@example.com" className="text-blue-600 hover:text-blue-800 transition-colors">
-                      info@example.com
+                      Blgmla.com
                     </a>
                   </p>
                   <p>
                     <a href="https://www.example.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">
-                      www.example.com
+                      www.Blgmla.com
                     </a>
                   </p>
                 </div>
@@ -103,8 +102,7 @@ const Contact: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Get in Touch</h2>
               <p className="text-gray-600 mb-8">
-                Terms & Conditions delenit atque corrupti sdolores et quas molestias cepturi sint eca itate non 
-                similique sunt in culpa modi tempora incidunt obtaim pain
+                Terms & Conditions erases and corrupts sorrows and what troubles they will face, they are not similar in fault, the ways of times are falling on them, pain
               </p>
 
               {isSubmitted && (

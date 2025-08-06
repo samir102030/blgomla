@@ -19,7 +19,7 @@ const HomePage: React.FC = () => {
         <section className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-pink-100 group cursor-pointer">
             <img
-              src="/promo1.jpg"
+              src="public/ban2.jpg"
               alt="Digital Camera With Zoom"
               className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
             />
@@ -30,7 +30,7 @@ const HomePage: React.FC = () => {
           </div>
           <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-green-100 group cursor-pointer">
             <img
-              src="/promo2.jpg"
+              src="public/ban1.png"
               alt="Instant Camera With Lens"
               className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
             />
@@ -41,7 +41,7 @@ const HomePage: React.FC = () => {
           </div>
           <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-yellow-100 group cursor-pointer">
             <img
-              src="/promo3.jpg"
+              src="public/p2.jpeg"
               alt="Travel Instant Camera"
               className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
             />
@@ -60,22 +60,22 @@ const HomePage: React.FC = () => {
             <div className="flex flex-col gap-6 md:col-span-1">
               <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-blue-100 group cursor-pointer">
                 <img
-                  src="/promo1.jpg"
+                  src="public/p1.jpeg"
                   alt="Promo Left 1"
                   className="w-full h-56 object-cover transform group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
               <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-purple-100 group cursor-pointer">
                 <img
-                  src="/promo2.jpg"
+                  src="public/p2.jpeg"
                   alt="Promo Left 2"
                   className="w-full h-56 object-cover transform group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
             </div>
-            {/* Products grid */}
+            {/* Products grid: all products, images cycle from /p1.jpeg to /p5.jpeg */}
             <div className="md:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product) => (
+              {products.map((product, idx) => (
                 <ProductCard
                   key={product.id}
                   id={product.id}
@@ -83,7 +83,7 @@ const HomePage: React.FC = () => {
                   price={product.price}
                   currency={product.currency}
                   originalPrice={undefined}
-                  image={product.image}
+                  image={`/p${(idx % 5) + 1}.jpeg`}
                   rating={product.rating}
                   description={product.description}
                   isNew={product.isNew}

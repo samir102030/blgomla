@@ -158,7 +158,7 @@ const MyAccountPage: React.FC = () => {
       <div className="relative bg-gray-100 py-16">
         <div className="absolute inset-0">
           <img
-            src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=400&fit=crop"
+            src="public/net1.jpeg"
             alt="Camera"
             className="w-full h-full object-cover opacity-20"
           />
@@ -176,7 +176,7 @@ const MyAccountPage: React.FC = () => {
         {/* Camera Image positioned on the right */}
         <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
           <img
-            src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=400&fit=crop"
+            src="public/net1.jpeg"
             alt="Professional Camera"
             className="h-full w-full object-contain"
           />
