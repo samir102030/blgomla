@@ -50,8 +50,7 @@ interface ProductStore {
 
 export const useProductStore = create<ProductStore>()(
   persist(
-    // eslint-disable-next-line
-    (set, get) => ({
+    (set) => ({
       products: [],
       product: undefined,
       paginated: undefined,

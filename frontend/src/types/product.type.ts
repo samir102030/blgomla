@@ -17,7 +17,7 @@ export interface ProductAttribute {
 }
 
 export interface Product {
-  _id?: string;
+  _id: string;
   name: string;
   description?: string;
   price: number;
@@ -41,4 +41,5 @@ export interface Product {
   updatedAt?: string;
   salePrice?: number;
   averageRating?: number;
+  product?: string; // ObjectId as string
 }

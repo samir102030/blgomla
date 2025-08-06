@@ -23,7 +23,6 @@ export interface User {
   profilePicture?: string;
   cart: UserCartItem[];
   love: Product[];
-  // love: UserLoveItem[];
   role: UserRole;
   deleted: boolean;
   active: boolean;

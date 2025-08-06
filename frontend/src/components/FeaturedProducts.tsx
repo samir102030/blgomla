@@ -14,7 +14,7 @@ const FeaturedProducts: React.FC = () => {
   const user = useUserStore((s) => s.user) as
     | (User & { love?: UserLoveItem[] })
     | undefined;
-  const updateUser = useUserStore((s) => s.updateUser);
+  // const updateUser = useUserStore((s) => s.updateUser);
 
   useEffect(() => {
     fetchFeaturedProducts();
@@ -24,13 +24,14 @@ const FeaturedProducts: React.FC = () => {
   const toggleLove = async (productId: string) => {
     if (!user || !user._id) return;
     const love: UserLoveItem[] = Array.isArray(user.love) ? user.love : [];
-    let newLove: UserLoveItem[];
+    // let newLove: UserLoveItem[];
     if (love.some((item) => item.product === productId)) {
-      newLove = love.filter((item) => item.product !== productId);
+      // newLove = love.filter((item) => item.product !== productId);
     } else {
-      newLove = [...love, { product: productId }];
+      // newLove = [...love, { product: productId }];
     }
-    await updateUser(user._id, { love: newLove });
+
+    // await updateUser(user._id, { love: newLove });
   };
 
   const renderStars = (rating: number) => {
