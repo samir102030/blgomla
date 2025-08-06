@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 const ProductDetailPage: React.FC = () => {
+  const [tab, setTab] = useState('description');
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const [quantity, setQuantity] = useState(1);
@@ -353,17 +354,50 @@ const ProductDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Product Description */}
+          {/* Product Description & Reviews Tabs */}
           <div className="mt-16">
-            <div className="border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900 pb-4">
-                Product Description
-              </h2>
+            <div className="border-b border-gray-200 flex space-x-8">
+              <button
+                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${tab === "description" ? "border-blue-600" : "border-transparent text-gray-500"}`}
+                onClick={() => setTab("description")}
+              >
+                Description
+              </button>
+              <button
+                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${tab === "reviews" ? "border-blue-600" : "border-transparent text-gray-500"}`}
+                onClick={() => setTab("reviews")}
+              >
+                Reviews
+              </button>
             </div>
             <div className="py-8">
-              <p className="text-gray-700 leading-relaxed">
-                {product.description}
-              </p>
+              {tab === "description" && (
+                <p className="text-gray-700 leading-relaxed">
+                  {product.description}
+                </p>
+              )}
+              {tab === "reviews" && (
+                <div>
+                  {product.reviews && product.reviews.length > 0 ? (
+                    <ul className="space-y-6">
+                      {product.reviews.map((review, idx) => (
+                        <li key={idx} className="border-b pb-4">
+                          <div className="flex items-center mb-2">
+                            <span className="font-semibold text-gray-900 mr-2">{review.user}</span>
+                            <span className="text-yellow-400">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>
+                          </div>
+                          <p className="text-gray-700">{review.comment}</p>
+                          {review.createdAt && (
+                            <div className="text-xs text-gray-400 mt-1">{new Date(review.createdAt).toLocaleDateString()}</div>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-gray-500">No reviews yet.</div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

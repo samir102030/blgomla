@@ -41,7 +41,7 @@ router.post("/", protectRoute, validateCreateOrder, createOrder);
 router.get("/", protectRoute, validateGetAllOrders, getOrders);
 
 // Get a single order by ID
-// router.get("/:id", getOrderById);
+router.get("/:id", protectRoute, getOrderById);
 
 // Get all orders for a user
 // router.get("/user/:userId", getUserOrders);
