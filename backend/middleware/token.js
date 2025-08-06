@@ -24,7 +24,7 @@ export const verifyToken = (req, res, next) => {
 
 export const generateToken = (userId, time = "1h") => {
   const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: "1h", // one hour
+    expiresIn: "5h", // five hours
   });
   return token;
 };
@@ -36,7 +36,7 @@ export const generateTokenAndSetCookie = (res, userId) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
-    maxAge: 60 * 60 * 1000, // one hour
+    maxAge: 5 * 60 * 60 * 1000, // five hours
     path: "/", // Restrict cookie to the application root
   });
 
