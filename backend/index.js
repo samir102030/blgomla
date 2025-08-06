@@ -16,8 +16,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://689344b7191aa800081d2bfc--belgomla.netlify.app/",
-      "https://689344b7191aa800081d2bfc--belgomla.netlify.app",
+      "https://*.netlify.app",
+      "https://68935717a16f60000867bbf9--belgomla.netlify.app",
     ],
     credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
