@@ -11,30 +11,19 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-lg">
-      {/* Top bar */}
-      <div className="bg-gray-50 border-b border-gray-200 py-2 text-sm hidden md:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <div className="flex space-x-6 text-gray-600">
-              <span className="flex items-center">
-                <span className="mr-2">📞</span>
-                (+20)1009353639
-              </span>
-              <span className="flex items-center">
-                <span className="mr-2">✉️</span>
-                Halafawy@gmail.com
-              </span>
+    <header className="sticky top-0 z-50 bg-[#FFD600] shadow-lg">
+
+            <div className="flex items-center space-x-4">
+              <span className="text-[#333333] text-sm">English</span>
+              <div className="flex items-center space-x-2">
+                <span className="text-[#333333] text-sm">Call us:</span>
+                <span className="text-[#333333] font-medium">📞 (+20)1009353639</span>
+              </div>
             </div>
-            <div className="flex space-x-6">
-              <span className="text-gray-600">Free shipping on orders</span>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Main header */}
-      <div className="py-4">
+      <div className="py-4 bg-[#FFD600]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4">
             {/* Logo */}
@@ -48,7 +37,7 @@ const Header: React.FC = () => {
                   alt="Belgomla Logo"
                   className="w-10 h-10 object-contain"
                 />
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-bold text-[#333333]">
                   Belgomla
                 </span>
               </Link>
@@ -59,10 +48,10 @@ const Header: React.FC = () => {
               <div className="relative flex">
                 <input
                   type="text"
-                  placeholder="Search for cameras, lenses, accessories..."
-                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-l-full focus:border-blue-500 focus:outline-none text-sm"
+                  placeholder="Search for electronics, computers, accessories..."
+                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
                 />
-                <button className="px-6 py-3 bg-blue-600 text-white rounded-r-full hover:bg-blue-700 transition-colors">
+                <button className="px-6 py-3 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
                   <span className="text-lg">🔍</span>
                 </button>
               </div>
@@ -73,7 +62,7 @@ const Header: React.FC = () => {
               {!user && (
                 <Link
                   to="/login"
-                  className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
+                  className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
                 >
                   <span className="text-xl mb-1">🔑</span>
                   <span className="text-xs hidden sm:block">Login</span>
@@ -81,21 +70,21 @@ const Header: React.FC = () => {
               )}
               <Link
                 to="/account"
-                className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
+                className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
               >
                 <span className="text-xl mb-1">👤</span>
                 <span className="text-xs hidden sm:block">Account</span>
               </Link>
               <Link
                 to="/wishlist"
-                className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors"
+                className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
               >
                 <span className="text-xl mb-1">❤️</span>
                 <span className="text-xs hidden sm:block">Wishlist</span>
               </Link>
               <Link
                 to="/cart"
-                className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition-colors relative"
+                className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors relative"
               >
                 <span className="text-xl mb-1">🛒</span>
                 <span className="text-xs hidden sm:block">Cart</span>
@@ -110,9 +99,9 @@ const Header: React.FC = () => {
               className="md:hidden flex flex-col space-y-1 p-2"
               onClick={toggleMenu}
             >
-              <span className="w-6 h-0.5 bg-gray-600 transition-all"></span>
-              <span className="w-6 h-0.5 bg-gray-600 transition-all"></span>
-              <span className="w-6 h-0.5 bg-gray-600 transition-all"></span>
+              <span className="w-6 h-0.5 bg-gray-800 transition-all"></span>
+              <span className="w-6 h-0.5 bg-gray-800 transition-all"></span>
+              <span className="w-6 h-0.5 bg-gray-800 transition-all"></span>
             </button>
           </div>
 
@@ -122,9 +111,9 @@ const Header: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search..."
-                className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-l-full focus:border-blue-500 focus:outline-none text-sm"
+                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
               />
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-r-full hover:bg-blue-700 transition-colors">
+              <button className="px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
                 🔍
               </button>
             </div>
@@ -134,7 +123,7 @@ const Header: React.FC = () => {
 
       {/* Navigation */}
       <nav
-        className={`bg-gray-900 text-white ${
+        className={`bg-[#002B5B] text-white ${
           isMenuOpen ? "block" : "hidden"
         } md:block`}
       >
@@ -143,7 +132,7 @@ const Header: React.FC = () => {
             <li>
               <Link
                 to="/"
-                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
               >
                 Home
               </Link>
@@ -151,7 +140,24 @@ const Header: React.FC = () => {
             <li>
               <Link
                 to="/brands"
-                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
+              >
+                Electronics
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/brands"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
+              >
+                Computers
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                to="/brands"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
               >
                 Brands
               </Link>
@@ -159,7 +165,7 @@ const Header: React.FC = () => {
             <li>
               <Link
                 to="/about"
-                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
               >
                 About Us
               </Link>
@@ -167,9 +173,25 @@ const Header: React.FC = () => {
             <li>
               <Link
                 to="/contact"
-                className="block py-3 px-2 hover:bg-gray-700 transition-colors"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors"
               >
                 Contact
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/vendor-registration"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors"
+              >
+                🏪 Become a Vendor
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/dashboard"
+                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors bg-[#673AB7]"
+              >
+                🏪 Admin Dashboard
               </Link>
             </li>
           </ul>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import BrandSidebar from "./BrandSidebar";
+import ProductFilterSidebar from "./ProductFilterSidebar";
 import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
 import { useProductStore } from "../stores/product.store";
@@ -58,10 +58,14 @@ const BrandsContent: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <BrandSidebar
-              brands={brands}
-              selectedBrand={selectedBrand}
-              onBrandSelect={handleBrandSelect}
+            <ProductFilterSidebar
+              onFilterChange={(filters) => {
+                // Handle filter changes here
+                console.log('Filters changed:', filters);
+                if (filters.brand) {
+                  handleBrandSelect(filters.brand);
+                }
+              }}
             />
           </div>
 

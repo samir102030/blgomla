@@ -7,48 +7,66 @@ import FeaturedProducts from '../components/FeaturedProducts';
 import Newsletter from '../components/Newsletter';
 import Services from '../components/Services';
 import Footer from '../components/Footer';
+import BrandLogos from '../components/BrandLogos';
 
 const HomePage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Header />
       <main>
         <HeroSlider />
 
-        {/* Promo Banners Section */}
-        <section className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-pink-100 group cursor-pointer">
-            <img
-              src="public/ban2.jpg"
-              alt="Digital Camera With Zoom"
-              className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="p-4 text-center">
-              <div className="text-lg font-semibold text-gray-800 mb-1">Mega Sale Offer</div>
-              <div className="text-xl font-bold text-gray-900">Digital Camera<br />With Zoom</div>
+        {/* Brand Logos Section */}
+        <BrandLogos />
+
+        {/* Hero Banner Section */}
+        <section className="bg-gradient-to-r from-[#FFD600] to-[#e6c100] py-12 mb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h2 className="text-4xl font-bold text-[#333333] mb-4">
+                  Back to School Offers
+                  <br />
+                  <span className="text-3xl">Up to 30% Off</span>
+                </h2>
+                <p className="text-lg text-[#333333] mb-6">Electronics</p>
+                <button className="bg-[#002B5B] text-white px-8 py-3 rounded-lg hover:bg-[#001a3d] transition-colors">
+                  Shop Now
+                </button>
+              </div>
+              <div className="flex-1 flex justify-end">
+                <img
+                  src="public/p1.jpeg"
+                  alt="Electronics Sale"
+                  className="max-w-md h-64 object-contain"
+                />
+              </div>
             </div>
           </div>
-          <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-green-100 group cursor-pointer">
-            <img
-              src="public/ban1.png"
-              alt="Instant Camera With Lens"
-              className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="p-4 text-center">
-              <div className="text-lg font-semibold text-gray-800 mb-1">Upto 35% Off</div>
-              <div className="text-xl font-bold text-gray-900">Instant Camera<br />With Lens</div>
-            </div>
-          </div>
-          <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-yellow-100 group cursor-pointer">
-            <img
-              src="public/p2.jpeg"
-              alt="Travel Instant Camera"
-              className="w-full h-48 object-cover transform group-hover:scale-105 transition-transform duration-300"
-            />
-            <div className="p-4 text-center">
-              <div className="text-lg font-semibold text-gray-800 mb-1">Special Offer 65%</div>
-              <div className="text-xl font-bold text-gray-900">Travel Instant<br />Camera</div>
-            </div>
+        </section>
+
+        {/* Product Categories Section */}
+        <section className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+            {[
+              { name: 'Chromecast', image: 'public/p1.jpeg' },
+              { name: 'Set Top Box', image: 'public/p2.jpeg' },
+              { name: 'Gaming Console', image: 'public/p3.jpeg' },
+              { name: 'Sound System', image: 'public/p4.jpeg' },
+              { name: 'Apple TV', image: 'public/p5.jpeg' },
+              { name: 'Smart TV', image: 'public/p1.jpeg' }
+            ].map((category, index) => (
+              <div key={index} className="bg-white rounded-full p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                <div className="w-20 h-20 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="w-12 h-12 object-contain"
+                  />
+                </div>
+                <p className="text-center text-sm font-medium text-gray-700">{category.name}</p>
+              </div>
+            ))}
           </div>
         </section>
 

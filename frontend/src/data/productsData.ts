@@ -1,4 +1,3 @@
-// Product data based on the provided CSV data
 export interface Product {
   id: string;
   name: string;
@@ -34,56 +33,151 @@ export interface Category {
 // Brands
 export const brands: Brand[] = [
   {
-    id: 'mercusys',
-    name: 'MERCUSYS',
-    logo: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=100&fit=crop',
-    description: 'Affordable networking solutions for home and office',
-    productCount: 10
+    id: 'apple',
+    name: 'Apple',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/04/Apple-Logo.png',
+    description: 'Premium technology products and innovation',
+    productCount: 45
   },
   {
-    id: 'tp-link',
-    name: 'TP-Link',
-    logo: 'https://images.unsplash.com/photo-1551808525-51a94da548ce?w=200&h=100&fit=crop',
-    description: 'Leading provider of networking products worldwide',
-    productCount: 20
+    id: 'samsung',
+    name: 'Samsung',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/04/Samsung-Logo.png',
+    description: 'Leading electronics and mobile technology',
+    productCount: 38
   },
   {
-    id: 'tapo',
-    name: 'Tapo',
-    logo: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=200&h=100&fit=crop',
-    description: 'Smart home cameras and security solutions',
+    id: 'hp',
+    name: 'HP',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/09/HP-Logo.png',
+    description: 'Computing and printing solutions',
+    productCount: 32
+  },
+  {
+    id: 'dell',
+    name: 'Dell',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/09/Dell-Logo.png',
+    description: 'Business and personal computing',
+    productCount: 28
+  },
+  {
+    id: 'lenovo',
+    name: 'Lenovo',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/09/Lenovo-Logo.png',
+    description: 'Innovative technology solutions',
+    productCount: 25
+  },
+  {
+    id: 'canon',
+    name: 'Canon',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/04/Canon-Logo.png',
+    description: 'Imaging and optical products',
+    productCount: 22
+  },
+  {
+    id: 'huawei',
+    name: 'Huawei',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/07/Huawei-Logo.png',
+    description: 'Telecommunications and consumer electronics',
+    productCount: 18
+  },
+  {
+    id: 'xiaomi',
+    name: 'Xiaomi',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/05/Xiaomi-Logo.png',
+    description: 'Smart devices and mobile technology',
     productCount: 15
+  },
+  {
+    id: 'oppo',
+    name: 'Oppo',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/05/Oppo-Logo.png',
+    description: 'Mobile devices and accessories',
+    productCount: 12
+  },
+  {
+    id: 'honor',
+    name: 'Honor',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/05/Honor-Logo.png',
+    description: 'Smartphone and technology brand',
+    productCount: 10
   }
 ];
 
 // Categories
 export const categories: Category[] = [
-  // MERCUSYS Categories
-  { id: 'mercusys-adapters', name: 'Adapters (USB/PCIe)', brandId: 'mercusys', productCount: 2 },
-  { id: 'mercusys-mesh', name: 'Mesh Wi‑Fi', brandId: 'mercusys', productCount: 2 },
-  { id: 'mercusys-extenders', name: 'Range Extenders', brandId: 'mercusys', productCount: 2 },
-  { id: 'mercusys-switches', name: 'Switches', brandId: 'mercusys', productCount: 2 },
-  { id: 'mercusys-routers', name: 'Wi‑Fi Routers', brandId: 'mercusys', productCount: 2 },
-  
-  // TP-Link Categories
-  { id: 'tp-link-mobile', name: '3G/4G/LTE & Mobile Wi‑Fi', brandId: 'tp-link', productCount: 2 },
-  { id: 'tp-link-access-points', name: 'Access Points', brandId: 'tp-link', productCount: 2 },
-  { id: 'tp-link-adapters', name: 'Adapters (USB/PCIe & NIC)', brandId: 'tp-link', productCount: 2 },
-  { id: 'tp-link-dsl', name: 'DSL / VDSL Modem Routers', brandId: 'tp-link', productCount: 2 },
-  { id: 'tp-link-mesh', name: 'Mesh Wi‑Fi (Deco)', brandId: 'tp-link', productCount: 2 },
-  { id: 'tp-link-routers-ac', name: 'Wi‑Fi Routers > Wireless AC', brandId: 'tp-link', productCount: 2 },
-  { id: 'tp-link-routers-n', name: 'Wi‑Fi Routers > Wireless N', brandId: 'tp-link', productCount: 2 },
-  { id: 'tp-link-routers-wifi6', name: 'Wi‑Fi Routers > Wi‑Fi 6', brandId: 'tp-link', productCount: 2 },
-  
-  // Tapo Categories
-  { id: 'tapo-accessories', name: 'Accessories & Power', brandId: 'tapo', productCount: 1 },
-  { id: 'tapo-cameras', name: 'Cameras', brandId: 'tapo', productCount: 2 },
-  { id: 'tapo-cameras-battery', name: 'Cameras > Battery / Wire‑Free', brandId: 'tapo', productCount: 2 },
-  { id: 'tapo-cameras-pantilt', name: 'Cameras > Indoor Pan/Tilt', brandId: 'tapo', productCount: 2 },
-  { id: 'tapo-cameras-wired', name: 'Cameras > Indoor/Outdoor (Wired)', brandId: 'tapo', productCount: 2 },
-  { id: 'tapo-cameras-outdoor', name: 'Cameras > Outdoor Fixed / Color Night', brandId: 'tapo', productCount: 2 },
-  { id: 'tapo-cameras-outdoor-pantilt', name: 'Cameras > Outdoor Pan/Tilt', brandId: 'tapo', productCount: 2 },
-  { id: 'tapo-doorbells', name: 'Doorbells', brandId: 'tapo', productCount: 2 }
+  {
+    id: 'electronics-computers',
+    name: 'Electronics & Computers',
+    brandId: 'apple',
+    productCount: 245
+  },
+  {
+    id: 'all-electronics',
+    name: 'All Electronics & Computers',
+    brandId: 'samsung',
+    productCount: 245
+  },
+  {
+    id: 'computers-accessories',
+    name: 'Computers & Accessories',
+    brandId: 'hp',
+    productCount: 156
+  },
+  {
+    id: 'all-computers',
+    name: 'All Computers & Accessories',
+    brandId: 'dell',
+    productCount: 156
+  },
+  {
+    id: 'computers',
+    name: 'Computers',
+    brandId: 'lenovo',
+    productCount: 89
+  },
+  {
+    id: 'all-computers-only',
+    name: 'All Computers',
+    brandId: 'hp',
+    productCount: 89
+  },
+  {
+    id: 'smartphones',
+    name: 'Smart Phones',
+    brandId: 'samsung',
+    productCount: 67
+  },
+  {
+    id: 'tablets',
+    name: 'Tablets',
+    brandId: 'apple',
+    productCount: 45
+  },
+  {
+    id: 'laptops',
+    name: 'Laptops',
+    brandId: 'dell',
+    productCount: 78
+  },
+  {
+    id: 'cameras',
+    name: 'Cameras',
+    brandId: 'canon',
+    productCount: 34
+  },
+  {
+    id: 'headphones',
+    name: 'Headphones & Audio',
+    brandId: 'apple',
+    productCount: 56
+  },
+  {
+    id: 'gaming',
+    name: 'Gaming Accessories',
+    brandId: 'samsung',
+    productCount: 23
+  }
 ];
 
 // Products

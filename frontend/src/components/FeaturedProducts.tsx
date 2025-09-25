@@ -41,7 +41,7 @@ const FeaturedProducts: React.FC = () => {
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <span key={i} className="text-yellow-400">
+        <span key={i} className="text-[#FFD600]">
           ★
         </span>
       );

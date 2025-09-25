@@ -162,12 +162,12 @@ const ShoppingCartPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#FAFAFA]">
         <Header />
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading cart...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002B5B] mx-auto mb-4"></div>
+            <p className="text-[#9E9E9E]">Loading cart...</p>
           </div>
         </div>
         <Footer />
@@ -185,7 +185,7 @@ const ShoppingCartPage: React.FC = () => {
             <p className="text-gray-600 mb-6">You need to be logged in to view your cart.</p>
             <Link
               to="/login"
-              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+              className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
             >
               Login
             </Link>
@@ -206,7 +206,7 @@ const ShoppingCartPage: React.FC = () => {
             <p className="text-gray-600 mb-6">Add some products to your cart to get started.</p>
             <Link
               to="/brands"
-              className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
+              className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
             >
               Browse Products
             </Link>
@@ -374,23 +374,23 @@ const ShoppingCartPage: React.FC = () => {
                   onChange={(e) => setShippingInfo({ ...shippingInfo, postcode: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
                 />
-                <button className="w-full bg-black text-white py-2 px-4 rounded-lg hover:bg-gray-800 transition-colors">
+                <button className="w-full bg-[#002B5B] text-white py-2 px-4 rounded-lg hover:bg-[#001a3d] transition-colors">
                   ESTIMATE
                 </button>
               </div>
 
               {/* Discount Coupon */}
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Discount Coupon Code</h3>
+              <div className="bg-[#FAFAFA] p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
+                <h3 className="text-lg font-semibold text-[#333333] mb-4">Discount Coupon Code</h3>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     placeholder="Coupon Code"
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
                   />
-                  <button className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors">
+                  <button className="bg-[#D32F2F] text-white px-6 py-2 rounded-lg hover:bg-[#b71c1c] transition-colors">
                     APPLY CODE
                   </button>
                 </div>
@@ -421,13 +421,13 @@ const ShoppingCartPage: React.FC = () => {
               <div className="space-y-3">
                 <Link
                   to="/checkout"
-                  className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center block"
+                  className="w-full bg-[#FFD600] text-[#333333] py-3 px-6 rounded-lg font-medium hover:bg-[#e6c100] transition-colors text-center block"
                 >
                   CHECKOUT
                 </Link>
-                <button 
+                <button
                   onClick={() => fetchCart()}
-                  className="w-full bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  className="w-full bg-[#9E9E9E]/20 text-[#333333] py-3 px-6 rounded-lg font-medium hover:bg-[#9E9E9E]/30 transition-colors"
                 >
                   UPDATE CART
                 </button>

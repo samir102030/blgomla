@@ -32,7 +32,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return Array.from({ length: 5 }, (_, i) => (
       <span
         key={i}
-        className={`text-lg ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+        className={`text-lg ${i < Math.floor(rating) ? 'text-[#FFD600]' : 'text-[#9E9E9E]'}`}
       >
         ★
       </span>
@@ -44,16 +44,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <div className="bg-gray-100 rounded-lg p-6 relative">
+    <div className="bg-[#FAFAFA] rounded-lg p-6 relative border border-[#9E9E9E]/20">
       {/* Badges */}
       <div className="absolute top-4 left-4 flex flex-col gap-1 z-10">
         {isNew && (
-          <span className="bg-green-600 text-white px-2 py-1 text-xs font-medium rounded">
+          <span className="bg-[#009688] text-white px-2 py-1 text-xs font-medium rounded">
             New
           </span>
         )}
         {isOnSale && (
-          <span className="bg-red-600 text-white px-2 py-1 text-xs font-medium rounded">
+          <span className="bg-[#D32F2F] text-white px-2 py-1 text-xs font-medium rounded">
             Sale
           </span>
         )}
@@ -62,10 +62,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Wishlist Button */}
       <button
         onClick={toggleWishlist}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-white hover:shadow-md transition-all duration-200"
+        className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-[#FFD600]/20 hover:shadow-md transition-all duration-200"
       >
         <svg
-          className={`w-6 h-6 ${isWishlisted ? 'text-red-500 fill-current' : 'text-gray-600'}`}
+          className={`w-6 h-6 ${isWishlisted ? 'text-[#D32F2F] fill-current' : 'text-[#9E9E9E]'}`}
           fill={isWishlisted ? 'currentColor' : 'none'}
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -92,11 +92,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Product Info */}
       <div className="text-center mb-4">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">{name}</h3>
+        <h3 className="text-xl font-semibold text-[#333333] mb-2">{name}</h3>
         <div className="flex justify-center mb-3">
           {renderStars(rating)}
         </div>
-        <p className="text-gray-600 text-sm leading-relaxed mb-4">
+        <p className="text-[#9E9E9E] text-sm leading-relaxed mb-4">
           {description}
         </p>
       </div>
@@ -104,9 +104,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Price */}
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-2">
-          <span className="text-2xl font-bold text-gray-900">{price} {currency}</span>
+          <span className="text-2xl font-bold text-[#333333]">{price} {currency}</span>
           {originalPrice && (
-            <span className="text-lg text-gray-500 line-through">{originalPrice} {currency}</span>
+            <span className="text-lg text-[#9E9E9E] line-through">{originalPrice} {currency}</span>
           )}
         </div>
       </div>
@@ -114,15 +114,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Action Buttons */}
       <div className="flex justify-center gap-3">
         {/* Quick View */}
-        <button className="p-3 border border-gray-300 rounded-full hover:bg-white hover:shadow-md transition-all duration-200">
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button className="p-3 border border-[#9E9E9E]/30 rounded-full hover:bg-[#FFD600] hover:text-[#333333] hover:border-[#FFD600] hover:shadow-md transition-all duration-200">
+          <svg className="w-5 h-5 text-[#9E9E9E] hover:text-[#333333]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </button>
 
         {/* Add to Cart */}
-        <button className="p-3 border border-gray-300 rounded-full hover:bg-white hover:shadow-md transition-all duration-200">
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button className="p-3 bg-[#FFD600] text-[#333333] rounded-full hover:bg-[#e6c100] hover:shadow-md transition-all duration-200 font-medium">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
           </svg>
         </button>

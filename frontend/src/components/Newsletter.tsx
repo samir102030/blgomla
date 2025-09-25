@@ -18,23 +18,23 @@ const Newsletter: React.FC = () => {
   };
 
   return (
-    <section className="relative py-16 bg-gradient-to-r from-gray-100 to-gray-200 overflow-hidden">
+    <section className="relative py-16 bg-gradient-to-r from-[#FAFAFA] to-[#9E9E9E]/10 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10 w-20 h-20 bg-blue-500 rounded-full"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 bg-purple-500 rounded-full"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-yellow-500 rounded-full"></div>
-        <div className="absolute bottom-32 right-1/3 w-8 h-8 bg-green-500 rounded-full"></div>
+        <div className="absolute top-10 left-10 w-20 h-20 bg-[#002B5B] rounded-full"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 bg-[#673AB7] rounded-full"></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#FFD600] rounded-full"></div>
+        <div className="absolute bottom-32 right-1/3 w-8 h-8 bg-[#009688] rounded-full"></div>
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#333333] mb-4">
               SUBSCRIBE OUR NEWSLETTER
             </h2>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className="text-lg text-[#9E9E9E] mb-8">
               GET UPDATE FOR NEWS, OFFERS
             </p>
 
@@ -47,22 +47,22 @@ const Newsletter: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email here"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300"
+                    className="w-full px-4 py-3 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent outline-none transition-all duration-300"
                     required
                   />
                 </div>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-300 font-medium flex items-center justify-center"
+                  className="px-6 py-3 bg-[#FFD600] text-[#333333] rounded-lg hover:bg-[#e6c100] transition-colors duration-300 font-medium flex items-center justify-center"
                 >
                   <span className="mr-2">✈️</span>
                   Subscribe
                 </button>
               </div>
-              
+
               {isSubmitted && (
-                <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
-                  <p className="text-green-700 text-sm">
+                <div className="mt-4 p-3 bg-[#009688]/10 border border-[#009688]/30 rounded-lg">
+                  <p className="text-[#009688] text-sm">
                     ✅ Thank you for subscribing to our newsletter!
                   </p>
                 </div>
@@ -70,7 +70,7 @@ const Newsletter: React.FC = () => {
             </form>
 
             {/* Additional Info */}
-            <p className="text-sm text-gray-500 mt-4">
+            <p className="text-sm text-[#9E9E9E] mt-4">
               Join Belgomla family
             </p>
           </div>

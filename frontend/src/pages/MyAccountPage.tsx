@@ -140,18 +140,18 @@ const MyAccountPage: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "delivered":
-        return "text-green-600 bg-green-100";
+        return "text-[#009688] bg-[#009688]/10";
       case "processing":
-        return "text-yellow-600 bg-yellow-100";
+        return "text-[#333333] bg-[#FFD600]/10";
       case "shipped":
-        return "text-blue-600 bg-blue-100";
+        return "text-[#002B5B] bg-[#002B5B]/10";
       default:
-        return "text-gray-600 bg-gray-100";
+        return "text-[#9E9E9E] bg-[#9E9E9E]/10";
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Header />
 
       {/* Hero Section */}
