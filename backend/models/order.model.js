@@ -32,6 +32,11 @@ const orderSchema = new mongoose.Schema(
       update_time: String,
       email_address: String,
     },
+    store: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Store",
+      required: true,
+    },
     itemsPrice: { type: Number, required: true },
     shippingPrice: { type: Number, default: 0 },
     taxPrice: { type: Number, default: 0 },
