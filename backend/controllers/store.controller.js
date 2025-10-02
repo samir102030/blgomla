@@ -1,8 +1,613 @@
-import { controllerWrapper } from "../utils/wrappers";
+// import { controllerWrapper } from "../utils/wrappers";
 import { paginateQuery } from "../utils/pagination.js";
 import Store from "../models/store.model.js";
 import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
+import User from "../models/user.model.js";
+import { v2 as cloudinary } from "cloudinary";
+import { controllerWrapper } from "../utils/wrappers.js";
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dlommecfr",
+  api_key: process.env.CLOUDINARY_API_KEY || "249541578961879",
+  api_secret:
+    process.env.CLOUDINARY_API_SECRET || "lwU-kzA0H1yGvZ1KqPrhILZlRa8",
+});
+
+// Helper function to upload file to Cloudinary
+const uploadToCloudinary = (buffer, folder = "vendor-documents") => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          resource_type: "auto",
+          folder: folder,
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result.secure_url);
+          }
+        }
+      )
+      .end(buffer);
+  });
+};
+
+// ============= Vendor Registration Controllers =============
+
+export const registerVendor = controllerWrapper(
+  "registerVendor",
+  async (req, res) => {
+    try {
+      // Debug: log incoming body keys and uploaded file fields (no sensitive data)
+      try {
+        console.log(
+          "registerVendor called with body keys:",
+          Object.keys(req.body || {}).filter((k) => k !== "password")
+        );
+        if (req.files)
+          console.log("registerVendor uploaded files:", Object.keys(req.files));
+      } catch (logErr) {
+        console.error("Error logging registerVendor request:", logErr);
+      }
+      const {
+        // Business Information
+        businessName,
+        businessType,
+        commercialRegistrationNumber,
+        taxNumber,
+
+        // Legal Entity Information
+        legalEntityType,
+        licenseNumber,
+        companyName,
+        companyAddress,
+        issueDate,
+        expiryDate,
+        allowedActivities,
+
+        // Contact Information
+        contactPersonName,
+        email,
+        phone,
+        alternativePhone,
+
+        // Address Information
+        address,
+        city,
+        governorate,
+        postalCode,
+
+        // Business Details
+        businessDescription,
+        productCategories,
+        expectedMonthlyVolume,
+
+        // Store Information
+        storeName,
+        storeDescription,
+
+        // Account Information
+        accountEmail,
+        password,
+
+        // Agreement
+        termsAccepted,
+        privacyPolicyAccepted,
+      } = req.body;
+
+      // Validation
+      if (
+        !businessName ||
+        !businessType ||
+        !legalEntityType ||
+        !licenseNumber ||
+        !companyName ||
+        !companyAddress ||
+        !issueDate ||
+        !expiryDate ||
+        !contactPersonName ||
+        !email ||
+        !phone ||
+        !address ||
+        !city ||
+        !governorate ||
+        !businessDescription ||
+        !storeName ||
+        !accountEmail ||
+        !password
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "All required fields must be filled",
+        });
+      }
+
+      if (!termsAccepted || !privacyPolicyAccepted) {
+        return res.status(400).json({
+          success: false,
+          message: "Terms and privacy policy must be accepted",
+        });
+      }
+
+      // Validate dates (avoid creating invalid Date objects)
+      const parsedIssueDate = issueDate ? new Date(issueDate) : null;
+      const parsedExpiryDate = expiryDate ? new Date(expiryDate) : null;
+      if (parsedIssueDate && isNaN(parsedIssueDate.getTime())) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid issueDate" });
+      }
+      if (parsedExpiryDate && isNaN(parsedExpiryDate.getTime())) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid expiryDate" });
+      }
+
+      // Check if user with account email already exists
+      const existingUser = await User.findOne({ email: accountEmail });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "User with this email already exists",
+        });
+      }
+
+      // Check if store with business name already exists
+      const existingStore = await Store.findOne({ businessName });
+      if (existingStore) {
+        return res.status(400).json({
+          success: false,
+          message: "Store with this business name already exists",
+        });
+      }
+
+      // Parse productCategories if it's a string
+      let parsedCategories = productCategories;
+      if (typeof productCategories === "string") {
+        try {
+          parsedCategories = JSON.parse(productCategories);
+        } catch (error) {
+          parsedCategories = [];
+        }
+      }
+
+      // Create user account for vendor
+      // NOTE: the User model has a pre-save hook that hashes the password.
+      // Do not hash here or the password will be double-hashed and login will fail.
+      const user = new User({
+        email: accountEmail,
+        password: password,
+        name: contactPersonName,
+        phoneNumber: phone,
+        role: "store",
+        isVerified: false,
+        active: false,
+      });
+
+      await user.save();
+
+      // Handle document uploads (if files are uploaded)
+      const documents = {};
+      if (req.files) {
+        try {
+          if (req.files.commercialRegistrationDocument) {
+            documents.commercialRegistration = await uploadToCloudinary(
+              req.files.commercialRegistrationDocument[0].buffer,
+              "vendor-documents/commercial-registration"
+            );
+          }
+          if (req.files.taxCardDocument) {
+            documents.taxCard = await uploadToCloudinary(
+              req.files.taxCardDocument[0].buffer,
+              "vendor-documents/tax-card"
+            );
+          }
+          if (req.files.nationalIdDocument) {
+            documents.nationalId = await uploadToCloudinary(
+              req.files.nationalIdDocument[0].buffer,
+              "vendor-documents/national-id"
+            );
+          }
+          if (req.files.bankStatementDocument) {
+            documents.bankStatement = await uploadToCloudinary(
+              req.files.bankStatementDocument[0].buffer,
+              "vendor-documents/bank-statement"
+            );
+          }
+          if (req.files.storeLogo) {
+            documents.storeLogo = await uploadToCloudinary(
+              req.files.storeLogo[0].buffer,
+              "vendor-logos"
+            );
+          }
+        } catch (uploadError) {
+          console.error("File upload error:", uploadError);
+          return res.status(500).json({
+            success: false,
+            message: "Error uploading files. Please try again.",
+            error: uploadError.message,
+          });
+        }
+      }
+
+      // Create store/vendor record
+      const store = new Store({
+        // Basic Store Information
+        name: storeName,
+        email: email,
+        phone: phone,
+        alternativePhone: alternativePhone,
+        description: storeDescription,
+        owner: user._id,
+        logo: documents.storeLogo,
+
+        // Business Information
+        businessName,
+        businessType,
+        businessDescription,
+        commercialRegistrationNumber,
+        taxNumber,
+
+        // Legal Entity Information
+        legalEntityType,
+        licenseNumber,
+        companyName,
+        companyAddress,
+        issueDate: new Date(issueDate),
+        expiryDate: new Date(expiryDate),
+        allowedActivities,
+
+        // Contact Information
+        contactPersonName,
+
+        // Address Information
+        address,
+        city,
+        governorate,
+        postalCode,
+
+        // Product and Business Details
+        productCategories: parsedCategories,
+        expectedMonthlyVolume: expectedMonthlyVolume
+          ? Number(expectedMonthlyVolume)
+          : 0,
+
+        // Documents
+        documents,
+
+        // Agreement Acceptance
+        termsAccepted: Boolean(termsAccepted),
+        privacyPolicyAccepted: Boolean(privacyPolicyAccepted),
+
+        // Store Status
+        status: "pending",
+        isActive: false,
+      });
+
+      try {
+        await store.save();
+      } catch (saveErr) {
+        console.error("Store save error:", saveErr);
+        // If mongoose validation error, return 400 with details
+        if (saveErr.name === "ValidationError") {
+          const errors = Object.keys(saveErr.errors || {}).reduce(
+            (acc, key) => {
+              acc[key] = saveErr.errors[key].message;
+              return acc;
+            },
+            {}
+          );
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: "Store validation failed",
+              errors,
+            });
+        }
+        // other errors
+        return res
+          .status(500)
+          .json({
+            success: false,
+            message: "Failed to save store",
+            error: saveErr.message,
+          });
+      }
+
+      // Return success response
+      res.status(201).json({
+        success: true,
+        message:
+          "Vendor registration submitted successfully. Your application will be reviewed.",
+        vendor: {
+          _id: store._id,
+          businessName: store.businessName,
+          storeName: store.name,
+          status: store.status,
+          email: store.email,
+          phone: store.phone,
+          createdAt: store.createdAt,
+        },
+        user: {
+          _id: user._id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+      });
+    } catch (error) {
+      console.error("Vendor registration error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error during registration",
+        error: error.message,
+      });
+    }
+  }
+);
+
+export const getAllVendors = controllerWrapper(
+  "getAllVendors",
+  async (req, res) => {
+    // Only admin can access this
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { page, limit, status } = req.query;
+    let query = Store.find().populate("owner", "name email phoneNumber");
+
+    if (status) {
+      query = query.where("status").equals(status);
+    }
+
+    const vendors = await paginateQuery(page, limit, query);
+    if (!vendors.success) return res.status(400).json(vendors);
+
+    res.status(200).json(vendors);
+  }
+);
+
+export const getVendorById = controllerWrapper(
+  "getVendorById",
+  async (req, res) => {
+    const { vendorId } = req.params;
+
+    const vendor = await Store.findById(vendorId).populate(
+      "owner",
+      "name email phoneNumber role"
+    );
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      vendor,
+    });
+  }
+);
+
+export const approveVendor = controllerWrapper(
+  "approveVendor",
+  async (req, res) => {
+    // Only admin can approve vendors
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { vendorId } = req.params;
+
+    const vendor = await Store.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    vendor.status = "approved";
+    vendor.isActive = true;
+    vendor.approvedAt = new Date();
+    await vendor.save();
+
+    // Also activate the user account
+    await User.findByIdAndUpdate(vendor.owner, {
+      isVerified: true,
+      active: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Vendor approved successfully",
+      vendor,
+    });
+  }
+);
+
+export const rejectVendor = controllerWrapper(
+  "rejectVendor",
+  async (req, res) => {
+    // Only admin can reject vendors
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { vendorId } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        message: "Rejection reason is required",
+      });
+    }
+
+    const vendor = await Store.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    vendor.status = "rejected";
+    vendor.rejectionReason = reason;
+    vendor.rejectedAt = new Date();
+    await vendor.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Vendor rejected successfully",
+      vendor,
+    });
+  }
+);
+
+export const suspendVendor = controllerWrapper(
+  "suspendVendor",
+  async (req, res) => {
+    // Only admin can suspend vendors
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { vendorId } = req.params;
+
+    const vendor = await Store.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    vendor.status = "suspended";
+    vendor.isActive = false;
+    await vendor.save();
+
+    // Also deactivate the user account
+    await User.findByIdAndUpdate(vendor.owner, { active: false });
+
+    res.status(200).json({
+      success: true,
+      message: "Vendor suspended successfully",
+      vendor,
+    });
+  }
+);
+
+export const updateVendorStatus = controllerWrapper(
+  "updateVendorStatus",
+  async (req, res) => {
+    // Only admin can update vendor status
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { vendorId } = req.params;
+    const { status } = req.body;
+
+    if (
+      !["pending", "approved", "rejected", "suspended", "active"].includes(
+        status
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status",
+      });
+    }
+
+    const vendor = await Store.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    vendor.status = status;
+    if (status === "approved" || status === "active") {
+      vendor.isActive = true;
+      if (!vendor.approvedAt) vendor.approvedAt = new Date();
+    } else {
+      vendor.isActive = false;
+    }
+
+    await vendor.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Vendor status updated to ${status}`,
+      vendor,
+    });
+  }
+);
+
+export const deleteVendor = controllerWrapper(
+  "deleteVendor",
+  async (req, res) => {
+    // Only admin can delete vendors
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { vendorId } = req.params;
+
+    const vendor = await Store.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    // Soft delete
+    vendor.deleted = true;
+    vendor.isActive = false;
+    await vendor.save();
+
+    // Also deactivate the user account
+    await User.findByIdAndUpdate(vendor.owner, {
+      active: false,
+      deleted: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Vendor deleted successfully",
+    });
+  }
+);
+
+// ============= Existing Store Controllers =============
 
 export const getAllStores = controllerWrapper(
   "getAllStores",

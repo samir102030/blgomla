@@ -1,26 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import { useUserStore } from '../stores/user.store';
-import { useProductStore } from '../stores/product.store';
-import type { Product } from '../types/product.type';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { useUserStore } from "../stores/user.store";
+import { useProductStore } from "../stores/product.store";
+import type { Product } from "../types/product.type";
 
 const WishlistPage: React.FC = () => {
-  const { user, getLovedProducts, toggleLoveProduct, loading: userLoading } = useUserStore();
+  const {
+    user,
+    getLovedProducts,
+    toggleLoveProduct,
+    loading: userLoading,
+  } = useUserStore();
   const { addToCart, loading: productLoading } = useProductStore();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [lovedProducts, setLovedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     getLovedProducts();
-  },[getLovedProducts])
+  }, [getLovedProducts]);
 
   useEffect(() => {
     if (user) {
       setLovedProducts(user.love);
     }
-  },[user])
+  }, [user]);
   // Fetch loved products from store
   // useEffect(() => {
   //   const fetchLovedProducts = async () => {
@@ -28,7 +33,7 @@ const WishlistPage: React.FC = () => {
   //       try {
   //         // Get the updated loved products from the store
   //         await getLovedProducts();
-          
+
   //         // Set the loved products directly from user.love
   //         if (user.love && user.love.length > 0) {
   //           setLovedProducts(user.love);
@@ -61,17 +66,17 @@ const WishlistPage: React.FC = () => {
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    setQuantities(prev => ({ ...prev, [id]: newQuantity }));
+    setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
   };
 
   const handleAddToCart = async (productId: string) => {
     try {
       const quantity = quantities[productId] || 1;
       await addToCart(productId, quantity);
-      alert('Item added to cart!');
+      alert("Item added to cart!");
     } catch (error) {
-      console.error('Error adding item to cart:', error);
-      alert('Failed to add item to cart');
+      console.error("Error adding item to cart:", error);
+      alert("Failed to add item to cart");
     }
   };
 
@@ -83,10 +88,10 @@ const WishlistPage: React.FC = () => {
           await addToCart(product._id, quantity);
         }
       }
-      alert('All items added to cart!');
+      alert("All items added to cart!");
     } catch (error) {
-      console.error('Error adding all items to cart:', error);
-      alert('Failed to add some items to cart');
+      console.error("Error adding all items to cart:", error);
+      alert("Failed to add some items to cart");
     }
   };
 
@@ -100,21 +105,21 @@ const WishlistPage: React.FC = () => {
       setLovedProducts([]);
       setQuantities({});
     } catch (error) {
-      console.error('Error clearing wishlist:', error);
+      console.error("Error clearing wishlist:", error);
     }
   };
 
   const handleToggleLove = async (productId: string) => {
     try {
       await toggleLoveProduct(productId);
-      setLovedProducts(prev => prev.filter(item => item._id !== productId));
-      setQuantities(prev => {
+      setLovedProducts((prev) => prev.filter((item) => item._id !== productId));
+      setQuantities((prev) => {
         const newQuantities = { ...prev };
         delete newQuantities[productId];
         return newQuantities;
       });
     } catch (error) {
-      console.error('Error toggling love:', error);
+      console.error("Error toggling love:", error);
     }
   };
 
@@ -123,12 +128,12 @@ const WishlistPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       {/* Hero Section */}
       <div className="relative bg-gray-100 py-16">
         <div className="absolute inset-0">
           <img
-            src="public/net3.jpeg"
+            src="net3.jpeg"
             alt="Camera"
             className="w-full h-full object-cover opacity-20"
           />
@@ -136,7 +141,9 @@ const WishlistPage: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Wishlist</h1>
           <nav className="text-sm text-gray-600">
-            <Link to="/" className="hover:text-gray-900">Home</Link>
+            <Link to="/" className="hover:text-gray-900">
+              Home
+            </Link>
             <span className="mx-2">/</span>
             <span>Wishlist</span>
           </nav>
@@ -144,7 +151,7 @@ const WishlistPage: React.FC = () => {
         {/* Camera Image positioned on the right */}
         <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
           <img
-            src="public/net3.jpeg"
+            src="net3.jpeg"
             alt="Professional Camera"
             className="h-full w-full object-contain"
           />
@@ -153,12 +160,15 @@ const WishlistPage: React.FC = () => {
 
       <main className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
           {!user ? (
             <div className="text-center py-16">
               <div className="text-gray-400 text-6xl mb-4">🔒</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Please Login</h2>
-              <p className="text-gray-600 mb-8">You need to be logged in to view your wishlist.</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Please Login
+              </h2>
+              <p className="text-gray-600 mb-8">
+                You need to be logged in to view your wishlist.
+              </p>
               <Link
                 to="/login"
                 className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
@@ -174,8 +184,12 @@ const WishlistPage: React.FC = () => {
           ) : lovedProducts.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-gray-400 text-6xl mb-4">💝</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Your Wishlist is Empty</h2>
-              <p className="text-gray-600 mb-8">Add some products to your wishlist to see them here.</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                Your Wishlist is Empty
+              </h2>
+              <p className="text-gray-600 mb-8">
+                Add some products to your wishlist to see them here.
+              </p>
               <Link
                 to="/brands"
                 className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
@@ -189,12 +203,24 @@ const WishlistPage: React.FC = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Image</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Product</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Price</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Quantity</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Add to Cart</th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">Remove</th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                        Image
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                        Product
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                        Price
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                        Quantity
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                        Add to Cart
+                      </th>
+                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                        Remove
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -202,21 +228,29 @@ const WishlistPage: React.FC = () => {
                       <tr key={item._id}>
                         <td className="px-6 py-4">
                           <img
-                            src={item.images?.[0]?.url || 'public/net3.jpeg'}
+                            src={item.images?.[0]?.url || "net3.jpeg"}
                             alt={item.name}
                             className="w-16 h-16 object-cover rounded-lg"
                           />
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                          <div className="text-xs text-gray-500">{item.description}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {item.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {item.description}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
                             {item.saleActive && item.salePrice ? (
                               <div>
-                                <span className="line-through text-gray-400">${item.price}</span>
-                                <span className="ml-2 font-bold text-red-600">${item.salePrice}</span>
+                                <span className="line-through text-gray-400">
+                                  ${item.price}
+                                </span>
+                                <span className="ml-2 font-bold text-red-600">
+                                  ${item.salePrice}
+                                </span>
                               </div>
                             ) : (
                               `$${item.price}`
@@ -226,7 +260,12 @@ const WishlistPage: React.FC = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center">
                             <button
-                              onClick={() => updateQuantity(item._id!, quantities[item._id!] - 1)}
+                              onClick={() =>
+                                updateQuantity(
+                                  item._id!,
+                                  quantities[item._id!] - 1
+                                )
+                              }
                               className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50"
                               disabled={isLoading}
                             >
@@ -236,7 +275,12 @@ const WishlistPage: React.FC = () => {
                               {quantities[item._id!] || 1}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item._id!, quantities[item._id!] + 1)}
+                              onClick={() =>
+                                updateQuantity(
+                                  item._id!,
+                                  quantities[item._id!] + 1
+                                )
+                              }
                               className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50"
                               disabled={isLoading}
                             >
@@ -259,8 +303,18 @@ const WishlistPage: React.FC = () => {
                             className="text-red-600 hover:text-red-800 disabled:opacity-50"
                             disabled={isLoading}
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
                             </svg>
                           </button>
                         </td>
@@ -269,7 +323,7 @@ const WishlistPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
                 <Link
@@ -301,20 +355,29 @@ const WishlistPage: React.FC = () => {
           {/* Related Products or Recommendations */}
           {user && lovedProducts.length > 0 && (
             <div className="mt-16">
-              <h2 className="text-2xl font-bold text-gray-900 mb-8">You Might Also Like</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">
+                You Might Also Like
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow">
+                  <div
+                    key={i}
+                    className="bg-white rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition-shadow"
+                  >
                     <div className="aspect-square bg-gray-100">
                       <img
-                        src={`/public/p1.jpeg?random=${i}`}
+                        src={`/p1.jpeg?random=${i}`}
                         alt={`Recommended Product ${i}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
                     <div className="p-4">
-                      <h3 className="font-medium text-gray-900 mb-2">Camera Model {i}</h3>
-                      <p className="text-lg font-bold text-gray-900">${(199 + i * 50).toFixed(2)}</p>
+                      <h3 className="font-medium text-gray-900 mb-2">
+                        Camera Model {i}
+                      </h3>
+                      <p className="text-lg font-bold text-gray-900">
+                        ${(199 + i * 50).toFixed(2)}
+                      </p>
                       <button className="w-full mt-3 bg-black text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
                         Add to Wishlist
                       </button>
@@ -326,7 +389,7 @@ const WishlistPage: React.FC = () => {
           )}
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

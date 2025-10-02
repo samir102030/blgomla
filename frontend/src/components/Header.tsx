@@ -6,21 +6,23 @@ const Header: React.FC = () => {
   const user = useUserStore((state) => state.user);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const role = user?.role;
+  const showBecomeVendor = !role || role === "customer";
+  const showAdminDashboard = role === "admin" || role === "store";
+
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   return (
     <header className="sticky top-0 z-50 bg-[#FFD600] shadow-lg">
-
-            <div className="flex items-center space-x-4">
-              <span className="text-[#333333] text-sm">English</span>
-              <div className="flex items-center space-x-2">
-                <span className="text-[#333333] text-sm">Call us:</span>
-                <span className="text-[#333333] font-medium">📞 (+20)1009353639</span>
-              </div>
-            </div>
-
+      <div className="flex items-center space-x-4">
+        <span className="text-[#333333] text-sm">English</span>
+        <div className="flex items-center space-x-2">
+          <span className="text-[#333333] text-sm">Call us:</span>
+          <span className="text-[#333333] font-medium">📞 (+20)1009353639</span>
+        </div>
+      </div>
 
       {/* Main header */}
       <div className="py-4 bg-[#FFD600]">
@@ -89,7 +91,12 @@ const Header: React.FC = () => {
                 <span className="text-xl mb-1">🛒</span>
                 <span className="text-xs hidden sm:block">Cart</span>
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {user?.cart.reduce((acc, item) => acc + item.quantity, 0)}
+                  {user?.cart?.length
+                    ? user.cart.reduce(
+                        (acc, item) => acc + (item.quantity || 0),
+                        0
+                      )
+                    : 0}
                 </span>
               </Link>
             </div>
@@ -178,22 +185,27 @@ const Header: React.FC = () => {
                 Contact
               </Link>
             </li>
-            <li>
-              <Link
-                to="/vendor-registration"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors"
-              >
-                🏪 Become a Vendor
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/dashboard"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors bg-[#673AB7]"
-              >
-                🏪 Admin Dashboard
-              </Link>
-            </li>
+            {showBecomeVendor && (
+              <li>
+                <Link
+                  to="/vendor-registration"
+                  className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors"
+                >
+                  🏪 Become a Vendor
+                </Link>
+              </li>
+            )}
+
+            {showAdminDashboard && (
+              <li>
+                <Link
+                  to="/dashboard"
+                  className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors bg-[#673AB7]"
+                >
+                  🏪 Admin Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
         </div>
       </nav>

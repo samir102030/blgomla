@@ -48,7 +48,9 @@ const MyAccountPage: React.FC = () => {
   };
 
   // Handle form change
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
     let fieldValue: any = value;
     if (type === "checkbox" && "checked" in e.target) {
@@ -81,7 +83,8 @@ const MyAccountPage: React.FC = () => {
 
   // Delete address
   const handleDeleteAddress = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this address?")) return;
+    if (!window.confirm("Are you sure you want to delete this address?"))
+      return;
     setAddressLoading(true);
     await addressStore.deleteAddress(id);
     if (user?._id) await addressStore.fetchUserAddresses(user._id);
@@ -158,7 +161,7 @@ const MyAccountPage: React.FC = () => {
       <div className="relative bg-gray-100 py-16">
         <div className="absolute inset-0">
           <img
-            src="public/net1.jpeg"
+            src="net1.jpeg"
             alt="Camera"
             className="w-full h-full object-cover opacity-20"
           />
@@ -176,7 +179,7 @@ const MyAccountPage: React.FC = () => {
         {/* Camera Image positioned on the right */}
         <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
           <img
-            src="public/net1.jpeg"
+            src="net1.jpeg"
             alt="Professional Camera"
             className="h-full w-full object-contain"
           />
@@ -354,62 +357,92 @@ const MyAccountPage: React.FC = () => {
                               <td className="px-6 py-4">
                                 <button
                                   className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                  onClick={() => handleViewOrderDetails(order._id)}
+                                  onClick={() =>
+                                    handleViewOrderDetails(order._id)
+                                  }
                                 >
                                   View Details
                                 </button>
                               </td>
-                {/* Order Details Modal */}
-                {showOrderModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
-                      <button
-                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-                        onClick={() => setShowOrderModal(false)}
-                        aria-label="Close"
-                      >
-                        &times;
-                      </button>
-                      <h2 className="text-xl font-bold mb-4">Order Details</h2>
-                      {orderDetailsLoading ? (
-                        <div>Loading...</div>
-                      ) : orderStore.order ? (
-                        <div>
-                          <div className="mb-4">
-                            <span className="font-semibold">Order ID:</span> {orderStore.order._id}
-                          </div>
-                          <div className="mb-4">
-                            <span className="font-semibold">Status:</span> {orderStore.order.status}
-                          </div>
-                          <div className="mb-4">
-                            <span className="font-semibold">Total:</span> ${orderStore.order.totalPrice}
-                          </div>
-                          <div className="mb-4">
-                            <span className="font-semibold">Created At:</span> {orderStore.order.createdAt?.slice(0, 10)}
-                          </div>
-                          <div className="mb-4">
-                            <span className="font-semibold">Items:</span>
-                            <ul className="list-disc ml-6">
-                              {orderStore.order.orderItems.map((item, idx) => (
-                                <li key={idx}>
-                                  Product: {item.product} | Quantity: {item.quantity}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div className="mb-4">
-                            <span className="font-semibold">Shipping Address:</span> {orderStore.order.shippingAddress}
-                          </div>
-                          <div className="mb-4">
-                            <span className="font-semibold">Payment Method:</span> {orderStore.order.paymentMethod}
-                          </div>
-                        </div>
-                      ) : (
-                        <div>Order not found.</div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                              {/* Order Details Modal */}
+                              {showOrderModal && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                                  <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-2xl relative">
+                                    <button
+                                      className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+                                      onClick={() => setShowOrderModal(false)}
+                                      aria-label="Close"
+                                    >
+                                      &times;
+                                    </button>
+                                    <h2 className="text-xl font-bold mb-4">
+                                      Order Details
+                                    </h2>
+                                    {orderDetailsLoading ? (
+                                      <div>Loading...</div>
+                                    ) : orderStore.order ? (
+                                      <div>
+                                        <div className="mb-4">
+                                          <span className="font-semibold">
+                                            Order ID:
+                                          </span>{" "}
+                                          {orderStore.order._id}
+                                        </div>
+                                        <div className="mb-4">
+                                          <span className="font-semibold">
+                                            Status:
+                                          </span>{" "}
+                                          {orderStore.order.status}
+                                        </div>
+                                        <div className="mb-4">
+                                          <span className="font-semibold">
+                                            Total:
+                                          </span>{" "}
+                                          ${orderStore.order.totalPrice}
+                                        </div>
+                                        <div className="mb-4">
+                                          <span className="font-semibold">
+                                            Created At:
+                                          </span>{" "}
+                                          {orderStore.order.createdAt?.slice(
+                                            0,
+                                            10
+                                          )}
+                                        </div>
+                                        <div className="mb-4">
+                                          <span className="font-semibold">
+                                            Items:
+                                          </span>
+                                          <ul className="list-disc ml-6">
+                                            {orderStore.order.orderItems.map(
+                                              (item, idx) => (
+                                                <li key={idx}>
+                                                  Product: {item.product} |
+                                                  Quantity: {item.quantity}
+                                                </li>
+                                              )
+                                            )}
+                                          </ul>
+                                        </div>
+                                        <div className="mb-4">
+                                          <span className="font-semibold">
+                                            Shipping Address:
+                                          </span>{" "}
+                                          {orderStore.order.shippingAddress}
+                                        </div>
+                                        <div className="mb-4">
+                                          <span className="font-semibold">
+                                            Payment Method:
+                                          </span>{" "}
+                                          {orderStore.order.paymentMethod}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div>Order not found.</div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </tr>
                           ))}
                         </tbody>
@@ -475,129 +508,154 @@ const MyAccountPage: React.FC = () => {
                             >
                               Delete
                             </button>
-                {/* Address Modal */}
-                {showAddressModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
-                      <button
-                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-                        onClick={() => setShowAddressModal(false)}
-                        aria-label="Close"
-                      >
-                        &times;
-                      </button>
-                      <h2 className="text-xl font-bold mb-4">
-                        {editingAddress ? "Edit Address" : "Add New Address"}
-                      </h2>
-                      <form onSubmit={handleAddressSubmit} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Name</label>
-                          <input
-                            type="text"
-                            name="name"
-                            value={addressForm.name}
-                            onChange={handleAddressChange}
-                            className="w-full border px-3 py-2 rounded"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Phone</label>
-                          <input
-                            type="text"
-                            name="phone"
-                            value={addressForm.phone}
-                            onChange={handleAddressChange}
-                            className="w-full border px-3 py-2 rounded"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Address</label>
-                          <input
-                            type="text"
-                            name="address"
-                            value={addressForm.address}
-                            onChange={handleAddressChange}
-                            className="w-full border px-3 py-2 rounded"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">City</label>
-                          <input
-                            type="text"
-                            name="city"
-                            value={addressForm.city}
-                            onChange={handleAddressChange}
-                            className="w-full border px-3 py-2 rounded"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">State</label>
-                          <input
-                            type="text"
-                            name="state"
-                            value={addressForm.state}
-                            onChange={handleAddressChange}
-                            className="w-full border px-3 py-2 rounded"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Zip Code</label>
-                          <input
-                            type="text"
-                            name="zipCode"
-                            value={addressForm.zipCode}
-                            onChange={handleAddressChange}
-                            className="w-full border px-3 py-2 rounded"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Country</label>
-                          <input
-                            type="text"
-                            name="country"
-                            value={addressForm.country}
-                            onChange={handleAddressChange}
-                            className="w-full border px-3 py-2 rounded"
-                          />
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <label className="flex items-center">
-                            <input
-                              type="checkbox"
-                              name="isDefault"
-                              checked={!!addressForm.isDefault}
-                              onChange={handleAddressChange}
-                              className="mr-2"
-                            />
-                            Default
-                          </label>
-                          <label className="flex items-center">
-                            <span className="mr-2">Type:</span>
-                            <select
-                              name="type"
-                              value={addressForm.type}
-                              onChange={handleAddressChange}
-                              className="border rounded px-2 py-1"
-                            >
-                              <option value="Shipping">Shipping</option>
-                              <option value="Billing">Billing</option>
-                            </select>
-                          </label>
-                        </div>
-                        <button
-                          type="submit"
-                          className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
-                          disabled={addressLoading}
-                        >
-                          {editingAddress ? "Update Address" : "Add Address"}
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                )}
+                            {/* Address Modal */}
+                            {showAddressModal && (
+                              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                                <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative">
+                                  <button
+                                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+                                    onClick={() => setShowAddressModal(false)}
+                                    aria-label="Close"
+                                  >
+                                    &times;
+                                  </button>
+                                  <h2 className="text-xl font-bold mb-4">
+                                    {editingAddress
+                                      ? "Edit Address"
+                                      : "Add New Address"}
+                                  </h2>
+                                  <form
+                                    onSubmit={handleAddressSubmit}
+                                    className="space-y-4"
+                                  >
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        Name
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="name"
+                                        value={addressForm.name}
+                                        onChange={handleAddressChange}
+                                        className="w-full border px-3 py-2 rounded"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        Phone
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="phone"
+                                        value={addressForm.phone}
+                                        onChange={handleAddressChange}
+                                        className="w-full border px-3 py-2 rounded"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        Address
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="address"
+                                        value={addressForm.address}
+                                        onChange={handleAddressChange}
+                                        className="w-full border px-3 py-2 rounded"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        City
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="city"
+                                        value={addressForm.city}
+                                        onChange={handleAddressChange}
+                                        className="w-full border px-3 py-2 rounded"
+                                        required
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        State
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="state"
+                                        value={addressForm.state}
+                                        onChange={handleAddressChange}
+                                        className="w-full border px-3 py-2 rounded"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        Zip Code
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="zipCode"
+                                        value={addressForm.zipCode}
+                                        onChange={handleAddressChange}
+                                        className="w-full border px-3 py-2 rounded"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-sm font-medium mb-1">
+                                        Country
+                                      </label>
+                                      <input
+                                        type="text"
+                                        name="country"
+                                        value={addressForm.country}
+                                        onChange={handleAddressChange}
+                                        className="w-full border px-3 py-2 rounded"
+                                      />
+                                    </div>
+                                    <div className="flex items-center space-x-4">
+                                      <label className="flex items-center">
+                                        <input
+                                          type="checkbox"
+                                          name="isDefault"
+                                          checked={!!addressForm.isDefault}
+                                          onChange={handleAddressChange}
+                                          className="mr-2"
+                                        />
+                                        Default
+                                      </label>
+                                      <label className="flex items-center">
+                                        <span className="mr-2">Type:</span>
+                                        <select
+                                          name="type"
+                                          value={addressForm.type}
+                                          onChange={handleAddressChange}
+                                          className="border rounded px-2 py-1"
+                                        >
+                                          <option value="Shipping">
+                                            Shipping
+                                          </option>
+                                          <option value="Billing">
+                                            Billing
+                                          </option>
+                                        </select>
+                                      </label>
+                                    </div>
+                                    <button
+                                      type="submit"
+                                      className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800"
+                                      disabled={addressLoading}
+                                    >
+                                      {editingAddress
+                                        ? "Update Address"
+                                        : "Add Address"}
+                                    </button>
+                                  </form>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}

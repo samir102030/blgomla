@@ -1,6 +1,35 @@
 import express from "express";
+import multer from "multer";
 
 const router = express.Router();
+
+// Configure multer for document uploads
+const storage = multer.memoryStorage();
+const documentUpload = multer({
+  storage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for documents
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept documents and images
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error("Only PDF, JPG, JPEG, PNG, and GIF files are allowed"),
+        false
+      );
+    }
+  },
+});
 
 import {
   protectRoute,
@@ -22,8 +51,37 @@ import {
   restoreStore,
   safeDeleteStore,
   updateStore,
+  registerVendor,
+  approveVendor,
+  rejectVendor,
+  suspendVendor,
+  updateVendorStatus,
+  getAllVendors,
+  getVendorById,
+  deleteVendor,
 } from "../controllers/store.controller.js";
 
+// Vendor Registration Routes
+router.post(
+  "/register",
+  documentUpload.fields([
+    { name: "commercialRegistrationDocument", maxCount: 1 },
+    { name: "taxCardDocument", maxCount: 1 },
+    { name: "nationalIdDocument", maxCount: 1 },
+    { name: "bankStatementDocument", maxCount: 1 },
+    { name: "storeLogo", maxCount: 1 },
+  ]),
+  registerVendor
+); // Register new vendor
+router.get("/vendors", protectRoute, getAllVendors); // Get all vendors (admin only)
+router.get("/vendors/:vendorId", protectRoute, getVendorById); // Get vendor by ID
+router.put("/vendors/:vendorId/approve", protectRoute, approveVendor); // Approve vendor
+router.put("/vendors/:vendorId/reject", protectRoute, rejectVendor); // Reject vendor
+router.put("/vendors/:vendorId/suspend", protectRoute, suspendVendor); // Suspend vendor
+router.put("/vendors/:vendorId/status", protectRoute, updateVendorStatus); // Update vendor status
+router.delete("/vendors/:vendorId", protectRoute, deleteVendor); // Delete vendor
+
+// Store Routes
 router.get("/", getAllStores); // Get all stores
 router.get("/:storeId", getStoreById); // Get store by ID
 // todo not implemented yet

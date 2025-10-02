@@ -1,15 +1,18 @@
-import React from 'react';
-import ProductCard from '../components/ProductCard';
-import { products } from '../data/productsData';
-import Header from '../components/Header';
-import HeroSlider from '../components/HeroSlider';
-import FeaturedProducts from '../components/FeaturedProducts';
-import Newsletter from '../components/Newsletter';
-import Services from '../components/Services';
-import Footer from '../components/Footer';
-import BrandLogos from '../components/BrandLogos';
+import React from "react";
+import ProductCard from "../components/ProductCard";
+import { products } from "../data/productsData";
+import Header from "../components/Header";
+import HeroSlider from "../components/HeroSlider";
+import FeaturedProducts from "../components/FeaturedProducts";
+import Newsletter from "../components/Newsletter";
+import Services from "../components/Services";
+import Footer from "../components/Footer";
+import BrandLogos from "../components/BrandLogos";
+import { useUserStore } from "../stores";
 
 const HomePage: React.FC = () => {
+  const user = useUserStore((state) => state.user);
+  console.log("Current User:", user);
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <Header />
@@ -36,7 +39,7 @@ const HomePage: React.FC = () => {
               </div>
               <div className="flex-1 flex justify-end">
                 <img
-                  src="public/p1.jpeg"
+                  src="p1.jpeg"
                   alt="Electronics Sale"
                   className="max-w-md h-64 object-contain"
                 />
@@ -49,14 +52,17 @@ const HomePage: React.FC = () => {
         <section className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             {[
-              { name: 'Chromecast', image: 'public/p1.jpeg' },
-              { name: 'Set Top Box', image: 'public/p2.jpeg' },
-              { name: 'Gaming Console', image: 'public/p3.jpeg' },
-              { name: 'Sound System', image: 'public/p4.jpeg' },
-              { name: 'Apple TV', image: 'public/p5.jpeg' },
-              { name: 'Smart TV', image: 'public/p1.jpeg' }
+              { name: "Chromecast", image: "p1.jpeg" },
+              { name: "Set Top Box", image: "p2.jpeg" },
+              { name: "Gaming Console", image: "p3.jpeg" },
+              { name: "Sound System", image: "p4.jpeg" },
+              { name: "Apple TV", image: "p5.jpeg" },
+              { name: "Smart TV", image: "p1.jpeg" },
             ].map((category, index) => (
-              <div key={index} className="bg-white rounded-full p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+              <div
+                key={index}
+                className="bg-white rounded-full p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              >
                 <div className="w-20 h-20 mx-auto mb-2 bg-gray-100 rounded-full flex items-center justify-center">
                   <img
                     src={category.image}
@@ -64,7 +70,9 @@ const HomePage: React.FC = () => {
                     className="w-12 h-12 object-contain"
                   />
                 </div>
-                <p className="text-center text-sm font-medium text-gray-700">{category.name}</p>
+                <p className="text-center text-sm font-medium text-gray-700">
+                  {category.name}
+                </p>
               </div>
             ))}
           </div>
@@ -72,20 +80,22 @@ const HomePage: React.FC = () => {
 
         {/* All Products Section */}
         <section className="max-w-7xl mx-auto px-4 py-12">
-          <h2 className="text-3xl font-bold mb-8 text-gray-900">All Products</h2>
+          <h2 className="text-3xl font-bold mb-8 text-gray-900">
+            All Products
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Left images column */}
             <div className="flex flex-col gap-6 md:col-span-1">
               <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-blue-100 group cursor-pointer">
                 <img
-                  src="public/p1.jpeg"
+                  src="p1.jpeg"
                   alt="Promo Left 1"
                   className="w-full h-56 object-cover transform group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
               <div className="rounded-lg overflow-hidden shadow hover:shadow-xl transition-shadow duration-300 bg-purple-100 group cursor-pointer">
                 <img
-                  src="public/p2.jpeg"
+                  src="p2.jpeg"
                   alt="Promo Left 2"
                   className="w-full h-56 object-cover transform group-hover:scale-105 transition-transform duration-300"
                 />
