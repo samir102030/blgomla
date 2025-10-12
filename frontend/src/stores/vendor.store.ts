@@ -143,7 +143,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.get<{
             success: boolean;
             vendors: Vendor[];
-          }>("/vendors", { params });
+          }>("/stores/vendors", { params });
           set({ vendors: response.data.vendors, loading: false });
         } catch (error: any) {
           set({
@@ -160,7 +160,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.get<{
             success: boolean;
             vendor: Vendor;
-          }>(`/vendors/${id}`);
+          }>(`/stores/vendors/${id}`);
           set({ vendor: response.data.vendor, loading: false });
         } catch (error: any) {
           set({
@@ -177,7 +177,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.put<{
             success: boolean;
             vendor: Vendor;
-          }>(`/vendors/${id}/approve`);
+          }>(`/stores/vendors/${id}/approve`);
 
           const { vendors } = get();
           const updatedVendors = vendors.map((v) =>
@@ -204,7 +204,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.put<{
             success: boolean;
             vendor: Vendor;
-          }>(`/vendors/${id}/reject`, { reason });
+          }>(`/stores/vendors/${id}/reject`, { reason });
 
           const { vendors } = get();
           const updatedVendors = vendors.map((v) =>
@@ -231,7 +231,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.put<{
             success: boolean;
             vendor: Vendor;
-          }>(`/vendors/${id}/suspend`);
+          }>(`/stores/vendors/${id}/suspend`);
 
           const { vendors } = get();
           const updatedVendors = vendors.map((v) =>
@@ -258,7 +258,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.put<{
             success: boolean;
             vendor: Vendor;
-          }>(`/vendors/${id}/activate`);
+          }>(`/stores/vendors/${id}/activate`);
 
           const { vendors } = get();
           const updatedVendors = vendors.map((v) =>
@@ -285,7 +285,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.put<{
             success: boolean;
             vendor: Vendor;
-          }>(`/vendors/${id}/status`, { status });
+          }>(`/stores/vendors/${id}/status`, { status });
 
           const { vendors } = get();
           const updatedVendors = vendors.map((v) =>
@@ -336,7 +336,7 @@ export const useVendorStore = create<VendorStore>()(
       deleteVendor: async (id: string) => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.delete(`/vendors/${id}`);
+          await axiosInstance.delete(`/stores/vendors/${id}`);
 
           const { vendors } = get();
           const updatedVendors = vendors.filter((v) => v._id !== id);
@@ -357,7 +357,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.post<{
             success: boolean;
             store: VendorStoreType;
-          }>("/vendors/store", data);
+          }>("/stores", data);
           set({ vendorStore: response.data.store, loading: false });
           return response.data.store;
         } catch (error: any) {
@@ -373,9 +373,9 @@ export const useVendorStore = create<VendorStore>()(
       fetchVendorStore: async (vendorId?: string) => {
         set({ loading: true, error: undefined });
         try {
-          const url = vendorId
-            ? `/vendors/${vendorId}/store`
-            : "/vendors/store";
+          // const url = vendorId ? `/stores/${vendorId}` : "/stores/store";
+          console.log("Fetching vendor store");
+          const url = "/stores/store";
           const response = await axiosInstance.get<{
             success: boolean;
             store: VendorStoreType;
@@ -396,7 +396,7 @@ export const useVendorStore = create<VendorStore>()(
           const response = await axiosInstance.put<{
             success: boolean;
             store: VendorStoreType;
-          }>(`/vendors/store/${id}`, data);
+          }>(`/stores/${id}`, data);
           set({ vendorStore: response.data.store, loading: false });
         } catch (error: any) {
           set({
@@ -410,7 +410,7 @@ export const useVendorStore = create<VendorStore>()(
       deleteStore: async (id: string) => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.delete(`/vendors/store/${id}`);
+          await axiosInstance.delete(`/stores/${id}`);
           set({ vendorStore: undefined, loading: false });
         } catch (error: any) {
           set({
@@ -425,8 +425,8 @@ export const useVendorStore = create<VendorStore>()(
         set({ loading: true, error: undefined });
         try {
           const url = vendorId
-            ? `/vendors/${vendorId}/analytics`
-            : "/vendors/analytics";
+            ? `/stores/${vendorId}/analytics`
+            : "/stores/analytics";
           const response = await axiosInstance.get<{
             success: boolean;
             analytics: VendorAnalytics;
@@ -445,13 +445,13 @@ export const useVendorStore = create<VendorStore>()(
         set({ loading: true, error: undefined });
         try {
           const url = vendorId
-            ? `/vendors/${vendorId}/dashboard-stats`
-            : "/vendors/dashboard-stats";
+            ? `/stores/${vendorId}/statistics`
+            : "/stores/statistics";
           const response = await axiosInstance.get<{
             success: boolean;
-            stats: VendorDashboardStats;
+            statistics: VendorDashboardStats;
           }>(url);
-          set({ dashboardStats: response.data.stats, loading: false });
+          set({ dashboardStats: response.data.statistics, loading: false });
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,

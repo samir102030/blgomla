@@ -301,22 +301,18 @@ export const registerVendor = controllerWrapper(
             },
             {}
           );
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message: "Store validation failed",
-              errors,
-            });
+          return res.status(400).json({
+            success: false,
+            message: "Store validation failed",
+            errors,
+          });
         }
         // other errors
-        return res
-          .status(500)
-          .json({
-            success: false,
-            message: "Failed to save store",
-            error: saveErr.message,
-          });
+        return res.status(500).json({
+          success: false,
+          message: "Failed to save store",
+          error: saveErr.message,
+        });
       }
 
       // Return success response
@@ -375,6 +371,21 @@ export const getAllVendors = controllerWrapper(
     res.status(200).json(vendors);
   }
 );
+
+// export const getStoreByUserId = controllerWrapper(
+//   "getStoreByUserId",
+//   async (req, res) => {
+//     // If userId param provided, return that user's store. Otherwise return current user's store.
+//     const userIdParam = req.params?.userId;
+//     const ownerId = userIdParam || req.user?._id;
+//     if (!ownerId)
+//       return res.status(400).json({ message: "User ID is required" });
+//     const store = await Store.findOne({ owner: ownerId }).populate("owner");
+//     if (!store) return res.status(404).json({ message: "Store not found" });
+
+//     res.status(200).json(store);
+//   }
+// );
 
 export const getVendorById = controllerWrapper(
   "getVendorById",
@@ -621,11 +632,31 @@ export const getAllStores = controllerWrapper(
 );
 export const getStoreByUserId = controllerWrapper(
   "getStoreByUserId",
-  (req, res) => {
-    const { userId } = req.params;
-    const store = Store.findOne({ owner: userId });
-    if (!store) return res.status(404).json({ message: "Store not found" });
-    res.status(200).json(store);
+  async (req, res) => {
+    try {
+      const userId = req.user && req.user._id;
+      console.log("getStoreByUserId called for userId:", userId);
+      if (!userId)
+        return res
+          .status(400)
+          .json({ success: false, message: "User id is required" });
+
+      const store = await Store.findOne({ owner: userId });
+      console.log("found store:", !!store);
+      if (store) console.log("store owner:", store.owner);
+      if (!store)
+        return res
+          .status(404)
+          .json({ success: false, message: "Store not found" });
+
+      // Return a plain JSON-safe object
+      res.status(200).json({ success: true, store: store.toObject() });
+    } catch (err) {
+      console.error("Error in getStoreByUserId:", err);
+      res
+        .status(500)
+        .json({ success: false, message: "Server error", error: err.message });
+    }
   }
 );
 export const getStoreById = controllerWrapper(

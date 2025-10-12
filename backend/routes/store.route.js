@@ -59,9 +59,21 @@ import {
   getAllVendors,
   getVendorById,
   deleteVendor,
+  getStoreByUserId,
 } from "../controllers/store.controller.js";
 
 // Vendor Registration Routes
+// Get current user's store (store owner or admin)
+router.get("/store", protectRoute, adminOrStoreRoute, getStoreByUserId);
+
+router.get(
+  "/:storeId/statistics",
+  protectRoute,
+  adminOrStoreRoute,
+  getStoreStatistics
+);
+
+router.get("/statistics", protectRoute, adminOrStoreRoute, getStoreStatistics);
 router.post(
   "/register",
   documentUpload.fields([
@@ -120,13 +132,6 @@ router.get(
   protectRoute,
   adminOrStoreRoute,
   getStoreDashboard
-);
-
-router.get(
-  "/:storeId/statistics",
-  protectRoute,
-  adminOrStoreRoute,
-  getStoreStatistics
 );
 
 router.get(
