@@ -6,6 +6,8 @@ import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
+import PleaseLogin from "../components/PleaseLogin";
+import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
   _id?: string;
@@ -24,7 +26,7 @@ interface CartItemWithProduct {
 const ShoppingCartPage: React.FC = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
 
   const user = useUserStore((state) => state.user);
@@ -76,8 +78,8 @@ const ShoppingCartPage: React.FC = () => {
       }
     };
 
-    loadCart();
-  }, [fetchCart]); // Removed user?.cart from dependencies
+    if (user?.cart) loadCart();
+  }, [fetchCart, user?.cart]); // Removed user?.cart from dependencies
 
   // Handle cart updates when user cart changes (but only after initial load)
   useEffect(() => {
@@ -164,45 +166,16 @@ const ShoppingCartPage: React.FC = () => {
   const shippingCost = 0.0;
   const grandTotal = subtotal + shippingCost;
 
-  if (loading) {
+  if (loading)
     return (
       <div className="min-h-screen bg-[#FAFAFA]">
         <Header />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002B5B] mx-auto mb-4"></div>
-            <p className="text-[#9E9E9E]">Loading cart...</p>
-          </div>
-        </div>
+        <LoadingComp />
         <Footer />
       </div>
     );
-  }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Please Login
-            </h2>
-            <p className="text-gray-600 mb-6">
-              You need to be logged in to view your cart.
-            </p>
-            <Link
-              to="/login"
-              className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
-            >
-              Login
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  if (!user) return <PleaseLogin />;
 
   if (cartItems.length === 0) {
     return (

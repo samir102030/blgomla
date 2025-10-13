@@ -315,7 +315,7 @@ export const useUserStore = create<UserStore>()(
             success: boolean;
             user: User;
           }>(`/users/loveProduct/${productId}`);
-          set({  loading: false });
+          set({ loading: false });
           return true;
         } catch (error: any) {
           set({

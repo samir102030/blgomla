@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
+import PleaseLogin from "../components/PleaseLogin";
 
 const initialAddressState = {
   name: "",
@@ -25,7 +26,7 @@ const MyAccountPage: React.FC = () => {
   const handleViewOrderDetails = async (orderId: string) => {
     setShowOrderModal(true);
     setOrderDetailsLoading(true);
-    await orderStore.fetchOrderById(orderId);
+    await fetchOrderById(orderId);
     setOrderDetailsLoading(false);
   };
   // Modal state for add/edit address
@@ -68,14 +69,19 @@ const MyAccountPage: React.FC = () => {
     setAddressLoading(true);
     try {
       if (editingAddress && editingAddress._id) {
-        await addressStore.updateAddress(editingAddress._id, addressForm);
+        await updateAddress(editingAddress._id, addressForm);
       } else {
-        await addressStore.createAddress(addressForm);
+        await createAddress(addressForm);
       }
-      if (user?._id) await addressStore.fetchUserAddresses(user._id);
+      if (user?._id) await fetchUserAddresses(user._id);
       setShowAddressModal(false);
     } catch (err) {
       // Optionally show error
+      const error = err as Error | any;
+      alert(
+        error?.response?.data?.message ||
+          "Failed to save address. Please try again."
+      );
     } finally {
       setAddressLoading(false);
     }
@@ -86,8 +92,8 @@ const MyAccountPage: React.FC = () => {
     if (!window.confirm("Are you sure you want to delete this address?"))
       return;
     setAddressLoading(true);
-    await addressStore.deleteAddress(id);
-    if (user?._id) await addressStore.fetchUserAddresses(user._id);
+    await deleteAddress(id);
+    if (user?._id) await fetchUserAddresses(user._id);
     setAddressLoading(false);
   };
   const logout = useUserStore((state) => state.logout);
@@ -101,16 +107,28 @@ const MyAccountPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // Orders and addresses from stores
-  const orderStore = useOrderStore();
-  const addressStore = useAddressStore();
+
+  // const orderStore = useOrderStore();
+  const fetchUserOrders = useOrderStore((state) => state.fetchUserOrders);
+
+  // const addressStore = useAddressStore();
+  const fetchUserAddresses = useAddressStore(
+    (state) => state.fetchUserAddresses
+  );
+  const deleteAddress = useAddressStore((state) => state.deleteAddress);
+  const fetchOrderById = useOrderStore((state) => state.fetchOrderById);
+  const updateAddress = useAddressStore((state) => state.updateAddress);
+  const createAddress = useAddressStore((state) => state.createAddress);
+  const orders = useOrderStore((state) => state.orders);
+  const addresses = useAddressStore((state) => state.addresses);
 
   // Fetch user orders and addresses on mount or when user changes
   useEffect(() => {
     if (user?._id) {
-      orderStore.fetchUserOrders(user._id);
-      addressStore.fetchUserAddresses(user._id);
+      fetchUserOrders(user._id);
+      fetchUserAddresses(user._id);
     }
-  }, [user?._id]);
+  }, [user?._id, fetchUserAddresses, fetchUserOrders]);
 
   const handleProfileUpdate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,6 +171,7 @@ const MyAccountPage: React.FC = () => {
     }
   };
 
+  if (!user) return <PleaseLogin />;
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <Header />
@@ -241,7 +260,7 @@ const MyAccountPage: React.FC = () => {
                           Total Orders
                         </h3>
                         <p className="text-3xl font-bold text-blue-600">
-                          {orderStore.orders.length}
+                          {orders.length}
                         </p>
                       </div>
                       <div className="bg-green-50 p-6 rounded-lg">
@@ -250,7 +269,7 @@ const MyAccountPage: React.FC = () => {
                         </h3>
                         <p className="text-3xl font-bold text-green-600">
                           $
-                          {orderStore.orders
+                          {orders
                             .reduce(
                               (sum, order) => sum + (order.totalPrice || 0),
                               0
@@ -272,7 +291,7 @@ const MyAccountPage: React.FC = () => {
                       Recent Orders
                     </h3>
                     <div className="space-y-4">
-                      {orderStore.orders.slice(0, 3).map((order) => (
+                      {orders.slice(0, 3).map((order) => (
                         <div
                           key={order._id}
                           className="border border-gray-200 rounded-lg p-4"
@@ -334,7 +353,7 @@ const MyAccountPage: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
-                          {orderStore.orders.map((order) => (
+                          {orders.map((order) => (
                             <tr key={order._id}>
                               <td className="px-6 py-4 text-sm font-medium text-gray-900">
                                 {order._id}
@@ -380,41 +399,38 @@ const MyAccountPage: React.FC = () => {
                                     </h2>
                                     {orderDetailsLoading ? (
                                       <div>Loading...</div>
-                                    ) : orderStore.order ? (
+                                    ) : order ? (
                                       <div>
                                         <div className="mb-4">
                                           <span className="font-semibold">
                                             Order ID:
                                           </span>{" "}
-                                          {orderStore.order._id}
+                                          {order._id}
                                         </div>
                                         <div className="mb-4">
                                           <span className="font-semibold">
                                             Status:
                                           </span>{" "}
-                                          {orderStore.order.status}
+                                          {order.status}
                                         </div>
                                         <div className="mb-4">
                                           <span className="font-semibold">
                                             Total:
                                           </span>{" "}
-                                          ${orderStore.order.totalPrice}
+                                          ${order.totalPrice}
                                         </div>
                                         <div className="mb-4">
                                           <span className="font-semibold">
                                             Created At:
                                           </span>{" "}
-                                          {orderStore.order.createdAt?.slice(
-                                            0,
-                                            10
-                                          )}
+                                          {order.createdAt?.slice(0, 10)}
                                         </div>
                                         <div className="mb-4">
                                           <span className="font-semibold">
                                             Items:
                                           </span>
                                           <ul className="list-disc ml-6">
-                                            {orderStore.order.orderItems.map(
+                                            {order.orderItems.map(
                                               (item, idx) => (
                                                 <li key={idx}>
                                                   Product: {item.product} |
@@ -428,13 +444,13 @@ const MyAccountPage: React.FC = () => {
                                           <span className="font-semibold">
                                             Shipping Address:
                                           </span>{" "}
-                                          {orderStore.order.shippingAddress}
+                                          {order.shippingAddress}
                                         </div>
                                         <div className="mb-4">
                                           <span className="font-semibold">
                                             Payment Method:
                                           </span>{" "}
-                                          {orderStore.order.paymentMethod}
+                                          {order.paymentMethod}
                                         </div>
                                       </div>
                                     ) : (
@@ -466,7 +482,7 @@ const MyAccountPage: React.FC = () => {
                       </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {addressStore.addresses.map((address) => (
+                      {addresses.map((address) => (
                         <div
                           key={address._id}
                           className="border border-gray-200 rounded-lg p-6"

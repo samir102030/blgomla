@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import type { Product } from "../types/product.type";
+import PleaseLogin from "../components/PleaseLogin";
 
 const WishlistPage: React.FC = () => {
   const {
@@ -18,51 +19,14 @@ const WishlistPage: React.FC = () => {
   const [lovedProducts, setLovedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    getLovedProducts();
-  }, [getLovedProducts]);
+    if (user) getLovedProducts();
+  }, [getLovedProducts, user]);
 
   useEffect(() => {
     if (user) {
       setLovedProducts(user.love);
     }
   }, [user]);
-  // Fetch loved products from store
-  // useEffect(() => {
-  //   const fetchLovedProducts = async () => {
-  //     if (user) {
-  //       try {
-  //         // Get the updated loved products from the store
-  //         await getLovedProducts();
-
-  //         // Set the loved products directly from user.love
-  //         if (user.love && user.love.length > 0) {
-  //           setLovedProducts(user.love);
-
-  //           // Initialize quantities for all products
-  //           const initialQuantities: Record<string, number> = {};
-  //           user.love.forEach(product => {
-  //             if (product._id) {
-  //               initialQuantities[product._id] = 1;
-  //             }
-  //           });
-  //           setQuantities(initialQuantities);
-  //         } else {
-  //           setLovedProducts([]);
-  //           setQuantities({});
-  //         }
-  //       } catch (error) {
-  //         console.error('Error fetching loved products:', error);
-  //         setLovedProducts([]);
-  //         setQuantities({});
-  //       }
-  //     } else {
-  //       setLovedProducts([]);
-  //       setQuantities({});
-  //     }
-  //   };
-
-  //   fetchLovedProducts();
-  // }, [user, getLovedProducts]);
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -161,21 +125,7 @@ const WishlistPage: React.FC = () => {
       <main className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {!user ? (
-            <div className="text-center py-16">
-              <div className="text-gray-400 text-6xl mb-4">🔒</div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Please Login
-              </h2>
-              <p className="text-gray-600 mb-8">
-                You need to be logged in to view your wishlist.
-              </p>
-              <Link
-                to="/login"
-                className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                Login
-              </Link>
-            </div>
+            <PleaseLogin />
           ) : isLoading ? (
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
