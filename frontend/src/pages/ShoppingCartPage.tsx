@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -7,7 +7,7 @@ import { useProductStore } from "../stores/product.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import PleaseLogin from "../components/PleaseLogin";
-import LoadingComp from "../components/LoadingComp";
+// import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
   _id?: string;
@@ -17,7 +17,8 @@ interface CartItemWithProduct {
     _id: string;
     name: string;
     price: number;
-    salePrice?: number;
+    stock: number;
+    salePercentage: number;
     saleActive: boolean;
     images: Array<{ url: string; alt?: string }>;
   };
@@ -26,7 +27,6 @@ interface CartItemWithProduct {
 const ShoppingCartPage: React.FC = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
-  const [loading, setLoading] = useState(false);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
 
   const user = useUserStore((state) => state.user);
@@ -35,55 +35,16 @@ const ShoppingCartPage: React.FC = () => {
   const removeFromCart = useProductStore((state) => state.removeFromCart);
 
   const [shippingInfo, setShippingInfo] = useState({
-    country: "Bangladesh",
-    city: "Dhaka",
+    country: "Egypt",
+    city: "Cairo",
     postcode: "",
   });
 
   const [couponCode, setCouponCode] = useState("");
 
-  // Fetch cart and product details
-  useEffect(() => {
-    const loadCart = async () => {
-      try {
-        setLoading(true);
-        await fetchCart();
-
-        // Fetch product details for each cart item
-        if (user?.cart) {
-          const itemsWithDetails = await Promise.all(
-            user.cart.map(async (item) => {
-              try {
-                // Fetch product details using axiosInstance
-                const { data } = await axiosInstance.get(
-                  `/products/${item.product}`
-                );
-                return {
-                  ...item,
-                  productDetails: data.data?.[0] || null,
-                };
-              } catch (error) {
-                console.error("Error fetching product details:", error);
-                return item;
-              }
-            })
-          );
-          setCartItems(itemsWithDetails);
-        }
-      } catch (error) {
-        console.error("Error loading cart:", error);
-        toast.error("Failed to load cart");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user?.cart) loadCart();
-  }, [fetchCart, user?.cart]); // Removed user?.cart from dependencies
-
   // Handle cart updates when user cart changes (but only after initial load)
   useEffect(() => {
-    if (!loading && user?.cart) {
+    if (user?.cart) {
       const updateCartItems = async () => {
         const itemsWithDetails = await Promise.all(
           user.cart.map(async (item) => {
@@ -106,10 +67,38 @@ const ShoppingCartPage: React.FC = () => {
 
       updateCartItems();
     }
-  }, [user?.cart, loading]);
+  }, [user?.cart]);
 
   const updateQuantity = async (productId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+
+    // Find the item to check stock
+    const item = cartItems.find((item) => item.product === productId);
+    if (!item || !item.productDetails) {
+      toast.error(
+        "Product Error: Item details not available. Please refresh the page"
+      );
+      return;
+    }
+
+    // Check if trying to add more than available stock
+    if (newQuantity > item.productDetails.stock) {
+      toast.error(
+        `Stock Error: Only ${item.productDetails.stock} ${
+          item.productDetails.stock === 1 ? "item" : "items"
+        } available for ${item.productDetails.name}. Please adjust quantity`
+      );
+      return;
+    }
+
+    // If stock is 0, remove the item
+    if (item.productDetails.stock === 0) {
+      await removeItem(productId);
+      toast.error(
+        `Stock Error: ${item.productDetails.name} is out of stock and has been removed from your cart`
+      );
+      return;
+    }
 
     try {
       setUpdatingItem(productId);
@@ -124,38 +113,121 @@ const ShoppingCartPage: React.FC = () => {
           item.product === productId ? { ...item, quantity: newQuantity } : item
         )
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating quantity:", error);
-      toast.error("Failed to update quantity");
+      const errorMessage =
+        error?.response?.data?.message || "Failed to update cart";
+      toast.error(`Cart Update Error: ${errorMessage}. Please try again`);
     } finally {
       setUpdatingItem(null);
     }
   };
 
-  const removeItem = async (productId: string) => {
-    try {
-      await removeFromCart(productId);
-      toast.success("Item removed from cart");
+  const removeItem = useCallback(
+    async (productId: string) => {
+      try {
+        await removeFromCart(productId);
+        toast.success("Item removed from cart");
 
-      // Update local state immediately
-      setCartItems((prevItems) =>
-        prevItems.filter((item) => item.product !== productId)
+        // Update local state immediately
+        setCartItems((prevItems) =>
+          prevItems.filter((item) => item.product !== productId)
+        );
+      } catch (error: any) {
+        console.error("Error removing item:", error);
+        const errorMessage =
+          error?.response?.data?.message || "Failed to remove item";
+        toast.error(`Remove Item Error: ${errorMessage}. Please try again`);
+      }
+    },
+    [removeFromCart]
+  );
+
+  // Check for out-of-stock items and remove them automatically
+  useEffect(() => {
+    const checkOutOfStockItems = async () => {
+      const outOfStockItems = cartItems.filter(
+        (item) => item.productDetails && item.productDetails.stock === 0
       );
-    } catch (error) {
-      console.error("Error removing item:", error);
-      toast.error("Failed to remove item");
+
+      for (const item of outOfStockItems) {
+        try {
+          await removeItem(item.product);
+          toast.error(
+            `Stock Error: ${item.productDetails?.name} is out of stock and has been removed from your cart`
+          );
+        } catch (error) {
+          console.error("Error removing out-of-stock item:", error);
+          toast.error(
+            `Stock Error: Failed to remove out-of-stock item ${item.productDetails?.name}. Please remove it manually`
+          );
+        }
+      }
+    };
+
+    if (cartItems.length > 0) {
+      checkOutOfStockItems();
     }
-  };
+  }, [cartItems, removeItem]);
 
   const getItemPrice = (item: CartItemWithProduct) => {
     if (!item.productDetails) return 0;
-    return item.productDetails.saleActive && item.productDetails.salePrice
-      ? item.productDetails.salePrice
+    return item.productDetails.saleActive
+      ? item.productDetails.price *
+          (1 - item.productDetails.salePercentage / 100)
       : item.productDetails.price;
   };
 
   const getItemTotal = (item: CartItemWithProduct) => {
     return getItemPrice(item) * item.quantity;
+  };
+
+  const handleCheckout = () => {
+    // Validate cart is not empty
+    if (cartItems.length === 0) {
+      toast.error(
+        "Cart Error: Your cart is empty. Please add items before proceeding to checkout"
+      );
+      return;
+    }
+
+    // Check if all items have valid product details
+    const invalidItems = cartItems.filter((item) => !item.productDetails);
+    if (invalidItems.length > 0) {
+      const invalidCount = invalidItems.length;
+      toast.error(
+        `Product Error: ${invalidCount} item${
+          invalidCount > 1 ? "s" : ""
+        } in your cart ${
+          invalidCount > 1 ? "are" : "is"
+        } no longer available. Please remove ${
+          invalidCount > 1 ? "them" : "it"
+        } and try again`
+      );
+      return;
+    }
+
+    // Check stock availability
+    const outOfStockItems = cartItems.filter(
+      (item) => item.productDetails && item.productDetails.stock < item.quantity
+    );
+    if (outOfStockItems.length > 0) {
+      const itemNames = outOfStockItems
+        .map((item) => item.productDetails?.name || "Unknown Product")
+        .join(", ");
+      const totalOutOfStock = outOfStockItems.length;
+      toast.error(
+        `Stock Error: ${totalOutOfStock} item${
+          totalOutOfStock > 1 ? "s" : ""
+        } (${itemNames}) ${
+          totalOutOfStock > 1 ? "have" : "has"
+        } insufficient stock. Please adjust quantities or remove items`
+      );
+      return;
+    }
+
+    // Navigate to checkout
+    navigate("/checkout");
   };
 
   const handleProductClick = (productId: string) => {
@@ -166,14 +238,14 @@ const ShoppingCartPage: React.FC = () => {
   const shippingCost = 0.0;
   const grandTotal = subtotal + shippingCost;
 
-  if (loading)
-    return (
-      <div className="min-h-screen bg-[#FAFAFA]">
-        <Header />
-        <LoadingComp />
-        <Footer />
-      </div>
-    );
+  // if (loading)
+  //   return (
+  //     <div className="min-h-screen bg-[#FAFAFA]">
+  //       <Header />
+  //       <LoadingComp />
+  //       <Footer />
+  //     </div>
+  //   );
 
   if (!user) return <PleaseLogin />;
 
@@ -291,10 +363,21 @@ const ShoppingCartPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          ${getItemPrice(item).toFixed(2)}
+                          {item.productDetails?.saleActive ? (
+                            <div className="flex flex-col">
+                              <span className="line-through text-gray-500">
+                                ${item.productDetails.price.toFixed(2)}
+                              </span>
+                              <span className="font-medium text-red-600">
+                                ${getItemPrice(item).toFixed(2)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span>${getItemPrice(item).toFixed(2)}</span>
+                          )}
                           {item.productDetails?.saleActive && (
                             <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
-                              Sale
+                              Sale {item.productDetails.salePercentage}%
                             </span>
                           )}
                         </div>
@@ -378,9 +461,7 @@ const ShoppingCartPage: React.FC = () => {
                     }
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="Bangladesh">Bangladesh</option>
-                    <option value="India">India</option>
-                    <option value="Pakistan">Pakistan</option>
+                    <option value="Egypt">Egypt</option>
                   </select>
                   <select
                     value={shippingInfo.city}
@@ -389,9 +470,7 @@ const ShoppingCartPage: React.FC = () => {
                     }
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="Dhaka">Dhaka</option>
-                    <option value="Chittagong">Chittagong</option>
-                    <option value="Sylhet">Sylhet</option>
+                    <option value="Cairo">Cairo</option>
                   </select>
                 </div>
                 <input
@@ -457,17 +536,11 @@ const ShoppingCartPage: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                <Link
-                  to="/checkout"
-                  className="w-full bg-[#FFD600] text-[#333333] py-3 px-6 rounded-lg font-medium hover:bg-[#e6c100] transition-colors text-center block"
+                <button
+                  onClick={handleCheckout}
+                  className="w-full bg-[#FFD600] text-[#333333] py-3 px-6 rounded-lg font-medium hover:bg-[#e6c100] transition-colors text-center"
                 >
                   CHECKOUT
-                </Link>
-                <button
-                  onClick={() => fetchCart()}
-                  className="w-full bg-[#9E9E9E]/20 text-[#333333] py-3 px-6 rounded-lg font-medium hover:bg-[#9E9E9E]/30 transition-colors"
-                >
-                  UPDATE CART
                 </button>
               </div>
             </div>

@@ -59,6 +59,7 @@ export const validateCreateOrder = validate([
         "PayPal",
         "Bank Transfer",
         "Cash on Delivery",
+        "cod",
       ];
       return methods.some((m) => m.toLowerCase() === value.toLowerCase());
     })
