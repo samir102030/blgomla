@@ -10,20 +10,39 @@ import {
 import { useProductStore } from "../../stores/product.store";
 import { useBrandStore } from "../../stores/brand.store";
 import { useCategoryStore } from "../../stores/category.store";
-import { axiosInstance } from "../../lib/axios";
+import { useUserStore } from "../../stores/user.store";
+import { useVendorStore } from "../../stores/vendor.store";
+import AddProductModal from "../../components/AddProductModal";
+import ProductDetailsModal from "../../components/ProductDetailsModal";
+import EditProductModal from "../../components/EditProductModal";
+import DeleteProductModal from "../../components/DeleteProductModal";
+import FilterModal, { type ProductFilters } from "../../components/FilterModal";
 
 const ProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isCreating, setIsCreating] = useState(false);
-  const [creating, setCreating] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isViewingDetails, setIsViewingDetails] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deletingProduct, setDeletingProduct] = useState<any>(null);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<ProductFilters>({
+    brand: "",
+    category: "",
+    priceMin: "",
+    priceMax: "",
+    stockStatus: "",
+    productStatus: "",
+  });
 
   const products = useProductStore((s) => s.products);
   const paginated = useProductStore((s) => s.paginated);
   const loading = useProductStore((s) => s.loading);
   const error = useProductStore((s) => s.error);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
-  const createProduct = useProductStore((s) => s.createProduct);
 
   const brands = useBrandStore((s) => s.brands);
   const fetchBrands = useBrandStore((s) => s.fetchBrands);
@@ -31,22 +50,31 @@ const ProductsPage: React.FC = () => {
   const categories = useCategoryStore((s) => s.categories);
   const fetchCategories = useCategoryStore((s) => s.fetchCategories);
 
+  const { user } = useUserStore();
+  const { vendorStore, fetchVendorStore } = useVendorStore();
+
   useEffect(() => {
-    fetchProducts();
     fetchBrands();
     fetchCategories();
-  }, [fetchProducts, fetchBrands, fetchCategories]);
+  }, [fetchBrands, fetchCategories]);
 
-  // Create product form state
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    price: "",
-    stock: "0",
-    brand: "",
-    category: "",
-  });
-  const [files, setFiles] = useState<File[]>([]);
+  // Fetch products based on user role
+  useEffect(() => {
+    if (user?.role === "admin") {
+      // Admin sees all products
+      fetchProducts();
+    } else if (user?.role === "store") {
+      // Store user sees only their products
+      fetchVendorStore();
+    }
+  }, [user?.role, fetchProducts, fetchVendorStore]);
+
+  // Fetch products when vendor store is loaded
+  useEffect(() => {
+    if (user?.role === "store" && vendorStore?._id) {
+      fetchProducts({ storeId: vendorStore._id });
+    }
+  }, [user?.role, vendorStore?._id, fetchProducts]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -70,96 +98,59 @@ const ProductsPage: React.FC = () => {
   };
 
   const filteredProducts = products.filter((product) => {
+    // Search filter (name or SKU)
     const matchesSearch =
       (product.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (product._id || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Category filter (legacy dropdown)
     const matchesCategory =
       categoryFilter === "all" ||
       getCategoryName(product) === categoryFilter ||
       product.Category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setFiles(Array.from(e.target.files));
-  };
+    // Advanced filters
+    const matchesBrand =
+      !advancedFilters.brand || product.brand === advancedFilters.brand;
 
-  // image previews and helpers
-  const [previews, setPreviews] = useState<string[]>([]);
+    const matchesAdvancedCategory =
+      !advancedFilters.category ||
+      (typeof product.Category === "string"
+        ? product.Category === advancedFilters.category
+        : (product.Category as any)?._id === advancedFilters.category);
 
-  useEffect(() => {
-    if (files.length === 0) {
-      setPreviews([]);
-      return;
-    }
-    const newPreviews = files.map((f) => URL.createObjectURL(f));
-    setPreviews(newPreviews);
-    return () => {
-      newPreviews.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [files]);
+    const matchesPriceMin =
+      !advancedFilters.priceMin ||
+      product.price >= parseFloat(advancedFilters.priceMin);
+    const matchesPriceMax =
+      !advancedFilters.priceMax ||
+      product.price <= parseFloat(advancedFilters.priceMax);
 
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
+    const matchesStockStatus =
+      !advancedFilters.stockStatus ||
+      (advancedFilters.stockStatus === "in_stock" && product.stock > 30) ||
+      (advancedFilters.stockStatus === "low_stock" &&
+        product.stock > 0 &&
+        product.stock <= 30) ||
+      (advancedFilters.stockStatus === "out_of_stock" &&
+        (!product.stock || product.stock === 0));
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const dropped = Array.from(e.dataTransfer.files).filter((f) =>
-      f.type.startsWith("image/")
+    const matchesProductStatus =
+      !advancedFilters.productStatus ||
+      (advancedFilters.productStatus === "active" && product.isActive) ||
+      (advancedFilters.productStatus === "inactive" && !product.isActive);
+
+    return (
+      matchesSearch &&
+      matchesCategory &&
+      matchesBrand &&
+      matchesAdvancedCategory &&
+      matchesPriceMin &&
+      matchesPriceMax &&
+      matchesStockStatus &&
+      matchesProductStatus
     );
-    if (dropped.length) setFiles((prev) => [...prev, ...dropped]);
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      // Upload files sequentially
-      const images: { url: string; alt?: string }[] = [];
-      for (const file of files) {
-        const fd = new FormData();
-        fd.append("image", file);
-        const res = await axiosInstance.post("/upload/upload", fd, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        if (res.data && res.data.url) {
-          images.push({ url: res.data.url, alt: file.name });
-        }
-      }
-
-      const payload: any = {
-        name: form.name,
-        description: form.description,
-        price: Number(form.price),
-        stock: Number(form.stock),
-        images,
-      };
-      if (form.brand) payload.brand = form.brand;
-      if (form.category) payload.Category = form.category;
-
-      const created = await createProduct(payload);
-      if (created) {
-        setIsCreating(false);
-        setForm({
-          name: "",
-          description: "",
-          price: "",
-          stock: "0",
-          brand: "",
-          category: "",
-        });
-        setFiles([]);
-        // refetch
-        await fetchProducts();
-      }
-    } catch (err) {
-      console.error("Create product error:", err);
-    } finally {
-      setCreating(false);
-    }
-  };
+  });
 
   // Helper to display category name whether populated or id
   const getCategoryName = (product: any) => {
@@ -174,6 +165,38 @@ const ProductsPage: React.FC = () => {
   // defensive defaults in case stores aren't hydrated yet
   const safeBrands = brands ?? [];
   const safeCategories = categories ?? [];
+
+  const handleViewProduct = (product: any) => {
+    setSelectedProduct(product);
+    setIsViewingDetails(true);
+  };
+
+  const handleEditProduct = (product: any) => {
+    setEditingProduct(product);
+    setIsEditing(true);
+  };
+
+  const handleDeleteProduct = (product: any) => {
+    setDeletingProduct(product);
+    setIsDeleting(true);
+  };
+
+  const handleOpenFilterModal = () => {
+    setIsFilterModalOpen(true);
+  };
+
+  const handleApplyFilters = (filters: ProductFilters) => {
+    setAdvancedFilters(filters);
+  };
+
+  // Helper function to refresh products based on user role
+  const refreshProducts = () => {
+    if (user?.role === "admin") {
+      fetchProducts();
+    } else if (user?.role === "store" && vendorStore?._id) {
+      fetchProducts({ storeId: vendorStore._id });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -205,209 +228,52 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {isCreating && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl overflow-hidden">
-            <div className="flex items-start justify-between px-6 py-4 border-b">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Create Product
-                </h2>
-                <p className="text-sm text-gray-500">
-                  Add product details and upload images
-                </p>
-              </div>
-              <div>
-                <button
-                  onClick={() => setIsCreating(false)}
-                  aria-label="Close modal"
-                  className="text-gray-500 hover:text-gray-700 rounded-md p-1"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
+        <AddProductModal
+          isOpen={isCreating}
+          onClose={() => setIsCreating(false)}
+          onProductCreated={refreshProducts}
+          brands={safeBrands}
+          categories={safeCategories}
+        />
+      )}
 
-            <form
-              onSubmit={handleCreate}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 px-6 py-6"
-            >
-              {/* Left: image uploader + previews */}
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Images
-                </label>
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                  onClick={() =>
-                    document.getElementById("product-images-input")?.click()
-                  }
-                  className="border-2 border-dashed border-gray-200 rounded-lg p-3 h-44 flex flex-col items-center justify-center text-center cursor-pointer bg-gray-50 hover:bg-gray-100"
-                >
-                  <p className="text-sm text-gray-500">
-                    Drag & drop images here or click to select
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Supports multiple images (jpg, png). Max 5 images.
-                  </p>
-                  <input
-                    id="product-images-input"
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </div>
+      {isViewingDetails && selectedProduct && (
+        <ProductDetailsModal
+          isOpen={isViewingDetails}
+          onClose={() => setIsViewingDetails(false)}
+          product={selectedProduct}
+        />
+      )}
 
-                {previews.length > 0 && (
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    {previews.map((src, idx) => (
-                      <div key={idx} className="relative group">
-                        <img
-                          src={src}
-                          alt={`preview-${idx}`}
-                          className="h-20 w-full object-cover rounded"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeFile(idx)}
-                          className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+      {isEditing && editingProduct && (
+        <EditProductModal
+          isOpen={isEditing}
+          onClose={() => setIsEditing(false)}
+          onProductUpdated={refreshProducts}
+          product={editingProduct}
+          brands={safeBrands}
+          categories={safeCategories}
+        />
+      )}
 
-              {/* Right: form fields */}
-              <div className="md:col-span-2 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Name
-                    </label>
-                    <input
-                      required
-                      placeholder="Product name"
-                      value={form.name}
-                      onChange={(e) =>
-                        setForm({ ...form, name: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Price
-                    </label>
-                    <input
-                      required
-                      placeholder="0.00"
-                      type="number"
-                      step="0.01"
-                      value={form.price}
-                      onChange={(e) =>
-                        setForm({ ...form, price: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                    />
-                  </div>
-                </div>
+      {isDeleting && deletingProduct && (
+        <DeleteProductModal
+          isOpen={isDeleting}
+          onClose={() => setIsDeleting(false)}
+          onProductDeleted={refreshProducts}
+          product={deletingProduct}
+        />
+      )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Brand
-                    </label>
-                    <select
-                      value={form.brand}
-                      onChange={(e) =>
-                        setForm({ ...form, brand: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                    >
-                      <option value="">Select brand</option>
-                      {safeBrands.map((b: any) => (
-                        <option key={b._id} value={b._id}>
-                          {b.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Category
-                    </label>
-                    <select
-                      value={form.category}
-                      onChange={(e) =>
-                        setForm({ ...form, category: e.target.value })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                    >
-                      <option value="">Select category</option>
-                      {safeCategories.map((c: any) => (
-                        <option key={c._id} value={c._id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Stock
-                  </label>
-                  <input
-                    placeholder="0"
-                    type="number"
-                    value={form.stock}
-                    onChange={(e) =>
-                      setForm({ ...form, stock: e.target.value })
-                    }
-                    className="mt-1 block w-1/3 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    placeholder="Short description"
-                    value={form.description}
-                    onChange={(e) =>
-                      setForm({ ...form, description: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-                  />
-                </div>
-              </div>
-
-              {/* actions */}
-              <div className="md:col-span-3 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCreating(false)}
-                  className="px-4 py-2 border rounded-md text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="px-4 py-2 bg-[#FFD600] rounded-md text-sm font-medium disabled:opacity-60"
-                >
-                  {creating ? "Creating..." : "Create Product"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {isFilterModalOpen && (
+        <FilterModal
+          isOpen={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+          onApplyFilters={handleApplyFilters}
+          currentFilters={advancedFilters}
+          brands={safeBrands}
+          categories={safeCategories}
+        />
       )}
 
       {/* Stats Cards (basic) */}
@@ -491,12 +357,16 @@ const ProductsPage: React.FC = () => {
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
               <option value="all">All Categories</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Food & Beverage">Food & Beverage</option>
-              <option value="Sports">Sports</option>
+              {safeCategories.map((category) => (
+                <option key={category._id} value={category._id}>
+                  {category.name}
+                </option>
+              ))}
             </select>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button
+              onClick={handleOpenFilterModal}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
               <FunnelIcon className="h-4 w-4" />
               More Filters
             </button>
@@ -597,13 +467,25 @@ const ProductsPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button
+                        onClick={() => handleViewProduct(product)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="View Details"
+                      >
                         <EyeIcon className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      <button
+                        onClick={() => handleEditProduct(product)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Edit Product"
+                      >
                         <PencilIcon className="h-4 w-4" />
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
+                      <button
+                        onClick={() => handleDeleteProduct(product)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Delete Product"
+                      >
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     </div>

@@ -1,0 +1,187 @@
+import React, { useState } from "react";
+import {
+  ExclamationTriangleIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { useBrandStore } from "../stores/brand.store";
+
+interface DeleteProductModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onProductDeleted: () => void;
+  product: any;
+}
+
+const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
+  isOpen,
+  onClose,
+  onProductDeleted,
+  product,
+}) => {
+  const [deleting, setDeleting] = useState(false);
+  const brands = useBrandStore((state: any) => state.brands);
+
+  const getBrandName = (brandId: string) => {
+    const brand = brands.find((b: any) => b._id === brandId);
+    return brand ? brand.name : brandId;
+  };
+
+  const handleDelete = async () => {
+    if (!product?._id) return;
+
+    setDeleting(true);
+    try {
+      // Import deleteProduct from store here to avoid circular imports
+      const { useProductStore } = await import("../stores/product.store");
+      const deleteProduct = useProductStore.getState().deleteProduct;
+
+      const success = await deleteProduct(product._id);
+      if (success) {
+        onClose();
+        onProductDeleted();
+      }
+    } catch (err) {
+      console.error("Delete product error:", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (!isOpen || !product) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-red-50 to-rose-50">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="ml-3">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Delete Product
+              </h2>
+              <p className="text-sm text-gray-600">
+                This action cannot be undone
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            aria-label="Close modal"
+          >
+            <XMarkIcon className="h-5 w-5 text-gray-500" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-6">
+          <div className="flex items-start space-x-4">
+            {/* Product Image */}
+            <div className="flex-shrink-0">
+              <img
+                src={product.images?.[0]?.url || "/placeholder.png"}
+                alt={product.name}
+                className="h-16 w-16 rounded-lg object-cover border border-gray-200"
+              />
+            </div>
+
+            {/* Product Details */}
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-medium text-gray-900 mb-1">
+                {product.name}
+              </h3>
+              <div className="space-y-1 text-sm text-gray-600">
+                <p>
+                  <span className="font-medium">SKU:</span>{" "}
+                  {product._id?.slice(-8).toUpperCase()}
+                </p>
+                <p>
+                  <span className="font-medium">Price:</span> $
+                  {product.price?.toFixed(2)}
+                </p>
+                <p>
+                  <span className="font-medium">Brand:</span>{" "}
+                  {product.brand ? getBrandName(product.brand) : "N/A"}
+                </p>
+                <p>
+                  <span className="font-medium">Stock:</span>{" "}
+                  {product.stock || 0}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Warning Message */}
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex">
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-400 flex-shrink-0" />
+              <div className="ml-3">
+                <h4 className="text-sm font-medium text-red-800">
+                  Are you sure you want to delete this product?
+                </h4>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>
+                    This will permanently delete the product "{product.name}"
+                    and all its associated data. This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          {product.soldCount > 0 && (
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <span className="text-yellow-400">⚠️</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Warning:</strong> This product has been sold{" "}
+                    {product.soldCount} time(s). Deleting it may affect order
+                    history and analytics.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={deleting}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {deleting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Deleting...
+              </>
+            ) : (
+              <>
+                <span>🗑️</span>
+                Delete Product
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DeleteProductModal;

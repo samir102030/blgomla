@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useProductStore } from "../stores/product.store";
 import { useUserStore } from "../stores/user.store";
+import { useBrandStore } from "../stores/brand.store";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { ProductReview } from "../types/product.type";
@@ -14,7 +15,7 @@ const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  
+
   // Review states
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -33,12 +34,15 @@ const ProductDetailPage: React.FC = () => {
   const toggleLoveProduct = useUserStore((state) => state.toggleLoveProduct);
   const getLovedProducts = useUserStore((state) => state.getLovedProducts);
   const user = useUserStore((state) => state.user);
-  console.log(product?.reviews);
+  const brands = useBrandStore((state) => state.brands);
+  const fetchBrands = useBrandStore((state) => state.fetchBrands);
+  console.log("Product details:", product);
 
   useEffect(() => {
     fetchCart();
     getLovedProducts();
-  }, [fetchCart, getLovedProducts]);
+    fetchBrands();
+  }, [fetchCart, getLovedProducts, fetchBrands]);
 
   useEffect(() => {
     if (productId) fetchProductById(productId);
@@ -90,10 +94,10 @@ const ProductDetailPage: React.FC = () => {
         });
         toast.success("Review added successfully!");
       }
-      
+
       // Refetch the product to ensure we have the latest data
       await fetchProductById(productId);
-      
+
       setShowReviewForm(false);
       setReviewComment("");
       setReviewRating(5);
@@ -119,7 +123,7 @@ const ProductDetailPage: React.FC = () => {
     try {
       await deleteReview(productId, reviewId);
       toast.success("Review deleted successfully!");
-      
+
       // Refetch the product to ensure we have the latest data
       await fetchProductById(productId);
     } catch (error) {
@@ -211,15 +215,25 @@ const ProductDetailPage: React.FC = () => {
       : ["/placeholder.png"];
 
   // Generate specifications based on product data
+  const getBrandName = (brandId: string) => {
+    const brand = brands.find((b) => b._id === brandId);
+    return brand ? brand.name : brandId;
+  };
+
   const specifications = [
-    product.brand ? `Brand: ${product.brand}` : undefined,
+    product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
     product.Category ? `Category: ${product.Category}` : undefined,
-    `Price: ${
-      product.saleActive && product.salePrice !== undefined
-        ? product.salePrice
-        : product.price
+    `Price: $${
+      product.saleActive && product.salePercentage && product.salePercentage > 0
+        ? product.salePrice?.toFixed(2) ||
+          (product.price * (1 - product.salePercentage / 100)).toFixed(2)
+        : product.price.toFixed(2)
     }`,
-    product.stock > 0 ? "In Stock" : "Out of Stock",
+    product.stock > 0
+      ? product.stock < 5
+        ? `In Stock (${product.stock})`
+        : "In Stock"
+      : "Out of Stock",
     ...(product.features || []).map((f) => `Feature: ${f}`),
     ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),
   ].filter(Boolean);
@@ -227,6 +241,10 @@ const ProductDetailPage: React.FC = () => {
   const handleQuantityChange = (change: number) => {
     const newQuantity = quantity + change;
     if (newQuantity >= 1) {
+      if (newQuantity > (product?.stock || 0)) {
+        toast.error(`Only ${product?.stock} items available in stock`);
+        return;
+      }
       setQuantity(newQuantity);
     }
   };
@@ -328,14 +346,28 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Price */}
               <div className="mb-6">
-                <span className="text-3xl font-bold text-gray-900">
-                  {product.saleActive && product.salePrice !== undefined
-                    ? product.salePrice
-                    : product.price}
-                </span>
-                {product.saleActive && (
-                  <span className="ml-3 bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                    Sale
+                {product.saleActive &&
+                product.salePercentage &&
+                product.salePercentage > 0 ? (
+                  <div className="flex items-center space-x-3">
+                    <span className="text-3xl font-bold text-gray-900">
+                      $
+                      {product.salePrice?.toFixed(2) ||
+                        (
+                          product.price *
+                          (1 - product.salePercentage / 100)
+                        ).toFixed(2)}
+                    </span>
+                    <span className="text-xl text-gray-500 line-through">
+                      ${product.price.toFixed(2)}
+                    </span>
+                    <span className="ml-3 bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                      Sale ({product.salePercentage}% off)
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-3xl font-bold text-gray-900">
+                    ${product.price.toFixed(2)}
                   </span>
                 )}
               </div>
@@ -352,6 +384,23 @@ const ProductDetailPage: React.FC = () => {
                   ))}
                 </ul>
               </div>
+
+              {/* Tags */}
+              {product.tags && product.tags.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold mb-4">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {product.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Quantity */}
               <div className="mb-8">
@@ -418,27 +467,6 @@ const ProductDetailPage: React.FC = () => {
                   </p>
                 </div>
               )}
-
-              {/* Share */}
-              <div className="border-t pt-6">
-                <span className="text-sm font-medium text-gray-700 mr-4">
-                  Share:
-                </span>
-                <div className="inline-flex space-x-2">
-                  <button className="text-blue-600 hover:text-blue-700">
-                    Facebook
-                  </button>
-                  <button className="text-blue-400 hover:text-blue-500">
-                    Twitter
-                  </button>
-                  <button className="text-pink-600 hover:text-pink-700">
-                    Instagram
-                  </button>
-                  <button className="text-red-600 hover:text-red-700">
-                    Google+
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -486,7 +514,9 @@ const ProductDetailPage: React.FC = () => {
                         </button>
                       ) : (
                         <div className="mb-6 p-4 bg-gray-50 rounded-md">
-                          <p className="text-gray-600 mb-2">You have already reviewed this product.</p>
+                          <p className="text-gray-600 mb-2">
+                            You have already reviewed this product.
+                          </p>
                           <button
                             onClick={() => handleEditReview(getUserReview()!)}
                             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 mr-2"
@@ -494,7 +524,9 @@ const ProductDetailPage: React.FC = () => {
                             Edit Review
                           </button>
                           <button
-                            onClick={() => handleDeleteReview(getUserReview()!._id)}
+                            onClick={() =>
+                              handleDeleteReview(getUserReview()!._id)
+                            }
                             className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
                           >
                             Delete Review
@@ -507,7 +539,7 @@ const ProductDetailPage: React.FC = () => {
                           <h3 className="text-lg font-semibold mb-4">
                             {editingReview ? "Edit Review" : "Write a Review"}
                           </h3>
-                          
+
                           {/* Rating */}
                           <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -519,7 +551,9 @@ const ProductDetailPage: React.FC = () => {
                                   key={star}
                                   onClick={() => setReviewRating(star)}
                                   className={`text-2xl ${
-                                    star <= reviewRating ? "text-yellow-400" : "text-gray-300"
+                                    star <= reviewRating
+                                      ? "text-yellow-400"
+                                      : "text-gray-300"
                                   }`}
                                 >
                                   ★
@@ -548,7 +582,9 @@ const ProductDetailPage: React.FC = () => {
                               onClick={handleSubmitReview}
                               className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
                             >
-                              {editingReview ? "Update Review" : "Submit Review"}
+                              {editingReview
+                                ? "Update Review"
+                                : "Submit Review"}
                             </button>
                             <button
                               onClick={handleCancelReview}
@@ -597,7 +633,7 @@ const ProductDetailPage: React.FC = () => {
                                 {"☆".repeat(5 - review.rating)}
                               </span>
                             </div>
-                            
+
                             {/* Edit/Delete buttons for user's own review */}
                             {user && review.user._id === user._id && (
                               <div className="flex space-x-2">
