@@ -54,16 +54,9 @@ export const validateCreateOrder = validate([
     .notEmpty()
     .withMessage("Payment method is required")
     .custom((value) => {
-      const methods = [
-        "Credit Card",
-        "PayPal",
-        "Bank Transfer",
-        "Cash on Delivery",
-        "cod",
-      ];
-      return methods.some((m) => m.toLowerCase() === value.toLowerCase());
+      return value.toLowerCase() === "cod";
     })
-    .withMessage("Invalid payment method"),
+    .withMessage("Only Cash On Delivery payment method is accepted"),
 
   // body("itemsPrice")
   //   .isFloat({ min: 0 })

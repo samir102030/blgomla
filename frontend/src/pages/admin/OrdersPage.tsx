@@ -8,6 +8,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
 import { axiosInstance } from "../../lib/axios";
+import OrderDetailsModal from "../../components/OrderDetailsModal";
+import EditOrderModal from "../../components/EditOrderModal";
+import DeleteOrderModal from "../../components/DeleteOrderModal";
+import OrderFiltersModal from "../../components/OrderFiltersModal";
 
 interface Order {
   _id: string;
@@ -19,8 +23,20 @@ interface Order {
     name: string;
   };
   orderItems: Array<{
-    product: any;
+    product: {
+      _id: string;
+      name: string;
+      price: number;
+      images: Array<{
+        url: string;
+        alt?: string;
+      }>;
+      saleActive: boolean;
+      salePercentage: number;
+    };
     quantity: number;
+    price: number;
+    salePercentage: number;
   }>;
   totalPrice: number;
   status: string;
@@ -37,6 +53,28 @@ const OrdersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
+
+  // Modal states
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFiltersModalOpen, setIsFiltersModalOpen] = useState(false);
+
+  // Advanced filters state
+  const [advancedFilters, setAdvancedFilters] = useState<{
+    status: string[];
+    paymentMethod: string[];
+    dateRange: { start: string; end: string };
+    minAmount: string;
+    maxAmount: string;
+  }>({
+    status: [],
+    paymentMethod: [],
+    dateRange: { start: "", end: "" },
+    minAmount: "",
+    maxAmount: "",
+  });
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -85,16 +123,101 @@ const OrdersPage: React.FC = () => {
     }
   };
 
+  // Modal handlers
+  const handleViewOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleEditOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteOrder = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleOpenFilters = () => {
+    setIsFiltersModalOpen(true);
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      await axiosInstance.put(`/orders/${orderId}/status`, { status });
+      // Refresh orders after update
+      fetchOrders();
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+    }
+  };
+
+  const handleDeleteOrderConfirm = async (orderId: string) => {
+    try {
+      await axiosInstance.delete(`/orders/${orderId}`);
+      // Refresh orders after deletion
+      fetchOrders();
+    } catch (error) {
+      console.error("Failed to delete order:", error);
+    }
+  };
+
+  const handleApplyFilters = (filters: {
+    status: string[];
+    paymentMethod: string[];
+    dateRange: { start: string; end: string };
+    minAmount: string;
+    maxAmount: string;
+  }) => {
+    setAdvancedFilters(filters);
+    // Apply filters to the orders list
+    // This would need to be implemented based on your filtering logic
+  };
+
   const filteredOrders = orders.filter((order) => {
+    // Basic search filter
     const matchesSearch =
       order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (user?.role === "admin" &&
         order.store?.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // Basic status filter
     const matchesStatus =
       statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+
+    // Advanced filters
+    const matchesAdvancedStatus =
+      advancedFilters.status.length === 0 ||
+      advancedFilters.status.includes(order.status);
+
+    const matchesPaymentMethod =
+      advancedFilters.paymentMethod.length === 0 ||
+      advancedFilters.paymentMethod.includes(order.paymentMethod);
+
+    const orderDate = new Date(order.createdAt);
+    const matchesDateRange =
+      (!advancedFilters.dateRange.start ||
+        orderDate >= new Date(advancedFilters.dateRange.start)) &&
+      (!advancedFilters.dateRange.end ||
+        orderDate <= new Date(advancedFilters.dateRange.end + "T23:59:59"));
+
+    const matchesAmountRange =
+      (!advancedFilters.minAmount ||
+        order.totalPrice >= parseFloat(advancedFilters.minAmount)) &&
+      (!advancedFilters.maxAmount ||
+        order.totalPrice <= parseFloat(advancedFilters.maxAmount));
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesAdvancedStatus &&
+      matchesPaymentMethod &&
+      matchesDateRange &&
+      matchesAmountRange
+    );
   });
 
   if (loading) {
@@ -131,13 +254,19 @@ const OrdersPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            Orders Management
+            {user?.role === "store" ? "My Store Orders" : "Orders Management"}
           </h1>
-          <p className="text-[#9E9E9E]">Manage and track all customer orders</p>
+          <p className="text-[#9E9E9E]">
+            {user?.role === "store"
+              ? "Manage orders for your store"
+              : "Manage and track all customer orders"}
+          </p>
         </div>
-        <button className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors">
-          Export Orders
-        </button>
+        {user?.role === "admin" && (
+          <button className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors">
+            Export Orders
+          </button>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -145,13 +274,16 @@ const OrdersPage: React.FC = () => {
         <div className="bg-[#FAFAFA] p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#9E9E9E]">Total Orders</p>
+              <p className="text-sm text-[#9E9E9E]">Total Revenue</p>
               <p className="text-2xl font-bold text-[#333333]">
-                {orders.length}
+                $
+                {filteredOrders
+                  .reduce((total, order) => total + order.totalPrice, 0)
+                  .toFixed(2)}
               </p>
             </div>
             <div className="bg-[#002B5B]/10 p-3 rounded-full">
-              <span className="text-2xl">📦</span>
+              <span className="text-2xl">�</span>
             </div>
           </div>
         </div>
@@ -160,7 +292,10 @@ const OrdersPage: React.FC = () => {
             <div>
               <p className="text-sm text-[#9E9E9E]">Pending Orders</p>
               <p className="text-2xl font-bold text-[#FFD600]">
-                {orders.filter((order) => order.status === "pending").length}
+                {
+                  filteredOrders.filter((order) => order.status === "pending")
+                    .length
+                }
               </p>
             </div>
             <div className="bg-[#FFD600]/10 p-3 rounded-full">
@@ -173,7 +308,10 @@ const OrdersPage: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Completed Orders</p>
               <p className="text-2xl font-bold text-green-600">
-                {orders.filter((order) => order.status === "delivered").length}
+                {
+                  filteredOrders.filter((order) => order.status === "delivered")
+                    .length
+                }
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -184,16 +322,13 @@ const OrdersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Revenue</p>
+              <p className="text-sm text-gray-600">Filtered Results</p>
               <p className="text-2xl font-bold text-purple-600">
-                $
-                {orders
-                  .reduce((total, order) => total + order.totalPrice, 0)
-                  .toFixed(2)}
+                {filteredOrders.length}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
-              <span className="text-2xl">💰</span>
+              <span className="text-2xl">�</span>
             </div>
           </div>
         </div>
@@ -210,7 +345,9 @@ const OrdersPage: React.FC = () => {
                 placeholder={
                   user?.role === "admin"
                     ? "Search orders by customer, order ID, email, or store name..."
-                    : "Search orders by customer, order ID, or email..."
+                    : user?.role === "store"
+                    ? "Search orders by customer, order ID, or email..."
+                    : "Search orders by order ID or email..."
                 }
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
@@ -231,7 +368,10 @@ const OrdersPage: React.FC = () => {
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <button
+              onClick={handleOpenFilters}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
               <FunnelIcon className="h-4 w-4" />
               More Filters
             </button>
@@ -321,15 +461,30 @@ const OrdersPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button
+                        onClick={() => handleViewOrder(order)}
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
+                        title="View Order Details"
+                      >
                         <EyeIcon className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      <button
+                        onClick={() => handleEditOrder(order)}
+                        className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
+                        title="Edit Order Status"
+                      >
                         <PencilIcon className="h-4 w-4" />
                       </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
+                      {/* Show delete button only for pending/cancelled orders */}
+                      {["pending", "cancelled"].includes(order.status) && (
+                        <button
+                          onClick={() => handleDeleteOrder(order)}
+                          className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
+                          title="Delete Order"
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -364,6 +519,34 @@ const OrdersPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Modals */}
+      <OrderDetailsModal
+        order={selectedOrder}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+      />
+
+      <EditOrderModal
+        order={selectedOrder}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onUpdate={handleUpdateOrderStatus}
+      />
+
+      <DeleteOrderModal
+        order={selectedOrder}
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onDelete={handleDeleteOrderConfirm}
+      />
+
+      <OrderFiltersModal
+        isOpen={isFiltersModalOpen}
+        onClose={() => setIsFiltersModalOpen(false)}
+        onApplyFilters={handleApplyFilters}
+        currentFilters={advancedFilters}
+      />
     </div>
   );
 };

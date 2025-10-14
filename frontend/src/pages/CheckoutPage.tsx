@@ -50,7 +50,7 @@ const CheckoutPage: React.FC = () => {
     shipToDifferent: false,
   });
 
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cod");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
 
@@ -853,27 +853,20 @@ const CheckoutPage: React.FC = () => {
                     Payment Method
                   </h3>
                   <div className="space-y-3">
-                    {[
-                      { id: "check", label: "Check Payment" },
-                      { id: "bank", label: "Direct Bank Transfer" },
-                      { id: "cod", label: "Cash On Delivery" },
-                      { id: "paypal", label: "Paypal" },
-                      { id: "payoneer", label: "Payoneer" },
-                    ].map((method) => (
-                      <label key={method.id} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="payment"
-                          value={method.id}
-                          checked={paymentMethod === method.id}
-                          onChange={(e) => setPaymentMethod(e.target.value)}
-                          className="text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          {method.label}
-                        </span>
-                      </label>
-                    ))}
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="cod"
+                        checked={paymentMethod === "cod"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="text-blue-600 focus:ring-blue-500"
+                        required
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Cash On Delivery
+                      </span>
+                    </label>
                   </div>
                 </div>
 

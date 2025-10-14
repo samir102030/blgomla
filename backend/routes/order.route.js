@@ -58,7 +58,7 @@ router.put("/:id/deliver", validateMarkOrderDelivered, markOrderDelivered);
 // Cancel an order
 router.put("/:id/cancel", validateCancelOrder, cancelOrder);
 
-// Delete an order (admin)
-// router.delete("/:id", validateDeleteOrder, deleteOrder);
+// Delete an order
+router.delete("/:id", protectRoute, validateDeleteOrder, deleteOrder);
 
 export default router;

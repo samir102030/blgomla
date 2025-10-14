@@ -6,10 +6,9 @@ const orderItemSchema = new mongoose.Schema({
     ref: "Product",
     required: [true, "Product ID is required"],
   },
-  // name: { type: String, required: true },
   quantity: { type: Number, required: [true, "Quantity is required"] },
-  // price: { type: Number, required: true },
-  // image: { type: String },
+  price: { type: Number, required: true }, // Price at time of purchase
+  salePercentage: { type: Number, default: 0 }, // Sale percentage at time of purchase
 });
 
 const orderSchema = new mongoose.Schema(
