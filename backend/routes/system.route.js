@@ -7,6 +7,7 @@ import ordersRoutes from "./order.route.js";
 import addressesRoutes from "./address.route.js";
 import uploadRoutes from "./upload.js";
 import storeRoutes from "./store.route.js";
+import analyticsRoutes from "./analytics.route.js";
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use("/addresses", addressesRoutes);
 router.use("/orders", ordersRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/stores", storeRoutes);
+router.use("/analytics", analyticsRoutes);
 
 export default router;
