@@ -44,8 +44,6 @@ const VendorRegistrationPage: React.FC = () => {
     confirmPassword: "",
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   const [documents, setDocuments] = useState<{
     commercialRegistration?: File;
     taxCard?: File;
@@ -227,48 +225,185 @@ const VendorRegistrationPage: React.FC = () => {
   };
 
   const fillDummyData = () => {
-    // populate all form fields with representative demo values
+    // Generate random data for testing
+    const randomId = Math.floor(Math.random() * 10000);
     const tomorrow = new Date();
     const nextYear = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+
+    // Random business names
+    const businessNames = [
+      "Tech Solutions Ltd",
+      "Global Trading Co",
+      "Innovative Ventures",
+      "Digital Commerce Inc",
+      "Smart Retail Group",
+      "Modern Marketplace",
+      "Elite Enterprises",
+      "Prime Distributors",
+      "Advanced Commerce",
+      "Future Tech Solutions",
+    ];
+
+    // Random company names
+    const companyNames = [
+      "ABC Corporation",
+      "XYZ Enterprises",
+      "Global Industries",
+      "Metro Solutions",
+      "City Commerce Ltd",
+      "Urban Traders",
+      "Prime Industries",
+      "Smart Solutions Inc",
+      "Future Enterprises",
+      "Modern Commerce Co",
+    ];
+
+    // Random cities and governorates
+    const locations = [
+      { city: "Cairo", governorate: "Cairo Governorate" },
+      { city: "Alexandria", governorate: "Alexandria Governorate" },
+      { city: "Giza", governorate: "Giza Governorate" },
+      { city: "Shubra El-Kheima", governorate: "Qalyubia Governorate" },
+      { city: "Port Said", governorate: "Port Said Governorate" },
+      { city: "Suez", governorate: "Suez Governorate" },
+      { city: "Luxor", governorate: "Luxor Governorate" },
+      { city: "Aswan", governorate: "Aswan Governorate" },
+      { city: "Mansoura", governorate: "Dakahlia Governorate" },
+      { city: "Tanta", governorate: "Gharbia Governorate" },
+    ];
+
+    // Random contact names
+    const contactNames = [
+      "Ahmed Mohamed",
+      "Fatima Hassan",
+      "Mohamed Ali",
+      "Sara Mahmoud",
+      "Omar Hassan",
+      "Layla Ahmed",
+      "Karim Ibrahim",
+      "Nour El-Din",
+      "Youssef Hassan",
+      "Amina Mahmoud",
+    ];
+
+    // Random store names
+    const storeNames = [
+      "TechHub Store",
+      "Digital Depot",
+      "Smart Shop",
+      "Prime Products",
+      "Elite Emporium",
+      "Modern Marketplace",
+      "Urban Store",
+      "City Commerce",
+      "Metro Mart",
+      "Global Goods",
+    ];
+
+    // Random business descriptions
+    const descriptions = [
+      "Leading provider of high-quality electronics and technology products.",
+      "Specialized in fashion and lifestyle products for modern consumers.",
+      "Comprehensive home and garden solutions for every household.",
+      "Premium sporting goods and outdoor equipment retailer.",
+      "Curated collection of books and educational materials.",
+      "Fun and educational toys for children of all ages.",
+      "Beauty and wellness products for health-conscious individuals.",
+      "Automotive parts and accessories for vehicle maintenance.",
+      "Elegant jewelry and accessories for special occasions.",
+      "Gourmet food and beverages from around the world.",
+    ];
+
+    // Random categories (select 2-4 random categories)
+    const allCategories = [
+      "Electronics",
+      "Fashion",
+      "Home & Garden",
+      "Sports & Outdoors",
+      "Books",
+      "Toys & Games",
+      "Health & Beauty",
+      "Automotive",
+      "Jewelry",
+      "Food & Beverages",
+      "Office Supplies",
+      "Pet Supplies",
+    ];
+
+    const selectedCategories = [];
+    const numCategories = Math.floor(Math.random() * 3) + 2; // 2-4 categories
+    const shuffledCategories = [...allCategories].sort(
+      () => 0.5 - Math.random()
+    );
+    for (let i = 0; i < numCategories; i++) {
+      selectedCategories.push(shuffledCategories[i]);
+    }
+
+    const randomLocation =
+      locations[Math.floor(Math.random() * locations.length)];
+    const randomPassword = `Pass${randomId}!`;
+
+    const businessTypes = ["company", "individual", "partnership"] as const;
+    const legalEntityTypes = [
+      "egyptian_tax_authority",
+      "ministry_supply_trade",
+      "other",
+    ] as const;
+
     setFormData({
-      businessName: "Demo Business",
-      businessType: "company",
-      commercialRegistrationNumber: "CR-123456",
-      taxNumber: "TAX-987654",
-      legalEntityType: "egyptian_tax_authority",
-      licenseNumber: "LIC-2025-001",
-      companyName: "Demo Company Ltd",
-      companyAddress: "123 Demo Street",
+      businessName:
+        businessNames[Math.floor(Math.random() * businessNames.length)],
+      businessType:
+        businessTypes[Math.floor(Math.random() * businessTypes.length)],
+      commercialRegistrationNumber: `CR-${randomId
+        .toString()
+        .padStart(6, "0")}`,
+      taxNumber: `TAX-${randomId.toString().padStart(6, "0")}`,
+      legalEntityType:
+        legalEntityTypes[Math.floor(Math.random() * legalEntityTypes.length)],
+      licenseNumber: `LIC-${randomId.toString().padStart(6, "0")}`,
+      companyName:
+        companyNames[Math.floor(Math.random() * companyNames.length)],
+      companyAddress: `${randomId} Demo Street, Business District`,
       issueDate: tomorrow.toISOString().slice(0, 10),
       expiryDate: nextYear.toISOString().slice(0, 10),
-      allowedActivities: "Retail, Online sales",
-      contactPersonName: "John Doe",
-      email: "contact@example.com",
-      phone: "+201234567890",
-      alternativePhone: "+201112223334",
-      address: "123 Demo Street, Floor 2",
-      city: "Cairo",
-      governorate: "Cairo Governorate",
-      postalCode: "11511",
-      businessDescription: "Demo business selling various demo products.",
-      productCategories: ["Electronics", "Fashion"],
-      expectedMonthlyVolume: 1000,
-      storeName: "Demo Store",
-      storeDescription: "This is a demo store used for testing.",
+      allowedActivities: "Retail, Online sales, Wholesale distribution",
+      contactPersonName:
+        contactNames[Math.floor(Math.random() * contactNames.length)],
+      email: `contact${randomId}@demo${randomId % 10}.com`,
+      phone: `+20${Math.floor(Math.random() * 900000000) + 100000000}`,
+      alternativePhone: `+20${
+        Math.floor(Math.random() * 900000000) + 100000000
+      }`,
+      address: `${randomId} Main Street, ${randomLocation.city}`,
+      city: randomLocation.city,
+      governorate: randomLocation.governorate,
+      postalCode: `${10000 + randomId}`,
+      businessDescription:
+        descriptions[Math.floor(Math.random() * descriptions.length)],
+      productCategories: selectedCategories,
+      expectedMonthlyVolume: Math.floor(Math.random() * 5000) + 1000,
+      storeName: storeNames[Math.floor(Math.random() * storeNames.length)],
+      storeDescription: `Welcome to our ${storeNames[
+        Math.floor(Math.random() * storeNames.length)
+      ].toLowerCase()}! We offer high-quality products with excellent customer service.`,
       termsAccepted: true,
       privacyPolicyAccepted: true,
     });
 
-    // prefill password so user only needs to enter account email
+    // Generate random account data
     setAccountData({
-      accountEmail: "",
-      password: "Password123",
-      confirmPassword: "Password123",
+      accountEmail: `vendor${randomId}@demo${randomId % 10}.com`,
+      password: randomPassword,
+      confirmPassword: randomPassword,
     });
-    // clear any attached documents (keeps files empty)
+
+    // Clear any attached documents (keeps files empty)
     setDocuments({});
     toast.success(
-      "Demo data populated. Please enter your account email to continue."
+      `Demo data ${randomId} populated! Account email: vendor${randomId}@demo${
+        randomId % 10
+      }.com`
     );
   };
 
@@ -397,7 +532,7 @@ const VendorRegistrationPage: React.FC = () => {
           onClick={fillDummyData}
           className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
         >
-          Fill demo data
+          Generate Random Data
         </button>
       </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">

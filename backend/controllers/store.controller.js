@@ -1,4 +1,5 @@
 // import { controllerWrapper } from "../utils/wrappers";
+import mongoose from "mongoose";
 import { paginateQuery } from "../utils/pagination.js";
 import Store from "../models/store.model.js";
 import Order from "../models/order.model.js";
@@ -41,6 +42,9 @@ const uploadToCloudinary = (buffer, folder = "vendor-documents") => {
 export const registerVendor = controllerWrapper(
   "registerVendor",
   async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
       // Debug: log incoming body keys and uploaded file fields (no sensitive data)
       try {
@@ -120,6 +124,8 @@ export const registerVendor = controllerWrapper(
         !accountEmail ||
         !password
       ) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({
           success: false,
           message: "All required fields must be filled",
@@ -127,6 +133,8 @@ export const registerVendor = controllerWrapper(
       }
 
       if (!termsAccepted || !privacyPolicyAccepted) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({
           success: false,
           message: "Terms and privacy policy must be accepted",
@@ -137,19 +145,27 @@ export const registerVendor = controllerWrapper(
       const parsedIssueDate = issueDate ? new Date(issueDate) : null;
       const parsedExpiryDate = expiryDate ? new Date(expiryDate) : null;
       if (parsedIssueDate && isNaN(parsedIssueDate.getTime())) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json({ success: false, message: "Invalid issueDate" });
       }
       if (parsedExpiryDate && isNaN(parsedExpiryDate.getTime())) {
+        await session.abortTransaction();
+        session.endSession();
         return res
           .status(400)
           .json({ success: false, message: "Invalid expiryDate" });
       }
 
       // Check if user with account email already exists
-      const existingUser = await User.findOne({ email: accountEmail });
+      const existingUser = await User.findOne({ email: accountEmail }).session(
+        session
+      );
       if (existingUser) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({
           success: false,
           message: "User with this email already exists",
@@ -157,8 +173,12 @@ export const registerVendor = controllerWrapper(
       }
 
       // Check if store with business name already exists
-      const existingStore = await Store.findOne({ businessName });
+      const existingStore = await Store.findOne({ businessName }).session(
+        session
+      );
       if (existingStore) {
+        await session.abortTransaction();
+        session.endSession();
         return res.status(400).json({
           success: false,
           message: "Store with this business name already exists",
@@ -188,7 +208,7 @@ export const registerVendor = controllerWrapper(
         active: false,
       });
 
-      await user.save();
+      await user.save({ session });
 
       // Handle document uploads (if files are uploaded)
       const documents = {};
@@ -226,6 +246,8 @@ export const registerVendor = controllerWrapper(
           }
         } catch (uploadError) {
           console.error("File upload error:", uploadError);
+          await session.abortTransaction();
+          session.endSession();
           return res.status(500).json({
             success: false,
             message: "Error uploading files. Please try again.",
@@ -289,9 +311,11 @@ export const registerVendor = controllerWrapper(
       });
 
       try {
-        await store.save();
+        await store.save({ session });
       } catch (saveErr) {
         console.error("Store save error:", saveErr);
+        await session.abortTransaction();
+        session.endSession();
         // If mongoose validation error, return 400 with details
         if (saveErr.name === "ValidationError") {
           const errors = Object.keys(saveErr.errors || {}).reduce(
@@ -314,6 +338,10 @@ export const registerVendor = controllerWrapper(
           error: saveErr.message,
         });
       }
+
+      // Commit the transaction
+      await session.commitTransaction();
+      session.endSession();
 
       // Return success response
       res.status(201).json({
@@ -338,6 +366,8 @@ export const registerVendor = controllerWrapper(
       });
     } catch (error) {
       console.error("Vendor registration error:", error);
+      await session.abortTransaction();
+      session.endSession();
       res.status(500).json({
         success: false,
         message: "Internal server error during registration",
