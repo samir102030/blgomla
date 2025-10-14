@@ -104,9 +104,9 @@ const FeaturedProducts: React.FC = () => {
               <div className="relative overflow-hidden rounded-t-lg bg-gray-100 aspect-square">
                 {/* Badges */}
                 <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
-                  {product.saleActive && (
+                  {product.saleActive && product.salePercentage && (
                     <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
-                      Sale
+                      {product.salePercentage}% OFF
                     </span>
                   )}
                 </div>
@@ -174,9 +174,9 @@ const FeaturedProducts: React.FC = () => {
                         ? product.salePrice
                         : product.price}
                     </span>
-                    {product.saleActive && (
+                    {product.saleActive && product.salePercentage && (
                       <span className="text-sm bg-red-100 text-red-800 px-2 py-1 rounded">
-                        Sale
+                        {product.salePercentage}% OFF
                       </span>
                     )}
                   </div>

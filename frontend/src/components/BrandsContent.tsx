@@ -61,7 +61,7 @@ const BrandsContent: React.FC = () => {
             <ProductFilterSidebar
               onFilterChange={(filters) => {
                 // Handle filter changes here
-                console.log('Filters changed:', filters);
+                console.log("Filters changed:", filters);
                 if (filters.brand) {
                   handleBrandSelect(filters.brand);
                 }
@@ -133,6 +133,8 @@ const BrandsContent: React.FC = () => {
                     rating={product.rating}
                     description={product?.description}
                     isOnSale={product.saleActive}
+                    isFeatured={product.featured}
+                    salePercentage={product.salePercentage}
                   />
                 ))
               )}
