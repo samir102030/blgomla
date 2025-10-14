@@ -135,7 +135,11 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                       {renderStars(Math.floor(product.rating))}
                     </div>
                     <span className="text-gray-600 text-sm">
-                      ({product.reviews?.length || 0} reviews)
+                      (
+                      {product.reviews?.filter(
+                        (r: any) => r.isVisible !== false
+                      ).length || 0}{" "}
+                      reviews)
                     </span>
                   </div>
                 )}
@@ -298,47 +302,58 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               )}
 
               {/* Reviews Summary */}
-              {product.reviews && product.reviews.length > 0 && (
-                <div>
-                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                    Recent Reviews
-                  </h4>
-                  <div className="space-y-3 max-h-40 overflow-y-auto">
-                    {product.reviews
-                      .slice(0, 3)
-                      .map((review: any, index: number) => (
-                        <div key={index} className="bg-gray-50 rounded-lg p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center">
-                              <img
-                                src={
-                                  review.user?.profilePicture ||
-                                  "/placeholder.png"
-                                }
-                                alt={review.user?.name || "User"}
-                                className="w-8 h-8 rounded-full mr-3"
-                              />
-                              <span className="font-medium text-gray-900 text-sm">
-                                {review.user?.name || "Anonymous"}
-                              </span>
+              {product.reviews &&
+                product.reviews.filter((r: any) => r.isVisible !== false)
+                  .length > 0 && (
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                      Recent Reviews
+                    </h4>
+                    <div className="space-y-3 max-h-40 overflow-y-auto">
+                      {product.reviews
+                        .filter((r: any) => r.isVisible !== false)
+                        .slice(0, 3)
+                        .map((review: any, index: number) => (
+                          <div
+                            key={index}
+                            className="bg-gray-50 rounded-lg p-3"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center">
+                                <img
+                                  src={
+                                    review.user?.profilePicture ||
+                                    "/placeholder.png"
+                                  }
+                                  alt={review.user?.name || "User"}
+                                  className="w-8 h-8 rounded-full mr-3"
+                                />
+                                <span className="font-medium text-gray-900 text-sm">
+                                  {review.user?.name || "Anonymous"}
+                                </span>
+                              </div>
+                              <div className="flex items-center">
+                                {renderStars(review.rating)}
+                              </div>
                             </div>
-                            <div className="flex items-center">
-                              {renderStars(review.rating)}
-                            </div>
+                            <p className="text-gray-700 text-sm">
+                              {review.comment}
+                            </p>
                           </div>
-                          <p className="text-gray-700 text-sm">
-                            {review.comment}
-                          </p>
+                        ))}
+                      {product.reviews.filter((r: any) => r.isVisible !== false)
+                        .length > 3 && (
+                        <div className="text-center text-gray-500 text-sm">
+                          And{" "}
+                          {product.reviews.filter(
+                            (r: any) => r.isVisible !== false
+                          ).length - 3}{" "}
+                          more reviews...
                         </div>
-                      ))}
-                    {product.reviews.length > 3 && (
-                      <div className="text-center text-gray-500 text-sm">
-                        And {product.reviews.length - 3} more reviews...
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ export interface ProductReview {
   user: User; // ObjectId as string
   rating: number;
   comment?: string;
+  isVisible?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

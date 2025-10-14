@@ -17,6 +17,10 @@ const reviewSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    isVisible: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
@@ -125,24 +129,30 @@ productSchema.virtual("salePrice").get(function () {
 });
 // method to update calculate rating after a review is added or updated
 productSchema.methods.calculateRating = function () {
-  if (this.reviews.length === 0) {
+  const visibleReviews = this.reviews.filter(
+    (review) => review.isVisible !== false
+  );
+  if (visibleReviews.length === 0) {
     this.rating = 0;
     return;
   }
-  const totalRating = this.reviews.reduce(
+  const totalRating = visibleReviews.reduce(
     (acc, review) => acc + review.rating,
     0
   );
-  this.rating = totalRating / this.reviews.length;
+  this.rating = totalRating / visibleReviews.length;
 };
 // rated
 productSchema.virtual("averageRating").get(function () {
-  if (this.reviews.length === 0) return 0;
-  const totalRating = this.reviews.reduce(
+  const visibleReviews = this.reviews.filter(
+    (review) => review.isVisible !== false
+  );
+  if (visibleReviews.length === 0) return 0;
+  const totalRating = visibleReviews.reduce(
     (acc, review) => acc + review.rating,
     0
   );
-  return totalRating / this.reviews.length;
+  return totalRating / visibleReviews.length;
 });
 
 const Product = mongoose.model("Product", productSchema);

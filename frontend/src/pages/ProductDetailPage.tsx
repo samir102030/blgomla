@@ -73,6 +73,24 @@ const ProductDetailPage: React.FC = () => {
     return product.reviews.find((review) => review.user._id === user._id);
   };
 
+  // Filter reviews based on visibility and ownership
+  const getFilteredReviews = () => {
+    if (!product?.reviews) return [];
+    return product.reviews.filter((review) => {
+      // Show visible reviews
+      if (review.isVisible !== false) return true;
+      // Show hidden reviews only to the review owner
+      return user && review.user._id === user._id;
+    });
+  };
+
+  // Get visible review count for display
+  const getVisibleReviewCount = () => {
+    if (!product?.reviews) return 0;
+    return product.reviews.filter((review) => review.isVisible !== false)
+      .length;
+  };
+
   // Handle review submission
   const handleSubmitReview = async () => {
     if (!productId || !reviewComment.trim()) {
@@ -340,7 +358,7 @@ const ProductDetailPage: React.FC = () => {
                   {renderStars(Math.floor(product.rating))}
                 </div>
                 <span className="ml-2 text-gray-600">
-                  ({product.reviews?.length || 0} reviews)
+                  ({getVisibleReviewCount()} reviews)
                 </span>
               </div>
 
@@ -611,9 +629,9 @@ const ProductDetailPage: React.FC = () => {
                   )}
 
                   {/* Reviews List */}
-                  {product.reviews && product.reviews.length > 0 ? (
+                  {getFilteredReviews().length > 0 ? (
                     <ul className="space-y-6">
-                      {product.reviews.map((review, idx) => (
+                      {getFilteredReviews().map((review, idx) => (
                         <li key={idx} className="border-b pb-4">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center">
@@ -632,6 +650,14 @@ const ProductDetailPage: React.FC = () => {
                                 {"★".repeat(review.rating)}
                                 {"☆".repeat(5 - review.rating)}
                               </span>
+                              {/* Hidden badge for user's own hidden reviews */}
+                              {user &&
+                                review.user._id === user._id &&
+                                review.isVisible === false && (
+                                  <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                    Hidden
+                                  </span>
+                                )}
                             </div>
 
                             {/* Edit/Delete buttons for user's own review */}

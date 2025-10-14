@@ -160,7 +160,10 @@ const FeaturedProducts: React.FC = () => {
                     {renderStars(product.rating)}
                   </div>
                   <span className="text-xs text-gray-500 ml-2">
-                    ({product.reviews?.length || 0})
+                    (
+                    {product.reviews?.filter((r: any) => r.isVisible !== false)
+                      .length || 0}
+                    )
                   </span>
                 </div>
 
