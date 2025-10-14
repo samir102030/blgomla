@@ -12,6 +12,8 @@ import MyAccountPage from "./pages/MyAccountPage";
 import AboutUsPage from "./pages/AboutUsPage";
 import VendorRegistrationPage from "./pages/VendorRegistrationPage";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 //import DashboardRoutes from './routes/DashboardRoutes';
 import AdminRoutes from "./routes/AdminRoutes";
 import VendorRoutes from "./routes/VendorRoutes";
@@ -27,6 +29,8 @@ function App() {
         <Route path="/brands" element={<BrandsPage />} />
         <Route path="/product/:productId" element={<ProductDetailPage />} />
         <Route path="/login" element={<LoginRegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/cart" element={<ShoppingCartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
