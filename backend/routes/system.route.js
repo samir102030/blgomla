@@ -9,6 +9,7 @@ import uploadRoutes from "./upload.js";
 import storeRoutes from "./store.route.js";
 import analyticsRoutes from "./analytics.route.js";
 import reviewRoutes from "./review.route.js";
+import chatRoutes from "./chat.route.js";
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use("/upload", uploadRoutes);
 router.use("/stores", storeRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/reviews", reviewRoutes);
+router.use("/chat", chatRoutes);
 
 export default router;

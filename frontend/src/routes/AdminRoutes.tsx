@@ -8,6 +8,7 @@ import UsersPage from "../pages/admin/UsersPage";
 import CategoriesPage from "../pages/admin/CategoriesPage";
 import SalesPage from "../pages/admin/SalesPage";
 import CustomerReviewsPage from "../pages/admin/CustomerReviewsPage";
+import CustomerSupportPage from "../pages/admin/CustomerSupportPage";
 import VendorRequests from "../pages/dashboard/vendors/VendorRequests";
 import AllVendors from "../pages/admin/vendors/AllVendors";
 import ApprovedVendors from "../pages/admin/vendors/ApprovedVendors";
@@ -62,6 +63,9 @@ const AdminRoutes: React.FC = () => {
 
         {/* Customer Reviews */}
         <Route path="/reviews" element={<CustomerReviewsPage />} />
+
+        {/* Customer Support */}
+        <Route path="/support" element={<CustomerSupportPage />} />
 
         {/* Sales & Analytics */}
         <Route path="/sales" element={<SalesPage />} />
