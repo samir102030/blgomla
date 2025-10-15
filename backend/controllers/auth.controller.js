@@ -7,6 +7,7 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
 import mongoose from "mongoose";
+import Notification from "../models/notification.model.js";
 export const signup = controllerWrapper("signup", async (req, res) => {
   const { email, password, name, phoneNumber, role, storeDescription } =
     req.body;
@@ -113,6 +114,18 @@ export const verifyEmail = controllerWrapper(
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
+    // Create account verification notification
+    try {
+      await Notification.create({
+        user: user._id,
+        title: "Account Verified",
+        message: "Your account has been successfully verified.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error creating verification notification:", error);
+    }
+
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
@@ -146,6 +159,18 @@ export const login = controllerWrapper("login", async (req, res) => {
 
   user.lastLogin = new Date();
   await user.save();
+
+  // Create login notification
+  try {
+    await Notification.create({
+      user: user._id,
+      title: "Welcome Back",
+      message: "You have successfully logged in to your account.",
+      type: "info",
+    });
+  } catch (error) {
+    console.error("Error creating login notification:", error);
+  }
 
   return res.status(200).json({
     success: true,
@@ -213,6 +238,18 @@ export const resetPassword = controllerWrapper(
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiresAt = undefined;
     await user.save();
+
+    // Create password reset notification
+    try {
+      await Notification.create({
+        user: user._id,
+        title: "Password Updated",
+        message: "Your password has been successfully changed.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error creating password reset notification:", error);
+    }
 
     res
       .status(200)
@@ -571,6 +608,18 @@ export const updateProfile = controllerWrapper(
         .json({ success: false, message: "User not found" });
     }
 
+    // Create profile update notification
+    try {
+      await Notification.create({
+        user: userId,
+        title: "Profile Updated",
+        message: "Your profile information has been updated successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error creating profile update notification:", error);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
@@ -622,6 +671,18 @@ export const changePassword = controllerWrapper(
     // Update password
     user.password = newPassword;
     await user.save();
+
+    // Create password change notification
+    try {
+      await Notification.create({
+        user: user._id,
+        title: "Password Updated",
+        message: "Your password has been successfully changed.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error creating password change notification:", error);
+    }
 
     return res.status(200).json({
       success: true,

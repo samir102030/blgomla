@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import Store from "../models/store.model.js";
 import mongoose from "mongoose";
 import { controllerWrapper } from "../utils/wrappers.js";
+import Notification from "../models/notification.model.js";
 
 export const createOrder = controllerWrapper(
   "createOrder",
@@ -133,6 +134,34 @@ export const createOrder = controllerWrapper(
       // Commit the transaction
       await session.commitTransaction();
 
+      // Create notifications
+      try {
+        await Notification.create({
+          user: savedOrder.user,
+          title: "Order Placed",
+          message: `Your order #${savedOrder._id} has been placed successfully.`,
+          type: "success",
+        });
+
+        // Notify store owner(s) about new order
+        const storeDoc = await Store.findById(savedOrder.store).populate(
+          "owner"
+        );
+        if (storeDoc && storeDoc.owner) {
+          const customer = await User.findById(savedOrder.user);
+          await Notification.create({
+            user: storeDoc.owner._id,
+            title: "New Order Received",
+            message: `You have received a new order #${savedOrder._id} from ${
+              customer?.name || "A customer"
+            }.`,
+            type: "success",
+          });
+        }
+      } catch (error) {
+        console.error("Error creating order notifications:", error);
+      }
+
       res.status(201).json({
         success: true,
         order: savedOrder,
@@ -249,6 +278,29 @@ export const updateOrderStatus = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+
+    // Create notification for customer about status change
+    const statusMessages = {
+      confirmed: "confirmed",
+      processing: "is being processed",
+      shipped: "has been shipped",
+      delivered: "has been delivered",
+      cancelled: "has been cancelled",
+    };
+
+    const message = statusMessages[status] || "status has been updated";
+
+    try {
+      await Notification.create({
+        user: order.user,
+        title: "Order Status Update",
+        message: `Your order #${order._id} ${message}.`,
+        type: status === "cancelled" ? "warning" : "info",
+      });
+    } catch (error) {
+      console.error("Error creating order status notification:", error);
+    }
+
     res.status(200).json({ success: true, order });
   }
 );

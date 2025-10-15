@@ -1,7 +1,11 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { axiosInstance } from '../lib/axios';
-import type { Notification, NotificationPreferences, NotificationStats } from '../types/notification.type';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { axiosInstance } from "../lib/axios";
+import type {
+  Notification,
+  NotificationPreferences,
+  NotificationStats,
+} from "../types/notification.type";
 
 interface PaginatedResult<T> {
   data: T[];
@@ -21,6 +25,7 @@ interface NotificationStore {
   paginated: PaginatedResult<Notification> | undefined;
   loading: boolean;
   error: string | undefined;
+  hideReadNotifications: boolean;
 
   // Notification Management
   fetchNotifications: (params?: Record<string, any>) => Promise<void>;
@@ -31,11 +36,13 @@ interface NotificationStore {
   deleteAllNotifications: () => Promise<boolean>;
 
   // Notification Creation (Admin)
-  createNotification: (data: Partial<Notification>) => Promise<Notification | undefined>;
+  createNotification: (
+    data: Partial<Notification>
+  ) => Promise<Notification | undefined>;
   sendBulkNotification: (data: {
     title: string;
     message: string;
-    type: Notification['type'];
+    type: Notification["type"];
     recipients: string[];
     actionUrl?: string;
     actionText?: string;
@@ -43,7 +50,9 @@ interface NotificationStore {
 
   // Preferences
   fetchPreferences: () => Promise<void>;
-  updatePreferences: (preferences: Partial<NotificationPreferences>) => Promise<boolean>;
+  updatePreferences: (
+    preferences: Partial<NotificationPreferences>
+  ) => Promise<boolean>;
 
   // Stats & Analytics
   fetchStats: () => Promise<void>;
@@ -51,7 +60,14 @@ interface NotificationStore {
 
   // Real-time Updates
   addNotification: (notification: Notification) => void;
-  updateNotification: (notificationId: string, updates: Partial<Notification>) => void;
+  updateNotification: (
+    notificationId: string,
+    updates: Partial<Notification>
+  ) => void;
+
+  // UI Controls
+  toggleHideReadNotifications: () => void;
+  showAllNotifications: () => void;
 
   // Utility
   clearError: () => void;
@@ -69,16 +85,19 @@ export const useNotificationStore = create<NotificationStore>()(
       paginated: undefined,
       loading: false,
       error: undefined,
+      hideReadNotifications: false,
 
       // Fetch Notifications
       fetchNotifications: async (params = {}) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<PaginatedResult<Notification>>('/notifications', { params });
-          set({ 
-            notifications: data.data, 
-            paginated: data, 
-            loading: false 
+          const { data } = await axiosInstance.get<
+            PaginatedResult<Notification>
+          >("/notifications", { params });
+          set({
+            notifications: data.data,
+            paginated: data,
+            loading: false,
           });
         } catch (error: any) {
           set({
@@ -92,7 +111,10 @@ export const useNotificationStore = create<NotificationStore>()(
       fetchNotificationById: async (notificationId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; notification: Notification }>(`/notifications/${notificationId}`);
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            notification: Notification;
+          }>(`/notifications/${notificationId}`);
           set({ notification: data.notification, loading: false });
         } catch (error: any) {
           set({
@@ -106,13 +128,16 @@ export const useNotificationStore = create<NotificationStore>()(
       markAsRead: async (notificationId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.patch<{ success: boolean; notification: Notification }>(`/notifications/${notificationId}/read`);
+          const { data } = await axiosInstance.patch<{
+            success: boolean;
+            notification: Notification;
+          }>(`/notifications/${notificationId}/read`);
           const updatedNotification = data.notification;
-          set(state => ({
-            notifications: state.notifications.map(notif => 
+          set((state) => ({
+            notifications: state.notifications.map((notif) =>
               notif._id === notificationId ? updatedNotification : notif
             ),
-            loading: false
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -128,10 +153,13 @@ export const useNotificationStore = create<NotificationStore>()(
       markAllAsRead: async () => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.patch('/notifications/read-all');
-          set(state => ({
-            notifications: state.notifications.map(notif => ({ ...notif, isRead: true })),
-            loading: false
+          await axiosInstance.put("/notifications/mark-all-read");
+          set((state) => ({
+            notifications: state.notifications.map((notif) => ({
+              ...notif,
+              read: true,
+            })),
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -148,9 +176,11 @@ export const useNotificationStore = create<NotificationStore>()(
         set({ loading: true, error: undefined });
         try {
           await axiosInstance.delete(`/notifications/${notificationId}`);
-          set(state => ({
-            notifications: state.notifications.filter(notif => notif._id !== notificationId),
-            loading: false
+          set((state) => ({
+            notifications: state.notifications.filter(
+              (notif) => notif._id !== notificationId
+            ),
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -166,7 +196,7 @@ export const useNotificationStore = create<NotificationStore>()(
       deleteAllNotifications: async () => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.delete('/notifications/all');
+          await axiosInstance.delete("/notifications/all");
           set({ notifications: [], loading: false });
           return true;
         } catch (error: any) {
@@ -182,11 +212,14 @@ export const useNotificationStore = create<NotificationStore>()(
       createNotification: async (notificationData: Partial<Notification>) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.post<{ success: boolean; notification: Notification }>('/notifications', notificationData);
+          const { data } = await axiosInstance.post<{
+            success: boolean;
+            notification: Notification;
+          }>("/notifications", notificationData);
           const newNotification = data.notification;
-          set(state => ({
+          set((state) => ({
             notifications: [newNotification, ...state.notifications],
-            loading: false
+            loading: false,
           }));
           return newNotification;
         } catch (error: any) {
@@ -202,7 +235,7 @@ export const useNotificationStore = create<NotificationStore>()(
       sendBulkNotification: async (data) => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.post('/notifications/bulk', data);
+          await axiosInstance.post("/notifications/bulk", data);
           set({ loading: false });
           return true;
         } catch (error: any) {
@@ -218,7 +251,10 @@ export const useNotificationStore = create<NotificationStore>()(
       fetchPreferences: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; preferences: NotificationPreferences }>('/notifications/preferences');
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            preferences: NotificationPreferences;
+          }>("/notifications/preferences");
           set({ preferences: data.preferences, loading: false });
         } catch (error: any) {
           set({
@@ -229,10 +265,15 @@ export const useNotificationStore = create<NotificationStore>()(
       },
 
       // Update Preferences
-      updatePreferences: async (preferences: Partial<NotificationPreferences>) => {
+      updatePreferences: async (
+        preferences: Partial<NotificationPreferences>
+      ) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.put<{ success: boolean; preferences: NotificationPreferences }>('/notifications/preferences', preferences);
+          const { data } = await axiosInstance.put<{
+            success: boolean;
+            preferences: NotificationPreferences;
+          }>("/notifications/preferences", preferences);
           set({ preferences: data.preferences, loading: false });
           return true;
         } catch (error: any) {
@@ -248,7 +289,10 @@ export const useNotificationStore = create<NotificationStore>()(
       fetchStats: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; stats: NotificationStats }>('/notifications/stats');
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            stats: NotificationStats;
+          }>("/notifications/stats");
           set({ stats: data.stats, loading: false });
         } catch (error: any) {
           set({
@@ -261,43 +305,59 @@ export const useNotificationStore = create<NotificationStore>()(
       // Get Unread Count
       getUnreadCount: () => {
         const { notifications } = get();
-        return notifications.filter(notif => !notif.isRead).length;
+        return notifications.filter((notif) => !notif.read).length;
       },
 
       // Add Notification (Real-time)
       addNotification: (notification: Notification) => {
-        set(state => ({
-          notifications: [notification, ...state.notifications]
+        set((state) => ({
+          notifications: [notification, ...state.notifications],
         }));
       },
 
       // Update Notification (Real-time)
-      updateNotification: (notificationId: string, updates: Partial<Notification>) => {
-        set(state => ({
-          notifications: state.notifications.map(notif => 
+      updateNotification: (
+        notificationId: string,
+        updates: Partial<Notification>
+      ) => {
+        set((state) => ({
+          notifications: state.notifications.map((notif) =>
             notif._id === notificationId ? { ...notif, ...updates } : notif
-          )
+          ),
         }));
+      },
+
+      // UI Controls
+      toggleHideReadNotifications: () => {
+        set((state) => ({
+          hideReadNotifications: !state.hideReadNotifications,
+        }));
+      },
+
+      showAllNotifications: () => {
+        set({ hideReadNotifications: false });
       },
 
       // Clear Error
       clearError: () => set({ error: undefined }),
 
       // Reset Store
-      reset: () => set({
-        notifications: [],
-        notification: undefined,
-        preferences: undefined,
-        stats: undefined,
-        paginated: undefined,
-        loading: false,
-        error: undefined,
-      }),
+      reset: () =>
+        set({
+          notifications: [],
+          notification: undefined,
+          preferences: undefined,
+          stats: undefined,
+          paginated: undefined,
+          loading: false,
+          error: undefined,
+        }),
     }),
     {
-      name: 'notification-store',
+      name: "notification-store",
       partialize: (state) => ({
         preferences: state.preferences,
+        hideReadNotifications: state.hideReadNotifications,
       }),
     }
   )

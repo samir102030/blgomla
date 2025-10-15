@@ -1,18 +1,20 @@
 export interface Notification {
   _id: string;
-  recipient: string; // User ID
+  user: string; // User ID
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error' | 'order' | 'product' | 'vendor' | 'system';
-  category?: 'order' | 'product' | 'account' | 'promotion' | 'system' | 'vendor';
-  isRead: boolean;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  actionUrl?: string;
-  actionText?: string;
-  data?: Record<string, any>; // Additional data for the notification
-  expiresAt?: string;
+  type:
+    | "info"
+    | "warning"
+    | "success"
+    | "error"
+    | "order"
+    | "promotion"
+    | "system";
+  read: boolean;
+  deleted: boolean;
   createdAt: string;
-  readAt?: string;
+  updatedAt: string;
 }
 
 export interface NotificationPreferences {
@@ -36,7 +38,7 @@ export interface NotificationPreferences {
     orders: boolean;
     accountActivity: boolean;
   };
-  frequency: 'immediate' | 'daily' | 'weekly';
+  frequency: "immediate" | "daily" | "weekly";
   quietHours: {
     enabled: boolean;
     startTime: string; // HH:mm format

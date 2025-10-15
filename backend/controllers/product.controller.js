@@ -2,6 +2,8 @@ import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import User from "../models/user.model.js";
+import Notification from "../models/notification.model.js";
+import mongoose from "mongoose";
 
 // Create Product
 export const createProduct = controllerWrapper(
@@ -10,6 +12,21 @@ export const createProduct = controllerWrapper(
     const productData = req.body;
     const product = new Product(productData);
     await product.save();
+
+    // Create notification for store owner
+    const store = await mongoose
+      .model("Store")
+      .findById(product.store)
+      .populate("owner");
+    if (store && store.owner) {
+      await Notification.create({
+        user: store.owner._id,
+        title: "New Product Added",
+        message: `Your product "${product.name}" has been added successfully`,
+        type: "product",
+      });
+    }
+
     res.status(201).json({ success: true, product });
   }
 );
@@ -336,6 +353,24 @@ export const addProductReview = controllerWrapper(
     //   product.reviews.length;
     product.calculateRating();
     await product.save();
+
+    // Create notification for store owner about new review
+    const store = await mongoose
+      .model("Store")
+      .findById(product.store)
+      .populate("owner");
+    if (store && store.owner) {
+      const reviewer = await User.findById(userId);
+      await Notification.create({
+        user: store.owner._id,
+        title: "New Product Review",
+        message: `Your product "${product.name}" received a new review from ${
+          reviewer?.name || "A customer"
+        }`,
+        type: "review",
+      });
+    }
+
     res.status(201).json({ success: true, reviews: product.reviews });
   }
 );

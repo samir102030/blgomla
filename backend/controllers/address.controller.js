@@ -1,5 +1,6 @@
 import Address from "../models/address.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
+import Notification from "../models/notification.model.js";
 
 export const createAddress = controllerWrapper(
   "createAddress",
@@ -15,6 +16,15 @@ export const createAddress = controllerWrapper(
       user: req.user._id,
     });
     await address.save();
+
+    // Create notification for new address
+    await Notification.create({
+      user: req.user._id,
+      title: "New Address Added",
+      message: "A new address has been added to your account",
+      type: "address",
+    });
+
     res.status(201).json({ success: true, address });
   }
 );

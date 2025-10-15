@@ -10,6 +10,7 @@ import storeRoutes from "./store.route.js";
 import analyticsRoutes from "./analytics.route.js";
 import reviewRoutes from "./review.route.js";
 import chatRoutes from "./chat.route.js";
+import notificationRoutes from "./notification.route.js";
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use("/stores", storeRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/chat", chatRoutes);
+router.use("/notifications", notificationRoutes);
 
 export default router;

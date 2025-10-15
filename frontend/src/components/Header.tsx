@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
+import NotificationBell from "./NotificationBell";
 
 const Header: React.FC = () => {
   const user = useUserStore((state) => state.user);
@@ -77,6 +78,7 @@ const Header: React.FC = () => {
                 <span className="text-xl mb-1">👤</span>
                 <span className="text-xs hidden sm:block">Account</span>
               </Link>
+              {user && <NotificationBell />}
               <Link
                 to="/wishlist"
                 className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
