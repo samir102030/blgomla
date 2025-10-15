@@ -1,104 +1,128 @@
-import React, { useState } from 'react';
-import { MagnifyingGlassIcon, PlusIcon, EyeIcon, PencilIcon, TrashIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from "react";
+import {
+  MagnifyingGlassIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
+import { useUserStore } from "../../stores/user.store";
 
 const UsersPage: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    role: "customer",
+    active: true,
+  });
+  const {
+    users,
+    paginated,
+    loading,
+    error,
+    fetchUsers,
+    updateUser,
+    safeDeleteUser,
+    finalDeleteUser,
+  } = useUserStore();
 
-  const users = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      role: 'customer',
-      status: 'active',
-      joinDate: '2024-01-15',
-      lastLogin: '2024-01-20',
-      orders: 12,
-      totalSpent: '$1,234.56',
-      avatar: '/p1.jpeg'
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      role: 'admin',
-      status: 'active',
-      joinDate: '2023-12-10',
-      lastLogin: '2024-01-21',
-      orders: 0,
-      totalSpent: '$0.00',
-      avatar: '/p2.jpeg'
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      email: 'mike.johnson@example.com',
-      role: 'customer',
-      status: 'inactive',
-      joinDate: '2024-01-08',
-      lastLogin: '2024-01-10',
-      orders: 3,
-      totalSpent: '$456.78',
-      avatar: '/p3.jpeg'
-    },
-    {
-      id: 4,
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@example.com',
-      role: 'moderator',
-      status: 'active',
-      joinDate: '2023-11-22',
-      lastLogin: '2024-01-21',
-      orders: 8,
-      totalSpent: '$892.34',
-      avatar: '/p4.jpeg'
-    },
-    {
-      id: 5,
-      name: 'David Brown',
-      email: 'david.brown@example.com',
-      role: 'customer',
-      status: 'suspended',
-      joinDate: '2024-01-05',
-      lastLogin: '2024-01-18',
-      orders: 1,
-      totalSpent: '$123.45',
-      avatar: '/p5.jpeg'
-    }
-  ];
+  useEffect(() => {
+    fetchUsers({ page: currentPage, limit: 10 });
+  }, [currentPage, fetchUsers]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-[#009688]/10 text-[#009688]';
-      case 'inactive':
-        return 'bg-[#9E9E9E]/10 text-[#9E9E9E]';
-      case 'suspended':
-        return 'bg-[#D32F2F]/10 text-[#D32F2F]';
-      default:
-        return 'bg-[#9E9E9E]/10 text-[#9E9E9E]';
+  const handleViewUser = (user: any) => {
+    setSelectedUser(user);
+    setShowViewModal(true);
+  };
+
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user);
+    setEditForm({
+      role: user.role,
+      active: user.active,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (selectedUser) {
+      const success = await updateUser(selectedUser._id, {
+        role: editForm.role as "customer" | "store" | "admin",
+        active: editForm.active,
+      });
+      if (success) {
+        fetchUsers({ page: currentPage, limit: 10 });
+        setShowEditModal(false);
+        setSelectedUser(null);
+      }
     }
+  };
+
+  const handleDeleteUser = (user: any) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (selectedUser) {
+      let success;
+      if (selectedUser.deleted) {
+        // Permanently delete
+        success = await finalDeleteUser(selectedUser._id);
+      } else {
+        // Mark as deleted
+        success = await safeDeleteUser(selectedUser._id);
+      }
+      if (success) {
+        fetchUsers({ page: currentPage, limit: 10 });
+        setShowDeleteModal(false);
+        setSelectedUser(null);
+      }
+    }
+  };
+
+  const getStatusColor = (user: any) => {
+    if (user.deleted) return "bg-[#D32F2F]/10 text-[#D32F2F]";
+    return user.active
+      ? "bg-[#009688]/10 text-[#009688]"
+      : "bg-[#9E9E9E]/10 text-[#9E9E9E]";
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-[#673AB7]/10 text-[#673AB7]';
-      case 'moderator':
-        return 'bg-[#002B5B]/10 text-[#002B5B]';
-      case 'customer':
-        return 'bg-[#9E9E9E]/10 text-[#9E9E9E]';
+      case "admin":
+        return "bg-[#673AB7]/10 text-[#673AB7]";
+      case "store":
+        return "bg-[#002B5B]/10 text-[#002B5B]";
+      case "customer":
+        return "bg-[#9E9E9E]/10 text-[#9E9E9E]";
       default:
-        return 'bg-[#9E9E9E]/10 text-[#9E9E9E]';
+        return "bg-[#9E9E9E]/10 text-[#9E9E9E]";
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    return matchesSearch && matchesRole;
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.phoneNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active"
+        ? user.active && !user.deleted
+        : statusFilter === "inactive"
+        ? !user.active && !user.deleted
+        : statusFilter === "deleted"
+        ? user.deleted
+        : true);
+    return matchesSearch && matchesRole && matchesStatus;
   });
 
   return (
@@ -106,13 +130,13 @@ const UsersPage: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">Users Management</h1>
-          <p className="text-[#9E9E9E]">Manage system users and their permissions</p>
+          <h1 className="text-2xl font-bold text-[#333333]">
+            Users Management
+          </h1>
+          <p className="text-[#9E9E9E]">
+            Manage system users and their permissions
+          </p>
         </div>
-        <button className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium">
-          <PlusIcon className="h-4 w-4" />
-          Add User
-        </button>
       </div>
 
       {/* Stats Cards */}
@@ -121,7 +145,9 @@ const UsersPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">12,847</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {paginated?.total || 0}
+              </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
               <span className="text-2xl">👥</span>
@@ -132,7 +158,9 @@ const UsersPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Active Users</p>
-              <p className="text-2xl font-bold text-green-600">11,234</p>
+              <p className="text-2xl font-bold text-green-600">
+                {users.filter((u) => u.active).length}
+              </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
               <span className="text-2xl">✅</span>
@@ -142,22 +170,26 @@ const UsersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">New This Month</p>
-              <p className="text-2xl font-bold text-blue-600">456</p>
+              <p className="text-sm text-gray-600">Inactive Users</p>
+              <p className="text-2xl font-bold text-red-600">
+                {users.filter((u) => !u.active).length}
+              </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <span className="text-2xl">🆕</span>
+            <div className="bg-red-100 p-3 rounded-full">
+              <span className="text-2xl">🚫</span>
             </div>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Suspended</p>
-              <p className="text-2xl font-bold text-red-600">89</p>
+              <p className="text-sm text-gray-600">Deleted Users</p>
+              <p className="text-2xl font-bold text-red-600">
+                {users.filter((u) => u.deleted).length}
+              </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <span className="text-2xl">🚫</span>
+              <span className="text-2xl">🗑️</span>
             </div>
           </div>
         </div>
@@ -186,101 +218,362 @@ const UsersPage: React.FC = () => {
             >
               <option value="all">All Roles</option>
               <option value="admin">Admin</option>
-              <option value="moderator">Moderator</option>
+              <option value="store">Store</option>
               <option value="customer">Customer</option>
             </select>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-              <FunnelIcon className="h-4 w-4" />
-              More Filters
-            </button>
+            <select
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="deleted">Deleted</option>
+            </select>
           </div>
         </div>
       </div>
 
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Join Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <img className="h-10 w-10 rounded-full object-cover" src={user.avatar} alt={user.name} />
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>
-                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.joinDate}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.lastLogin}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.orders}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {user.totalSpent}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
-                        <EyeIcon className="h-4 w-4" />
-                      </button>
-                      <button className="text-green-600 hover:text-green-900">
-                        <PencilIcon className="h-4 w-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Loading users...</p>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center">
+            <p className="text-red-600">Error loading users: {error}</p>
+            <button
+              onClick={() => fetchUsers({ page: currentPage, limit: 10 })}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Join Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Last Login
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-4 text-center text-gray-500"
+                    >
+                      No users found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <tr key={user._id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          {user.profilePicture ? (
+                            <img
+                              className="h-10 w-10 rounded-full object-cover"
+                              src={user.profilePicture}
+                              alt={user.name || "User"}
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                              <UserIcon className="h-6 w-6 text-gray-500" />
+                            </div>
+                          )}
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {user.name || "N/A"}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {user.email}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(
+                            user.role
+                          )}`}
+                        >
+                          {user.role.charAt(0).toUpperCase() +
+                            user.role.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                            user
+                          )}`}
+                        >
+                          {user.deleted
+                            ? "Deleted"
+                            : user.active
+                            ? "Active"
+                            : "Inactive"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.createdAt
+                          ? new Date(user.createdAt).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {user.lastLogin
+                          ? new Date(user.lastLogin).toLocaleDateString()
+                          : "Never"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            className="text-blue-600 hover:text-blue-900"
+                            onClick={() => handleViewUser(user)}
+                          >
+                            <EyeIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="text-green-600 hover:text-green-900"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="text-red-600 hover:text-red-900"
+                            onClick={() => handleDeleteUser(user)}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
       <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
         <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">1</span> to <span className="font-medium">5</span> of{' '}
-          <span className="font-medium">12,847</span> results
+          Showing{" "}
+          <span className="font-medium">
+            {((paginated?.page || 1) - 1) * (paginated?.limit || 10) + 1}
+          </span>{" "}
+          to{" "}
+          <span className="font-medium">
+            {Math.min(
+              (paginated?.page || 1) * (paginated?.limit || 10),
+              paginated?.total || 0
+            )}
+          </span>{" "}
+          of <span className="font-medium">{paginated?.total || 0}</span>{" "}
+          results
         </div>
         <div className="flex space-x-2">
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">Previous</button>
-          <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">1</button>
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">2</button>
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">3</button>
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">Next</button>
+          <button
+            className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50"
+            disabled={(paginated?.page || 1) <= 1}
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          >
+            Previous
+          </button>
+          {Array.from(
+            { length: Math.min(5, paginated?.pages || 1) },
+            (_, i) => {
+              const pageNum = Math.max(1, (paginated?.page || 1) - 2) + i;
+              if (pageNum > (paginated?.pages || 1)) return null;
+              return (
+                <button
+                  key={pageNum}
+                  className={`px-3 py-1 rounded text-sm ${
+                    pageNum === (paginated?.page || 1)
+                      ? "bg-blue-600 text-white"
+                      : "border border-gray-300 hover:bg-gray-50"
+                  }`}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </button>
+              );
+            }
+          )}
+          <button
+            className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50"
+            disabled={(paginated?.page || 1) >= (paginated?.pages || 1)}
+            onClick={() =>
+              setCurrentPage((prev) =>
+                Math.min(paginated?.pages || 1, prev + 1)
+              )
+            }
+          >
+            Next
+          </button>
         </div>
       </div>
+
+      {/* View User Modal */}
+      {showViewModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">User Details</h3>
+            <div className="space-y-2">
+              <p>
+                <strong>Name:</strong> {selectedUser.name || "N/A"}
+              </p>
+              <p>
+                <strong>Email:</strong> {selectedUser.email}
+              </p>
+              <p>
+                <strong>Role:</strong> {selectedUser.role}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {selectedUser.deleted
+                  ? "Deleted"
+                  : selectedUser.active
+                  ? "Active"
+                  : "Inactive"}
+              </p>
+              <p>
+                <strong>Phone:</strong> {selectedUser.phoneNumber || "N/A"}
+              </p>
+              <p>
+                <strong>Join Date:</strong>{" "}
+                {selectedUser.createdAt
+                  ? new Date(selectedUser.createdAt).toLocaleDateString()
+                  : "N/A"}
+              </p>
+              <p>
+                <strong>Last Login:</strong>{" "}
+                {selectedUser.lastLogin
+                  ? new Date(selectedUser.lastLogin).toLocaleDateString()
+                  : "Never"}
+              </p>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                onClick={() => setShowViewModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Edit User</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Role</label>
+                <select
+                  className="w-full p-2 border rounded"
+                  value={editForm.role}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, role: e.target.value })
+                  }
+                >
+                  <option value="customer">Customer</option>
+                  <option value="store">Store</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Status</label>
+                <select
+                  className="w-full p-2 border rounded"
+                  value={editForm.active ? "active" : "inactive"}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      active: e.target.value === "active",
+                    })
+                  }
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                onClick={() => setShowEditModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                onClick={handleSaveEdit}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Modal */}
+      {showDeleteModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Delete User</h3>
+            <p>
+              Are you sure you want to{" "}
+              {selectedUser.deleted ? "permanently delete" : "delete"} user "
+              {selectedUser.name || selectedUser.email}"?
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              {selectedUser.deleted
+                ? "This action cannot be undone."
+                : "This action can be undone by restoring the user later."}
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

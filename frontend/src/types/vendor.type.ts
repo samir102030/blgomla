@@ -1,47 +1,47 @@
 export interface VendorRegistrationData {
   // Business Information
   businessName: string;
-  businessType: 'individual' | 'company' | 'partnership';
+  businessType: "individual" | "company" | "partnership";
   commercialRegistrationNumber?: string;
   taxNumber?: string;
-  
+
   // Legal Entity Information
-  legalEntityType: 'egyptian_tax_authority' | 'ministry_supply_trade' | 'other';
+  legalEntityType: "egyptian_tax_authority" | "ministry_supply_trade" | "other";
   licenseNumber: string;
   companyName: string;
   companyAddress: string;
   issueDate: string;
   expiryDate: string;
   allowedActivities?: string;
-  
+
   // Contact Information
   contactPersonName: string;
   email: string;
   phone: string;
   alternativePhone?: string;
-  
+
   // Address Information
   address: string;
   city: string;
   governorate: string;
   postalCode?: string;
-  
+
   // Business Details
   businessDescription: string;
   productCategories: string[];
   expectedMonthlyVolume?: number;
-  
+
   // Documents
   commercialRegistrationDocument?: File | string;
   taxCardDocument?: File | string;
   nationalIdDocument?: File | string;
   bankStatementDocument?: File | string;
-  
+
   // Store Information
   storeName?: string;
   storeDescription?: string;
   storeLogo?: File | string;
-  
+
   // Agreement
   termsAccepted: boolean;
   privacyPolicyAccepted: boolean;
@@ -50,10 +50,10 @@ export interface VendorRegistrationData {
 export interface Vendor {
   _id: string;
   businessName: string;
-  businessType: 'individual' | 'company' | 'partnership';
+  businessType: "individual" | "company" | "partnership";
   commercialRegistrationNumber?: string;
   taxNumber?: string;
-  
+
   // Legal Entity
   legalEntityType: string;
   licenseNumber: string;
@@ -62,7 +62,7 @@ export interface Vendor {
   issueDate: string;
   expiryDate: string;
   allowedActivities?: string;
-  
+
   // Contact
   contactPersonName: string;
   email: string;
@@ -70,22 +70,22 @@ export interface Vendor {
   phone: string;
   contactPhone: string; // Alias for phone
   alternativePhone?: string;
-  
+
   // Address
   address: string;
   city: string;
   governorate: string;
   postalCode?: string;
-  
+
   // Business
   businessDescription: string;
   productCategories: string[];
   expectedMonthlyVolume?: number;
-  
+
   // Status
-  status: 'pending' | 'approved' | 'rejected' | 'suspended' | 'active';
+  status: "pending" | "approved" | "rejected" | "suspended" | "active";
   rejectionReason?: string;
-  
+
   // Documents
   documents: {
     commercialRegistration?: string;
@@ -93,7 +93,7 @@ export interface Vendor {
     nationalId?: string;
     bankStatement?: string;
   };
-  
+
   // Store
   store?: {
     _id: string;
@@ -105,16 +105,16 @@ export interface Vendor {
     orderCount?: number;
     rating?: number;
   };
-  
+
   // User
   userId: string;
-  
+
   // Metrics
   totalSales?: number;
   totalProducts?: number;
   rating?: number;
   commission?: number;
-  
+
   // Timestamps
   createdAt: string;
   updatedAt: string;
@@ -134,7 +134,7 @@ export interface VendorStore {
   logo?: string;
   isActive: boolean;
   deleted: boolean;
-  
+
   // Store Customization
   subscribers: string[];
   slider: Array<{
@@ -157,7 +157,7 @@ export interface VendorStore {
     number: number;
     name: string;
   }>;
-  
+
   // Timestamps
   createdAt: string;
   updatedAt: string;
@@ -188,12 +188,44 @@ export interface VendorAnalytics {
 }
 
 export interface VendorDashboardStats {
-  totalProducts: number;
-  activeProducts: number;
-  totalOrders: number;
-  pendingOrders: number;
   totalRevenue: number;
+  totalOrders: number;
+  totalUsers: number;
+  totalProducts: number;
   monthlyRevenue: number;
-  averageRating: number;
-  totalReviews: number;
+  topProducts: Array<{
+    name: string;
+    sales: number;
+    units: number;
+    image?: string;
+  }>;
+  topCountries: Array<{
+    country: string;
+    sales: number;
+    flag?: string;
+    trend?: string;
+  }>;
+  bestSellers: Array<{
+    name: string;
+    revenue: number;
+    orders: number;
+    progress: number;
+  }>;
+  productOverview: Array<{
+    id: string;
+    name: string;
+    price: number;
+    quantity: number;
+    status: string;
+    revenue: number;
+    rating: number;
+  }>;
+  salesChange: string;
+  // Legacy fields
+  totalSales: number;
+  totalIncome: number;
+  ordersNumber: number;
+  productsNumber: number;
+  paidOrders: number;
+  unpaidOrders: number;
 }

@@ -964,36 +964,191 @@ export const getStoreDashboard = controllerWrapper(
 export const getStoreStatistics = controllerWrapper(
   "getStoreStatistics",
   async (req, res) => {
-    // Example: return dummy stats
     const { storeId } = req.params;
-    let store;
-    if (storeId) store = await Store.findById(storeId);
-    else store = await Store.findOne({ owner: req.user._id });
-    if (!store) return res.status(404).json({ message: "Store not found" });
+    let storeFilter = {};
+    let productFilter = {};
+    let orderFilter = {};
 
-    const paidOrders = await Order.find({
-      store: store._id,
+    if (req.user.role === "store") {
+      // For store owners, get stats for their store
+      let store;
+      if (storeId) {
+        store = await Store.findById(storeId);
+      } else {
+        store = await Store.findOne({ owner: req.user._id });
+      }
+      if (!store) return res.status(404).json({ message: "Store not found" });
+
+      storeFilter = { _id: store._id };
+      productFilter = { store: store._id };
+      orderFilter = { store: store._id };
+    } else if (req.user.role === "admin") {
+      // For admin, get stats for all stores
+      // No filter needed, aggregate all
+    } else {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    // Get all stores matching the filter
+    const stores = await Store.find(storeFilter);
+    const storeIds = stores.map((s) => s._id);
+
+    // Update filters for products and orders
+    if (req.user.role === "store") {
+      productFilter = { store: { $in: storeIds } };
+      orderFilter = { store: { $in: storeIds } };
+    }
+
+    // Calculate basic stats
+    const paidOrders = await Order.find({ ...orderFilter, isPaid: true });
+    const totalRevenue = paidOrders.reduce(
+      (acc, order) => acc + order.totalPrice,
+      0
+    );
+
+    const allOrders = await Order.find(orderFilter);
+    const totalOrders = allOrders.length;
+
+    const products = await Product.find(productFilter);
+    const totalProducts = products.length;
+
+    // Total users (customers who placed orders)
+    const uniqueCustomers = await Order.distinct("user", orderFilter);
+    const totalUsers = uniqueCustomers.length;
+
+    // Monthly revenue (current month)
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthlyOrders = await Order.find({
+      ...orderFilter,
       isPaid: true,
+      createdAt: { $gte: startOfMonth },
     });
-    // for each order in paidOrders sum the totalPrice
-    const totalIncome = paidOrders.reduce(
+    const monthlyRevenue = monthlyOrders.reduce(
       (acc, order) => acc + order.totalPrice,
       0
     );
-    const allOrders = await Order.find({ store: store._id });
-    const totalSales = allOrders.reduce(
+
+    // Top products (by sales)
+    const topProducts = await Order.aggregate([
+      { $match: orderFilter },
+      { $unwind: "$orderItems" },
+      {
+        $group: {
+          _id: "$orderItems.product",
+          totalSales: {
+            $sum: { $multiply: ["$orderItems.price", "$orderItems.quantity"] },
+          },
+          totalUnits: { $sum: "$orderItems.quantity" },
+        },
+      },
+      { $sort: { totalSales: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      { $unwind: "$product" },
+      {
+        $project: {
+          name: "$product.name",
+          sales: { $round: ["$totalSales", 2] },
+          units: "$totalUnits",
+          image: { $arrayElemAt: ["$product.images.url", 0] },
+        },
+      },
+    ]);
+
+    // Top countries (simplified, assuming address has country)
+    // For now, placeholder
+    const topCountries = [];
+
+    // Best sellers (top stores by revenue, for admin)
+    let bestSellers = [];
+    if (req.user.role === "admin") {
+      bestSellers = await Order.aggregate([
+        { $match: orderFilter },
+        {
+          $group: {
+            _id: "$store",
+            totalRevenue: { $sum: "$totalPrice" },
+            totalOrders: { $sum: 1 },
+          },
+        },
+        { $sort: { totalRevenue: -1 } },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: "stores",
+            localField: "_id",
+            foreignField: "_id",
+            as: "store",
+          },
+        },
+        { $unwind: "$store" },
+        {
+          $project: {
+            name: "$store.storeName",
+            revenue: { $round: ["$totalRevenue", 2] },
+            orders: "$totalOrders",
+            progress: 100, // placeholder
+          },
+        },
+      ]);
+    }
+
+    // Product overview (recent products with basic info)
+    const productOverview = products.slice(0, 5).map((p) => ({
+      id: p._id,
+      name: p.name,
+      price: p.price,
+      quantity: p.stock || 0,
+      status: p.status || "active",
+      revenue: 0, // placeholder, would need to calculate
+      rating: p.averageRating || 0,
+    }));
+
+    // Sales change (compare with previous period)
+    const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonthOrders = await Order.find({
+      ...orderFilter,
+      isPaid: true,
+      createdAt: { $gte: prevMonth, $lt: startOfMonth },
+    });
+    const prevMonthlyRevenue = prevMonthOrders.reduce(
       (acc, order) => acc + order.totalPrice,
       0
     );
-    const products = await Product.find({ store: store._id });
+    const salesChange =
+      prevMonthlyRevenue > 0
+        ? (
+            ((monthlyRevenue - prevMonthlyRevenue) / prevMonthlyRevenue) *
+            100
+          ).toFixed(2) + "%"
+        : "0%";
 
     res.json({
       success: true,
       statistics: {
-        totalSales,
-        totalIncome,
-        ordersNumber: allOrders.length,
-        productsNumber: products.length,
+        totalRevenue,
+        totalOrders,
+        totalUsers,
+        totalProducts,
+        monthlyRevenue,
+        topProducts,
+        topCountries,
+        bestSellers,
+        productOverview,
+        salesChange,
+        // Legacy fields
+        totalSales: totalRevenue,
+        totalIncome: totalRevenue,
+        ordersNumber: totalOrders,
+        productsNumber: totalProducts,
         paidOrders: paidOrders.length,
         unpaidOrders: allOrders.length - paidOrders.length,
       },

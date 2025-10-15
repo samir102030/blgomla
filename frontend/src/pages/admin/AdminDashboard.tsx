@@ -1,5 +1,13 @@
 import React, { useEffect } from "react";
-import { ArrowUpIcon, ArrowDownIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpIcon,
+  ShoppingBagIcon,
+  CurrencyDollarIcon,
+  ClipboardDocumentListIcon,
+  UsersIcon,
+  ChartBarIcon,
+  StarIcon,
+} from "@heroicons/react/24/outline";
 import { useVendorStore } from "../../stores/vendor.store";
 import { useUserStore } from "../../stores/user.store";
 
@@ -41,503 +49,383 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
-          <div className="flex items-center justify-between">
-            <div>{error}</div>
-            <div className="space-x-2">
-              <button
-                onClick={retry}
-                className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm"
-              >
-                Retry
-              </button>
-              <button
-                onClick={() => clearError()}
-                className="px-3 py-1 bg-white border rounded text-sm"
-              >
-                Dismiss
-              </button>
-            </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {user?.role === "admin" ? "Admin Dashboard" : "Store Dashboard"}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Welcome back! Here's what's happening with your{" "}
+              {user?.role === "admin" ? "platform" : "store"}.
+            </p>
           </div>
-        </div>
-      )}
-
-      {/* Top stat cards - use dashboardStats where available */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className={`bg-[#FAFAFA] rounded-xl p-6 border border-gray-100`}>
-          <div className="flex items-start justify-between mb-4">
-            <div
-              className={`w-12 h-12 bg-[#009688] rounded-xl flex items-center justify-center text-white text-xl`}
-            >
-              🛍️
-            </div>
-            <div className="flex items-center space-x-1">
-              <ArrowUpIcon className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium text-green-600">
-                {/* change unavailable */}0%
+          <div className="flex items-center space-x-4">
+            <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
+              <span className="text-sm text-gray-500">Last updated:</span>
+              <span className="text-sm font-medium ml-2">
+                {new Date().toLocaleDateString()}
               </span>
             </div>
           </div>
-          <div className="mb-4">
-            <p className="text-sm font-medium text-[#9E9E9E] mb-1">
-              Total Sales
-            </p>
-            <p className="text-2xl font-bold text-[#333333]">
-              {dashboardStats?.totalRevenue
-                ? `$${Number(dashboardStats.totalRevenue).toLocaleString()}`
-                : "$0"}
-            </p>
-          </div>
         </div>
-
-        <div className={`bg-[#FAFAFA] rounded-xl p-6 border border-gray-100`}>
-          <div className="flex items-start justify-between mb-4">
-            <div
-              className={`w-12 h-12 bg-[#FFD600] rounded-xl flex items-center justify-center text-white text-xl`}
-            >
-              $
-            </div>
-            <div className="flex items-center space-x-1">
-              <ArrowUpIcon className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium text-green-600">
-                {/* change unavailable */}0%
-              </span>
-            </div>
-          </div>
-          <div className="mb-4">
-            <p className="text-sm font-medium text-[#9E9E9E] mb-1">
-              Total Income
-            </p>
-            <p className="text-2xl font-bold text-[#333333]">
-              {dashboardStats?.totalRevenue
-                ? `$${Number(dashboardStats.totalRevenue).toLocaleString()}`
-                : "$0"}
-            </p>
-          </div>
-        </div>
-
-        <div className={`bg-[#FAFAFA] rounded-xl p-6 border border-gray-100`}>
-          <div className="flex items-start justify-between mb-4">
-            <div
-              className={`w-12 h-12 bg-[#9E9E9E] rounded-xl flex items-center justify-center text-white text-xl`}
-            >
-              📋
-            </div>
-            <div className="flex items-center space-x-1">
-              <ArrowDownIcon className="w-4 h-4 text-red-500" />
-              <span className="text-sm font-medium text-red-600">
-                {/* change unavailable */}0%
-              </span>
-            </div>
-          </div>
-          <div className="mb-4">
-            <p className="text-sm font-medium text-[#9E9E9E] mb-1">
-              Orders Paid
-            </p>
-            <p className="text-2xl font-bold text-[#333333]">
-              {dashboardStats?.totalOrders ?? 0}
-            </p>
-          </div>
-        </div>
-
-        <div className={`bg-[#FAFAFA] rounded-xl p-6 border border-gray-100`}>
-          <div className="flex items-start justify-between mb-4">
-            <div
-              className={`w-12 h-12 bg-[#002B5B] rounded-xl flex items-center justify-center text-white text-xl`}
-            >
-              👥
-            </div>
-            <div className="flex items-center space-x-1">
-              <ArrowUpIcon className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium text-green-600">
-                {/* change unavailable */}0%
-              </span>
-            </div>
-          </div>
-          <div className="mb-4">
-            <p className="text-sm font-medium text-[#9E9E9E] mb-1">
-              Total Visitors
-            </p>
-            <p className="text-2xl font-bold text-[#333333]">
-              {dashboardStats?.monthlyRevenue
-                ? dashboardStats.monthlyRevenue
-                : 0}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main charts and lists */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-[#FAFAFA] rounded-xl p-6 shadow-sm border border-[#9E9E9E]/20">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-[#333333]">
-              Recent Order
-            </h3>
-            <button className="text-[#9E9E9E] hover:text-[#333333]">...</button>
-          </div>
-          <div className="h-64 relative">
-            {/* Simple chart placeholder: if dashboardStats.chartPoints is provided, we could render it here. For now keep the SVG background but avoid dummy data. */}
-            <svg
-              className="w-full h-full"
-              viewBox="0 0 400 200"
-              preserveAspectRatio="none"
-            >
-              <defs>
-                <pattern
-                  id="grid2"
-                  width="40"
-                  height="20"
-                  patternUnits="userSpaceOnUse"
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="text-red-500 mr-3">
+                  <svg
+                    className="w-6 h-6"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-red-800 font-medium">Error loading data</p>
+                  <p className="text-red-600 text-sm">{error}</p>
+                </div>
+              </div>
+              <div className="space-x-2">
+                <button
+                  onClick={retry}
+                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
                 >
-                  <path
-                    d="M 40 0 L 0 0 0 20"
-                    fill="none"
-                    stroke="#f3f4f6"
-                    strokeWidth="1"
-                  />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid2)" />
-            </svg>
+                  Retry
+                </button>
+                <button
+                  onClick={() => clearError()}
+                  className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-            <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-[#9E9E9E] px-4">
-              <span>Jan</span>
-              <span>Feb</span>
-              <span>Mar</span>
-              <span>Apr</span>
-              <span>May</span>
-              <span>Jun</span>
-              <span>Jul</span>
-              <span>Aug</span>
-              <span>Sep</span>
-              <span>Oct</span>
-              <span>Nov</span>
-              <span>Dec</span>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">
+                  Total Revenue
+                </p>
+                <p className="text-2xl font-bold mt-1">
+                  ${dashboardStats?.totalRevenue?.toLocaleString() || "0"}
+                </p>
+              </div>
+              <div className="bg-blue-400 bg-opacity-30 p-3 rounded-lg">
+                <CurrencyDollarIcon className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="flex items-center mt-4">
+              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
+              <span className="text-sm text-blue-100">
+                {dashboardStats?.salesChange || "0%"} from last month
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">
+                  Total Orders
+                </p>
+                <p className="text-2xl font-bold mt-1">
+                  {dashboardStats?.totalOrders || 0}
+                </p>
+              </div>
+              <div className="bg-green-400 bg-opacity-30 p-3 rounded-lg">
+                <ClipboardDocumentListIcon className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="flex items-center mt-4">
+              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
+              <span className="text-sm text-green-100">Active orders</span>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">
+                  Total Customers
+                </p>
+                <p className="text-2xl font-bold mt-1">
+                  {dashboardStats?.totalUsers || 0}
+                </p>
+              </div>
+              <div className="bg-purple-400 bg-opacity-30 p-3 rounded-lg">
+                <UsersIcon className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="flex items-center mt-4">
+              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
+              <span className="text-sm text-purple-100">New this month</span>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">
+                  Total Products
+                </p>
+                <p className="text-2xl font-bold mt-1">
+                  {dashboardStats?.totalProducts || 0}
+                </p>
+              </div>
+              <div className="bg-orange-400 bg-opacity-30 p-3 rounded-lg">
+                <ShoppingBagIcon className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="flex items-center mt-4">
+              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
+              <span className="text-sm text-orange-100">In stock</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#FAFAFA] rounded-xl p-6 shadow-sm border border-[#9E9E9E]/20">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-[#333333]">
-              Top Products
-            </h3>
-            <button className="text-sm text-[#002B5B] hover:text-[#001a3d]">
-              View all ↗
-            </button>
+        {/* Charts and Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Sales Chart */}
+          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Revenue Overview
+                </h3>
+                <p className="text-sm text-gray-500">Monthly revenue trends</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <span className="text-sm text-gray-600">Revenue</span>
+              </div>
+            </div>
+            <div className="h-64 flex items-end justify-between space-x-2">
+              {/* Simple bar chart placeholder */}
+              {Array.from({ length: 12 }, (_, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center">
+                  <div
+                    className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t w-full mb-2 transition-all hover:from-blue-600 hover:to-blue-500"
+                    style={{
+                      height: `${Math.random() * 200 + 50}px`,
+                      minHeight: "20px",
+                    }}
+                  ></div>
+                  <span className="text-xs text-gray-500">
+                    {new Date(0, i).toLocaleString("default", {
+                      month: "short",
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="space-y-4">
-            {dashboardStats &&
-            (dashboardStats.totalProducts || dashboardStats.monthlyRevenue) ? (
-              // If backend doesn't provide topProducts in stats, show nothing here
-              (dashboardStats as any).topProducts?.map((p: any, i: number) => (
-                <div key={i} className="flex items-center justify-between py-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg">
-                      {p.image || "📦"}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#333333]">
-                        {p.name}
-                      </p>
-                      <p className="text-xs text-[#9E9E9E]">
-                        {p.items || `${p.count || 0} Items`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-xs text-[#9E9E9E]">
-                        {p.coupon || ""}
-                      </span>
-                      <span className="text-lg">{p.flag || ""}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-[#9E9E9E]">
-                        {p.status || ""}
-                      </span>
-                      <div className="flex items-center space-x-1">
-                        <span className="text-xs font-medium text-[#D32F2F]">
-                          {p.discount || ""}
-                        </span>
-                        <span className="text-xs text-[#333333]">
-                          {p.price ? `$${p.price}` : p.priceDisplay || ""}
-                        </span>
+
+          {/* Top Products */}
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Top Products
+                </h3>
+                <p className="text-sm text-gray-500">Best performing items</p>
+              </div>
+              <ChartBarIcon className="w-5 h-5 text-gray-400" />
+            </div>
+            <div className="space-y-4">
+              {dashboardStats?.topProducts &&
+              dashboardStats.topProducts.length > 0 ? (
+                dashboardStats.topProducts.map((p: any, i: number) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        {p.image ? (
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Hide image and show fallback icon
+                              const img = e.currentTarget as HTMLImageElement;
+                              img.style.display = "none";
+                              const fallback =
+                                img.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = "flex";
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="w-full h-full flex items-center justify-center text-blue-600"
+                          style={{ display: p.image ? "none" : "flex" }}
+                        >
+                          <ShoppingBagIcon className="w-5 h-5" />
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {p.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {p.units || 0} sold
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500">
-                No top products data available
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Statistics Section - fallback to generic fields */}
-      <div className="bg-[#FAFAFA] rounded-xl p-6 shadow-sm border border-[#9E9E9E]/20">
-        <h3 className="text-lg font-semibold text-[#333333] mb-6">
-          Statistics
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="mb-2">
-              <span className="text-2xl font-bold text-[#333333]">
-                {dashboardStats?.totalUsers ?? "N/A"}
-              </span>
-            </div>
-            <div className="mb-2">
-              <span className="text-sm text-[#9E9E9E]">Total Users</span>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="mb-2">
-              <span className="text-2xl font-bold text-[#333333]">
-                {dashboardStats?.totalOrders ?? 0}
-              </span>
-            </div>
-            <div className="mb-2">
-              <span className="text-sm text-[#9E9E9E]">Total Orders</span>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="mb-2">
-              <span className="text-2xl font-bold text-[#333333]">
-                {dashboardStats?.totalSales
-                  ? `$${Number(dashboardStats.totalSales).toLocaleString()}`
-                  : "$0"}
-              </span>
-            </div>
-            <div className="mb-2">
-              <span className="text-sm text-[#9E9E9E]">Total Sales</span>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <div className="mb-2">
-              <span className="text-2xl font-bold text-[#333333]">
-                {dashboardStats?.totalPending ?? 0}
-              </span>
-            </div>
-            <div className="mb-2">
-              <span className="text-sm text-[#9E9E9E]">Total Pending</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Row: Top Countries, Best Sellers, Product Overview (driven by backend when available) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-[#FAFAFA] rounded-xl p-6 shadow-sm border border-[#9E9E9E]/20">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-[#333333]">
-              Top Countries By Sales
-            </h3>
-            <button className="text-sm text-[#002B5B] hover:text-[#001a3d]">
-              View all
-            </button>
-          </div>
-
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="text-2xl font-bold text-[#333333]">
-                {dashboardStats?.totalSales
-                  ? `$${Number(dashboardStats.totalSales).toLocaleString()}`
-                  : "$0"}
-              </span>
-              <div className="flex items-center text-[#009688]">
-                <ArrowUpIcon className="w-4 h-4" />
-                <span className="text-sm font-medium">
-                  {dashboardStats?.salesChange || "0%"}
-                </span>
-              </div>
-            </div>
-            <p className="text-xs text-[#9E9E9E]">Since last period</p>
-          </div>
-
-          <div className="space-y-3">
-            {dashboardStats?.topCountries &&
-            dashboardStats.topCountries.length > 0 ? (
-              dashboardStats.topCountries.map((c: any, i: number) => (
-                <div key={i} className="flex items-center justify-between py-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-sm">{c.flag || "🏳️"}</span>
-                    </div>
-                    <span className="text-sm font-medium text-[#333333]">
-                      {c.country}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-sm font-semibold text-[#333333]">
-                      {c.sales ?? c.value ?? 0}
-                    </span>
-                    <div
-                      className={`w-4 h-4 ${
-                        c.trend === "up" ? "text-[#009688]" : "text-[#D32F2F]"
-                      }`}
-                    >
-                      {c.trend === "up" ? (
-                        <ArrowUpIcon className="w-4 h-4" />
-                      ) : (
-                        <ArrowDownIcon className="w-4 h-4" />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500">
-                No country data available
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="bg-[#FAFAFA] rounded-xl p-6 shadow-sm border border-[#9E9E9E]/20">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-[#333333]">
-              Best Shop Sellers
-            </h3>
-            <button className="text-sm text-[#002B5B] hover:text-[#001a3d]">
-              View all ↗
-            </button>
-          </div>
-
-          <div className="grid grid-cols-4 gap-4 pb-3 mb-4 border-b border-[#9E9E9E]/20 text-xs font-medium text-[#9E9E9E]">
-            <div>Shop</div>
-            <div>Categories</div>
-            <div>Total</div>
-            <div>Status</div>
-          </div>
-
-          <div className="space-y-4">
-            {dashboardStats?.bestSellers &&
-            dashboardStats.bestSellers.length > 0 ? (
-              dashboardStats.bestSellers.map((s: any, idx: number) => (
-                <div key={idx} className="grid grid-cols-4 gap-4 items-center">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm">
-                      {s.avatar || "🏬"}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-[#333333]">
-                        {s.name}
-                      </p>
-                      <p className="text-xs text-[#9E9E9E]">
-                        {s.purchases ? `${s.purchases} Purchases` : ""}
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-gray-900">
+                        ${p.sales || 0}
                       </p>
                     </div>
                   </div>
-                  <div className="text-sm text-[#9E9E9E]">
-                    {s.categories || ""}
-                  </div>
-                  <div className="text-sm font-semibold text-[#333333]">
-                    {s.total ?? s.revenue ?? "$0"}
-                  </div>
-                  <div className="flex items-center space-x-2">
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <ChartBarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">
+                    No product data available
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Admin-only sections */}
+        {user?.role === "admin" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Best Sellers for Admin */}
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Best Sellers
+                  </h3>
+                  <p className="text-sm text-gray-500">Top performing stores</p>
+                </div>
+                <StarIcon className="w-5 h-5 text-gray-400" />
+              </div>
+              <div className="space-y-4">
+                {dashboardStats?.bestSellers &&
+                dashboardStats.bestSellers.length > 0 ? (
+                  dashboardStats.bestSellers.map((s: any, i: number) => (
                     <div
-                      className={`w-16 h-2 bg-[#9E9E9E]/20 rounded-full overflow-hidden`}
+                      key={i}
+                      className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
                     >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
+                          <StarIcon className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {s.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {s.categories || "Store"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-900">
+                          ${s.total || s.revenue || 0}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {s.purchases || 0} sales
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <StarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500">
+                      No seller data available
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Product Overview for Admin */}
+            <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Product Overview
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Platform product statistics
+                  </p>
+                </div>
+                <ShoppingBagIcon className="w-5 h-5 text-gray-400" />
+              </div>
+              <div className="space-y-4">
+                {dashboardStats?.productOverview &&
+                dashboardStats.productOverview.length > 0 ? (
+                  dashboardStats.productOverview
+                    .slice(0, 5)
+                    .map((p: any, i: number) => (
                       <div
-                        className={`h-full bg-green-500 rounded-full`}
-                        style={{ width: `${s.progress ?? 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs text-[#9E9E9E]">
-                      {s.progress ?? 0}%
-                    </span>
+                        key={i}
+                        className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
+                            <ShoppingBagIcon className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {p.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              ID: {p.id || p._id}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-gray-900">
+                            ${p.price || 0}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {p.quantity || 0} in stock
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="text-center py-8">
+                    <ShoppingBagIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-sm text-gray-500">
+                      No product data available
+                    </p>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500">
-                No best sellers data available
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-
-        <div className="bg-[#FAFAFA] rounded-xl p-6 shadow-sm border border-[#9E9E9E]/20">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-[#333333]">
-              Product overview
-            </h3>
-            <button className="text-sm text-[#002B5B] hover:text-[#001a3d]">
-              View all ↗
-            </button>
-          </div>
-
-          <div className="grid grid-cols-7 gap-4 pb-3 mb-4 border-b border-[#9E9E9E]/20 text-xs font-medium text-[#9E9E9E]">
-            <div>Name</div>
-            <div>Product ID</div>
-            <div>Price</div>
-            <div>Quantity</div>
-            <div>Sale</div>
-            <div>Revenue</div>
-            <div>Status</div>
-          </div>
-
-          <div className="space-y-4">
-            {dashboardStats?.productOverview &&
-            dashboardStats.productOverview.length > 0 ? (
-              dashboardStats.productOverview.map((p: any, i: number) => (
-                <div
-                  key={i}
-                  className="grid grid-cols-7 gap-4 items-center text-xs"
-                >
-                  <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center text-sm">
-                      {p.image || "📦"}
-                    </div>
-                    <span className="font-medium text-[#333333]">{p.name}</span>
-                  </div>
-                  <div className="text-[#9E9E9E]">{p.id || p._id}</div>
-                  <div className="text-[#333333] font-medium">
-                    {p.price ? `$${p.price}` : p.priceDisplay || "N/A"}
-                  </div>
-                  <div className="text-[#9E9E9E]">{p.quantity ?? 0}</div>
-                  <div
-                    className={`px-2 py-1 rounded text-xs ${
-                      p.status === "On sale"
-                        ? "bg-[#009688]/10 text-[#009688]"
-                        : p.status === "---"
-                        ? "text-[#9E9E9E]"
-                        : "bg-[#FFD600]/10 text-[#333333]"
-                    }`}
-                  >
-                    {p.status || "—"}
-                  </div>
-                  <div className="text-[#333333] font-medium">
-                    {p.revenue ?? "-"}
-                  </div>
-                  <div className="text-[#673AB7] font-medium">
-                    {p.rating ?? "-"}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500">
-                No product overview available
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

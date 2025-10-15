@@ -252,13 +252,22 @@ export const updateUser = controllerWrapper("updateUser", async (req, res) => {
       .json({ success: false, message: "User ID is required" });
   }
 
-  if (!updateData || Object.keys(updateData).length === 0) {
-    return res
-      .status(400)
-      .json({ success: false, message: "No data provided to update" });
+  // Only allow updating role and active status
+  const allowedFields = ["role", "active"];
+  const filteredData = {};
+  for (const field of allowedFields) {
+    if (updateData[field] !== undefined) {
+      filteredData[field] = updateData[field];
+    }
   }
 
-  const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+  if (Object.keys(filteredData).length === 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No valid data provided to update" });
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
     new: true,
     runValidators: true,
   });

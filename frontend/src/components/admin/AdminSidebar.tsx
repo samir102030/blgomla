@@ -7,12 +7,12 @@ import {
   // TagIcon,
   // UserGroupIcon,
   // CogIcon,
-  ClipboardDocumentListIcon,
+  // ClipboardDocumentListIcon,
   UserIcon,
   ChartBarIcon,
   BuildingStorefrontIcon,
   ChatBubbleLeftRightIcon,
-  StarIcon,
+  // StarIcon,
 } from "@heroicons/react/24/outline";
 
 interface AdminSidebarProps {
@@ -154,7 +154,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
           </div>
           {!collapsed && (
             <span className="ml-4 text-2xl font-bold text-[#FFD600] tracking-wide">
-              ELGOMLA
+              <Link to="/">ELGOMLA</Link>
             </span>
           )}
         </div>
