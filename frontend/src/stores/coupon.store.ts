@@ -1,7 +1,12 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { axiosInstance } from '../lib/axios';
-import type { Coupon, CouponUsage, CouponValidation, CouponStats } from '../types/coupon.type';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { axiosInstance } from "../lib/axios";
+import type {
+  Coupon,
+  CouponUsage,
+  CouponValidation,
+  CouponStats,
+} from "../types/coupon.type";
 
 interface PaginatedResult<T> {
   data: T[];
@@ -29,12 +34,19 @@ interface CouponStore {
   fetchCouponById: (couponId: string) => Promise<void>;
   fetchCouponByCode: (code: string) => Promise<void>;
   createCoupon: (data: Partial<Coupon>) => Promise<Coupon | undefined>;
-  updateCoupon: (couponId: string, data: Partial<Coupon>) => Promise<Coupon | undefined>;
+  updateCoupon: (
+    couponId: string,
+    data: Partial<Coupon>
+  ) => Promise<Coupon | undefined>;
   deleteCoupon: (couponId: string) => Promise<boolean>;
   toggleCouponStatus: (couponId: string) => Promise<boolean>;
 
   // Coupon Validation & Application
-  validateCoupon: (code: string, orderAmount: number, productIds?: string[]) => Promise<CouponValidation | undefined>;
+  validateCoupon: (
+    code: string,
+    subtotal: number,
+    cartItems?: any[]
+  ) => Promise<CouponValidation | undefined>;
   applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
 
@@ -69,11 +81,14 @@ export const useCouponStore = create<CouponStore>()(
       fetchCoupons: async (params = {}) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<PaginatedResult<Coupon>>('/coupons', { params });
-          set({ 
-            coupons: data.data, 
-            paginated: data, 
-            loading: false 
+          const { data } = await axiosInstance.get<PaginatedResult<Coupon>>(
+            "/coupons",
+            { params }
+          );
+          set({
+            coupons: data.data,
+            paginated: data,
+            loading: false,
           });
         } catch (error: any) {
           set({
@@ -87,7 +102,10 @@ export const useCouponStore = create<CouponStore>()(
       fetchCouponById: async (couponId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; coupon: Coupon }>(`/coupons/${couponId}`);
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            coupon: Coupon;
+          }>(`/coupons/${couponId}`);
           set({ coupon: data.coupon, loading: false });
         } catch (error: any) {
           set({
@@ -101,7 +119,10 @@ export const useCouponStore = create<CouponStore>()(
       fetchCouponByCode: async (code: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; coupon: Coupon }>(`/coupons/code/${code}`);
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            coupon: Coupon;
+          }>(`/coupons/code/${code}`);
           set({ coupon: data.coupon, loading: false });
         } catch (error: any) {
           set({
@@ -115,11 +136,14 @@ export const useCouponStore = create<CouponStore>()(
       createCoupon: async (couponData: Partial<Coupon>) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.post<{ success: boolean; coupon: Coupon }>('/coupons', couponData);
+          const { data } = await axiosInstance.post<{
+            success: boolean;
+            coupon: Coupon;
+          }>("/coupons", couponData);
           const newCoupon = data.coupon;
-          set(state => ({
+          set((state) => ({
             coupons: [...state.coupons, newCoupon],
-            loading: false
+            loading: false,
           }));
           return newCoupon;
         } catch (error: any) {
@@ -135,14 +159,18 @@ export const useCouponStore = create<CouponStore>()(
       updateCoupon: async (couponId: string, couponData: Partial<Coupon>) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.put<{ success: boolean; coupon: Coupon }>(`/coupons/${couponId}`, couponData);
+          const { data } = await axiosInstance.put<{
+            success: boolean;
+            coupon: Coupon;
+          }>(`/coupons/${couponId}`, couponData);
           const updatedCoupon = data.coupon;
-          set(state => ({
-            coupons: state.coupons.map(coupon => 
+          set((state) => ({
+            coupons: state.coupons.map((coupon) =>
               coupon._id === couponId ? updatedCoupon : coupon
             ),
-            coupon: state.coupon?._id === couponId ? updatedCoupon : state.coupon,
-            loading: false
+            coupon:
+              state.coupon?._id === couponId ? updatedCoupon : state.coupon,
+            loading: false,
           }));
           return updatedCoupon;
         } catch (error: any) {
@@ -159,9 +187,9 @@ export const useCouponStore = create<CouponStore>()(
         set({ loading: true, error: undefined });
         try {
           await axiosInstance.delete(`/coupons/${couponId}`);
-          set(state => ({
-            coupons: state.coupons.filter(coupon => coupon._id !== couponId),
-            loading: false
+          set((state) => ({
+            coupons: state.coupons.filter((coupon) => coupon._id !== couponId),
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -177,13 +205,16 @@ export const useCouponStore = create<CouponStore>()(
       toggleCouponStatus: async (couponId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.patch<{ success: boolean; coupon: Coupon }>(`/coupons/${couponId}/toggle`);
+          const { data } = await axiosInstance.patch<{
+            success: boolean;
+            coupon: Coupon;
+          }>(`/coupons/${couponId}/toggle`);
           const updatedCoupon = data.coupon;
-          set(state => ({
-            coupons: state.coupons.map(coupon => 
+          set((state) => ({
+            coupons: state.coupons.map((coupon) =>
               coupon._id === couponId ? updatedCoupon : coupon
             ),
-            loading: false
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -196,16 +227,23 @@ export const useCouponStore = create<CouponStore>()(
       },
 
       // Validate Coupon
-      validateCoupon: async (code: string, orderAmount: number, productIds?: string[]) => {
+      validateCoupon: async (
+        code: string,
+        subtotal: number,
+        cartItems?: any[]
+      ) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.post<{ success: boolean; validation: CouponValidation }>('/coupons/validate', {
+          const { data } = await axiosInstance.post<{
+            success: boolean;
+            coupon: any;
+          }>("/coupons/validate", {
             code,
-            orderAmount,
-            productIds
+            subtotal,
+            cartItems,
           });
-          set({ couponValidation: data.validation, loading: false });
-          return data.validation;
+          set({ couponValidation: data, loading: false });
+          return data;
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,
@@ -219,7 +257,10 @@ export const useCouponStore = create<CouponStore>()(
       applyCoupon: async (code: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.post<{ success: boolean; coupon: Coupon }>('/coupons/apply', { code });
+          const { data } = await axiosInstance.post<{
+            success: boolean;
+            coupon: Coupon;
+          }>("/coupons/apply", { code });
           set({ appliedCoupon: data.coupon, loading: false });
           return true;
         } catch (error: any) {
@@ -240,8 +281,13 @@ export const useCouponStore = create<CouponStore>()(
       fetchCouponUsages: async (couponId?: string) => {
         set({ loading: true, error: undefined });
         try {
-          const url = couponId ? `/coupons/${couponId}/usages` : '/coupons/usages';
-          const { data } = await axiosInstance.get<{ success: boolean; usages: CouponUsage[] }>(url);
+          const url = couponId
+            ? `/coupons/${couponId}/usages`
+            : "/coupons/usages";
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            usages: CouponUsage[];
+          }>(url);
           set({ couponUsages: data.usages, loading: false });
         } catch (error: any) {
           set({
@@ -255,7 +301,10 @@ export const useCouponStore = create<CouponStore>()(
       fetchUserCouponUsages: async (userId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; usages: CouponUsage[] }>(`/coupons/user/${userId}/usages`);
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            usages: CouponUsage[];
+          }>(`/coupons/user/${userId}/usages`);
           set({ couponUsages: data.usages, loading: false });
         } catch (error: any) {
           set({
@@ -269,7 +318,10 @@ export const useCouponStore = create<CouponStore>()(
       fetchCouponStats: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; stats: CouponStats }>('/coupons/stats');
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            stats: CouponStats;
+          }>("/coupons/stats");
           set({ couponStats: data.stats, loading: false });
         } catch (error: any) {
           set({
@@ -283,7 +335,10 @@ export const useCouponStore = create<CouponStore>()(
       fetchAvailableCoupons: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; coupons: Coupon[] }>('/coupons/available');
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            coupons: Coupon[];
+          }>("/coupons/available");
           set({ coupons: data.coupons, loading: false });
         } catch (error: any) {
           set({
@@ -297,20 +352,21 @@ export const useCouponStore = create<CouponStore>()(
       clearError: () => set({ error: undefined }),
 
       // Reset Store
-      reset: () => set({
-        coupons: [],
-        coupon: undefined,
-        couponUsages: [],
-        couponStats: undefined,
-        appliedCoupon: undefined,
-        couponValidation: undefined,
-        paginated: undefined,
-        loading: false,
-        error: undefined,
-      }),
+      reset: () =>
+        set({
+          coupons: [],
+          coupon: undefined,
+          couponUsages: [],
+          couponStats: undefined,
+          appliedCoupon: undefined,
+          couponValidation: undefined,
+          paginated: undefined,
+          loading: false,
+          error: undefined,
+        }),
     }),
     {
-      name: 'coupon-store',
+      name: "coupon-store",
       partialize: (state) => ({
         appliedCoupon: state.appliedCoupon,
       }),

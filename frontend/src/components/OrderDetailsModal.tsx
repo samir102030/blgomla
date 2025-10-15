@@ -25,8 +25,15 @@ interface Order {
     quantity: number;
     price: number;
     salePercentage: number;
+    couponDiscount?: number;
   }>;
   totalPrice: number;
+  itemsPrice: number;
+  shippingPrice: number;
+  taxPrice: number;
+  couponCode?: string;
+  couponDiscount?: number;
+  discountPrice?: number;
   status: string;
   paymentMethod: string;
   createdAt: string;
@@ -308,6 +315,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           <p className="text-sm font-semibold text-gray-900">
                             ${(item.price * item.quantity).toFixed(2)}
                           </p>
+                          {item.couponDiscount && item.couponDiscount > 0 && (
+                            <p className="text-xs text-green-600">
+                              Coupon: -${item.couponDiscount.toFixed(2)}
+                            </p>
+                          )}
                           {item.salePercentage > 0 && (
                             <p className="text-xs text-gray-500 line-through">
                               ${(item.product.price * item.quantity).toFixed(2)}
@@ -328,21 +340,33 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Subtotal:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        ${order.totalPrice.toFixed(2)}
+                        $
+                        {order.itemsPrice?.toFixed(2) ||
+                          order.totalPrice.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Shipping:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        $0.00
+                        ${order.shippingPrice?.toFixed(2) || "0.00"}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Tax:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        $0.00
+                        ${order.taxPrice?.toFixed(2) || "0.00"}
                       </span>
                     </div>
+                    {order.couponDiscount && order.couponDiscount > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-green-600">
+                          Coupon Discount ({order.couponCode}):
+                        </span>
+                        <span className="text-sm font-medium text-green-600">
+                          -${order.couponDiscount.toFixed(2)}
+                        </span>
+                      </div>
+                    )}
                     <div className="border-t pt-3 flex justify-between">
                       <span className="text-lg font-semibold text-gray-900">
                         Total:

@@ -5,11 +5,13 @@ import Store from "../models/store.model.js";
 import mongoose from "mongoose";
 import { controllerWrapper } from "../utils/wrappers.js";
 import Notification from "../models/notification.model.js";
+import Coupon from "../models/coupon.model.js";
 
 export const createOrder = controllerWrapper(
   "createOrder",
   async (req, res) => {
-    const { orderItems, shippingAddress, paymentMethod, store } = req.body;
+    const { orderItems, shippingAddress, paymentMethod, store, couponCode } =
+      req.body;
 
     // Validate required fields
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
@@ -57,6 +59,7 @@ export const createOrder = controllerWrapper(
       let shippingPrice = 0;
       let taxPrice = 0;
       let totalPrice = 0;
+      let couponDiscount = 0;
 
       const validatedItems = [];
 
@@ -90,12 +93,97 @@ export const createOrder = controllerWrapper(
           quantity: item.quantity,
           price: itemPrice,
           salePercentage: product.saleActive ? product.salePercentage : 0,
+          couponDiscount: 0, // Will be updated after coupon validation
         });
       }
 
-      totalPrice = itemsPrice + shippingPrice + taxPrice;
+      // Step 2: Validate and apply coupon if provided
+      let appliedCoupon = null;
+      if (couponCode) {
+        const coupon = await Coupon.findOne({
+          code: couponCode.toUpperCase(),
+          store: store,
+          isActive: true,
+        }).session(session);
 
-      // Step 2: Create the order
+        if (!coupon) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: "Invalid coupon code",
+          });
+        }
+
+        // Check if coupon is valid
+        if (!coupon.isValid) {
+          await session.abortTransaction();
+          let message = "Coupon is not valid";
+          const now = new Date();
+          if (now < coupon.startDate) message = "Coupon has not started yet";
+          else if (now > coupon.endDate) message = "Coupon has expired";
+          else if (
+            coupon.usageLimit &&
+            coupon.usageCount >= coupon.usageLimit
+          ) {
+            message = "Coupon usage limit exceeded";
+          }
+          return res.status(400).json({ success: false, message });
+        }
+
+        // Check minimum purchase
+        if (itemsPrice < coupon.minimumPurchase) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: `Minimum purchase of $${coupon.minimumPurchase} required for this coupon`,
+          });
+        }
+
+        // Check if coupon applies to any items
+        let applicableSubtotal = 0;
+        for (let i = 0; i < validatedItems.length; i++) {
+          const item = validatedItems[i];
+          const product = await Product.findById(item.product).session(session);
+          if (coupon.canApplyToProduct(product._id, product.Category)) {
+            applicableSubtotal += item.price * item.quantity;
+          }
+        }
+
+        if (applicableSubtotal === 0) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: "Coupon does not apply to any items in your cart",
+          });
+        }
+
+        // Calculate discount
+        couponDiscount = coupon.calculateDiscount(applicableSubtotal);
+        appliedCoupon = coupon;
+
+        // Distribute discount proportionally to applicable items
+        let remainingDiscount = couponDiscount;
+        for (let i = 0; i < validatedItems.length; i++) {
+          const item = validatedItems[i];
+          const product = await Product.findById(item.product).session(session);
+          if (coupon.canApplyToProduct(product._id, product.Category)) {
+            const itemTotal = item.price * item.quantity;
+            const proportion = itemTotal / applicableSubtotal;
+            const itemDiscount = Math.min(
+              remainingDiscount * proportion,
+              itemTotal
+            );
+            validatedItems[i].couponDiscount = itemDiscount;
+            remainingDiscount -= itemDiscount;
+          }
+        }
+      }
+
+      // Calculate final prices
+      const discountPrice = couponDiscount; // Total discount applied
+      totalPrice = itemsPrice + shippingPrice + taxPrice - discountPrice;
+
+      // Step 3: Create the order
       const order = new Order({
         user: req.user._id,
         orderItems: validatedItems,
@@ -106,11 +194,23 @@ export const createOrder = controllerWrapper(
         shippingPrice,
         taxPrice,
         totalPrice,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+        couponDiscount,
+        discountPrice,
       });
 
       const savedOrder = await order.save({ session });
 
-      // Step 3: Update product stock and sold count
+      // Step 4: Update coupon usage count if coupon was applied
+      if (appliedCoupon) {
+        await Coupon.findByIdAndUpdate(
+          appliedCoupon._id,
+          { $inc: { usageCount: 1 } },
+          { session }
+        );
+      }
+
+      // Step 5: Update product stock and sold count
       for (const item of orderItems) {
         await Product.findByIdAndUpdate(
           item.product,
@@ -124,7 +224,7 @@ export const createOrder = controllerWrapper(
         );
       }
 
-      // Step 4: Clear user's cart
+      // Step 6: Clear user's cart
       await User.findByIdAndUpdate(
         req.user._id,
         { $set: { cart: [] } },

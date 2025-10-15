@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import VendorDashboard from "../pages/vendor/VendorDashboard";
 import VendorProductManagement from "../pages/vendor/VendorProductManagement";
 import VendorStoreManagement from "../pages/vendor/VendorStoreManagement";
+import CouponsPage from "../pages/vendor/CouponsPage";
 import OrdersPage from "../pages/admin/OrdersPage";
 import VendorLayout from "../components/vendor/VendorLayout";
 
@@ -156,15 +157,7 @@ const VendorRoutes: React.FC = () => {
             />
           }
         />
-        <Route
-          path="marketing/coupons"
-          element={
-            <PlaceholderPage
-              title="Coupons"
-              description="Manage discount coupons"
-            />
-          }
-        />
+        <Route path="marketing/coupons" element={<CouponsPage />} />
 
         {/* Settings */}
         <Route

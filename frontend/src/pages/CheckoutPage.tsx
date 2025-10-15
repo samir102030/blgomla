@@ -5,8 +5,10 @@ import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
+import { useCouponStore } from "../stores/coupon.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
+import type { Coupon } from "../types/coupon.type";
 
 interface CartItemWithProduct {
   _id?: string;
@@ -33,6 +35,7 @@ const CheckoutPage: React.FC = () => {
   const fetchCart = useUserStore((state) => state.fetchCart);
   const { createOrder } = useOrderStore();
   const { addresses, fetchUserAddresses, createAddress } = useAddressStore();
+  const { appliedCoupon, validateCoupon, removeCoupon } = useCouponStore();
 
   const [billingData, setBillingData] = useState({
     firstName: user?.name?.split(" ")[0] || "",
@@ -53,6 +56,7 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [couponCode, setCouponCode] = useState("");
 
   // Load cart data and addresses on component mount
   useEffect(() => {
@@ -118,7 +122,89 @@ const CheckoutPage: React.FC = () => {
     0
   );
   const shippingFee = 0.0;
-  const grandTotal = subtotal + shippingFee;
+
+  // Calculate coupon discount using store's applied coupon
+  const calculateCouponDiscount = () => {
+    if (!appliedCoupon || !appliedCoupon.discountValue) return 0;
+
+    if (appliedCoupon.discountType === "percentage") {
+      const discount = subtotal * (appliedCoupon.discountValue / 100);
+      return appliedCoupon.maximumDiscount
+        ? Math.min(discount, appliedCoupon.maximumDiscount)
+        : discount;
+    } else {
+      return appliedCoupon.discountValue;
+    }
+  };
+
+  const discountAmount = calculateCouponDiscount();
+  const grandTotal = subtotal + shippingFee - discountAmount;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+
+    try {
+      const cartItemsData = cartItems.map((item) => ({
+        product: item.product,
+        quantity: item.quantity,
+      }));
+
+      const validation = await validateCoupon(
+        couponCode.toUpperCase(),
+        subtotal,
+        cartItemsData
+      );
+
+      if (validation && validation.success && validation.coupon) {
+        // Apply the coupon by storing it in the coupon store
+        // The validation response includes the coupon data
+        const couponData: Coupon = {
+          _id: validation.coupon._id,
+          code: validation.coupon.code,
+          discountType: validation.coupon.discountType as
+            | "percentage"
+            | "fixed",
+          discountValue: validation.coupon.discountValue,
+          // Add other required fields with defaults
+          description: "",
+          minimumPurchase: 0,
+          maximumDiscount: undefined,
+          startDate: new Date().toISOString(),
+          endDate: new Date().toISOString(),
+          usageLimit: undefined,
+          usageCount: 0,
+          isActive: true,
+          applicableProducts: [],
+          applicableCategories: [],
+          store: "",
+          createdBy: "",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Set the applied coupon in the store
+        useCouponStore.setState({ appliedCoupon: couponData });
+
+        toast.success(
+          `Coupon applied! You saved $${calculateCouponDiscount().toFixed(2)}`
+        );
+        setCouponCode("");
+      } else {
+        toast.error("Invalid coupon code");
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to apply coupon");
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    setCouponCode("");
+    toast.success("Coupon removed");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -307,6 +393,7 @@ const CheckoutPage: React.FC = () => {
         shippingPrice: shippingFee,
         taxPrice: 0, // You can calculate tax if needed
         totalPrice: grandTotal,
+        couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       };
 
       // Create order
@@ -840,11 +927,62 @@ const CheckoutPage: React.FC = () => {
                       <span>Shipping Fee</span>
                       <span>${shippingFee.toFixed(2)}</span>
                     </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Coupon Discount</span>
+                        <span>-${discountAmount.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-lg font-bold border-t pt-2">
                       <span>Grand Total</span>
                       <span>${grandTotal.toFixed(2)}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Coupon Code */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Coupon Code
+                  </h3>
+                  {!appliedCoupon ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Enter coupon code"
+                        value={couponCode}
+                        onChange={(e) =>
+                          setCouponCode(e.target.value.toUpperCase())
+                        }
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyCoupon}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
+                      <div className="flex items-center">
+                        <span className="text-green-800 font-medium">
+                          {appliedCoupon.code}
+                        </span>
+                        <span className="text-green-600 ml-2">
+                          (-${discountAmount.toFixed(2)})
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Payment Method */}

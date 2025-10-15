@@ -115,6 +115,12 @@ const productSchema = new mongoose.Schema(
         value: { type: String, required: true },
       },
     ],
+    coupons: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Coupon",
+      },
+    ],
   },
   { timestamps: true }
 );

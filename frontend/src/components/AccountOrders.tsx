@@ -187,12 +187,46 @@ const AccountOrders: React.FC = () => {
                           {selectedOrder?.status}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total:</span>
-                        <span className="font-medium text-gray-900">
-                          ${selectedOrder?.totalPrice}
-                        </span>
-                      </div>
+                      {selectedOrder?.couponCode ? (
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Subtotal:</span>
+                            <span className="font-medium text-gray-900">
+                              $
+                              {(
+                                selectedOrder?.itemsPrice +
+                                (selectedOrder?.shippingPrice || 0)
+                              ).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-green-600">
+                            <span>Coupon ({selectedOrder.couponCode}):</span>
+                            <span className="font-medium">
+                              -$
+                              {(
+                                selectedOrder?.itemsPrice +
+                                (selectedOrder?.shippingPrice || 0) -
+                                selectedOrder?.totalPrice
+                              ).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2">
+                            <span className="text-gray-600 font-medium">
+                              Total:
+                            </span>
+                            <span className="font-bold text-gray-900">
+                              ${selectedOrder?.totalPrice}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Total:</span>
+                          <span className="font-medium text-gray-900">
+                            ${selectedOrder?.totalPrice}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-gray-600">Date:</span>
                         <span className="font-medium text-gray-900">

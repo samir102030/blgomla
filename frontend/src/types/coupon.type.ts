@@ -2,22 +2,18 @@ export interface Coupon {
   _id: string;
   code: string;
   description?: string;
-  discountType: 'percentage' | 'fixed';
+  discountType: "percentage" | "fixed";
   discountValue: number;
-  minimumOrderAmount?: number;
-  maximumDiscountAmount?: number;
+  minimumPurchase?: number;
+  maximumDiscount?: number;
+  startDate: string;
+  endDate: string;
   usageLimit?: number;
-  usedCount: number;
-  userUsageLimit?: number;
+  usageCount: number;
   isActive: boolean;
-  validFrom: string;
-  validUntil: string;
   applicableProducts?: string[];
   applicableCategories?: string[];
-  excludedProducts?: string[];
-  excludedCategories?: string[];
-  applicableUsers?: string[];
-  firstTimeUserOnly?: boolean;
+  store: string;
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -33,10 +29,16 @@ export interface CouponUsage {
 }
 
 export interface CouponValidation {
-  isValid: boolean;
-  message: string;
-  discountAmount?: number;
-  finalAmount?: number;
+  success: boolean;
+  coupon?: {
+    _id: string;
+    code: string;
+    discountType: string;
+    discountValue: number;
+    discount: number;
+    applicableItems: number;
+  };
+  message?: string;
 }
 
 export interface CouponStats {

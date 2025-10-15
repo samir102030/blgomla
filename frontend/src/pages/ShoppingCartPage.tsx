@@ -4,9 +4,11 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
+import { useCouponStore } from "../stores/coupon.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import PleaseLogin from "../components/PleaseLogin";
+import type { Coupon } from "../types/coupon.type";
 // import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
@@ -33,6 +35,13 @@ const ShoppingCartPage: React.FC = () => {
   const fetchCart = useUserStore((state) => state.fetchCart);
   const updateCartItem = useProductStore((state) => state.updateCartItem);
   const removeFromCart = useProductStore((state) => state.removeFromCart);
+
+  const {
+    validateCoupon,
+    removeCoupon,
+    appliedCoupon,
+    loading: couponLoading,
+  } = useCouponStore();
 
   const [shippingInfo, setShippingInfo] = useState({
     country: "Egypt",
@@ -233,13 +242,93 @@ const ShoppingCartPage: React.FC = () => {
     navigate("/checkout");
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+
+    try {
+      // Validate coupon with current cart
+      const validation = await validateCoupon(
+        couponCode.trim(),
+        subtotal,
+        cartItems
+      );
+
+      if (!validation?.success) {
+        toast.error(validation?.message || "Invalid coupon code");
+        return;
+      }
+
+      // Apply the coupon by storing it in the coupon store
+      // The validation response includes the coupon data
+      if (!validation.coupon) {
+        toast.error("Failed to apply coupon");
+        return;
+      }
+
+      const couponData: Coupon = {
+        _id: validation.coupon._id,
+        code: validation.coupon.code,
+        discountType: validation.coupon.discountType as "percentage" | "fixed",
+        discountValue: validation.coupon.discountValue,
+        // Add other required fields with defaults
+        description: "",
+        minimumPurchase: 0,
+        maximumDiscount: undefined,
+        startDate: new Date().toISOString(),
+        endDate: new Date().toISOString(),
+        usageLimit: undefined,
+        usageCount: 0,
+        isActive: true,
+        applicableProducts: [],
+        applicableCategories: [],
+        store: "",
+        createdBy: "",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Set the applied coupon in the store
+      useCouponStore.setState({ appliedCoupon: couponData });
+
+      toast.success("Coupon applied successfully!");
+      setCouponCode(""); // Clear the input
+    } catch (error: any) {
+      console.error("Error applying coupon:", error);
+      toast.error(error?.response?.data?.message || "Failed to apply coupon");
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    removeCoupon();
+    toast.success("Coupon removed");
+  };
+
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + getItemTotal(item), 0);
   const shippingCost = 0.0;
-  const grandTotal = subtotal + shippingCost;
+
+  // Calculate coupon discount
+  const calculateCouponDiscount = () => {
+    if (!appliedCoupon || !appliedCoupon.discountValue) return 0;
+
+    if (appliedCoupon.discountType === "percentage") {
+      const discount = subtotal * (appliedCoupon.discountValue / 100);
+      return appliedCoupon.maximumDiscount
+        ? Math.min(discount, appliedCoupon.maximumDiscount)
+        : discount;
+    } else {
+      return appliedCoupon.discountValue;
+    }
+  };
+
+  const couponDiscount = calculateCouponDiscount();
+  const grandTotal = subtotal + shippingCost - couponDiscount;
 
   // if (loading)
   //   return (
@@ -498,18 +587,47 @@ const ShoppingCartPage: React.FC = () => {
                 <h3 className="text-lg font-semibold text-[#333333] mb-4">
                   Discount Coupon Code
                 </h3>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Coupon Code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
-                  />
-                  <button className="bg-[#D32F2F] text-white px-6 py-2 rounded-lg hover:bg-[#b71c1c] transition-colors">
-                    APPLY CODE
-                  </button>
-                </div>
+
+                {appliedCoupon ? (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-green-800">
+                          Coupon Applied: {appliedCoupon.code}
+                        </p>
+                        <p className="text-xs text-green-600">
+                          {appliedCoupon.discountType === "percentage"
+                            ? `${appliedCoupon.discountValue}% off`
+                            : `$${appliedCoupon.discountValue} off`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="text-red-600 hover:text-red-800 text-sm underline"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Coupon Code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
+                      disabled={couponLoading}
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="bg-[#D32F2F] text-white px-6 py-2 rounded-lg hover:bg-[#b71c1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {couponLoading ? "APPLYING..." : "APPLY CODE"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -530,6 +648,14 @@ const ShoppingCartPage: React.FC = () => {
                     ${shippingCost.toFixed(2)}
                   </span>
                 </div>
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Coupon Discount ({appliedCoupon?.code})</span>
+                    <span className="font-medium">
+                      -${couponDiscount.toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 <div className="border-t pt-4">
                   <div className="flex justify-between text-lg font-semibold">
                     <span>Grand Total</span>

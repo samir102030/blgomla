@@ -55,6 +55,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
           href: "/dashboard/products",
           roles: ["admin", "store"],
         },
+        {
+          name: "Coupons",
+          href: "/dashboard/coupons",
+          roles: ["admin", "store"],
+        },
         // { name: "Attributes", href: "/dashboard/attributes" },
         { name: "Order", href: "/dashboard/order", roles: ["admin", "store"] },
       ],
@@ -66,12 +71,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       icon: ChatBubbleLeftRightIcon,
       roles: ["admin", "store"],
     },
-    {
-      name: "Customer Support",
-      href: "/dashboard/support",
-      icon: ChatBubbleLeftRightIcon,
-      roles: ["admin", "store"],
-    },
+    // {
+    //   name: "Customer Support",
+    //   href: "/dashboard/support",
+    //   icon: ChatBubbleLeftRightIcon,
+    //   roles: ["admin", "store"],
+    // },
     {
       name: "Sales",
       href: "/dashboard/sales",
