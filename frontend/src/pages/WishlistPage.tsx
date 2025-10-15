@@ -9,18 +9,17 @@ import PleaseLogin from "../components/PleaseLogin";
 
 const WishlistPage: React.FC = () => {
   const {
-    user,
     getLovedProducts,
     toggleLoveProduct,
     loading: userLoading,
   } = useUserStore();
+  const user = useUserStore((state) => state.user);
   const { addToCart, loading: productLoading } = useProductStore();
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [lovedProducts, setLovedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    if (user) getLovedProducts();
-  }, [getLovedProducts, user]);
+    getLovedProducts();
+  }, [getLovedProducts]);
 
   useEffect(() => {
     if (user) {
@@ -28,15 +27,9 @@ const WishlistPage: React.FC = () => {
     }
   }, [user]);
 
-  const updateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    setQuantities((prev) => ({ ...prev, [id]: newQuantity }));
-  };
-
   const handleAddToCart = async (productId: string) => {
     try {
-      const quantity = quantities[productId] || 1;
-      await addToCart(productId, quantity);
+      await addToCart(productId, 1);
       alert("Item added to cart!");
     } catch (error) {
       console.error("Error adding item to cart:", error);
@@ -44,44 +37,37 @@ const WishlistPage: React.FC = () => {
     }
   };
 
-  const handleAddAllToCart = async () => {
-    try {
-      for (const product of lovedProducts) {
-        if (product._id) {
-          const quantity = quantities[product._id] || 1;
-          await addToCart(product._id, quantity);
-        }
-      }
-      alert("All items added to cart!");
-    } catch (error) {
-      console.error("Error adding all items to cart:", error);
-      alert("Failed to add some items to cart");
-    }
-  };
+  // const handleAddAllToCart = async () => {
+  //   try {
+  //     for (const product of lovedProducts) {
+  //       if (product._id) {
+  //         await addToCart(product._id, 1);
+  //       }
+  //     }
+  //     alert("All items added to cart!");
+  //   } catch (error) {
+  //     console.error("Error adding all items to cart:", error);
+  //     alert("Failed to add some items to cart");
+  //   }
+  // };
 
-  const handleClearWishlist = async () => {
-    try {
-      for (const product of lovedProducts) {
-        if (product._id) {
-          await toggleLoveProduct(product._id);
-        }
-      }
-      setLovedProducts([]);
-      setQuantities({});
-    } catch (error) {
-      console.error("Error clearing wishlist:", error);
-    }
-  };
+  // const handleClearWishlist = async () => {
+  //   try {
+  //     for (const product of lovedProducts) {
+  //       if (product._id) {
+  //         await toggleLoveProduct(product._id);
+  //       }
+  //     }
+  //     setLovedProducts([]);
+  //   } catch (error) {
+  //     console.error("Error clearing wishlist:", error);
+  //   }
+  // };
 
   const handleToggleLove = async (productId: string) => {
     try {
       await toggleLoveProduct(productId);
       setLovedProducts((prev) => prev.filter((item) => item._id !== productId));
-      setQuantities((prev) => {
-        const newQuantities = { ...prev };
-        delete newQuantities[productId];
-        return newQuantities;
-      });
     } catch (error) {
       console.error("Error toggling love:", error);
     }
@@ -163,9 +149,6 @@ const WishlistPage: React.FC = () => {
                         Price
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
-                        Quantity
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
                         Add to Cart
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
@@ -177,16 +160,20 @@ const WishlistPage: React.FC = () => {
                     {lovedProducts.map((item) => (
                       <tr key={item._id}>
                         <td className="px-6 py-4">
-                          <img
-                            src={item.images?.[0]?.url || "net3.jpeg"}
-                            alt={item.name}
-                            className="w-16 h-16 object-cover rounded-lg"
-                          />
+                          <Link to={`/product/${item._id}`}>
+                            <img
+                              src={item.images?.[0]?.url || "net3.jpeg"}
+                              alt={item.name}
+                              className="w-16 h-16 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                            />
+                          </Link>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {item.name}
-                          </div>
+                          <Link to={`/product/${item._id}`}>
+                            <div className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
+                              {item.name}
+                            </div>
+                          </Link>
                           <div className="text-xs text-gray-500">
                             {item.description}
                           </div>
@@ -205,37 +192,6 @@ const WishlistPage: React.FC = () => {
                             ) : (
                               `$${item.price}`
                             )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center">
-                            <button
-                              onClick={() =>
-                                updateQuantity(
-                                  item._id!,
-                                  quantities[item._id!] - 1
-                                )
-                              }
-                              className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50"
-                              disabled={isLoading}
-                            >
-                              -
-                            </button>
-                            <span className="px-4 py-1 border-t border-b border-gray-300 bg-white">
-                              {quantities[item._id!] || 1}
-                            </span>
-                            <button
-                              onClick={() =>
-                                updateQuantity(
-                                  item._id!,
-                                  quantities[item._id!] + 1
-                                )
-                              }
-                              className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50"
-                              disabled={isLoading}
-                            >
-                              +
-                            </button>
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -275,7 +231,7 @@ const WishlistPage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
+              {/* <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
                 <Link
                   to="/brands"
                   className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -298,12 +254,12 @@ const WishlistPage: React.FC = () => {
                     Clear Wishlist
                   </button>
                 </div>
-              </div>
+              </div> */}
             </div>
           )}
 
           {/* Related Products or Recommendations */}
-          {user && lovedProducts.length > 0 && (
+          {/* {user && lovedProducts.length > 0 && (
             <div className="mt-16">
               <h2 className="text-2xl font-bold text-gray-900 mb-8">
                 You Might Also Like
@@ -336,7 +292,7 @@ const WishlistPage: React.FC = () => {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </main>
 
