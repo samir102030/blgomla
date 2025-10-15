@@ -108,6 +108,15 @@ export interface Vendor {
 
   // User
   userId: string;
+  owner?: {
+    _id: string;
+    name: string;
+    email: string;
+    phoneNumber: string;
+    role: string;
+    isVerified: boolean;
+    active: boolean;
+  };
 
   // Metrics
   totalSales?: number;

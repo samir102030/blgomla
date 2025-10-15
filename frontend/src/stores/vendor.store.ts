@@ -142,13 +142,14 @@ export const useVendorStore = create<VendorStore>()(
         try {
           const response = await axiosInstance.get<{
             success: boolean;
-            vendors: Vendor[];
+            data: Vendor[];
           }>("/stores/vendors", { params });
-          set({ vendors: response.data.vendors, loading: false });
+          set({ vendors: response.data.data || [], loading: false });
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,
             loading: false,
+            vendors: [], // Ensure vendors is always an array
           });
         }
       },

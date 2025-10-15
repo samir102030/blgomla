@@ -41,34 +41,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
     { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
     {
       name: "Vendors",
+      href: "/dashboard/vendors",
       icon: BuildingStorefrontIcon,
-      children: [
-        {
-          name: "Vendor Requests",
-          href: "/dashboard/vendors/requests",
-          roles: ["admin"],
-        },
-        {
-          name: "All Vendors",
-          href: "/dashboard/vendors/all",
-          roles: ["admin"],
-        },
-        {
-          name: "Approved Vendors",
-          href: "/dashboard/vendors/approved",
-          roles: ["admin"],
-        },
-        {
-          name: "Rejected Vendors",
-          href: "/dashboard/vendors/rejected",
-          roles: ["admin"],
-        },
-        {
-          name: "Vendor Analytics",
-          href: "/dashboard/vendors/analytics",
-          roles: ["admin"],
-        },
-      ],
+      roles: ["admin"],
     },
     {
       name: "E-commerce",

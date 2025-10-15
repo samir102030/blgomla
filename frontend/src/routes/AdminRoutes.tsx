@@ -9,11 +9,7 @@ import CategoriesPage from "../pages/admin/CategoriesPage";
 import SalesPage from "../pages/admin/SalesPage";
 import CustomerReviewsPage from "../pages/admin/CustomerReviewsPage";
 import CustomerSupportPage from "../pages/admin/CustomerSupportPage";
-import VendorRequests from "../pages/dashboard/vendors/VendorRequests";
-import AllVendors from "../pages/admin/vendors/AllVendors";
-import ApprovedVendors from "../pages/admin/vendors/ApprovedVendors";
-import RejectedVendors from "../pages/admin/vendors/RejectedVendors";
-import VendorAnalytics from "../pages/admin/vendors/VendorAnalytics";
+import VendorManagement from "../pages/admin/vendors/VendorManagement";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -36,11 +32,7 @@ const AdminRoutes: React.FC = () => {
         <Route path="/" element={<AdminDashboard />} />
 
         {/* Vendor Management */}
-        <Route path="/vendors/requests" element={<VendorRequests />} />
-        <Route path="/vendors/all" element={<AllVendors />} />
-        <Route path="/vendors/approved" element={<ApprovedVendors />} />
-        <Route path="/vendors/rejected" element={<RejectedVendors />} />
-        <Route path="/vendors/analytics" element={<VendorAnalytics />} />
+        <Route path="/vendors" element={<VendorManagement />} />
 
         {/* E-commerce */}
         <Route path="/category" element={<CategoriesPage />} />
