@@ -93,7 +93,7 @@ const ShoppingCartPage: React.FC = () => {
 
     // If stock is 0, remove the item
     if (item.productDetails.stock === 0) {
-      await removeItem(productId);
+      await removeItem(item._id || productId);
       toast.error(
         `Stock Error: ${item.productDetails.name} is out of stock and has been removed from your cart`
       );
@@ -102,7 +102,7 @@ const ShoppingCartPage: React.FC = () => {
 
     try {
       setUpdatingItem(productId);
-      await updateCartItem(productId, newQuantity);
+      await updateCartItem(item._id || productId, newQuantity);
       toast.success("Cart updated successfully");
 
       // Refresh cart data and update local state
@@ -124,14 +124,17 @@ const ShoppingCartPage: React.FC = () => {
   };
 
   const removeItem = useCallback(
-    async (productId: string) => {
+    async (cartItemId: string) => {
       try {
-        await removeFromCart(productId);
+        await removeFromCart(cartItemId);
         toast.success("Item removed from cart");
+
+        // Refresh cart data from user store
+        await fetchCart();
 
         // Update local state immediately
         setCartItems((prevItems) =>
-          prevItems.filter((item) => item.product !== productId)
+          prevItems.filter((item) => item._id !== cartItemId)
         );
       } catch (error: any) {
         console.error("Error removing item:", error);
@@ -140,7 +143,7 @@ const ShoppingCartPage: React.FC = () => {
         toast.error(`Remove Item Error: ${errorMessage}. Please try again`);
       }
     },
-    [removeFromCart]
+    [removeFromCart, fetchCart]
   );
 
   // Check for out-of-stock items and remove them automatically
@@ -152,7 +155,7 @@ const ShoppingCartPage: React.FC = () => {
 
       for (const item of outOfStockItems) {
         try {
-          await removeItem(item.product);
+          await removeItem(item._id || item.product);
           toast.error(
             `Stock Error: ${item.productDetails?.name} is out of stock and has been removed from your cart`
           );
@@ -416,7 +419,7 @@ const ShoppingCartPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => removeItem(item.product)}
+                          onClick={() => removeItem(item._id || item.product)}
                           disabled={updatingItem === item.product}
                           className="text-red-600 hover:text-red-800 disabled:opacity-50"
                         >

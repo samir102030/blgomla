@@ -11,7 +11,7 @@ interface AddressStore {
   createAddress: (data: Partial<Address>) => Promise<Address | undefined>;
   fetchAddresses: (params?: Record<string, any>) => Promise<void>;
   fetchAddressById: (id: string) => Promise<void>;
-  fetchUserAddresses: (userId: string) => Promise<void>;
+  fetchUserAddresses: () => Promise<void>;
   updateAddress: (
     id: string,
     data: Partial<Address>

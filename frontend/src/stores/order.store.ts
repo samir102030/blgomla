@@ -11,7 +11,7 @@ interface OrderStore {
   createOrder: (data: Partial<Order>) => Promise<Order | undefined>;
   fetchOrders: (params?: Record<string, any>) => Promise<void>;
   fetchOrderById: (id: string) => Promise<void>;
-  fetchUserOrders: (userId: string) => Promise<void>;
+  fetchUserOrders: (userId?: string) => Promise<void>;
   updateOrderStatus: (id: string, status: string) => Promise<boolean>;
   markOrderPaid: (id: string, paymentResult?: any) => Promise<boolean>;
   markOrderDelivered: (id: string) => Promise<boolean>;
@@ -79,7 +79,7 @@ export const useOrderStore = create<OrderStore>((set) => ({
       const res = await axiosInstance.get<{
         success: boolean;
         orders: Order[];
-      }>(`/orders`);
+      }>(`/orders/my-orders`);
       set({ orders: res.data.orders, loading: false });
     } catch (error: any) {
       set({

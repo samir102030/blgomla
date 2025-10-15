@@ -4,6 +4,11 @@ import { controllerWrapper } from "../utils/wrappers.js";
 export const createAddress = controllerWrapper(
   "createAddress",
   async (req, res) => {
+    // If creating a default address, unset all other default addresses for this user
+    if (req.body.isDefault === true) {
+      await Address.updateMany({ user: req.user._id }, { isDefault: false });
+    }
+
     const address = new Address({
       phone: req.user.phoneNumber || "",
       ...req.body,
@@ -60,6 +65,15 @@ export const updateAddress = controllerWrapper(
         message:
           "Access denied - You are not authorized to update this address",
       });
+
+    // If setting this address as default, unset all other default addresses for this user
+    if (req.body.isDefault === true) {
+      await Address.updateMany(
+        { user: address.user, _id: { $ne: address._id } },
+        { isDefault: false }
+      );
+    }
+
     address.name = req.body.name;
     address.address = req.body.address;
     address.city = req.body.city;

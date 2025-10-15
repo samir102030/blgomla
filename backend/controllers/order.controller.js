@@ -203,7 +203,10 @@ export const getOrders = controllerWrapper("getOrders", async (req, res) => {
 export const getOrderById = controllerWrapper(
   "getOrderById",
   async (req, res) => {
-    const order = await Order.findById(req.params.id).populate("user");
+    const order = await Order.findById(req.params.id)
+      .populate("user")
+      .populate("shippingAddress")
+      .populate("orderItems.product");
     if (!order)
       return res
         .status(404)
@@ -218,6 +221,17 @@ export const getUserOrders = controllerWrapper(
     const orders = await Order.find({ user: req.params.userId }).sort({
       createdAt: -1,
     });
+    res.status(200).json({ success: true, orders });
+  }
+);
+
+export const getMyOrders = controllerWrapper(
+  "getMyOrders",
+  async (req, res) => {
+    const orders = await Order.find({ user: req.user._id })
+      .populate("shippingAddress")
+      .populate("orderItems.product")
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, orders });
   }
 );

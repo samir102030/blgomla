@@ -538,3 +538,94 @@ export const getLovedProducts = controllerWrapper(
     });
   }
 );
+
+export const updateProfile = controllerWrapper(
+  "updateProfile",
+  async (req, res) => {
+    const userId = req.user._id;
+    const updateData = req.body;
+
+    // Allow updating name, phoneNumber, and profilePicture
+    const allowedFields = ["name", "phoneNumber", "profilePicture"];
+    const filteredData = {};
+    for (const field of allowedFields) {
+      if (updateData[field] !== undefined) {
+        filteredData[field] = updateData[field];
+      }
+    }
+
+    if (Object.keys(filteredData).length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No valid data provided to update" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        ...updatedUser._doc,
+        password: undefined,
+      },
+    });
+  }
+);
+
+export const changePassword = controllerWrapper(
+  "changePassword",
+  async (req, res) => {
+    const userId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and new password are required",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if current password is correct
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  }
+);

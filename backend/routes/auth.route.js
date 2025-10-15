@@ -3,6 +3,7 @@ import express from "express";
 import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
 import {
   activateUser,
+  changePassword,
   changeUserRole,
   deActivateUser,
   finalDeleteUser,
@@ -20,6 +21,7 @@ import {
   safeDeleteUser,
   signup,
   toggleLoveProduct,
+  updateProfile,
   updateUser,
   verifyEmail,
 } from "../controllers/auth.controller.js";
@@ -41,6 +43,12 @@ router.post("/logout", logout);
 router.post("/loveProduct/:productId", protectRoute, loveProduct);
 router.get("/loveProducts", protectRoute, getLovedProducts);
 router.put("/loveProduct/:productId", protectRoute, toggleLoveProduct); // Toggle love status
+
+// Profile update route for authenticated users
+router.put("/profile", protectRoute, updateProfile);
+
+// Password change route for authenticated users
+router.put("/changePassword", protectRoute, changePassword);
 
 // not tested
 router.put("/verifyEmail", verifyEmail);

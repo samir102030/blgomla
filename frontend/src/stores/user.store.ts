@@ -34,6 +34,11 @@ interface UserStore {
     userId: string,
     data: Partial<User>
   ) => Promise<User | undefined>;
+  updateProfile: (data: Partial<User>) => Promise<User | undefined>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<boolean>;
   safeDeleteUser: (userId: string) => Promise<boolean>;
   finalDeleteUser: (userId: string) => Promise<boolean>;
   changeUserRole: (userId: string, role: string) => Promise<boolean>;
@@ -167,6 +172,41 @@ export const useUserStore = create<UserStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+        }
+      },
+
+      updateProfile: async (data) => {
+        set({ loading: true, error: undefined });
+        try {
+          const res = await axiosInstance.put<{ success: boolean; user: User }>(
+            `/users/profile`,
+            data
+          );
+          set({ user: res.data.user, loading: false });
+          return res.data.user;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      changePassword: async (currentPassword, newPassword) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.put<{ success: boolean; message: string }>(
+            `/users/changePassword`,
+            { currentPassword, newPassword }
+          );
+          set({ loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
         }
       },
 
