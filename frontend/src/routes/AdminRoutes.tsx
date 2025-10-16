@@ -6,6 +6,7 @@ import OrdersPage from "../pages/admin/OrdersPage";
 import ProductsPage from "../pages/admin/ProductsPage";
 import UsersPage from "../pages/admin/UsersPage";
 import CategoriesPage from "../pages/admin/CategoriesPage";
+import BrandsPage from "../pages/admin/BrandsPage";
 import SalesPage from "../pages/admin/SalesPage";
 import CustomerReviewsPage from "../pages/admin/CustomerReviewsPage";
 import CustomerSupportPage from "../pages/admin/CustomerSupportPage";
@@ -37,6 +38,7 @@ const AdminRoutes: React.FC = () => {
 
         {/* E-commerce */}
         <Route path="/category" element={<CategoriesPage />} />
+        <Route path="/brands" element={<BrandsPage />} />
         <Route path="/coupons" element={<CouponsPage />} />
         <Route
           path="/attributes"

@@ -1,7 +1,11 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { axiosInstance } from '../lib/axios';
-import type { Category, CategoryTree, CategoryStats } from '../types/category.type';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { axiosInstance } from "../lib/axios";
+import type {
+  Category,
+  CategoryTree,
+  CategoryStats,
+} from "../types/category.type";
 
 interface PaginatedResult<T> {
   data: T[];
@@ -29,14 +33,23 @@ interface CategoryStore {
   fetchCategoryTree: () => Promise<void>;
   fetchDeletedCategories: () => Promise<void>;
   createCategory: (data: Partial<Category>) => Promise<Category | undefined>;
-  updateCategory: (categoryId: string, data: Partial<Category>) => Promise<Category | undefined>;
+  updateCategory: (
+    categoryId: string,
+    data: Partial<Category>
+  ) => Promise<Category | undefined>;
   deleteCategory: (categoryId: string) => Promise<boolean>;
   safeDeleteCategory: (categoryId: string) => Promise<boolean>;
   restoreCategory: (categoryId: string) => Promise<boolean>;
 
   // Category Management
-  setCategoryToProduct: (productId: string, categoryId: string) => Promise<boolean>;
-  getProductsByCategory: (categoryId: string, params?: Record<string, any>) => Promise<void>;
+  setCategoryToProduct: (
+    productId: string,
+    categoryId: string
+  ) => Promise<boolean>;
+  getProductsByCategory: (
+    categoryId: string,
+    params?: Record<string, any>
+  ) => Promise<void>;
   fetchCategoryStats: () => Promise<void>;
   reorderCategories: (categoryIds: string[]) => Promise<boolean>;
 
@@ -62,11 +75,13 @@ export const useCategoryStore = create<CategoryStore>()(
       fetchCategories: async (params = {}) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<PaginatedResult<Category>>('/categories', { params });
-          set({ 
-            categories: data.data, 
-            paginated: data, 
-            loading: false 
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            categories: Category[];
+          }>("/categories", { params });
+          set({
+            categories: data.categories,
+            loading: false,
           });
         } catch (error: any) {
           set({
@@ -80,7 +95,10 @@ export const useCategoryStore = create<CategoryStore>()(
       fetchCategoryById: async (categoryId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; category: Category }>(`/categories/${categoryId}`);
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            category: Category;
+          }>(`/categories/${categoryId}`);
           set({ category: data.category, loading: false });
         } catch (error: any) {
           set({
@@ -94,7 +112,10 @@ export const useCategoryStore = create<CategoryStore>()(
       fetchCategoryTree: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; categoryTree: CategoryTree[] }>('/categories/tree');
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            categoryTree: CategoryTree[];
+          }>("/categories/tree");
           set({ categoryTree: data.categoryTree, loading: false });
         } catch (error: any) {
           set({
@@ -108,7 +129,10 @@ export const useCategoryStore = create<CategoryStore>()(
       fetchDeletedCategories: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; categories: Category[] }>('/categories/deleted');
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            categories: Category[];
+          }>("/categories/deleted");
           set({ deletedCategories: data.categories, loading: false });
         } catch (error: any) {
           set({
@@ -122,11 +146,14 @@ export const useCategoryStore = create<CategoryStore>()(
       createCategory: async (categoryData: Partial<Category>) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.post<{ success: boolean; category: Category }>('/categories', categoryData);
+          const { data } = await axiosInstance.post<{
+            success: boolean;
+            category: Category;
+          }>("/categories", categoryData);
           const newCategory = data.category;
-          set(state => ({
+          set((state) => ({
             categories: [...state.categories, newCategory],
-            loading: false
+            loading: false,
           }));
           return newCategory;
         } catch (error: any) {
@@ -139,17 +166,26 @@ export const useCategoryStore = create<CategoryStore>()(
       },
 
       // Update Category
-      updateCategory: async (categoryId: string, categoryData: Partial<Category>) => {
+      updateCategory: async (
+        categoryId: string,
+        categoryData: Partial<Category>
+      ) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.put<{ success: boolean; category: Category }>(`/categories/${categoryId}`, categoryData);
+          const { data } = await axiosInstance.put<{
+            success: boolean;
+            category: Category;
+          }>(`/categories/${categoryId}`, categoryData);
           const updatedCategory = data.category;
-          set(state => ({
-            categories: state.categories.map(cat => 
+          set((state) => ({
+            categories: state.categories.map((cat) =>
               cat._id === categoryId ? updatedCategory : cat
             ),
-            category: state.category?._id === categoryId ? updatedCategory : state.category,
-            loading: false
+            category:
+              state.category?._id === categoryId
+                ? updatedCategory
+                : state.category,
+            loading: false,
           }));
           return updatedCategory;
         } catch (error: any) {
@@ -166,9 +202,11 @@ export const useCategoryStore = create<CategoryStore>()(
         set({ loading: true, error: undefined });
         try {
           await axiosInstance.delete(`/categories/${categoryId}`);
-          set(state => ({
-            categories: state.categories.filter(cat => cat._id !== categoryId),
-            loading: false
+          set((state) => ({
+            categories: state.categories.filter(
+              (cat) => cat._id !== categoryId
+            ),
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -184,12 +222,17 @@ export const useCategoryStore = create<CategoryStore>()(
       safeDeleteCategory: async (categoryId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.put<{ success: boolean; category: Category }>(`/categories/safeDelete/${categoryId}`);
+          const { data } = await axiosInstance.put<{
+            success: boolean;
+            category: Category;
+          }>(`/categories/safeDelete/${categoryId}`);
           const deletedCategory = data.category;
-          set(state => ({
-            categories: state.categories.filter(cat => cat._id !== categoryId),
+          set((state) => ({
+            categories: state.categories.filter(
+              (cat) => cat._id !== categoryId
+            ),
             deletedCategories: [...state.deletedCategories, deletedCategory],
-            loading: false
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -205,12 +248,17 @@ export const useCategoryStore = create<CategoryStore>()(
       restoreCategory: async (categoryId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.put<{ success: boolean; category: Category }>(`/categories/restore/${categoryId}`);
+          const { data } = await axiosInstance.put<{
+            success: boolean;
+            category: Category;
+          }>(`/categories/restore/${categoryId}`);
           const restoredCategory = data.category;
-          set(state => ({
+          set((state) => ({
             categories: [...state.categories, restoredCategory],
-            deletedCategories: state.deletedCategories.filter(cat => cat._id !== categoryId),
-            loading: false
+            deletedCategories: state.deletedCategories.filter(
+              (cat) => cat._id !== categoryId
+            ),
+            loading: false,
           }));
           return true;
         } catch (error: any) {
@@ -226,7 +274,10 @@ export const useCategoryStore = create<CategoryStore>()(
       setCategoryToProduct: async (productId: string, categoryId: string) => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.put(`/categories/setCategoryToProduct/${productId}`, { categoryId });
+          await axiosInstance.put(
+            `/categories/setCategoryToProduct/${productId}`,
+            { categoryId }
+          );
           set({ loading: false });
           return true;
         } catch (error: any) {
@@ -242,7 +293,9 @@ export const useCategoryStore = create<CategoryStore>()(
       getProductsByCategory: async (categoryId: string, params = {}) => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.get(`/categories/products/${categoryId}`, { params });
+          await axiosInstance.get(`/categories/products/${categoryId}`, {
+            params,
+          });
           set({ loading: false });
         } catch (error: any) {
           set({
@@ -256,7 +309,10 @@ export const useCategoryStore = create<CategoryStore>()(
       fetchCategoryStats: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ success: boolean; stats: CategoryStats }>('/categories/stats');
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            stats: CategoryStats;
+          }>("/categories/stats");
           set({ categoryStats: data.stats, loading: false });
         } catch (error: any) {
           set({
@@ -270,7 +326,7 @@ export const useCategoryStore = create<CategoryStore>()(
       reorderCategories: async (categoryIds: string[]) => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.put('/categories/reorder', { categoryIds });
+          await axiosInstance.put("/categories/reorder", { categoryIds });
           set({ loading: false });
           return true;
         } catch (error: any) {
@@ -286,19 +342,20 @@ export const useCategoryStore = create<CategoryStore>()(
       clearError: () => set({ error: undefined }),
 
       // Reset Store
-      reset: () => set({
-        categories: [],
-        category: undefined,
-        categoryTree: [],
-        deletedCategories: [],
-        categoryStats: undefined,
-        paginated: undefined,
-        loading: false,
-        error: undefined,
-      }),
+      reset: () =>
+        set({
+          categories: [],
+          category: undefined,
+          categoryTree: [],
+          deletedCategories: [],
+          categoryStats: undefined,
+          paginated: undefined,
+          loading: false,
+          error: undefined,
+        }),
     }),
     {
-      name: 'category-store',
+      name: "category-store",
       partialize: (state) => ({
         categories: state.categories,
         categoryTree: state.categoryTree,

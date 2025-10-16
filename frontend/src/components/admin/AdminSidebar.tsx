@@ -50,6 +50,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       icon: ShoppingBagIcon,
       children: [
         { name: "Category", href: "/dashboard/category", roles: ["admin"] },
+        { name: "Brands", href: "/dashboard/brands", roles: ["admin"] },
         {
           name: "Products",
           href: "/dashboard/products",

@@ -6,27 +6,22 @@ import {
   PencilIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useCategoryStore } from "../../stores/category.store";
-import CategoryModal from "../../components/CategoryModal";
-import ViewCategoryModal from "../../components/ViewCategoryModal";
+import { useBrandStore } from "../../stores/brand.store";
+import BrandModal from "../../components/BrandModal";
+import ViewBrandModal from "../../components/ViewBrandModal";
 
-const CategoriesPage: React.FC = () => {
+const BrandsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<any>(null);
-  const [viewingCategory, setViewingCategory] = useState<any>(null);
-  const {
-    categories,
-    loading,
-    fetchCategories,
-    safeDeleteCategory,
-    updateCategory,
-  } = useCategoryStore();
+  const [editingBrand, setEditingBrand] = useState<any>(null);
+  const [viewingBrand, setViewingBrand] = useState<any>(null);
+  const { brands, loading, fetchBrands, safeDeleteBrand, updateBrand } =
+    useBrandStore();
 
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    fetchBrands();
+  }, [fetchBrands]);
 
   const getStatusColor = (isActive: boolean) => {
     return isActive
@@ -34,49 +29,49 @@ const CategoriesPage: React.FC = () => {
       : "bg-[#9E9E9E]/10 text-[#9E9E9E]";
   };
 
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (category.description &&
-        category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredBrands = brands.filter(
+    (brand) =>
+      brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (brand.description &&
+        brand.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleDelete = async (categoryId: string) => {
-    if (window.confirm("Are you sure you want to delete this category?")) {
-      await safeDeleteCategory(categoryId);
-      fetchCategories(); // Refresh the list
+  const handleDelete = async (brandId: string) => {
+    if (window.confirm("Are you sure you want to delete this brand?")) {
+      await safeDeleteBrand(brandId);
+      fetchBrands(); // Refresh the list
     }
   };
 
-  const handleAddCategory = () => {
-    setEditingCategory(null);
+  const handleAddBrand = () => {
+    setEditingBrand(null);
     setModalOpen(true);
   };
 
-  const handleEditCategory = (category: any) => {
-    setEditingCategory(category);
+  const handleEditBrand = (brand: any) => {
+    setEditingBrand(brand);
     setModalOpen(true);
   };
 
-  const handleToggleStatus = async (category: any) => {
-    await updateCategory(category._id, { isActive: !category.isActive });
-    fetchCategories(); // Refresh the list
-  };
-
-  const handleModalClose = () => {
-    setModalOpen(false);
-    setEditingCategory(null);
-    fetchCategories(); // Refresh after modal closes
-  };
-
-  const handleViewCategory = (category: any) => {
-    setViewingCategory(category);
+  const handleViewBrand = (brand: any) => {
+    setViewingBrand(brand);
     setViewModalOpen(true);
   };
 
   const handleViewModalClose = () => {
     setViewModalOpen(false);
-    setViewingCategory(null);
+    setViewingBrand(null);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setEditingBrand(null);
+    fetchBrands(); // Refresh after modal closes
+  };
+
+  const handleToggleStatus = async (brand: any) => {
+    await updateBrand(brand._id, { isActive: !brand.isActive });
+    fetchBrands(); // Refresh the list
   };
 
   if (loading) {
@@ -91,18 +86,16 @@ const CategoriesPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            Categories Management
+            Brands Management
           </h1>
-          <p className="text-[#9E9E9E]">
-            Organize your products into categories
-          </p>
+          <p className="text-[#9E9E9E]">Organize your products into brands</p>
         </div>
         <button
-          onClick={handleAddCategory}
+          onClick={handleAddBrand}
           className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
         >
           <PlusIcon className="h-4 w-4" />
-          Add Category
+          Add Brand
         </button>
       </div>
 
@@ -111,22 +104,22 @@ const CategoriesPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Categories</p>
+              <p className="text-sm text-gray-600">Total Brands</p>
               <p className="text-2xl font-bold text-gray-900">
-                {categories.length}
+                {brands.length}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
-              <span className="text-2xl">📁</span>
+              <span className="text-2xl">🏷️</span>
             </div>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active Categories</p>
+              <p className="text-sm text-gray-600">Active Brands</p>
               <p className="text-2xl font-bold text-green-600">
-                {categories.filter((c) => c.isActive).length}
+                {brands.filter((b) => b.isActive).length}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -137,26 +130,26 @@ const CategoriesPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Parent Categories</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {categories.filter((c) => !c.parentCategory).length}
+              <p className="text-sm text-gray-600">Inactive Brands</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {brands.filter((b) => !b.isActive).length}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <span className="text-2xl">🏷️</span>
+            <div className="bg-orange-100 p-3 rounded-full">
+              <span className="text-2xl">⏸️</span>
             </div>
           </div>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Subcategories</p>
-              <p className="text-2xl font-bold text-orange-600">
-                {categories.filter((c) => c.parentCategory).length}
+              <p className="text-sm text-gray-600">Brands with Logo</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {brands.filter((b) => b.logo).length}
               </p>
             </div>
-            <div className="bg-orange-100 p-3 rounded-full">
-              <span className="text-2xl">📂</span>
+            <div className="bg-purple-100 p-3 rounded-full">
+              <span className="text-2xl">🖼️</span>
             </div>
           </div>
         </div>
@@ -168,7 +161,7 @@ const CategoriesPage: React.FC = () => {
           <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search categories..."
+            placeholder="Search brands..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -176,23 +169,20 @@ const CategoriesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Categories Table */}
+      {/* Brands Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
+                  Brand
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Slug
+                  Description
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Parent
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Products
+                  Logo
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -203,74 +193,62 @@ const CategoriesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCategories.map((category) => (
-                <tr key={category._id} className="hover:bg-gray-50">
+              {filteredBrands.map((brand) => (
+                <tr key={brand._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      {category.image && (
-                        <img
-                          className="h-10 w-10 rounded-lg object-cover mr-4"
-                          src={category.image}
-                          alt={category.name}
-                        />
-                      )}
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {category.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {category.description}
-                        </div>
-                      </div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {brand.name}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {category.slug || "-"}
+                    {brand.description || "-"}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {typeof category.parentCategory === "object" &&
-                    category.parentCategory?.name
-                      ? category.parentCategory.name
-                      : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {category.productCount || 0}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {brand.logo ? (
+                      <img
+                        className="h-10 w-10 rounded-lg object-cover"
+                        src={brand.logo}
+                        alt={brand.name}
+                      />
+                    ) : (
+                      <span className="text-gray-400">No logo</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                        category.isActive
+                        brand.isActive
                       )}`}
                     >
-                      {category.isActive ? "Active" : "Inactive"}
+                      {brand.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleViewCategory(category)}
+                        onClick={() => handleViewBrand(brand)}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleToggleStatus(category)}
+                        onClick={() => handleToggleStatus(brand)}
                         className={`hover:text-gray-900 ${
-                          category.isActive ? "text-green-600" : "text-gray-600"
+                          brand.isActive ? "text-green-600" : "text-gray-600"
                         }`}
-                        title={category.isActive ? "Deactivate" : "Activate"}
+                        title={brand.isActive ? "Deactivate" : "Activate"}
                       >
-                        {category.isActive ? "✓" : "✗"}
+                        {brand.isActive ? "✓" : "✗"}
                       </button>
                       <button
-                        onClick={() => handleEditCategory(category)}
+                        onClick={() => handleEditBrand(brand)}
                         className="text-green-600 hover:text-green-900"
                       >
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
+                        onClick={() => handleDelete(brand._id)}
                         className="text-red-600 hover:text-red-900"
-                        onClick={() => handleDelete(category._id)}
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>
@@ -287,9 +265,8 @@ const CategoriesPage: React.FC = () => {
       <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
         <div className="text-sm text-gray-700">
           Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">{filteredCategories.length}</span> of{" "}
-          <span className="font-medium">{filteredCategories.length}</span>{" "}
-          results
+          <span className="font-medium">{filteredBrands.length}</span> of{" "}
+          <span className="font-medium">{filteredBrands.length}</span> results
         </div>
         <div className="flex space-x-2">
           <button
@@ -310,24 +287,21 @@ const CategoriesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Modal */}
-      <CategoryModal
+      {/* Brand Modal */}
+      <BrandModal
         isOpen={modalOpen}
         onClose={handleModalClose}
-        category={editingCategory}
-        parentCategories={categories.filter(
-          (c) => c._id !== editingCategory?._id
-        )}
+        brand={editingBrand}
       />
 
-      {/* View Category Modal */}
-      <ViewCategoryModal
+      {/* View Brand Modal */}
+      <ViewBrandModal
         isOpen={viewModalOpen}
         onClose={handleViewModalClose}
-        category={viewingCategory}
+        brand={viewingBrand}
       />
     </div>
   );
 };
 
-export default CategoriesPage;
+export default BrandsPage;
