@@ -761,8 +761,8 @@ export const deleteStore = controllerWrapper(
 export const safeDeleteStore = controllerWrapper(
   "safeDeleteStore",
   async (req, res) => {
-    const { storeId } = req.params;
-    const store = await Store.findById(storeId);
+    const { id } = req.params;
+    const store = await Store.findById(id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.deleted = true;
     await store.save();
@@ -773,8 +773,8 @@ export const safeDeleteStore = controllerWrapper(
 export const restoreStore = controllerWrapper(
   "restoreStore",
   async (req, res) => {
-    const { storeId } = req.params;
-    const store = await Store.findById(storeId);
+    const { id } = req.params;
+    const store = await Store.findById(id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.deleted = false;
     await store.save();
@@ -849,8 +849,8 @@ export const restoreStore = controllerWrapper(
 export const activateStore = controllerWrapper(
   "activateStore",
   async (req, res) => {
-    const { storeId } = req.params;
-    const store = await Store.findById(storeId);
+    const { id } = req.params;
+    const store = await Store.findById(id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.isActive = true;
     await store.save();
@@ -861,8 +861,8 @@ export const activateStore = controllerWrapper(
 export const deactivateStore = controllerWrapper(
   "deactivateStore",
   async (req, res) => {
-    const { storeId } = req.params;
-    const store = await Store.findById(storeId);
+    const { id } = req.params;
+    const store = await Store.findById(id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.isActive = false;
     await store.save();
@@ -952,8 +952,8 @@ export const getStoreDashboard = controllerWrapper(
   "getStoreDashboard",
   async (req, res) => {
     // Example: return basic stats
-    const { storeId } = req.params;
-    const store = await Store.findById(storeId);
+    const { id } = req.params;
+    const store = await Store.findById(id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     // Add your own dashboard logic here
     res.json({ success: true, dashboard: { store } });
@@ -964,7 +964,7 @@ export const getStoreDashboard = controllerWrapper(
 export const getStoreStatistics = controllerWrapper(
   "getStoreStatistics",
   async (req, res) => {
-    const { storeId } = req.params;
+    const { id } = req.params;
     let storeFilter = {};
     let productFilter = {};
     let orderFilter = {};
@@ -972,8 +972,8 @@ export const getStoreStatistics = controllerWrapper(
     if (req.user.role === "store") {
       // For store owners, get stats for their store
       let store;
-      if (storeId) {
-        store = await Store.findById(storeId);
+      if (id) {
+        store = await Store.findById(id);
       } else {
         store = await Store.findOne({ owner: req.user._id });
       }
@@ -1159,9 +1159,9 @@ export const getStoreStatistics = controllerWrapper(
 export const getAllStoreOrders = controllerWrapper(
   "getAllStoreOrders",
   async (req, res) => {
-    const { storeId } = req.params;
-    if (storeId) {
-      const orders = await Order.find({ store: storeId });
+    const { id } = req.params;
+    if (id) {
+      const orders = await Order.find({ store: id });
       return res.json({ success: true, orders });
     }
     const store = await Store.findOne({ owner: req.user._id });
@@ -1177,9 +1177,9 @@ export const getAllStoreOrders = controllerWrapper(
 export const getAllStoreComments = controllerWrapper(
   "getAllStoreComments",
   async (req, res) => {
-    const { storeId } = req.params;
+    const { id } = req.params;
     // Assuming you have a Comment model and store reference
-    const comments = await Comment.find({ store: storeId });
+    const comments = await Comment.find({ store: id });
     res.json({ success: true, comments });
   }
 );
@@ -1187,9 +1187,9 @@ export const getAllStoreComments = controllerWrapper(
 export const getAllStoreProducts = controllerWrapper(
   "getAllStoreProducts",
   async (req, res) => {
-    const { storeId } = req.params;
-    if (storeId) {
-      const products = await Product.find({ store: storeId });
+    const { id } = req.params;
+    if (id) {
+      const products = await Product.find({ store: id });
       return res.json({ success: true, products });
     }
     const store = await Store.findOne({ owner: req.user._id });
@@ -1203,10 +1203,10 @@ export const getAllStoreProducts = controllerWrapper(
 export const getStoreComments = controllerWrapper(
   "getStoreComments",
   async (req, res) => {
-    const { storeId } = req.params;
-    if (storeId) {
+    const { id } = req.params;
+    if (id) {
       // get the comments from the store products
-      const products = await Product.find({ store: storeId }).select("_id");
+      const products = await Product.find({ store: id }).select("_id");
       // const productIds = products.map((p) => p._id);
       const comments = products.map((p) => p.reviews);
       // const comments = await Comment.find({ product: { $in: productIds } });

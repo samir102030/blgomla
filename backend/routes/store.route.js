@@ -67,7 +67,7 @@ import {
 router.get("/store", protectRoute, adminOrStoreRoute, getStoreByUserId);
 
 router.get(
-  "/:storeId/statistics",
+  "/:id/statistics",
   protectRoute,
   adminOrStoreRoute,
   getStoreStatistics
@@ -95,61 +95,39 @@ router.delete("/vendors/:vendorId", protectRoute, deleteVendor); // Delete vendo
 
 // Store Routes
 router.get("/", getAllStores); // Get all stores
-router.get("/:storeId", getStoreById); // Get store by ID
-// todo not implemented yet
-router.post("/", protectRoute, adminOrStoreRoute, createStore); // Create a new store
-router.put("/:storeId", protectRoute, adminOrStoreRoute, updateStore); // Update store details
-router.delete("/:storeId", protectRoute, adminOrStoreRoute, deleteStore); // Delete store
+router.get("/:id", getStoreById); // Get store by ID
+router.put("/:id", protectRoute, adminOrStoreRoute, updateStore); // Update store details
+router.delete("/:id", protectRoute, adminOrStoreRoute, deleteStore); // Delete store
 // router.put("/:storeId/restore", protectRoute, adminOrStoreRoute, restoreStore); //
 // Restore a deleted store
-router.put(
-  "/:storeId/safeDelete",
-  protectRoute,
-  adminOrStoreRoute,
-  safeDeleteStore
-); // Soft delete store
-router.put("/:storeId/restore", protectRoute, adminOrStoreRoute, restoreStore); // Restore soft deleted store
+router.put("/:id/safeDelete", protectRoute, adminOrStoreRoute, safeDeleteStore); // Soft delete store
+router.put("/:id/restore", protectRoute, adminOrStoreRoute, restoreStore); // Restore soft deleted store
 
 // activate store
-router.put(
-  "/:storeId/activate",
-  protectRoute,
-  adminOrStoreRoute,
-  activateStore
-); // Activate store
+router.put("/:id/activate", protectRoute, adminOrStoreRoute, activateStore); // Activate store
 // deactivate store
-router.put(
-  "/:storeId/deactivate",
-  protectRoute,
-  adminOrStoreRoute,
-  deactivateStore
-); // Deactivate store
+router.put("/:id/deactivate", protectRoute, adminOrStoreRoute, deactivateStore); // Deactivate store
 
 // ============= Store Panel Routes =============
 
 router.get(
-  "/:storeId/dashboard",
+  "/:id/dashboard",
   protectRoute,
   adminOrStoreRoute,
   getStoreDashboard
 );
 
 router.get(
-  "/:storeId/products",
+  "/:id/products",
   protectRoute,
   adminOrStoreRoute,
   getAllStoreProducts
 );
 
-router.get(
-  "/:storeId/orders",
-  protectRoute,
-  adminOrStoreRoute,
-  getAllStoreOrders
-);
+router.get("/:id/orders", protectRoute, adminOrStoreRoute, getAllStoreOrders);
 
 router.get(
-  "/:storeId/comments",
+  "/:id/comments",
   protectRoute,
   adminOrStoreRoute,
   getAllStoreComments

@@ -7,9 +7,11 @@ import AccountOrders from "../components/AccountOrders";
 import AccountAddresses from "../components/AccountAddresses";
 import AccountProfile from "../components/AccountProfile";
 import AccountPassword from "../components/AccountPassword";
+import AccountStore from "../components/AccountStore";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
+import { useVendorStore } from "../stores/vendor.store";
 import PleaseLogin from "../components/PleaseLogin";
 
 const MyAccountPage: React.FC = () => {
@@ -23,13 +25,25 @@ const MyAccountPage: React.FC = () => {
     (state) => state.fetchUserAddresses
   );
 
+  // Vendor store
+  const fetchVendorStore = useVendorStore((state) => state.fetchVendorStore);
+
   // Fetch user orders and addresses on mount or when user changes
   useEffect(() => {
     if (user?._id) {
       fetchUserOrders();
       fetchUserAddresses();
+      if (user.role === "store") {
+        fetchVendorStore();
+      }
     }
-  }, [user?._id, fetchUserAddresses, fetchUserOrders]);
+  }, [
+    user?._id,
+    fetchUserAddresses,
+    fetchUserOrders,
+    fetchVendorStore,
+    user?.role,
+  ]);
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: "📊" },
@@ -37,6 +51,9 @@ const MyAccountPage: React.FC = () => {
     { id: "addresses", label: "Addresses", icon: "📍" },
     { id: "profile", label: "Account Details", icon: "👤" },
     { id: "password", label: "Change Password", icon: "🔒" },
+    ...(user?.role === "store"
+      ? [{ id: "store", label: "My Store", icon: "🏪" }]
+      : []),
     { id: "logout", label: "Logout", icon: "🚪" },
   ];
 
@@ -139,6 +156,11 @@ const MyAccountPage: React.FC = () => {
 
                 {/* Password Change */}
                 {activeTab === "password" && <AccountPassword />}
+
+                {/* Store */}
+                {activeTab === "store" && user?.role === "store" && (
+                  <AccountStore />
+                )}
               </div>
             </div>
           </div>

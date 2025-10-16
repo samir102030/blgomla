@@ -136,35 +136,90 @@ export interface VendorStore {
   name: string;
   email?: string;
   phone?: string;
+  alternativePhone?: string;
   description?: string;
   owner: string; // User ID
-  address?: string;
-  location?: string;
   logo?: string;
   isActive: boolean;
   deleted: boolean;
 
+  // Business Information
+  businessName?: string;
+  businessType?: "individual" | "company" | "partnership";
+  businessDescription?: string;
+  commercialRegistrationNumber?: string;
+  taxNumber?: string;
+
+  // Legal Entity Information
+  legalEntityType?: string;
+  licenseNumber?: string;
+  companyName?: string;
+  companyAddress?: string;
+  issueDate?: string;
+  expiryDate?: string;
+  allowedActivities?: string;
+
+  // Contact Information
+  contactPersonName?: string;
+
+  // Address Information
+  address?: string;
+  city?: string;
+  governorate?: string;
+  postalCode?: string;
+  location?: string;
+
+  // Product and Business Details
+  productCategories?: string[];
+  expectedMonthlyVolume?: number;
+
+  // Store Status and Approval
+  status?: "pending" | "approved" | "rejected" | "suspended" | "active";
+  rejectionReason?: string;
+  approvedAt?: string;
+  rejectedAt?: string;
+
+  // Documents
+  documents?: {
+    commercialRegistration?: string;
+    taxCard?: string;
+    nationalId?: string;
+    bankStatement?: string;
+  };
+
+  // Agreement Acceptance
+  termsAccepted?: boolean;
+  privacyPolicyAccepted?: boolean;
+
+  // Store Metrics
+  totalSales?: number;
+  totalProducts?: number;
+  totalOrders?: number;
+  rating?: number;
+  totalReviews?: number;
+  commission?: number;
+
   // Store Customization
-  subscribers: string[];
-  slider: Array<{
-    image: string;
-    title: string;
-    description: string;
+  subscribers?: string[];
+  slider?: Array<{
+    image?: string;
+    title?: string;
+    description?: string;
   }>;
-  socialLinks: Array<{
-    platform: string;
-    url: string;
+  socialLinks?: Array<{
+    platform?: string;
+    url?: string;
   }>;
-  features: Array<{
-    title: string;
-    description: string;
-    icon: string;
+  features?: Array<{
+    title?: string;
+    description?: string;
+    icon?: string;
   }>;
   about?: string;
   story?: string;
-  achievements: Array<{
+  achievements?: Array<{
     number: number;
-    name: string;
+    name?: string;
   }>;
 
   // Timestamps
