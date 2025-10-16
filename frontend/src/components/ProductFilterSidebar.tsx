@@ -1,127 +1,136 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import type { Category } from "../types/category.type";
+import type { Brand } from "../types/brand.type";
 
-interface FilterSidebarProps {
-  onFilterChange?: (filters: any) => void;
+interface FilterState {
+  categories: string[];
+  subcategories: string[];
+  brands: string[];
+  minPrice: string;
+  maxPrice: string;
+  rating: string;
+  search: string;
+  featured: boolean;
+  onSale: boolean;
 }
 
-const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange }) => {
+interface FilterSidebarProps {
+  filters: FilterState;
+  categories: Category[];
+  brands: Brand[];
+  onFilterChange?: (filters: Partial<FilterState>) => void;
+  onSearchChange?: (search: string) => void;
+}
+
+const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
+  filters,
+  categories,
+  brands,
+  onFilterChange,
+}) => {
   const [expandedSections, setExpandedSections] = useState({
-    shipping: true,
     category: true,
     brand: false,
     price: false,
-    offers: false,
-    minPrice: false,
     rating: false,
-    newArrivals: false
-  });
-
-  const [filters, setFilters] = useState({
-    shipping: '',
-    category: '',
-    brand: '',
-    minPrice: '',
-    maxPrice: '',
-    offers: [],
-    rating: '',
-    newArrivals: false
   });
 
   const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
+    setExpandedSections((prev) => ({
       ...prev,
-      [section]: !prev[section as keyof typeof prev]
+      [section]: !prev[section as keyof typeof prev],
     }));
   };
 
-  const handleFilterChange = (key: string, value: any) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    if (onFilterChange) {
-      onFilterChange(newFilters);
-    }
+  const handleCategoryChange = (categoryId: string, checked: boolean) => {
+    const newCategories = checked
+      ? [...filters.categories, categoryId]
+      : filters.categories.filter((id) => id !== categoryId);
+    onFilterChange?.({ categories: newCategories });
   };
 
-  const categories = [
-    { id: 'electronics', name: 'Electronics & Computers', count: 245 },
-    { id: 'all-electronics', name: 'All Electronics & Computers', count: 245 },
-    { id: 'computers-accessories', name: 'Computers & Accessories', count: 156 },
-    { id: 'all-computers', name: 'All Computers & Accessories', count: 156 },
-    { id: 'computers', name: 'Computers', count: 89 },
-    { id: 'all-computers-only', name: 'All Computers', count: 89 },
-    { id: 'smart-phones', name: 'Smart Phones', count: 67, checked: true }
-  ];
+  const handleBrandChange = (brandId: string, checked: boolean) => {
+    const newBrands = checked
+      ? [...filters.brands, brandId]
+      : filters.brands.filter((id) => id !== brandId);
+    onFilterChange?.({ brands: newBrands });
+  };
 
-  const brands = [
-    { id: 'apple', name: 'Apple', count: 45 },
-    { id: 'samsung', name: 'Samsung', count: 38 },
-    { id: 'hp', name: 'HP', count: 32 },
-    { id: 'dell', name: 'Dell', count: 28 },
-    { id: 'lenovo', name: 'Lenovo', count: 25 },
-    { id: 'canon', name: 'Canon', count: 22 },
-    { id: 'huawei', name: 'Huawei', count: 18 }
-  ];
+  const handlePriceChange = (field: "minPrice" | "maxPrice", value: string) => {
+    onFilterChange?.({ [field]: value });
+  };
+
+  const handleRatingChange = (rating: string) => {
+    onFilterChange?.({ rating });
+  };
+
+  const handleFeaturedChange = (featured: boolean) => {
+    onFilterChange?.({ featured });
+  };
+
+  const handleOnSaleChange = (onSale: boolean) => {
+    onFilterChange?.({ onSale });
+  };
+
+  const clearFilters = () => {
+    onFilterChange?.({
+      categories: [],
+      subcategories: [],
+      brands: [],
+      minPrice: "",
+      maxPrice: "",
+      rating: "",
+      search: "",
+    });
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm">
-      {/* Shipping Options */}
-      <div className="border-b border-gray-200">
+      {/* Clear Filters */}
+      <div className="p-4 border-b border-gray-200">
         <button
-          onClick={() => toggleSection('shipping')}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
+          onClick={clearFilters}
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-md text-sm font-medium transition-colors"
         >
-          <h3 className="font-semibold text-gray-900">Shipping Options</h3>
-          <span className="text-gray-500">
-            {expandedSections.shipping ? '−' : '+'}
-          </span>
+          Clear All Filters
         </button>
-        {expandedSections.shipping && (
-          <div className="px-4 pb-4">
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="shipping"
-                  value="express"
-                  className="mr-3"
-                  onChange={(e) => handleFilterChange('shipping', e.target.value)}
-                />
-                <span className="bg-yellow-400 text-black px-2 py-1 rounded text-sm font-medium mr-2">
-                  express
-                </span>
-                <span className="text-blue-600">✓</span>
-              </label>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Category */}
       <div className="border-b border-gray-200">
         <button
-          onClick={() => toggleSection('category')}
+          onClick={() => toggleSection("category")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
           <h3 className="font-semibold text-gray-900">Category</h3>
           <span className="text-gray-500">
-            {expandedSections.category ? '−' : '+'}
+            {expandedSections.category ? "−" : "+"}
           </span>
         </button>
         {expandedSections.category && (
           <div className="px-4 pb-4">
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-60 overflow-y-auto">
               {categories.map((category) => (
-                <label key={category.id} className="flex items-center justify-between">
+                <label
+                  key={category._id}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      defaultChecked={category.checked}
+                      checked={filters.categories.includes(category._id!)}
+                      onChange={(e) =>
+                        handleCategoryChange(category._id!, e.target.checked)
+                      }
                       className="mr-3"
-                      onChange={() => handleFilterChange('category', category.id)}
                     />
-                    <span className="text-sm text-gray-700">{category.name}</span>
+                    <span className="text-sm text-gray-700">
+                      {category.name}
+                    </span>
                   </div>
-                  <span className="text-xs text-gray-500">({category.count})</span>
+                  <span className="text-xs text-gray-500">
+                    ({category.productCount || 0})
+                  </span>
                 </label>
               ))}
             </div>
@@ -132,28 +141,36 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange }) 
       {/* Brand */}
       <div className="border-b border-gray-200">
         <button
-          onClick={() => toggleSection('brand')}
+          onClick={() => toggleSection("brand")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
           <h3 className="font-semibold text-gray-900">Brand</h3>
           <span className="text-gray-500">
-            {expandedSections.brand ? '−' : '+'}
+            {expandedSections.brand ? "−" : "+"}
           </span>
         </button>
         {expandedSections.brand && (
           <div className="px-4 pb-4">
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-60 overflow-y-auto">
               {brands.map((brand) => (
-                <label key={brand.id} className="flex items-center justify-between">
+                <label
+                  key={brand._id}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center">
                     <input
                       type="checkbox"
+                      checked={filters.brands.includes(brand._id!)}
+                      onChange={(e) =>
+                        handleBrandChange(brand._id!, e.target.checked)
+                      }
                       className="mr-3"
-                      onChange={() => handleFilterChange('brand', brand.id)}
                     />
                     <span className="text-sm text-gray-700">{brand.name}</span>
                   </div>
-                  <span className="text-xs text-gray-500">({brand.count})</span>
+                  <span className="text-xs text-gray-500">
+                    ({brand.productCount || 0})
+                  </span>
                 </label>
               ))}
             </div>
@@ -164,12 +181,12 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange }) 
       {/* Price Range */}
       <div className="border-b border-gray-200">
         <button
-          onClick={() => toggleSection('price')}
+          onClick={() => toggleSection("price")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
-          <h3 className="font-semibold text-gray-900">Price</h3>
+          <h3 className="font-semibold text-gray-900">Price Range</h3>
           <span className="text-gray-500">
-            {expandedSections.price ? '−' : '+'}
+            {expandedSections.price ? "−" : "+"}
           </span>
         </button>
         {expandedSections.price && (
@@ -177,75 +194,84 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({ onFilterChange }) 
             <div className="flex items-center space-x-2">
               <input
                 type="number"
-                placeholder="430"
+                placeholder="Min"
+                value={filters.minPrice}
+                onChange={(e) => handlePriceChange("minPrice", e.target.value)}
                 className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
               />
-              <span className="text-gray-500">TO</span>
+              <span className="text-gray-500">-</span>
               <input
                 type="number"
-                placeholder="4000"
+                placeholder="Max"
+                value={filters.maxPrice}
+                onChange={(e) => handlePriceChange("maxPrice", e.target.value)}
                 className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
               />
-              <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
-                GO
-              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Offers */}
+      {/* Rating */}
       <div className="border-b border-gray-200">
         <button
-          onClick={() => toggleSection('offers')}
+          onClick={() => toggleSection("rating")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
-          <h3 className="font-semibold text-gray-900">Offers</h3>
+          <h3 className="font-semibold text-gray-900">Minimum Rating</h3>
           <span className="text-gray-500">
-            {expandedSections.offers ? '−' : '+'}
+            {expandedSections.rating ? "−" : "+"}
           </span>
         </button>
+        {expandedSections.rating && (
+          <div className="px-4 pb-4">
+            <div className="space-y-2">
+              {[4, 3, 2, 1].map((rating) => (
+                <label key={rating} className="flex items-center">
+                  <input
+                    type="radio"
+                    name="rating"
+                    value={rating}
+                    checked={filters.rating === rating.toString()}
+                    onChange={(e) => handleRatingChange(e.target.value)}
+                    className="mr-3"
+                  />
+                  <span className="text-sm text-gray-700">{rating}+ Stars</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Minimum Price */}
+      {/* Featured */}
       <div className="border-b border-gray-200">
-        <button
-          onClick={() => toggleSection('minPrice')}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-        >
-          <h3 className="font-semibold text-gray-900">Minimum Price</h3>
-          <span className="text-gray-500">
-            {expandedSections.minPrice ? '−' : '+'}
-          </span>
-        </button>
+        <div className="p-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={filters.featured}
+              onChange={(e) => handleFeaturedChange(e.target.checked)}
+              className="mr-3"
+            />
+            <span className="text-sm text-gray-700">Featured Products</span>
+          </label>
+        </div>
       </div>
 
-      {/* Product Rating */}
-      <div className="border-b border-gray-200">
-        <button
-          onClick={() => toggleSection('rating')}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-        >
-          <h3 className="font-semibold text-gray-900">Product Rating</h3>
-          <span className="text-gray-500">
-            {expandedSections.rating ? '−' : '+'}
-          </span>
-        </button>
-      </div>
-
-      {/* New Arrivals */}
+      {/* On Sale */}
       <div>
-        <button
-          onClick={() => toggleSection('newArrivals')}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-        >
-          <h3 className="font-semibold text-gray-900">New Arrivals</h3>
-          <span className="text-gray-500">
-            {expandedSections.newArrivals ? '−' : '+'}
-          </span>
-        </button>
+        <div className="p-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={filters.onSale}
+              onChange={(e) => handleOnSaleChange(e.target.checked)}
+              className="mr-3"
+            />
+            <span className="text-sm text-gray-700">On Sale</span>
+          </label>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { Toaster } from "react-hot-toast";
 import HomePage from "./pages/HomePage";
 import ContactPage from "./pages/ContactPage";
 import BrandsPage from "./pages/BrandsPage";
+import ProductsPage from "./pages/ProductsPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import LoginRegisterPage from "./pages/LoginRegisterPage";
 import ShoppingCartPage from "./pages/ShoppingCartPage";
@@ -27,6 +28,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/brands" element={<BrandsPage />} />
+        <Route path="/products" element={<ProductsPage />} />
         <Route path="/product/:productId" element={<ProductDetailPage />} />
         <Route path="/login" element={<LoginRegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

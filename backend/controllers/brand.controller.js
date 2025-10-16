@@ -87,7 +87,22 @@ export const getAllBrands = controllerWrapper(
   "getAllBrands",
   async (req, res) => {
     const brands = await Brand.find({ deleted: { $ne: true } });
-    res.status(200).json({ success: true, brands });
+
+    // Add product count for each brand
+    const brandsWithCount = await Promise.all(
+      brands.map(async (brand) => {
+        const productCount = await Product.countDocuments({
+          brand: brand._id,
+          deleted: { $ne: true },
+        });
+        return {
+          ...brand.toObject(),
+          productCount,
+        };
+      })
+    );
+
+    res.status(200).json({ success: true, brands: brandsWithCount });
   }
 );
 

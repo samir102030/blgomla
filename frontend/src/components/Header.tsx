@@ -3,6 +3,13 @@ import { Link } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
 import NotificationBell from "./NotificationBell";
 
+interface NavigationItem {
+  label: string;
+  path: string;
+  condition?: boolean;
+  className?: string;
+}
+
 const Header: React.FC = () => {
   const user = useUserStore((state) => state.user);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -14,6 +21,42 @@ const Header: React.FC = () => {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  // Navigation configuration
+  const navigationItems: NavigationItem[] = [
+    {
+      label: "Home",
+      path: "/",
+      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
+    },
+    {
+      label: "All Products",
+      path: "/products",
+      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
+    },
+    {
+      label: "About Us",
+      path: "/about",
+      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
+    },
+    {
+      label: "Contact",
+      path: "/contact",
+      className: "",
+    },
+    {
+      label: "🏪 Become a Vendor",
+      path: "/vendor-registration",
+      condition: showBecomeVendor,
+      className: "",
+    },
+    {
+      label: "🏪 Admin Dashboard",
+      path: "/dashboard",
+      condition: showAdminDashboard,
+      className: "bg-[#673AB7]",
+    },
+  ];
 
   return (
     <header className="sticky top-0 z-50 bg-[#FFD600] shadow-lg">
@@ -138,76 +181,18 @@ const Header: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ul className="flex flex-col md:flex-row md:space-x-8">
-            <li>
-              <Link
-                to="/"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/brands"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
-              >
-                Electronics
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/brands"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
-              >
-                Computers
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                to="/brands"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
-              >
-                Brands
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/about"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors border-r border-[#9E9E9E]/30 md:border-r-0"
-              >
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link
-                to="/contact"
-                className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors"
-              >
-                Contact
-              </Link>
-            </li>
-            {showBecomeVendor && (
-              <li>
-                <Link
-                  to="/vendor-registration"
-                  className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors"
-                >
-                  🏪 Become a Vendor
-                </Link>
-              </li>
-            )}
-
-            {showAdminDashboard && (
-              <li>
-                <Link
-                  to="/dashboard"
-                  className="block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors bg-[#673AB7]"
-                >
-                  🏪 Admin Dashboard
-                </Link>
-              </li>
-            )}
+            {navigationItems
+              .filter((item) => item.condition === undefined || item.condition) // Show items where condition is undefined (default true) or true
+              .map((item) => (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={`block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors ${item.className}`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
           </ul>
         </div>
       </nav>
