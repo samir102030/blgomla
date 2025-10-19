@@ -111,7 +111,7 @@ const ShoppingCartPage: React.FC = () => {
 
     try {
       setUpdatingItem(productId);
-      await updateCartItem(item._id || productId, newQuantity);
+      await updateCartItem(productId, newQuantity);
       toast.success("Cart updated successfully");
 
       // Refresh cart data and update local state
@@ -143,7 +143,7 @@ const ShoppingCartPage: React.FC = () => {
 
         // Update local state immediately
         setCartItems((prevItems) =>
-          prevItems.filter((item) => item._id !== cartItemId)
+          prevItems.filter((item) => item.product !== cartItemId)
         );
       } catch (error: any) {
         console.error("Error removing item:", error);
@@ -164,7 +164,7 @@ const ShoppingCartPage: React.FC = () => {
 
       for (const item of outOfStockItems) {
         try {
-          await removeItem(item._id || item.product);
+          await removeItem(item.product);
           toast.error(
             `Stock Error: ${item.productDetails?.name} is out of stock and has been removed from your cart`
           );
@@ -508,7 +508,7 @@ const ShoppingCartPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => removeItem(item._id || item.product)}
+                          onClick={() => removeItem(item.product)}
                           disabled={updatingItem === item.product}
                           className="text-red-600 hover:text-red-800 disabled:opacity-50"
                         >

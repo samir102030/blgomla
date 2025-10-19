@@ -95,7 +95,7 @@ const CheckoutPage: React.FC = () => {
       // Load user addresses
       if (user?._id) {
         try {
-          await fetchUserAddresses(user._id);
+          await fetchUserAddresses();
         } catch (error: any) {
           console.error("Error loading addresses:", error);
           toast.error(
@@ -406,7 +406,7 @@ const CheckoutPage: React.FC = () => {
         // Clear cart after successful order
         await fetchCart();
         // Navigate to order confirmation or orders page
-        navigate(`/orders/${order._id}`);
+        navigate(`/order-confirmation/${order._id}`);
       } else {
         throw new Error("Order creation returned no data");
       }

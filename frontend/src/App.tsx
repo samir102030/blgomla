@@ -8,6 +8,7 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import LoginRegisterPage from "./pages/LoginRegisterPage";
 import ShoppingCartPage from "./pages/ShoppingCartPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import WishlistPage from "./pages/WishlistPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import AboutUsPage from "./pages/AboutUsPage";
@@ -35,6 +36,10 @@ function App() {
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/cart" element={<ShoppingCartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route
+          path="/order-confirmation/:orderId"
+          element={<OrderConfirmationPage />}
+        />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/account" element={<MyAccountPage />} />
         <Route path="/about" element={<AboutUsPage />} />

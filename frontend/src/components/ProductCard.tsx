@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useUserStore } from "../stores/user.store";
+import toast from "react-hot-toast";
 
 interface ProductCardProps {
   id: string;
@@ -30,7 +32,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isFeatured = false,
   salePercentage,
 }) => {
+  const navigate = useNavigate();
+  const { user, toggleLoveProduct, getLovedProducts } = useUserStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Check if product is in user's wishlist
+  useEffect(() => {
+    if (user?.love && Array.isArray(user.love)) {
+      const isInWishlist = user.love.some((product) => product._id === id);
+      setIsWishlisted(isInWishlist);
+    } else {
+      setIsWishlisted(false);
+    }
+  }, [user?.love, id]);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -45,8 +60,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
     ));
   };
 
-  const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted);
+  const toggleWishlist = async () => {
+    if (!user) {
+      toast.error("Please login to add items to wishlist");
+      navigate("/login");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const success = await toggleLoveProduct(id);
+      if (success) {
+        // Refresh the loved products to update the UI
+        await getLovedProducts();
+        toast.success(
+          isWishlisted ? "Removed from wishlist" : "Added to wishlist"
+        );
+      } else {
+        toast.error("Failed to update wishlist");
+      }
+    } catch {
+      toast.error("Failed to update wishlist");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -73,23 +110,46 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Wishlist Button */}
       <button
         onClick={toggleWishlist}
-        className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-[#FFD600]/20 hover:shadow-md transition-all duration-200"
+        disabled={isLoading}
+        className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-[#FFD600]/20 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <svg
-          className={`w-6 h-6 ${
-            isWishlisted ? "text-[#D32F2F] fill-current" : "text-[#9E9E9E]"
-          }`}
-          fill={isWishlisted ? "currentColor" : "none"}
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-          />
-        </svg>
+        {isLoading ? (
+          <svg
+            className="w-6 h-6 text-[#9E9E9E] animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        ) : (
+          <svg
+            className={`w-6 h-6 ${
+              isWishlisted ? "text-[#D32F2F] fill-current" : "text-[#9E9E9E]"
+            }`}
+            fill={isWishlisted ? "currentColor" : "none"}
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+        )}
       </button>
 
       {/* Product Image */}
@@ -124,60 +184,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-center gap-3">
-        {/* Quick View */}
-        <button className="p-3 border border-[#9E9E9E]/30 rounded-full hover:bg-[#FFD600] hover:text-[#333333] hover:border-[#FFD600] hover:shadow-md transition-all duration-200">
-          <svg
-            className="w-5 h-5 text-[#9E9E9E] hover:text-[#333333]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </button>
-
-        {/* Add to Cart */}
-        <button className="p-3 bg-[#FFD600] text-[#333333] rounded-full hover:bg-[#e6c100] hover:shadow-md transition-all duration-200 font-medium">
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"
-            />
-          </svg>
-        </button>
-
-        {/* Compare */}
-        <button className="p-3 border border-gray-300 rounded-full hover:bg-white hover:shadow-md transition-all duration-200">
-          <svg
-            className="w-5 h-5 text-gray-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-        </button>
       </div>
     </div>
   );

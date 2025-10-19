@@ -52,20 +52,22 @@ const ProductDetailPage: React.FC = () => {
   // Check if product is already in cart
   const isProductInCart = () => {
     if (!user?.cart || !productId) return false;
-    return user.cart.some((item) => item.product === productId);
+    return user.cart.some((item) => item.product.toString() === productId);
   };
 
   // Get current quantity in cart
   const getCartQuantity = () => {
     if (!user?.cart || !productId) return 0;
-    const cartItem = user.cart.find((item) => item.product === productId);
+    const cartItem = user.cart.find(
+      (item) => item.product.toString() === productId
+    );
     return cartItem ? cartItem.quantity : 0;
   };
 
   // Check if product is in loved products
   const isProductLoved = () => {
     if (!user?.love || !productId) return false;
-    return user.love.some((item) => item._id === productId);
+    return user.love.some((item) => item.toString() === productId);
   };
 
   // Check if user has already reviewed this product
@@ -176,22 +178,19 @@ const ProductDetailPage: React.FC = () => {
 
   const handleAddToCart = async () => {
     if (!productId) return;
-    if (isProductInCart()) {
-      toast("Product already in cart!");
-
-      navigate("/cart");
-      return;
-    }
 
     try {
       await addToCart(productId, quantity);
-      navigate("/cart");
-
-      // You could add a success notification here
-      // console.log("Product added to cart successfully!");
+      await fetchCart(); // Update user store cart
+      toast.success("Product added to cart successfully!");
     } catch (error) {
       console.error("Failed to add product to cart:", error);
+      toast.error("Failed to add product to cart");
     }
+  };
+
+  const handleGoToCart = () => {
+    navigate("/cart");
   };
 
   if (loading) {
@@ -260,8 +259,17 @@ const ProductDetailPage: React.FC = () => {
   const handleQuantityChange = (change: number) => {
     const newQuantity = quantity + change;
     if (newQuantity >= 1) {
-      if (newQuantity > (product?.stock || 0)) {
-        toast.error(`Only ${product?.stock} items available in stock`);
+      const currentCartQuantity = getCartQuantity();
+      const totalQuantity = currentCartQuantity + newQuantity;
+      // Only check stock if it's defined and greater than 0
+      if (
+        product?.stock &&
+        product.stock > 0 &&
+        totalQuantity > product.stock
+      ) {
+        toast.error(
+          `Only ${product.stock} items available in stock. You already have ${currentCartQuantity} in cart.`
+        );
         return;
       }
       setQuantity(newQuantity);
@@ -429,7 +437,10 @@ const ProductDetailPage: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => handleQuantityChange(-1)}
-                    className="w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50"
+                    disabled={isProductInCart()}
+                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${
+                      isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
                     -
                   </button>
@@ -438,17 +449,25 @@ const ProductDetailPage: React.FC = () => {
                   </span>
                   <button
                     onClick={() => handleQuantityChange(1)}
-                    className="w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50"
+                    disabled={isProductInCart()}
+                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${
+                      isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
                     +
                   </button>
+                  {isProductInCart() && (
+                    <span className="text-sm text-gray-500 ml-2">
+                      Go to cart to change quantity
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex space-x-4 mb-8">
                 <button
-                  onClick={handleAddToCart}
+                  onClick={isProductInCart() ? handleGoToCart : handleAddToCart}
                   disabled={loading}
                   className={`flex-1 py-3 px-6 rounded-md transition-colors ${
                     isProductInCart()

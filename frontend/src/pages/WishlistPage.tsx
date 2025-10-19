@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
-import { useProductStore } from "../stores/product.store";
 import type { Product } from "../types/product.type";
 import PleaseLogin from "../components/PleaseLogin";
 
@@ -14,7 +13,6 @@ const WishlistPage: React.FC = () => {
     loading: userLoading,
   } = useUserStore();
   const user = useUserStore((state) => state.user);
-  const { addToCart, loading: productLoading } = useProductStore();
   const [lovedProducts, setLovedProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -26,30 +24,6 @@ const WishlistPage: React.FC = () => {
       setLovedProducts(user.love);
     }
   }, [user]);
-
-  const handleAddToCart = async (productId: string) => {
-    try {
-      await addToCart(productId, 1);
-      alert("Item added to cart!");
-    } catch (error) {
-      console.error("Error adding item to cart:", error);
-      alert("Failed to add item to cart");
-    }
-  };
-
-  // const handleAddAllToCart = async () => {
-  //   try {
-  //     for (const product of lovedProducts) {
-  //       if (product._id) {
-  //         await addToCart(product._id, 1);
-  //       }
-  //     }
-  //     alert("All items added to cart!");
-  //   } catch (error) {
-  //     console.error("Error adding all items to cart:", error);
-  //     alert("Failed to add some items to cart");
-  //   }
-  // };
 
   // const handleClearWishlist = async () => {
   //   try {
@@ -73,7 +47,7 @@ const WishlistPage: React.FC = () => {
     }
   };
 
-  const isLoading = userLoading || productLoading;
+  const isLoading = userLoading;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -149,9 +123,6 @@ const WishlistPage: React.FC = () => {
                         Price
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
-                        Add to Cart
-                      </th>
-                      <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
                         Remove
                       </th>
                     </tr>
@@ -196,15 +167,6 @@ const WishlistPage: React.FC = () => {
                         </td>
                         <td className="px-6 py-4">
                           <button
-                            onClick={() => handleAddToCart(item._id!)}
-                            className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50"
-                            disabled={isLoading}
-                          >
-                            ADD TO CART
-                          </button>
-                        </td>
-                        <td className="px-6 py-4">
-                          <button
                             onClick={() => handleToggleLove(item._id!)}
                             className="text-red-600 hover:text-red-800 disabled:opacity-50"
                             disabled={isLoading}
@@ -239,13 +201,6 @@ const WishlistPage: React.FC = () => {
                   ← Continue Shopping
                 </Link>
                 <div className="space-x-4">
-                  <button
-                    onClick={handleAddAllToCart}
-                    className="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50"
-                    disabled={isLoading}
-                  >
-                    Add All to Cart
-                  </button>
                   <button
                     onClick={handleClearWishlist}
                     className="bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
