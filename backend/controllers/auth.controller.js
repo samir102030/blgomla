@@ -2,7 +2,10 @@ import crypto from "crypto";
 import User from "../models/user.model.js";
 import { paginateQuery } from "../utils/pagination.js";
 
-import { generateTokenAndSetCookie } from "../middleware/token.js";
+import {
+  generateTokensAndSetCookies,
+  generateToken,
+} from "../middleware/token.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
@@ -42,7 +45,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
 
   await user.save();
 
-  generateTokenAndSetCookie(res, user._id);
+  generateTokensAndSetCookies(res, user._id);
 
   res.status(201).json({
     success: true,
@@ -155,7 +158,7 @@ export const login = controllerWrapper("login", async (req, res) => {
       .status(400)
       .json({ success: false, message: "Invalid credentials" });
 
-  generateTokenAndSetCookie(res, user._id);
+  generateTokensAndSetCookies(res, user._id);
 
   user.lastLogin = new Date();
   await user.save();
@@ -184,10 +187,35 @@ export const login = controllerWrapper("login", async (req, res) => {
 
 export const logout = controllerWrapper("logout", async (req, res) => {
   res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
   return res
     .status(200)
     .json({ success: true, message: "Logged out successfully" });
 });
+
+export const refreshToken = controllerWrapper(
+  "refreshToken",
+  async (req, res) => {
+    // This will be called after verifyRefreshToken middleware
+    const userId = req.userId;
+
+    // Generate new access token
+    const newAccessToken = generateToken(userId, "5h");
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 5 * 60 * 60 * 1000, // five hours
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+      accessToken: newAccessToken, // Optionally send in response for client-side storage if needed
+    });
+  }
+);
 
 export const forgotPassword = controllerWrapper(
   "forgotPassword",

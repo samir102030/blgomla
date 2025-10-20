@@ -1,6 +1,7 @@
 import express from "express";
 
 import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
+import { verifyRefreshToken } from "../middleware/token.js";
 import {
   activateUser,
   changePassword,
@@ -16,6 +17,7 @@ import {
   logout,
   loveProduct,
   reSendVerificationEmail,
+  refreshToken,
   resetPassword,
   restoreUser,
   safeDeleteUser,
@@ -39,6 +41,7 @@ const router = express.Router();
 router.post("/signup", validateSignup, signup);
 router.post("/login", validateLogin, login);
 router.post("/logout", logout);
+router.post("/refresh", verifyRefreshToken, refreshToken);
 
 router.post("/loveProduct/:productId", protectRoute, loveProduct);
 router.get("/loveProducts", protectRoute, getLovedProducts);
