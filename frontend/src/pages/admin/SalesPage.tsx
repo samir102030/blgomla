@@ -11,7 +11,7 @@ const SalesPage: React.FC = () => {
   const [chartPeriod, setChartPeriod] = useState("daily");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<
-    "sales" | "products" | "transactions"
+    "sales" | "products" | "transactions" | "revenue" | "metrics"
   >("sales");
   const {
     salesOverview,
@@ -84,6 +84,146 @@ const SalesPage: React.FC = () => {
         return "bg-[#D32F2F]/10 text-[#D32F2F]";
       default:
         return "bg-[#9E9E9E]/10 text-[#9E9E9E]";
+    }
+  };
+
+  const exportModalData = (type: string) => {
+    try {
+      let reportData: string[][] = [];
+      let filename = "";
+
+      if (type === "sales" && salesTrend) {
+        reportData.push(["Sales Trend Data"]);
+        reportData.push(["Date", "Sales", "Orders"]);
+        salesTrend.forEach((data) => {
+          reportData.push([
+            data.date,
+            `$${data.sales.toFixed(2)}`,
+            data.orders.toString(),
+          ]);
+        });
+        filename = `sales-trend-${new Date().toISOString().split("T")[0]}.csv`;
+      } else if (type === "products" && topProducts) {
+        reportData.push(["Top Products Data"]);
+        reportData.push(["Product Name", "Units Sold", "Sales Amount"]);
+        topProducts.forEach((product) => {
+          reportData.push([
+            product.name,
+            product.units.toString(),
+            `$${product.sales.toFixed(2)}`,
+          ]);
+        });
+        filename = `top-products-${new Date().toISOString().split("T")[0]}.csv`;
+      } else if (type === "transactions" && recentTransactions) {
+        reportData.push(["Recent Transactions Data"]);
+        reportData.push([
+          "Transaction ID",
+          "Customer",
+          "Amount",
+          "Status",
+          "Date",
+        ]);
+        recentTransactions.forEach((transaction) => {
+          reportData.push([
+            transaction.id,
+            transaction.customer,
+            transaction.amount,
+            transaction.status,
+            transaction.date,
+          ]);
+        });
+        filename = `recent-transactions-${
+          new Date().toISOString().split("T")[0]
+        }.csv`;
+      } else if (type === "revenue" && revenueBreakdown) {
+        reportData.push(["Revenue Breakdown Data"]);
+        reportData.push(["Category", "Amount", "Percentage"]);
+        const total =
+          revenueBreakdown.productSales +
+          revenueBreakdown.shipping +
+          revenueBreakdown.taxes +
+          revenueBreakdown.other;
+        reportData.push([
+          "Product Sales",
+          `$${revenueBreakdown.productSales.toFixed(2)}`,
+          total > 0
+            ? `${((revenueBreakdown.productSales / total) * 100).toFixed(1)}%`
+            : "0%",
+        ]);
+        reportData.push([
+          "Shipping",
+          `$${revenueBreakdown.shipping.toFixed(2)}`,
+          total > 0
+            ? `${((revenueBreakdown.shipping / total) * 100).toFixed(1)}%`
+            : "0%",
+        ]);
+        reportData.push([
+          "Taxes",
+          `$${revenueBreakdown.taxes.toFixed(2)}`,
+          total > 0
+            ? `${((revenueBreakdown.taxes / total) * 100).toFixed(1)}%`
+            : "0%",
+        ]);
+        reportData.push([
+          "Other",
+          `$${revenueBreakdown.other.toFixed(2)}`,
+          total > 0
+            ? `${((revenueBreakdown.other / total) * 100).toFixed(1)}%`
+            : "0%",
+        ]);
+        filename = `revenue-breakdown-${
+          new Date().toISOString().split("T")[0]
+        }.csv`;
+      } else if (type === "metrics" && performanceMetrics) {
+        reportData.push(["Performance Metrics Data"]);
+        reportData.push(["Metric", "Value", "Description"]);
+        reportData.push([
+          "Conversion Rate",
+          `${performanceMetrics.conversionRate.toFixed(1)}%`,
+          "Percentage of visitors who make a purchase",
+        ]);
+        reportData.push([
+          "Average Order Value",
+          `$${performanceMetrics.avgOrderValue.toFixed(2)}`,
+          "Average amount spent per order",
+        ]);
+        reportData.push([
+          "Items per Order",
+          performanceMetrics.itemsPerOrder.toFixed(1),
+          "Average number of items in each order",
+        ]);
+        reportData.push([
+          "Customer Satisfaction",
+          `${performanceMetrics.customerSatisfaction}%`,
+          "Overall customer satisfaction rating",
+        ]);
+        filename = `performance-metrics-${
+          new Date().toISOString().split("T")[0]
+        }.csv`;
+      } else {
+        alert("No data available to export.");
+        return;
+      }
+
+      const csvContent = reportData
+        .map((row) =>
+          row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")
+        )
+        .join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting modal data:", error);
+      alert("Failed to export data. Please try again.");
     }
   };
 
@@ -440,6 +580,15 @@ const SalesPage: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900">
               Revenue Breakdown
             </h3>
+            <button
+              onClick={() => {
+                setModalType("revenue");
+                setShowModal(true);
+              }}
+              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            >
+              View Details
+            </button>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -646,9 +795,20 @@ const SalesPage: React.FC = () => {
 
       {/* Performance Metrics */}
       <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-6">
-          Performance Metrics
-        </h3>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Performance Metrics
+          </h3>
+          <button
+            onClick={() => {
+              setModalType("metrics");
+              setShowModal(true);
+            }}
+            className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+          >
+            View Details
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">
@@ -703,13 +863,23 @@ const SalesPage: React.FC = () => {
                   {modalType === "products" && "Top Products Details"}
                   {modalType === "transactions" &&
                     "Recent Transactions Details"}
+                  {modalType === "revenue" && "Revenue Breakdown Details"}
+                  {modalType === "metrics" && "Performance Metrics Details"}
                 </h2>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl"
-                >
-                  ×
-                </button>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => exportModalData(modalType)}
+                    className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors text-sm"
+                  >
+                    Export Data
+                  </button>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-4">
@@ -801,6 +971,169 @@ const SalesPage: React.FC = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {modalType === "revenue" && revenueBreakdown && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Revenue Breakdown
+                    </h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full table-auto">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="px-4 py-2 text-left">Category</th>
+                            <th className="px-4 py-2 text-left">Amount</th>
+                            <th className="px-4 py-2 text-left">Percentage</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-t">
+                            <td className="px-4 py-2">Product Sales</td>
+                            <td className="px-4 py-2">
+                              ${revenueBreakdown.productSales.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-2">
+                              {revenueBreakdown.productSales +
+                                revenueBreakdown.shipping +
+                                revenueBreakdown.taxes +
+                                revenueBreakdown.other >
+                              0
+                                ? Math.round(
+                                    (revenueBreakdown.productSales /
+                                      (revenueBreakdown.productSales +
+                                        revenueBreakdown.shipping +
+                                        revenueBreakdown.taxes +
+                                        revenueBreakdown.other)) *
+                                      100
+                                  )
+                                : 0}
+                              %
+                            </td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="px-4 py-2">Shipping</td>
+                            <td className="px-4 py-2">
+                              ${revenueBreakdown.shipping.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-2">
+                              {revenueBreakdown.productSales +
+                                revenueBreakdown.shipping +
+                                revenueBreakdown.taxes +
+                                revenueBreakdown.other >
+                              0
+                                ? Math.round(
+                                    (revenueBreakdown.shipping /
+                                      (revenueBreakdown.productSales +
+                                        revenueBreakdown.shipping +
+                                        revenueBreakdown.taxes +
+                                        revenueBreakdown.other)) *
+                                      100
+                                  )
+                                : 0}
+                              %
+                            </td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="px-4 py-2">Taxes</td>
+                            <td className="px-4 py-2">
+                              ${revenueBreakdown.taxes.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-2">
+                              {revenueBreakdown.productSales +
+                                revenueBreakdown.shipping +
+                                revenueBreakdown.taxes +
+                                revenueBreakdown.other >
+                              0
+                                ? Math.round(
+                                    (revenueBreakdown.taxes /
+                                      (revenueBreakdown.productSales +
+                                        revenueBreakdown.shipping +
+                                        revenueBreakdown.taxes +
+                                        revenueBreakdown.other)) *
+                                      100
+                                  )
+                                : 0}
+                              %
+                            </td>
+                          </tr>
+                          <tr className="border-t">
+                            <td className="px-4 py-2">Other</td>
+                            <td className="px-4 py-2">
+                              ${revenueBreakdown.other.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-2">
+                              {revenueBreakdown.productSales +
+                                revenueBreakdown.shipping +
+                                revenueBreakdown.taxes +
+                                revenueBreakdown.other >
+                              0
+                                ? Math.round(
+                                    (revenueBreakdown.other /
+                                      (revenueBreakdown.productSales +
+                                        revenueBreakdown.shipping +
+                                        revenueBreakdown.taxes +
+                                        revenueBreakdown.other)) *
+                                      100
+                                  )
+                                : 0}
+                              %
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {modalType === "metrics" && performanceMetrics && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">
+                      Performance Metrics
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-medium mb-2">Conversion Rate</h4>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {performanceMetrics.conversionRate.toFixed(1)}%
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Percentage of visitors who make a purchase
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-medium mb-2">
+                          Average Order Value
+                        </h4>
+                        <p className="text-2xl font-bold text-green-600">
+                          ${performanceMetrics.avgOrderValue.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Average amount spent per order
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-medium mb-2">Items per Order</h4>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {performanceMetrics.itemsPerOrder.toFixed(1)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Average number of items in each order
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-medium mb-2">
+                          Customer Satisfaction
+                        </h4>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {performanceMetrics.customerSatisfaction}%
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Overall customer satisfaction rating
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}

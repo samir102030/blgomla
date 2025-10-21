@@ -5,6 +5,7 @@ import {
   PencilIcon,
   TrashIcon,
   UserIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
 
@@ -17,6 +18,7 @@ const UsersPage: React.FC = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [editForm, setEditForm] = useState({
     role: "customer",
     active: true,
@@ -30,6 +32,7 @@ const UsersPage: React.FC = () => {
     updateUser,
     safeDeleteUser,
     finalDeleteUser,
+    restoreUser,
   } = useUserStore();
 
   useEffect(() => {
@@ -69,6 +72,11 @@ const UsersPage: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  const handleRestoreUser = (user: any) => {
+    setSelectedUser(user);
+    setShowRestoreModal(true);
+  };
+
   const confirmDelete = async () => {
     if (selectedUser) {
       let success;
@@ -82,6 +90,17 @@ const UsersPage: React.FC = () => {
       if (success) {
         fetchUsers({ page: currentPage, limit: 10 });
         setShowDeleteModal(false);
+        setSelectedUser(null);
+      }
+    }
+  };
+
+  const confirmRestore = async () => {
+    if (selectedUser) {
+      const success = await restoreUser(selectedUser._id);
+      if (success) {
+        fetchUsers({ page: currentPage, limit: 10 });
+        setShowRestoreModal(false);
         setSelectedUser(null);
       }
     }
@@ -354,18 +373,29 @@ const UsersPage: React.FC = () => {
                           >
                             <EyeIcon className="h-4 w-4" />
                           </button>
-                          <button
-                            className="text-green-600 hover:text-green-900"
-                            onClick={() => handleEditUser(user)}
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-900"
-                            onClick={() => handleDeleteUser(user)}
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </button>
+                          {!user.deleted && (
+                            <button
+                              className="text-green-600 hover:text-green-900"
+                              onClick={() => handleEditUser(user)}
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </button>
+                          )}
+                          {user.deleted ? (
+                            <button
+                              className="text-yellow-600 hover:text-yellow-900"
+                              onClick={() => handleRestoreUser(user)}
+                            >
+                              <ArrowPathIcon className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              className="text-red-600 hover:text-red-900"
+                              onClick={() => handleDeleteUser(user)}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -569,6 +599,36 @@ const UsersPage: React.FC = () => {
                 onClick={confirmDelete}
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Restore User Modal */}
+      {showRestoreModal && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Restore User</h3>
+            <p>
+              Are you sure you want to restore user "
+              {selectedUser.name || selectedUser.email}"?
+            </p>
+            <p className="text-sm text-gray-600 mt-2">
+              This will reactivate the user and make them active again.
+            </p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                onClick={() => setShowRestoreModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                onClick={confirmRestore}
+              >
+                Restore
               </button>
             </div>
           </div>
