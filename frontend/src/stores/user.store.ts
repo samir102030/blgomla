@@ -22,6 +22,7 @@ interface UserStore {
   fetchUsers: (params?: Record<string, any>) => Promise<void>;
   fetchDeletedUsers: (params?: Record<string, any>) => Promise<void>;
   fetchUserById: (userId: string) => Promise<void>;
+  getProfile: () => Promise<User | undefined>;
   signup: (
     data: Partial<User> & { password: string }
   ) => Promise<User | undefined>;
@@ -103,6 +104,23 @@ export const useUserStore = create<UserStore>()(
             user: User;
           }>(`/users/${userId}`);
           set({ user: data.user, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      getProfile: async () => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            user: User;
+          }>(`/users/profile`);
+          set({ user: data.user, loading: false });
+          return data.user;
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,

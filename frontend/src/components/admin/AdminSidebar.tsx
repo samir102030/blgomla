@@ -161,6 +161,25 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               return false;
             }
 
+            // Check user status
+            if (!user?.active || user?.deleted) {
+              console.log("User inactive or deleted");
+              return false;
+            }
+
+            // If user is store, check store approval
+            if (user?.role === "store") {
+              // console.log("store", user.store);
+              if (
+                // !user.store ||
+                user.store.status !== "approved" ||
+                user.store.deleted
+              ) {
+                console.log("Store not approved or deleted");
+                return false;
+              }
+            }
+
             // For items with children, check if user has access to any child
             if (item.children) {
               const accessibleChildren = item.children.filter(

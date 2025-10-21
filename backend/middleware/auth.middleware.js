@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import Store from "../models/store.model.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
@@ -20,6 +21,27 @@ export const protectRoute = async (req, res, next) => {
         return res
           .status(401)
           .json({ success: false, message: "User not found" });
+      }
+
+      // Check if user is active and not deleted
+      if (!user.active || user.deleted) {
+        return res.status(403).json({
+          success: false,
+          message: "Account is inactive or deleted",
+        });
+      }
+
+      // If user is a store, check if store is approved
+      if (user.role === "store") {
+        const store = await Store.findOne({ owner: user._id });
+        if (!store || store.status !== "approved" || store.deleted) {
+          return res.status(403).json({
+            success: false,
+            message: "Store is not approved or inactive",
+          });
+        }
+        // Attach store to req for later use
+        req.store = store;
       }
 
       req.user = user;

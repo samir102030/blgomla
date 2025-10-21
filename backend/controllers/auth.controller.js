@@ -53,6 +53,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     user: {
       ...user._doc,
       password: undefined,
+      store: role === "store" ? store : undefined,
     },
   });
 });
@@ -181,6 +182,10 @@ export const login = controllerWrapper("login", async (req, res) => {
     user: {
       ...user._doc,
       password: undefined,
+      store:
+        user.role === "store"
+          ? await Store.findOne({ owner: user._id })
+          : undefined,
     },
   });
 });
@@ -604,60 +609,31 @@ export const getLovedProducts = controllerWrapper(
   }
 );
 
-export const updateProfile = controllerWrapper(
-  "updateProfile",
-  async (req, res) => {
-    const userId = req.user._id;
-    const updateData = req.body;
-
-    // Allow updating name, phoneNumber, and profilePicture
-    const allowedFields = ["name", "phoneNumber", "profilePicture"];
-    const filteredData = {};
-    for (const field of allowedFields) {
-      if (updateData[field] !== undefined) {
-        filteredData[field] = updateData[field];
-      }
-    }
-
-    if (Object.keys(filteredData).length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No valid data provided to update" });
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updatedUser) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    // Create profile update notification
-    try {
-      await Notification.create({
-        user: userId,
-        title: "Profile Updated",
-        message: "Your profile information has been updated successfully.",
-        type: "success",
-      });
-    } catch (error) {
-      console.error("Error creating profile update notification:", error);
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Profile updated successfully",
-      user: {
-        ...updatedUser._doc,
-        password: undefined,
-      },
+export const getProfile = controllerWrapper("getProfile", async (req, res) => {
+  const userId = req.user._id;
+  const user = await User.findById(userId).populate("love");
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: "User not found",
     });
   }
-);
+
+  // Include store data for store users
+  const userData = {
+    ...user._doc,
+    password: undefined,
+    store:
+      user.role === "store"
+        ? await Store.findOne({ owner: user._id })
+        : undefined,
+  };
+
+  res.status(200).json({
+    success: true,
+    user: userData,
+  });
+});
 
 export const changePassword = controllerWrapper(
   "changePassword",

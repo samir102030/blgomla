@@ -32,5 +32,6 @@ export interface User {
   verificationTokenExpiresAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  store?: any; // Store object if role is store
   // wishlist?: string[];
 }
