@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useUserStore } from "../stores/user.store";
 import { axiosInstance } from "../lib/axios";
 
@@ -12,10 +12,16 @@ interface Message {
   sender: {
     _id?: string;
     name: string;
+    email: string;
     role: string;
+    profilePicture?: string;
   };
   content: string;
-  createdAt: Date;
+  createdAt: string;
+  messageType: string;
+  isRead: boolean;
+  readAt?: string;
+  attachments: any[];
 }
 
 interface Conversation {
@@ -43,6 +49,8 @@ const ProductChat: React.FC<ProductChatProps> = ({
   const [newMessage, setNewMessage] = useState("");
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const initializedRef = useRef(false);
   const fetchMessages = useCallback(async (conversationId: string) => {
     try {
       const response = await axiosInstance.get(
@@ -54,9 +62,15 @@ const ProductChat: React.FC<ProductChatProps> = ({
     }
   }, []);
 
-  const initializeConversation = useCallback(async () => {
+  const initializeConversationRef = useRef<() => Promise<void>>(async () => {});
+
+  initializeConversationRef.current = async () => {
+    if (initializedRef.current) return; // Prevent multiple calls
+
+    initializedRef.current = true;
     try {
       setLoading(true);
+      setError(null);
       const response = await axiosInstance.post("/chat/conversations", {
         type: "product",
         productId,
@@ -65,28 +79,37 @@ const ProductChat: React.FC<ProductChatProps> = ({
 
       // Fetch messages for this conversation
       await fetchMessages(response.data._id);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error initializing conversation:", error);
-      // Fallback to mock data if API fails
-      setConversation({ _id: "mock-conversation-id" } as Conversation);
-      setMessages([
-        {
-          _id: "1",
-          sender: { name: "Store Support", role: "vendor" },
-          content: `Hello! How can I help you with ${productName}?`,
-          createdAt: new Date(Date.now() - 3600000),
-        },
-      ]);
+      setError(
+        error?.response?.data?.message || "Failed to start conversation"
+      );
+      setConversation(null);
+      initializedRef.current = false; // Allow retry on error
     } finally {
       setLoading(false);
     }
-  }, [productId, productName, fetchMessages]);
+  };
 
   useEffect(() => {
-    if (isOpen && !conversation && productId && !loading) {
-      initializeConversation();
+    if (
+      isOpen &&
+      !initializedRef.current &&
+      initializeConversationRef.current
+    ) {
+      initializeConversationRef.current();
     }
-  }, [isOpen, conversation, productId, loading, initializeConversation]);
+  }, [isOpen]);
+
+  // Reset initialization state when chat is closed
+  useEffect(() => {
+    if (!isOpen) {
+      initializedRef.current = false;
+      setConversation(null);
+      setMessages([]);
+      setError(null);
+    }
+  }, [isOpen]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !user || !conversation) return;
@@ -96,10 +119,14 @@ const ProductChat: React.FC<ProductChatProps> = ({
       sender: {
         _id: user._id,
         name: user.name || "Customer",
+        email: user.email || "",
         role: user.role,
       },
       content: newMessage,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
+      messageType: "text",
+      isRead: false,
+      attachments: [],
     };
 
     // Optimistically add message to UI
@@ -186,36 +213,77 @@ const ProductChat: React.FC<ProductChatProps> = ({
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Loading conversation...</div>
           </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="text-red-500 mb-2">⚠️ Error</div>
+              <div className="text-gray-600 text-sm">{error}</div>
+            </div>
+          </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message._id}
-              className={`flex ${
-                message.sender._id === user?._id
-                  ? "justify-end"
-                  : "justify-start"
-              }`}
-            >
+          messages.map((message) => {
+            // Find the participant's role in the conversation
+            const participant = conversation?.participants.find(
+              (p) => p.user._id === message.sender._id
+            );
+            const senderRole = participant?.role || message.sender.role;
+            const isCurrentUser = message.sender._id === user?._id;
+
+            // Determine message styling based on sender role
+            const getMessageStyle = () => {
+              if (isCurrentUser) {
+                return "bg-blue-600 text-white"; // Customer messages (current user)
+              }
+              switch (senderRole) {
+                case "vendor":
+                  return "bg-purple-100 text-gray-900 border-l-4 border-purple-500";
+                case "admin":
+                  return "bg-green-100 text-gray-900 border-l-4 border-green-500";
+                default:
+                  return "bg-gray-200 text-gray-900";
+              }
+            };
+
+            const getRoleLabel = () => {
+              switch (senderRole) {
+                case "vendor":
+                  return "Store";
+                case "admin":
+                  return "Admin Support";
+                default:
+                  return "Support";
+              }
+            };
+
+            return (
               <div
-                className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
-                  message.sender._id === user?._id
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-900"
+                key={message._id}
+                className={`flex ${
+                  isCurrentUser ? "justify-end" : "justify-start"
                 }`}
               >
-                <p>{message.content}</p>
-                <p
-                  className={`text-xs mt-1 ${
-                    message.sender._id === user?._id
-                      ? "text-blue-100"
-                      : "text-gray-500"
-                  }`}
+                <div
+                  className={`max-w-xs px-3 py-2 rounded-lg text-sm ${getMessageStyle()}`}
                 >
-                  {new Date(message.createdAt).toLocaleTimeString()}
-                </p>
+                  {!isCurrentUser && (
+                    <div className="flex items-center mb-1">
+                      <span className="text-xs font-medium text-gray-600">
+                        {getRoleLabel()}
+                      </span>
+                    </div>
+                  )}
+                  <p>{message.content}</p>
+                  <p
+                    className={`text-xs mt-1 ${
+                      isCurrentUser ? "text-blue-100" : "text-gray-500"
+                    }`}
+                  >
+                    {new Date(message.createdAt).toLocaleTimeString()}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -232,7 +300,7 @@ const ProductChat: React.FC<ProductChatProps> = ({
           />
           <button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
+            disabled={!newMessage.trim() || !conversation || !!error}
             className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             Send

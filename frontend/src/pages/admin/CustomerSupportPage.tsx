@@ -1,24 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { useUserStore } from "../../stores/user.store";
+import { axiosInstance } from "../../lib/axios";
 
 interface Conversation {
   _id: string;
   type: "general" | "product";
   participants: Array<{
     user: {
+      _id: string;
       name: string;
+      email: string;
       role: string;
+      profilePicture?: string;
     };
     role: "customer" | "admin" | "vendor";
   }>;
   product?: {
+    _id: string;
+    name: string;
+    images: string[];
+  };
+  store?: {
+    _id: string;
     name: string;
   };
   lastMessage?: {
+    _id: string;
     content: string;
-    createdAt: Date;
+    createdAt: string;
   };
-  lastMessageAt: Date;
+  lastMessageAt: string;
+  isActive: boolean;
 }
 
 interface Message {
@@ -26,10 +38,16 @@ interface Message {
   sender: {
     _id?: string;
     name: string;
+    email: string;
     role: string;
+    profilePicture?: string;
   };
   content: string;
-  createdAt: Date;
+  createdAt: string;
+  messageType: string;
+  isRead: boolean;
+  readAt?: string;
+  attachments: any[];
 }
 
 const CustomerSupportPage: React.FC = () => {
@@ -39,78 +57,78 @@ const CustomerSupportPage: React.FC = () => {
     useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
-  // Mock data for now - will be replaced with API calls
+  // Fetch conversations
   useEffect(() => {
-    // Fetch conversations
-    setConversations([
-      {
-        _id: "1",
-        type: "general",
-        participants: [
-          { user: { name: "John Doe", role: "customer" }, role: "customer" },
-          { user: { name: "Admin", role: "admin" }, role: "admin" },
-        ],
-        lastMessage: {
-          content: "Hello, I need help with my order",
-          createdAt: new Date(),
-        },
-        lastMessageAt: new Date(),
-      },
-      {
-        _id: "2",
-        type: "product",
-        product: { name: "iPhone 15 Pro" },
-        participants: [
-          { user: { name: "Jane Smith", role: "customer" }, role: "customer" },
-          { user: { name: "Apple Store", role: "vendor" }, role: "vendor" },
-        ],
-        lastMessage: {
-          content: "When will this be back in stock?",
-          createdAt: new Date(),
-        },
-        lastMessageAt: new Date(),
-      },
-    ]);
-  }, []);
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !user) return;
-
-    // Mock sending message
-    const message: Message = {
-      _id: Date.now().toString(),
-      sender: {
-        _id: user._id,
-        name: user.name || "Admin",
-        role: user.role,
-      },
-      content: newMessage,
-      createdAt: new Date(),
+    const fetchConversations = async () => {
+      try {
+        setLoading(true);
+        const response = await axiosInstance.get("/chat/conversations");
+        setConversations(response.data);
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setMessages((prev) => [...prev, message]);
+    if (user) {
+      fetchConversations();
+    }
+  }, [user]);
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation || !user || sending) return;
+
+    setSending(true);
+    const messageToSend = newMessage;
     setNewMessage("");
+
+    try {
+      const response = await axiosInstance.post(
+        `/chat/conversations/${selectedConversation._id}/messages`,
+        {
+          content: messageToSend,
+        }
+      );
+
+      // Add the new message to the messages list
+      setMessages((prev) => [...prev, response.data]);
+
+      // Update the conversation's last message
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv._id === selectedConversation._id
+            ? {
+                ...conv,
+                lastMessage: response.data,
+                lastMessageAt: new Date().toISOString(),
+              }
+            : conv
+        )
+      );
+    } catch (error) {
+      console.error("Error sending message:", error);
+      // Restore the message if sending failed
+      setNewMessage(messageToSend);
+    } finally {
+      setSending(false);
+    }
   };
 
-  const selectConversation = (conversation: Conversation) => {
+  const selectConversation = async (conversation: Conversation) => {
     setSelectedConversation(conversation);
-    // Mock messages for selected conversation
-    setMessages([
-      {
-        _id: "1",
-        sender: { name: "John Doe", role: "customer" },
-        content: "Hello, I need help with my order",
-        createdAt: new Date(Date.now() - 3600000),
-      },
-      {
-        _id: "2",
-        sender: { name: "Admin", role: "admin" },
-        content:
-          "Hi John, I'd be happy to help. What's the issue with your order?",
-        createdAt: new Date(Date.now() - 1800000),
-      },
-    ]);
+    try {
+      const response = await axiosInstance.get(
+        `/chat/conversations/${conversation._id}/messages`
+      );
+      setMessages(response.data);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      setMessages([]);
+    }
   };
 
   return (
@@ -125,47 +143,61 @@ const CustomerSupportPage: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {conversations.map((conversation) => (
-            <div
-              key={conversation._id}
-              onClick={() => selectConversation(conversation)}
-              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                selectedConversation?._id === conversation._id
-                  ? "bg-blue-50 border-l-4 border-l-blue-500"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                    {conversation.participants
-                      .find((p) => p.role === "customer")
-                      ?.user.name.charAt(0)}
-                  </div>
-                  <div className="ml-3">
-                    <p className="font-medium text-gray-900">
-                      {
-                        conversation.participants.find(
-                          (p) => p.role === "customer"
-                        )?.user.name
-                      }
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {conversation.type === "general"
-                        ? "General Support"
-                        : `Product: ${conversation.product?.name}`}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xs text-gray-400">
-                  {new Date(conversation.lastMessageAt).toLocaleTimeString()}
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 truncate">
-                {conversation.lastMessage?.content}
-              </p>
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="text-gray-500">Loading conversations...</div>
             </div>
-          ))}
+          ) : conversations.length === 0 ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="text-gray-500">No conversations yet</div>
+            </div>
+          ) : (
+            conversations.map((conversation) => (
+              <div
+                key={conversation._id}
+                onClick={() => selectConversation(conversation)}
+                className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
+                  selectedConversation?._id === conversation._id
+                    ? "bg-blue-50 border-l-4 border-l-blue-500"
+                    : ""
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {conversation.participants
+                        .find((p) => p.role === "customer")
+                        ?.user.name.charAt(0)}
+                    </div>
+                    <div className="ml-3">
+                      <p className="font-medium text-gray-900">
+                        {
+                          conversation.participants.find(
+                            (p) => p.role === "customer"
+                          )?.user.name
+                        }
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {conversation.type === "general"
+                          ? "General Support"
+                          : `Product: ${conversation.product?.name}`}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-400">
+                    {conversation.lastMessageAt
+                      ? new Date(
+                          conversation.lastMessageAt
+                        ).toLocaleTimeString()
+                      : ""}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 truncate">
+                  {conversation.lastMessage?.content || "No messages yet"}
+                </p>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -200,35 +232,73 @@ const CustomerSupportPage: React.FC = () => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message._id}
-                  className={`flex ${
-                    message.sender._id === user?._id
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
+              {messages.map((message) => {
+                // Find the participant's role in the conversation
+                const participant = selectedConversation.participants.find(
+                  (p) => p.user._id === message.sender._id
+                );
+                const senderRole = participant?.role || message.sender.role;
+                const isCurrentUser = message.sender._id === user?._id;
+
+                // Determine message styling based on sender role
+                const getMessageStyle = () => {
+                  if (isCurrentUser) {
+                    return "bg-blue-500 text-white"; // Admin messages (current user)
+                  }
+                  switch (senderRole) {
+                    case "customer":
+                      return "bg-green-100 text-gray-900 border-l-4 border-green-500";
+                    case "vendor":
+                      return "bg-purple-100 text-gray-900 border-l-4 border-purple-500";
+                    case "admin":
+                      return "bg-blue-100 text-gray-900 border-l-4 border-blue-500";
+                    default:
+                      return "bg-gray-200 text-gray-900";
+                  }
+                };
+
+                const getRoleLabel = () => {
+                  switch (senderRole) {
+                    case "customer":
+                      return "Customer";
+                    case "vendor":
+                      return "Store";
+                    case "admin":
+                      return "Admin";
+                    default:
+                      return "Unknown";
+                  }
+                };
+
+                return (
                   <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.sender._id === user?._id
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-200 text-gray-900"
+                    key={message._id}
+                    className={`flex ${
+                      isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
-                    <p
-                      className={`text-xs mt-1 ${
-                        message.sender._id === user?._id
-                          ? "text-blue-100"
-                          : "text-gray-500"
-                      }`}
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${getMessageStyle()}`}
                     >
-                      {new Date(message.createdAt).toLocaleTimeString()}
-                    </p>
+                      {!isCurrentUser && (
+                        <div className="flex items-center mb-1">
+                          <span className="text-xs font-medium text-gray-600">
+                            {getRoleLabel()}: {message.sender.name}
+                          </span>
+                        </div>
+                      )}
+                      <p className="text-sm">{message.content}</p>
+                      <p
+                        className={`text-xs mt-1 ${
+                          isCurrentUser ? "text-blue-100" : "text-gray-500"
+                        }`}
+                      >
+                        {new Date(message.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Message Input */}
@@ -244,10 +314,10 @@ const CustomerSupportPage: React.FC = () => {
                 />
                 <button
                   onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || sending}
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send
+                  {sending ? "Sending..." : "Send"}
                 </button>
               </div>
             </div>

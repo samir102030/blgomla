@@ -21,19 +21,27 @@ export const createOrGetConversation = async (req, res) => {
       }).populate("participants.user", "name email role profilePicture");
 
       if (!conversation) {
-        // Create new general conversation
+        // Try to create new general conversation
         const adminUser = await User.findOne({ role: "admin" });
-        if (!adminUser) {
-          return res.status(404).json({ message: "Admin user not found" });
+
+        if (adminUser) {
+          // Create conversation with admin
+          conversation = new Conversation({
+            type: "general",
+            participants: [
+              { user: userId, role: "customer" },
+              { user: adminUser._id, role: "admin" },
+            ],
+          });
+        } else {
+          // No admin available - create conversation without admin for now
+          // This allows customers to send messages that will be handled later
+          conversation = new Conversation({
+            type: "general",
+            participants: [{ user: userId, role: "customer" }],
+          });
         }
 
-        conversation = new Conversation({
-          type: "general",
-          participants: [
-            { user: userId, role: "customer" },
-            { user: adminUser._id, role: "admin" },
-          ],
-        });
         await conversation.save();
         await conversation.populate(
           "participants.user",
@@ -42,11 +50,9 @@ export const createOrGetConversation = async (req, res) => {
       }
     } else if (type === "product") {
       if (!productId) {
-        return res
-          .status(400)
-          .json({
-            message: "Product ID is required for product conversations",
-          });
+        return res.status(400).json({
+          message: "Product ID is required for product conversations",
+        });
       }
 
       // Get product and store info
@@ -100,15 +106,26 @@ export const createOrGetConversation = async (req, res) => {
 export const getUserConversations = async (req, res) => {
   try {
     const userId = req.user._id;
+    const userRole = req.user.role;
     const { type } = req.query;
 
-    const query = {
-      "participants.user": userId,
-      isActive: true,
-    };
+    let query;
 
-    if (type) {
-      query.type = type;
+    if (userRole === "admin") {
+      // Admins can see all conversations
+      query = { isActive: true };
+      if (type) {
+        query.type = type;
+      }
+    } else {
+      // Regular users can only see conversations they're participants in
+      query = {
+        "participants.user": userId,
+        isActive: true,
+      };
+      if (type) {
+        query.type = type;
+      }
     }
 
     const conversations = await Conversation.find(query)
@@ -130,13 +147,19 @@ export const getConversationMessages = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const userId = req.user._id;
+    const userRole = req.user.role;
     const { page = 1, limit = 50 } = req.query;
 
-    // Check if user is participant in conversation
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-      "participants.user": userId,
-    });
+    // Check if user is participant in conversation or is an admin
+    let conversation;
+    if (userRole === "admin") {
+      conversation = await Conversation.findById(conversationId);
+    } else {
+      conversation = await Conversation.findOne({
+        _id: conversationId,
+        "participants.user": userId,
+      });
+    }
 
     if (!conversation) {
       return res.status(403).json({ message: "Access denied" });
@@ -167,15 +190,32 @@ export const sendMessage = async (req, res) => {
     const { conversationId } = req.params;
     const { content, messageType = "text", attachments = [] } = req.body;
     const userId = req.user._id;
+    const userRole = req.user.role;
 
-    // Check if user is participant in conversation
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-      "participants.user": userId,
-    });
+    // Check if user is participant in conversation or is an admin
+    let conversation;
+    if (userRole === "admin") {
+      // Admins can send messages to any conversation
+      conversation = await Conversation.findById(conversationId);
+    } else {
+      // Regular users can only send to conversations they're participants in
+      conversation = await Conversation.findOne({
+        _id: conversationId,
+        "participants.user": userId,
+      });
+    }
 
     if (!conversation) {
       return res.status(403).json({ message: "Access denied" });
+    }
+
+    // If admin is sending to a conversation they're not a participant in, add them as a participant
+    if (
+      userRole === "admin" &&
+      !conversation.participants.some((p) => p.user.toString() === userId)
+    ) {
+      conversation.participants.push({ user: userId, role: "admin" });
+      await conversation.save();
     }
 
     // Create message
@@ -209,12 +249,18 @@ export const markMessagesAsRead = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const userId = req.user._id;
+    const userRole = req.user.role;
 
-    // Check if user is participant in conversation
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-      "participants.user": userId,
-    });
+    // Check if user is participant in conversation or is an admin
+    let conversation;
+    if (userRole === "admin") {
+      conversation = await Conversation.findById(conversationId);
+    } else {
+      conversation = await Conversation.findOne({
+        _id: conversationId,
+        "participants.user": userId,
+      });
+    }
 
     if (!conversation) {
       return res.status(403).json({ message: "Access denied" });
