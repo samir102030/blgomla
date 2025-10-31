@@ -38,7 +38,7 @@ interface VendorStore {
 
   // Store Management
   createStore: (data: Partial<VendorStoreType>) => Promise<VendorStoreType>;
-  fetchVendorStore: (vendorId?: string) => Promise<void>;
+  fetchVendorStore: () => Promise<void>;
   updateStore: (id: string, data: Partial<VendorStoreType>) => Promise<void>;
   deleteStore: (id: string) => Promise<void>;
 
@@ -371,7 +371,7 @@ export const useVendorStore = create<VendorStore>()(
       },
 
       // Fetch Vendor Store
-      fetchVendorStore: async (vendorId?: string) => {
+      fetchVendorStore: async () => {
         set({ loading: true, error: undefined });
         try {
           // const url = vendorId ? `/stores/${vendorId}` : "/stores/store";

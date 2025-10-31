@@ -207,19 +207,19 @@ export interface VendorStore {
     description?: string;
   }>;
   socialLinks?: Array<{
-    platform?: string;
-    url?: string;
+    platform: string;
+    url: string;
   }>;
   features?: Array<{
-    title?: string;
-    description?: string;
-    icon?: string;
+    title: string;
+    description: string;
+    icon: string;
   }>;
   about?: string;
   story?: string;
   achievements?: Array<{
     number: number;
-    name?: string;
+    name: string;
   }>;
 
   // Timestamps
@@ -257,6 +257,10 @@ export interface VendorDashboardStats {
   totalUsers: number;
   totalProducts: number;
   monthlyRevenue: number;
+  averageRating: number;
+  activeProducts: number;
+  pendingOrders: number;
+  totalReviews: number;
   topProducts: Array<{
     name: string;
     sales: number;

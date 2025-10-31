@@ -37,13 +37,28 @@ interface Order {
     quantity: number;
     price: number;
     salePercentage: number;
+    couponDiscount?: number;
   }>;
   totalPrice: number;
+  itemsPrice: number;
+  shippingPrice: number;
+  taxPrice: number;
+  couponCode?: string;
+  couponDiscount?: number;
+  discountPrice?: number;
   status: string;
   paymentMethod: string;
   createdAt: string;
   isPaid: boolean;
   isDelivered: boolean;
+  shippingAddress?: {
+    name: string;
+    phone?: string;
+    address: string;
+    city: string;
+    state?: string;
+    zipCode?: string;
+  };
 }
 
 const OrdersPage: React.FC = () => {
