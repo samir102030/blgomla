@@ -305,7 +305,7 @@ export const useNotificationStore = create<NotificationStore>()(
       // Get Unread Count
       getUnreadCount: () => {
         const { notifications } = get();
-        return notifications.filter((notif) => !notif.read).length;
+        return notifications?.filter((notif) => !notif.read).length;
       },
 
       // Add Notification (Real-time)

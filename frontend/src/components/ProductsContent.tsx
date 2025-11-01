@@ -67,7 +67,7 @@ const ProductsContent: React.FC = () => {
   };
 
   // Apply filters
-  const filteredProducts = products.filter((product) => {
+  const filteredProducts = products?.filter((product) => {
     // Category filter (including subcategories)
     if (filters.categories.length > 0) {
       const selectedCategoryIds = filters.categories.flatMap((catId) =>
