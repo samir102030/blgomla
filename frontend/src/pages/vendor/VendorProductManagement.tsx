@@ -351,7 +351,7 @@ const VendorProductManagement: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                     >
                       <option value="">Select Brand</option>
-                      {brands.map((brand) => (
+                      {brands?.map((brand) => (
                         <option key={brand._id} value={brand._id}>
                           {brand.name}
                         </option>

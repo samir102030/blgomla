@@ -234,7 +234,7 @@ const ProductDetailPage: React.FC = () => {
 
   // Generate specifications based on product data
   const getBrandName = (brandId: string) => {
-    const brand = brands.find((b) => b._id === brandId);
+    const brand = brands?.find((b) => b._id === brandId);
     return brand ? brand.name : brandId;
   };
 

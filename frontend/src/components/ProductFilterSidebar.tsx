@@ -152,7 +152,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
         {expandedSections.brand && (
           <div className="px-4 pb-4">
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {brands.map((brand) => (
+              {brands?.map((brand) => (
                 <label
                   key={brand._id}
                   className="flex items-center justify-between"

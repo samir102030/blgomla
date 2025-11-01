@@ -37,7 +37,7 @@ const BrandSidebar: React.FC<BrandSidebarProps> = ({
         <div className="w-12 h-0.5 bg-gray-900"></div>
       </div>
       <ul className="space-y-3">
-        {brands.map((brand) => (
+        {brands?.map((brand) => (
           <li key={brand._id}>
             <button
               onClick={() => handleBrandClick(brand._id)}

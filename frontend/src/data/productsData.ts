@@ -709,7 +709,7 @@ export const products: Product[] = [
 
 // Helper functions
 export const getBrandById = (brandId: string): Brand | undefined => {
-  return brands.find((brand) => brand.id === brandId);
+  return brands?.find((brand) => brand.id === brandId);
 };
 
 export const getCategoriesByBrand = (brandId: string): Category[] => {

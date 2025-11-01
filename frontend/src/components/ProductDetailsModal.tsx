@@ -30,7 +30,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
       : ["/placeholder.png"];
 
   const getBrandName = (brandId: string) => {
-    const brand = brands.find((b: any) => b._id === brandId);
+    const brand = brands?.find((b: any) => b._id === brandId);
     return brand ? brand.name : brandId;
   };
 

@@ -57,7 +57,7 @@ const BrandLogos: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-11 gap-4">
-          {brands.map((brand, index) => (
+          {brands?.map((brand, index) => (
             <div
               key={index}
               className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group"

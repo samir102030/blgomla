@@ -29,12 +29,12 @@ const BrandsPage: React.FC = () => {
       : "bg-[#9E9E9E]/10 text-[#9E9E9E]";
   };
 
-  const filteredBrands = brands.filter(
+  const filteredBrands = brands?.filter(
     (brand) =>
       brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (brand.description &&
         brand.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  ) || [];
 
   const handleDelete = async (brandId: string) => {
     if (window.confirm("Are you sure you want to delete this brand?")) {
@@ -106,7 +106,7 @@ const BrandsPage: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Total Brands</p>
               <p className="text-2xl font-bold text-gray-900">
-                {brands.length}
+                {brands?.length || 0}
               </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
@@ -119,7 +119,7 @@ const BrandsPage: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Active Brands</p>
               <p className="text-2xl font-bold text-green-600">
-                {brands.filter((b) => b.isActive).length}
+                {(brands?.filter((b) => b.isActive) || []).length}
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -132,7 +132,7 @@ const BrandsPage: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Inactive Brands</p>
               <p className="text-2xl font-bold text-orange-600">
-                {brands.filter((b) => !b.isActive).length}
+                {(brands?.filter((b) => !b.isActive) || []).length}
               </p>
             </div>
             <div className="bg-orange-100 p-3 rounded-full">
@@ -145,7 +145,7 @@ const BrandsPage: React.FC = () => {
             <div>
               <p className="text-sm text-gray-600">Brands with Logo</p>
               <p className="text-2xl font-bold text-purple-600">
-                {brands.filter((b) => b.logo).length}
+                {(brands?.filter((b) => b.logo) || []).length}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
@@ -193,7 +193,7 @@ const BrandsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredBrands.map((brand) => (
+              {filteredBrands?.map((brand) => (
                 <tr key={brand._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">

@@ -306,7 +306,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 >
                   <option value="">Select brand</option>
-                  {brands.map((b: any) => (
+                  {brands?.map((b: any) => (
                     <option key={b._id} value={b._id}>
                       {b.name}
                     </option>
