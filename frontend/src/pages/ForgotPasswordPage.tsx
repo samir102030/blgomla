@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
@@ -9,9 +9,11 @@ const ForgotPasswordPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [token, setToken] = useState("");
 
   const forgotPassword = useUserStore((s) => s.forgotPassword);
   const loading = useUserStore((s) => s.loading);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +35,14 @@ const ForgotPasswordPage: React.FC = () => {
     } catch (err: any) {
       setError(err?.response?.data?.message || "An error occurred");
     }
+  };
+
+  const handleResetPassword = () => {
+    if (!token.trim()) {
+      toast.error("Please enter the reset token");
+      return;
+    }
+    navigate(`/reset-password/${token}`);
   };
 
   return (
@@ -157,6 +167,28 @@ const ForgotPasswordPage: React.FC = () => {
                     >
                       Didn't receive the email? Try again
                     </button>
+                    <div className="mt-6">
+                      <label
+                        htmlFor="token"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
+                        Reset Token
+                      </label>
+                      <input
+                        type="text"
+                        id="token"
+                        value={token}
+                        onChange={(e) => setToken(e.target.value)}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+                        placeholder="Enter the reset token"
+                      />
+                      <button
+                        onClick={handleResetPassword}
+                        className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        Go to Reset Password
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>

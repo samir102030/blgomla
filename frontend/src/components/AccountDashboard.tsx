@@ -27,7 +27,7 @@ const AccountDashboard: React.FC = () => {
           <h3 className="text-lg font-semibold text-blue-900 mb-2">
             Total Orders
           </h3>
-          <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
+          <p className="text-3xl font-bold text-blue-600">{orders?.length}</p>
         </div>
         <div className="bg-green-50 p-6 rounded-lg">
           <h3 className="text-lg font-semibold text-green-900 mb-2">
@@ -35,9 +35,10 @@ const AccountDashboard: React.FC = () => {
           </h3>
           <p className="text-3xl font-bold text-green-600">
             $
-            {orders
-              .reduce((sum, order) => sum + (order.totalPrice || 0), 0)
-              .toFixed(2)}
+            {orders &&
+              orders
+                .reduce((sum, order) => sum + (order?.totalPrice || 0), 0)
+                .toFixed(2)}
           </p>
         </div>
         <div className="bg-purple-50 p-6 rounded-lg">
@@ -54,32 +55,35 @@ const AccountDashboard: React.FC = () => {
         Recent Orders
       </h3>
       <div className="space-y-4">
-        {orders.slice(0, 3).map((order) => (
-          <div
-            key={order._id}
-            className="border border-gray-200 rounded-lg p-4"
-          >
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium text-gray-900">Order {order._id}</p>
-                <p className="text-sm text-gray-600">
-                  {order.createdAt?.slice(0, 10)} •{" "}
-                  {order.orderItems?.length || 0} items
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="font-medium text-gray-900">${order.totalPrice}</p>
-                <span
-                  className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                    order.status
-                  )}`}
-                >
-                  {order.status}
-                </span>
+        {orders &&
+          orders.slice(0, 3).map((order) => (
+            <div
+              key={order._id}
+              className="border border-gray-200 rounded-lg p-4"
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-medium text-gray-900">Order {order._id}</p>
+                  <p className="text-sm text-gray-600">
+                    {order.createdAt?.slice(0, 10)} •{" "}
+                    {order.orderItems?.length || 0} items
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-gray-900">
+                    ${order.totalPrice}
+                  </p>
+                  <span
+                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                      order.status
+                    )}`}
+                  >
+                    {order.status}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

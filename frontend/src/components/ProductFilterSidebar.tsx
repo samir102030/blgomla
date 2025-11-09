@@ -110,7 +110,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
         {expandedSections.category && (
           <div className="px-4 pb-4">
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {categories.map((category) => (
+              {categories?.map((category) => (
                 <label
                   key={category._id}
                   className="flex items-center justify-between"

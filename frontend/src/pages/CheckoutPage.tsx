@@ -127,6 +127,16 @@ const CheckoutPage: React.FC = () => {
   const calculateCouponDiscount = () => {
     if (!appliedCoupon || !appliedCoupon.discountValue) return 0;
 
+    // Check if coupon has expired
+    const currentDate = new Date();
+    const endDate = new Date(appliedCoupon.endDate);
+    if (currentDate > endDate) {
+      // Remove expired coupon
+      removeCoupon();
+      toast.error("The applied coupon has expired and has been removed");
+      return 0;
+    }
+
     if (appliedCoupon.discountType === "percentage") {
       const discount = subtotal * (appliedCoupon.discountValue / 100);
       return appliedCoupon.maximumDiscount
@@ -159,6 +169,24 @@ const CheckoutPage: React.FC = () => {
       );
 
       if (validation && validation.success && validation.coupon) {
+        // Fetch the full coupon details to check expiration
+        const { fetchCouponByCode } = useCouponStore.getState();
+        await fetchCouponByCode(couponCode.toUpperCase());
+        const fullCoupon = useCouponStore.getState().coupon;
+
+        if (!fullCoupon) {
+          toast.error("Failed to retrieve coupon details");
+          return;
+        }
+
+        // Check if coupon has expired
+        const currentDate = new Date();
+        const endDate = new Date(fullCoupon.endDate);
+        if (currentDate > endDate) {
+          toast.error("This coupon has expired");
+          return;
+        }
+
         // Apply the coupon by storing it in the coupon store
         // The validation response includes the coupon data
         const couponData: Coupon = {
@@ -168,21 +196,21 @@ const CheckoutPage: React.FC = () => {
             | "percentage"
             | "fixed",
           discountValue: validation.coupon.discountValue,
-          // Add other required fields with defaults
-          description: "",
-          minimumPurchase: 0,
-          maximumDiscount: undefined,
-          startDate: new Date().toISOString(),
-          endDate: new Date().toISOString(),
-          usageLimit: undefined,
-          usageCount: 0,
-          isActive: true,
-          applicableProducts: [],
-          applicableCategories: [],
-          store: "",
-          createdBy: "",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          // Use actual dates from full coupon
+          description: fullCoupon.description || "",
+          minimumPurchase: fullCoupon.minimumPurchase || 0,
+          maximumDiscount: fullCoupon.maximumDiscount,
+          startDate: fullCoupon.startDate,
+          endDate: fullCoupon.endDate,
+          usageLimit: fullCoupon.usageLimit,
+          usageCount: fullCoupon.usageCount,
+          isActive: fullCoupon.isActive,
+          applicableProducts: fullCoupon.applicableProducts || [],
+          applicableCategories: fullCoupon.applicableCategories || [],
+          store: fullCoupon.store,
+          createdBy: fullCoupon.createdBy,
+          createdAt: fullCoupon.createdAt,
+          updatedAt: fullCoupon.updatedAt,
         };
 
         // Set the applied coupon in the store

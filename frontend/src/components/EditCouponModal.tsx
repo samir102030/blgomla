@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useCouponStore } from "../stores/coupon.store";
-// import { useUserStore } from "../stores/user.store";
-// import { useVendorStore } from "../stores/vendor.store";
-// import { useProductStore } from "../stores/product.store";
+import { useUserStore } from "../stores/user.store";
+import { useVendorStore } from "../stores/vendor.store";
+import { useProductStore } from "../stores/product.store";
 // import { useCategoryStore } from "../stores/category.store";
 
 interface EditCouponModalProps {
@@ -29,48 +29,76 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
     startDate: "",
     endDate: "",
     usageLimit: "",
-    // applicableProducts: [] as string[],
+    applicableProducts: [] as (string | any)[],
     // applicableCategories: [] as string[],
   });
 
-  const { updateCoupon, loading } = useCouponStore();
-  // const { user } = useUserStore();
-  // const { vendorStore } = useVendorStore();
-  // const { products, fetchProducts } = useProductStore();
+  const { updateCoupon, loading, fetchCouponById } = useCouponStore();
+  const { user } = useUserStore();
+  const { vendorStore } = useVendorStore();
+  const { products, fetchProducts } = useProductStore();
   // const { categories, fetchCategories } = useCategoryStore();
 
   useEffect(() => {
     if (isOpen && coupon) {
-      setFormData({
-        code: coupon.code || "",
-        description: coupon.description || "",
-        discountType: coupon.discountType || "percentage",
-        discountValue: coupon.discountValue?.toString() || "",
-        minimumPurchase: coupon.minimumPurchase?.toString() || "",
-        maximumDiscount: coupon.maximumDiscount?.toString() || "",
-        startDate: coupon.startDate
-          ? new Date(coupon.startDate).toISOString().slice(0, 16)
-          : "",
-        endDate: coupon.endDate
-          ? new Date(coupon.endDate).toISOString().slice(0, 16)
-          : "",
-        usageLimit: coupon.usageLimit?.toString() || "",
-        // applicableProducts: coupon.applicableProducts || [],
-        // applicableCategories: coupon.applicableCategories || [],
-      });
-      // Temporarily comment out to debug
-      // fetchCategories();
-      // if (user?.role === "store" && vendorStore?._id) {
-      //   fetchProducts({ storeId: vendorStore._id });
-      // }
+      // Fetch complete coupon details to ensure we have applicableProducts
+      fetchCouponById(coupon._id)
+        .then(() => {
+          const fullCoupon = useCouponStore.getState().coupon;
+          if (fullCoupon) {
+            setFormData({
+              code: fullCoupon.code || "",
+              description: fullCoupon.description || "",
+              discountType: fullCoupon.discountType || "percentage",
+              discountValue: fullCoupon.discountValue?.toString() || "",
+              minimumPurchase: fullCoupon.minimumPurchase?.toString() || "",
+              maximumDiscount: fullCoupon.maximumDiscount?.toString() || "",
+              startDate: fullCoupon.startDate
+                ? new Date(fullCoupon.startDate).toISOString().slice(0, 16)
+                : "",
+              endDate: fullCoupon.endDate
+                ? new Date(fullCoupon.endDate).toISOString().slice(0, 16)
+                : "",
+              usageLimit: fullCoupon.usageLimit?.toString() || "",
+              applicableProducts: fullCoupon.applicableProducts || [],
+              // applicableCategories: fullCoupon.applicableCategories || [],
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch coupon details:", error);
+          // Fallback to the coupon prop data
+          setFormData({
+            code: coupon.code || "",
+            description: coupon.description || "",
+            discountType: coupon.discountType || "percentage",
+            discountValue: coupon.discountValue?.toString() || "",
+            minimumPurchase: coupon.minimumPurchase?.toString() || "",
+            maximumDiscount: coupon.maximumDiscount?.toString() || "",
+            startDate: coupon.startDate
+              ? new Date(coupon.startDate).toISOString().slice(0, 16)
+              : "",
+            endDate: coupon.endDate
+              ? new Date(coupon.endDate).toISOString().slice(0, 16)
+              : "",
+            usageLimit: coupon.usageLimit?.toString() || "",
+            applicableProducts: coupon.applicableProducts || [],
+            // applicableCategories: coupon.applicableCategories || [],
+          });
+        });
+
+      // Fetch products for the store
+      if (user?.role === "store" && vendorStore?._id) {
+        fetchProducts({ storeId: vendorStore._id });
+      }
     }
   }, [
     isOpen,
     coupon,
-    // fetchCategories,
-    // fetchProducts,
-    // user?.role,
-    // vendorStore?._id,
+    fetchCouponById,
+    fetchProducts,
+    user?.role,
+    vendorStore?._id,
   ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,7 +116,9 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
       usageLimit: formData.usageLimit
         ? parseInt(formData.usageLimit)
         : undefined,
-      // applicableProducts: formData.applicableProducts,
+      applicableProducts: formData.applicableProducts.map((item) =>
+        typeof item === "string" ? item : item._id
+      ),
       // applicableCategories: formData.applicableCategories,
     };
 
@@ -108,9 +138,9 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // const handleMultiSelectChange = (name: string, value: string[]) => {
-  //   setFormData((prev) => ({ ...prev, [name]: value }));
-  // };
+  const handleMultiSelectChange = (name: string, value: (string | any)[]) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   if (!isOpen) return null;
 
@@ -282,32 +312,84 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
           </div>
 
           {/* Applicable Products */}
-          {/* <div>
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Applicable Products
             </label>
-            <select
-              multiple
-              value={formData.applicableProducts}
-              onChange={(e) => {
-                const values = Array.from(
-                  e.target.selectedOptions,
-                  (option) => option.value
-                );
-                handleMultiSelectChange("applicableProducts", values);
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {products.map((product) => (
-                <option key={product._id} value={product._id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
+            <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
+              {products.length > 0 ? (
+                products.map((product) => (
+                  <label
+                    key={product._id}
+                    className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.applicableProducts.some((item) =>
+                        typeof item === "string"
+                          ? item === product._id
+                          : item._id === product._id
+                      )}
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        const currentProducts = formData.applicableProducts;
+                        let newProducts;
+
+                        if (isChecked) {
+                          // Check if product is already in the array (handle both string IDs and objects)
+                          const alreadyExists = currentProducts.some((item) =>
+                            typeof item === "string"
+                              ? item === product._id
+                              : item._id === product._id
+                          );
+
+                          if (!alreadyExists) {
+                            newProducts = [...currentProducts, product._id];
+                          } else {
+                            newProducts = currentProducts;
+                          }
+                        } else {
+                          // Remove product (handle both string IDs and objects)
+                          newProducts = currentProducts.filter((item) =>
+                            typeof item === "string"
+                              ? item !== product._id
+                              : item._id !== product._id
+                          );
+                        }
+
+                        handleMultiSelectChange(
+                          "applicableProducts",
+                          newProducts
+                        );
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium text-gray-900">
+                        {product.name}
+                      </span>
+                      {product.description && (
+                        <p className="text-xs text-gray-500 mt-1 truncate">
+                          {product.description}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-600">
+                      ${product.price.toFixed(2)}
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No products available
+                </p>
+              )}
+            </div>
             <p className="text-xs text-gray-500 mt-1">
-              Leave empty to apply to all products
+              Leave unchecked to apply to all products. Check specific products
+              to restrict the coupon.
             </p>
-          </div> */}
+          </div>
 
           {/* Applicable Categories */}
           {/* <div>

@@ -170,15 +170,21 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
           )}
 
           {/* Applicable Products */}
-          {coupon.applicableProducts &&
-            coupon.applicableProducts.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Applicable Products
-                </label>
-                <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                  <div className="flex flex-wrap gap-2">
-                    {coupon.applicableProducts.map((product: any) => (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Applicable Products
+            </label>
+            <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+              {coupon.applicableProducts &&
+              coupon.applicableProducts.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {coupon.applicableProducts
+                    .filter(
+                      (product: any, index: number, self: any[]) =>
+                        index ===
+                        self.findIndex((p: any) => p._id === product._id)
+                    )
+                    .map((product: any) => (
                       <span
                         key={product._id}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
@@ -186,21 +192,31 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
                         {product.name}
                       </span>
                     ))}
-                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  No specific products
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Applicable Categories */}
-          {coupon.applicableCategories &&
-            coupon.applicableCategories.length > 0 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Applicable Categories
-                </label>
-                <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                  <div className="flex flex-wrap gap-2">
-                    {coupon.applicableCategories.map((category: any) => (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Applicable Categories
+            </label>
+            <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+              {coupon.applicableCategories &&
+              coupon.applicableCategories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {coupon.applicableCategories
+                    .filter(
+                      (category: any, index: number, self: any[]) =>
+                        index ===
+                        self.findIndex((c: any) => c._id === category._id)
+                    )
+                    .map((category: any) => (
                       <span
                         key={category._id}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
@@ -208,10 +224,14 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
                         {category.name}
                       </span>
                     ))}
-                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                  No specific categories
+                </span>
+              )}
+            </div>
+          </div>
 
           {/* Store Info */}
           {coupon.store && (
@@ -226,7 +246,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
           )}
 
           {/* Created By */}
-          {coupon.createdBy && (
+          {/* {coupon.createdBy && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Created By
@@ -235,7 +255,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
                 {coupon.createdBy.name}
               </div>
             </div>
-          )}
+          )} */}
 
           <div className="flex justify-end pt-6 border-t">
             <button
