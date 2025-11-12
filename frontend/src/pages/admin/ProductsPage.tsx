@@ -498,7 +498,7 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
+      {/* <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
         <div className="text-sm text-gray-700">
           Showing <span className="font-medium">1</span> to{" "}
           <span className="font-medium">5</span> of{" "}
@@ -521,7 +521,7 @@ const ProductsPage: React.FC = () => {
             Next
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

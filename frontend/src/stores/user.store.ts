@@ -183,7 +183,19 @@ export const useUserStore = create<UserStore>()(
             `/users/${userId}`,
             data
           );
-          set({ user: res.data.user, loading: false });
+          // Only update the current user if it's the same user being updated
+          const currentUser = get().user;
+          if (currentUser && currentUser._id === userId) {
+            set({ user: res.data.user, loading: false });
+          } else {
+            // Update the user in the users array if it exists
+            set((state) => ({
+              users: state.users.map((u) =>
+                u._id === userId ? res.data.user : u
+              ),
+              loading: false,
+            }));
+          }
           return res.data.user;
         } catch (error: any) {
           set({
