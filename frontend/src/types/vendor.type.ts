@@ -85,6 +85,8 @@ export interface Vendor {
   // Status
   status: "pending" | "approved" | "rejected" | "suspended" | "active";
   rejectionReason?: string;
+  isActive?: boolean;
+  deleted?: boolean;
 
   // Documents
   documents: {

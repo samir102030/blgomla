@@ -10,7 +10,8 @@ const VendorManagement: React.FC = () => {
     loading,
     fetchVendors,
     updateVendorStatus,
-    deleteVendor,
+    safeDeleteVendor,
+    restoreVendor,
     approveVendor,
     rejectVendor,
     fetchVendorById,
@@ -54,7 +55,8 @@ const VendorManagement: React.FC = () => {
       activeTab === "all" ||
       (activeTab === "requests" && vendor.status === "pending") ||
       (activeTab === "approved" && vendor.status === "approved") ||
-      (activeTab === "rejected" && vendor.status === "rejected");
+      (activeTab === "rejected" && vendor.status === "rejected") ||
+      (activeTab === "deleted" && vendor.deleted);
     return matchesSearch && matchesStatus && matchesTab;
   });
 
@@ -70,14 +72,29 @@ const VendorManagement: React.FC = () => {
   const handleDeleteVendor = async (vendorId: string) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this vendor? This action cannot be undone."
+        "Are you sure you want to delete this vendor? The vendor will be marked as deleted and can be restored later."
       )
     ) {
       try {
-        await deleteVendor(vendorId);
+        await safeDeleteVendor(vendorId);
         toast.success("Vendor deleted successfully");
       } catch {
         toast.error("Failed to delete vendor");
+      }
+    }
+  };
+
+  const handleRestoreVendor = async (vendorId: string) => {
+    if (
+      window.confirm(
+        "Are you sure you want to restore this vendor? The vendor will be reactivated."
+      )
+    ) {
+      try {
+        await restoreVendor(vendorId);
+        toast.success("Vendor restored successfully");
+      } catch {
+        toast.error("Failed to restore vendor");
       }
     }
   };
@@ -124,7 +141,8 @@ const VendorManagement: React.FC = () => {
     setShowDetailsModal(true);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, deleted?: boolean) => {
+    if (deleted) return "bg-gray-100 text-gray-800";
     const statusStyles = {
       pending: "bg-yellow-100 text-yellow-800",
       approved: "bg-green-100 text-green-800",
@@ -153,6 +171,7 @@ const VendorManagement: React.FC = () => {
       approved: vendorList.filter((v) => v.status === "approved").length,
       rejected: vendorList.filter((v) => v.status === "rejected").length,
       suspended: vendorList.filter((v) => v.status === "suspended").length,
+      deleted: vendorList.filter((v) => v.deleted).length,
     };
     return counts;
   };
@@ -180,6 +199,7 @@ const VendorManagement: React.FC = () => {
     { id: "requests", name: "Requests", count: statusCounts.pending },
     { id: "approved", name: "Approved", count: statusCounts.approved },
     { id: "rejected", name: "Rejected", count: statusCounts.rejected },
+    { id: "deleted", name: "Deleted", count: statusCounts.deleted },
     { id: "analytics", name: "Analytics", count: null },
   ];
 
@@ -264,6 +284,7 @@ const VendorManagement: React.FC = () => {
                     <option value="approved">Approved</option>
                     <option value="rejected">Rejected</option>
                     <option value="suspended">Suspended</option>
+                    <option value="deleted">Deleted</option>
                   </select>
                 </div>
               </div>
@@ -328,10 +349,11 @@ const VendorManagement: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(
-                                vendor.status
+                                vendor.status,
+                                vendor.deleted
                               )}`}
                             >
-                              {vendor.status}
+                              {vendor.deleted ? "Deleted" : vendor.status}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -367,32 +389,45 @@ const VendorManagement: React.FC = () => {
                                     </button>
                                   </>
                                 )}
-                              {activeTab !== "requests" && (
-                                <>
-                                  <select
-                                    value={vendor.status}
-                                    onChange={(e) =>
-                                      handleStatusChange(
-                                        vendor._id,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="text-xs border border-gray-300 rounded px-2 py-1"
-                                  >
-                                    <option value="pending">Pending</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
-                                    <option value="suspended">Suspended</option>
-                                  </select>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteVendor(vendor._id)
-                                    }
-                                    className="text-red-600 hover:text-red-900"
-                                  >
-                                    Delete
-                                  </button>
-                                </>
+                              {activeTab === "deleted" && vendor.deleted ? (
+                                <button
+                                  onClick={() =>
+                                    handleRestoreVendor(vendor._id)
+                                  }
+                                  className="text-green-600 hover:text-green-900"
+                                >
+                                  Restore
+                                </button>
+                              ) : (
+                                !vendor.deleted && (
+                                  <>
+                                    <select
+                                      value={vendor.status}
+                                      onChange={(e) =>
+                                        handleStatusChange(
+                                          vendor._id,
+                                          e.target.value
+                                        )
+                                      }
+                                      className="text-xs border border-gray-300 rounded px-2 py-1"
+                                    >
+                                      <option value="pending">Pending</option>
+                                      <option value="approved">Approved</option>
+                                      <option value="rejected">Rejected</option>
+                                      <option value="suspended">
+                                        Suspended
+                                      </option>
+                                    </select>
+                                    <button
+                                      onClick={() =>
+                                        handleDeleteVendor(vendor._id)
+                                      }
+                                      className="text-red-600 hover:text-red-900"
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )
                               )}
                             </div>
                           </td>
@@ -567,17 +602,17 @@ const VendorManagement: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-4 h-4 bg-gray-500 rounded mr-3"></div>
-                        <span className="text-sm text-gray-600">Suspended</span>
+                        <span className="text-sm text-gray-600">Deleted</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm font-medium text-gray-900 mr-2">
-                          {statusCounts.suspended}
+                          {statusCounts.deleted}
                         </span>
                         <span className="text-xs text-gray-500">
                           (
                           {totalVendors > 0
                             ? Math.round(
-                                (statusCounts.suspended / totalVendors) * 100
+                                (statusCounts.deleted / totalVendors) * 100
                               )
                             : 0}
                           %)
@@ -669,10 +704,11 @@ const VendorManagement: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(
-                                vendor.status
+                                vendor.status,
+                                vendor.deleted
                               )}`}
                             >
-                              {vendor.status}
+                              {vendor.deleted ? "Deleted" : vendor.status}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -830,10 +866,13 @@ const VendorManagement: React.FC = () => {
                     </label>
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(
-                        selectedVendorForDetails.status
+                        selectedVendorForDetails.status,
+                        selectedVendorForDetails.deleted
                       )}`}
                     >
-                      {selectedVendorForDetails.status}
+                      {selectedVendorForDetails.deleted
+                        ? "Deleted"
+                        : selectedVendorForDetails.status}
                     </span>
                   </div>
                   <div>

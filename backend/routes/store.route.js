@@ -59,6 +59,8 @@ import {
   getAllVendors,
   getVendorById,
   deleteVendor,
+  safeDeleteVendor,
+  restoreVendor,
   getStoreByUserId,
 } from "../controllers/store.controller.js";
 
@@ -91,7 +93,8 @@ router.put("/vendors/:vendorId/approve", protectRoute, approveVendor); // Approv
 router.put("/vendors/:vendorId/reject", protectRoute, rejectVendor); // Reject vendor
 router.put("/vendors/:vendorId/suspend", protectRoute, suspendVendor); // Suspend vendor
 router.put("/vendors/:vendorId/status", protectRoute, updateVendorStatus); // Update vendor status
-router.delete("/vendors/:vendorId", protectRoute, deleteVendor); // Delete vendor
+router.put("/vendors/:vendorId/safeDelete", protectRoute, safeDeleteVendor); // Soft delete vendor
+router.put("/vendors/:vendorId/restore", protectRoute, restoreVendor); // Restore soft deleted vendor
 
 // Store Routes
 router.get("/", getAllStores); // Get all stores

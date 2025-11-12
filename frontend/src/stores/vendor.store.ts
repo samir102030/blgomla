@@ -35,6 +35,8 @@ interface VendorStore {
   updateVendorStatus: (id: string, status: string) => Promise<void>;
   updateVendor: (id: string, data: Partial<Vendor>) => Promise<void>;
   deleteVendor: (id: string) => Promise<void>;
+  safeDeleteVendor: (id: string) => Promise<void>;
+  restoreVendor: (id: string) => Promise<void>;
 
   // Store Management
   createStore: (data: Partial<VendorStoreType>) => Promise<VendorStoreType>;
@@ -341,6 +343,46 @@ export const useVendorStore = create<VendorStore>()(
 
           const { vendors } = get();
           const updatedVendors = vendors.filter((v) => v._id !== id);
+
+          set({ vendors: updatedVendors, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      // Safe Delete Vendor
+      safeDeleteVendor: async (id: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.put(`/stores/vendors/${id}/safeDelete`);
+
+          const { vendors } = get();
+          const updatedVendors = vendors.map((v) =>
+            v._id === id ? { ...v, deleted: true, isActive: false } : v
+          );
+
+          set({ vendors: updatedVendors, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      // Restore Vendor
+      restoreVendor: async (id: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.put(`/stores/vendors/${id}/restore`);
+
+          const { vendors } = get();
+          const updatedVendors = vendors.map((v) =>
+            v._id === id ? { ...v, deleted: false, isActive: true } : v
+          );
 
           set({ vendors: updatedVendors, loading: false });
         } catch (error: any) {

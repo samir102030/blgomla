@@ -648,6 +648,84 @@ export const deleteVendor = controllerWrapper(
   }
 );
 
+export const safeDeleteVendor = controllerWrapper(
+  "safeDeleteVendor",
+  async (req, res) => {
+    // Only admin can soft delete vendors
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { vendorId } = req.params;
+
+    const vendor = await Store.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    // Soft delete
+    vendor.deleted = true;
+    vendor.isActive = false;
+    await vendor.save();
+
+    // Also deactivate the user account
+    await User.findByIdAndUpdate(vendor.owner, {
+      active: false,
+      deleted: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Vendor soft deleted successfully",
+    });
+  }
+);
+
+export const restoreVendor = controllerWrapper(
+  "restoreVendor",
+  async (req, res) => {
+    // Only admin can restore vendors
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - Admin only",
+      });
+    }
+
+    const { vendorId } = req.params;
+
+    const vendor = await Store.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    // Restore vendor
+    vendor.deleted = false;
+    vendor.isActive = true;
+    await vendor.save();
+
+    // Also reactivate the user account
+    await User.findByIdAndUpdate(vendor.owner, {
+      active: true,
+      deleted: false,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Vendor restored successfully",
+    });
+  }
+);
+
 // ============= Existing Store Controllers =============
 
 export const getAllStores = controllerWrapper(
