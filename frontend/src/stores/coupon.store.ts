@@ -237,6 +237,7 @@ export const useCouponStore = create<CouponStore>()(
           const { data } = await axiosInstance.post<{
             success: boolean;
             coupon: any;
+            message?: string;
           }>("/coupons/validate", {
             code,
             subtotal,
@@ -245,6 +246,15 @@ export const useCouponStore = create<CouponStore>()(
           set({ couponValidation: data, loading: false });
           return data;
         } catch (error: any) {
+          // Handle validation errors that come as HTTP errors
+          if (error?.response?.data) {
+            const validationError = {
+              success: false,
+              message: error.response.data.message || "Invalid coupon code",
+            };
+            set({ couponValidation: validationError, loading: false });
+            return validationError;
+          }
           set({
             error: error?.response?.data?.message || error.message,
             loading: false,

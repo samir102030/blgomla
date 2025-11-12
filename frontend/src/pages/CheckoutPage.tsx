@@ -169,26 +169,8 @@ const CheckoutPage: React.FC = () => {
       );
 
       if (validation && validation.success && validation.coupon) {
-        // Fetch the full coupon details to check expiration
-        const { fetchCouponByCode } = useCouponStore.getState();
-        await fetchCouponByCode(couponCode.toUpperCase());
-        const fullCoupon = useCouponStore.getState().coupon;
-
-        if (!fullCoupon) {
-          toast.error("Failed to retrieve coupon details");
-          return;
-        }
-
-        // Check if coupon has expired
-        const currentDate = new Date();
-        const endDate = new Date(fullCoupon.endDate);
-        if (currentDate > endDate) {
-          toast.error("This coupon has expired");
-          return;
-        }
-
         // Apply the coupon by storing it in the coupon store
-        // The validation response includes the coupon data
+        // The validation response now includes the full coupon data
         const couponData: Coupon = {
           _id: validation.coupon._id,
           code: validation.coupon.code,
@@ -196,21 +178,21 @@ const CheckoutPage: React.FC = () => {
             | "percentage"
             | "fixed",
           discountValue: validation.coupon.discountValue,
-          // Use actual dates from full coupon
-          description: fullCoupon.description || "",
-          minimumPurchase: fullCoupon.minimumPurchase || 0,
-          maximumDiscount: fullCoupon.maximumDiscount,
-          startDate: fullCoupon.startDate,
-          endDate: fullCoupon.endDate,
-          usageLimit: fullCoupon.usageLimit,
-          usageCount: fullCoupon.usageCount,
-          isActive: fullCoupon.isActive,
-          applicableProducts: fullCoupon.applicableProducts || [],
-          applicableCategories: fullCoupon.applicableCategories || [],
-          store: fullCoupon.store,
-          createdBy: fullCoupon.createdBy,
-          createdAt: fullCoupon.createdAt,
-          updatedAt: fullCoupon.updatedAt,
+          // Use actual data from validation response
+          description: validation.coupon.description || "",
+          minimumPurchase: validation.coupon.minimumPurchase || 0,
+          maximumDiscount: validation.coupon.maximumDiscount,
+          startDate: validation.coupon.startDate,
+          endDate: validation.coupon.endDate,
+          usageLimit: validation.coupon.usageLimit,
+          usageCount: validation.coupon.usageCount || 0,
+          isActive: validation.coupon.isActive,
+          applicableProducts: validation.coupon.applicableProducts || [],
+          applicableCategories: validation.coupon.applicableCategories || [],
+          store: validation.coupon.store,
+          createdBy: validation.coupon.createdBy,
+          createdAt: validation.coupon.createdAt,
+          updatedAt: validation.coupon.updatedAt,
         };
 
         // Set the applied coupon in the store
@@ -221,7 +203,8 @@ const CheckoutPage: React.FC = () => {
         );
         setCouponCode("");
       } else {
-        toast.error("Invalid coupon code");
+        console.log(validation);
+        toast.error(validation?.message || "Invalid coupon code");
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Failed to apply coupon");
@@ -804,7 +787,7 @@ const CheckoutPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Country*
                       </label>
@@ -818,11 +801,9 @@ const CheckoutPage: React.FC = () => {
                         }
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="Bangladesh">Bangladesh</option>
-                        <option value="India">India</option>
-                        <option value="Pakistan">Pakistan</option>
+                        <option value="Egypt">Egypt</option>
                       </select>
-                    </div>
+                    </div> */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Town/City*
@@ -882,7 +863,7 @@ const CheckoutPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-6">
+                  {/* <div className="flex items-center space-x-6">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
@@ -915,7 +896,7 @@ const CheckoutPage: React.FC = () => {
                         Ship To Different Address
                       </span>
                     </label>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 

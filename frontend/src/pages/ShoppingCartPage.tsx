@@ -262,7 +262,7 @@ const ShoppingCartPage: React.FC = () => {
       }
 
       // Apply the coupon by storing it in the coupon store
-      // The validation response includes the coupon data
+      // The validation response now includes the full coupon data
       if (!validation.coupon) {
         toast.error("Failed to apply coupon");
         return;
@@ -273,21 +273,21 @@ const ShoppingCartPage: React.FC = () => {
         code: validation.coupon.code,
         discountType: validation.coupon.discountType as "percentage" | "fixed",
         discountValue: validation.coupon.discountValue,
-        // Add other required fields with defaults
-        description: "",
-        minimumPurchase: 0,
-        maximumDiscount: undefined,
-        startDate: new Date().toISOString(),
-        endDate: new Date().toISOString(),
-        usageLimit: undefined,
-        usageCount: 0,
-        isActive: true,
-        applicableProducts: [],
-        applicableCategories: [],
-        store: "",
-        createdBy: "",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        // Use actual data from validation response
+        description: validation.coupon.description || "",
+        minimumPurchase: validation.coupon.minimumPurchase || 0,
+        maximumDiscount: validation.coupon.maximumDiscount,
+        startDate: validation.coupon.startDate,
+        endDate: validation.coupon.endDate,
+        usageLimit: validation.coupon.usageLimit,
+        usageCount: validation.coupon.usageCount || 0,
+        isActive: validation.coupon.isActive,
+        applicableProducts: validation.coupon.applicableProducts || [],
+        applicableCategories: validation.coupon.applicableCategories || [],
+        store: validation.coupon.store,
+        createdBy: validation.coupon.createdBy,
+        createdAt: validation.coupon.createdAt,
+        updatedAt: validation.coupon.updatedAt,
       };
 
       // Set the applied coupon in the store

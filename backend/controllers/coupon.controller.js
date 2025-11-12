@@ -163,6 +163,39 @@ export const getCouponById = controllerWrapper(
   }
 );
 
+// Get Coupon By Code
+export const getCouponByCode = controllerWrapper(
+  "getCouponByCode",
+  async (req, res) => {
+    const { code } = req.params;
+    const coupon = await Coupon.findOne({ code: code.toUpperCase() })
+      .populate("store", "name")
+      .populate("applicableProducts", "name images price")
+      .populate("applicableCategories", "name")
+      .populate("createdBy", "name");
+
+    if (!coupon) {
+      return res.status(404).json({
+        success: false,
+        message: "Coupon not found",
+      });
+    }
+
+    // Check permissions - users can only see coupons from their store or all if admin
+    if (req.user.role !== "admin") {
+      const store = await Store.findOne({ owner: req.user._id });
+      if (!store || store._id.toString() !== coupon.store._id.toString()) {
+        return res.status(403).json({
+          success: false,
+          message: "Unauthorized to view this coupon",
+        });
+      }
+    }
+
+    res.status(200).json({ success: true, coupon });
+  }
+);
+
 // Update Coupon
 export const updateCoupon = controllerWrapper(
   "updateCoupon",
@@ -347,8 +380,22 @@ export const validateCoupon = controllerWrapper(
       coupon: {
         _id: coupon._id,
         code: coupon.code,
+        description: coupon.description,
         discountType: coupon.discountType,
         discountValue: coupon.discountValue,
+        minimumPurchase: coupon.minimumPurchase,
+        maximumDiscount: coupon.maximumDiscount,
+        startDate: coupon.startDate,
+        endDate: coupon.endDate,
+        usageLimit: coupon.usageLimit,
+        usageCount: coupon.usageCount,
+        isActive: coupon.isActive,
+        applicableProducts: coupon.applicableProducts,
+        applicableCategories: coupon.applicableCategories,
+        store: coupon.store,
+        createdBy: coupon.createdBy,
+        createdAt: coupon.createdAt,
+        updatedAt: coupon.updatedAt,
         discount,
         applicableItems: applicableItems.length,
       },

@@ -8,6 +8,7 @@ import {
   validateCoupon,
   getStoreCoupons,
   toggleCouponStatus,
+  getCouponByCode,
 } from "../controllers/coupon.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -25,6 +26,7 @@ router.delete("/:couponId", deleteCoupon);
 
 // Additional routes
 router.post("/validate", validateCoupon);
+router.get("/code/:code", getCouponByCode);
 router.get("/store/:storeId", getStoreCoupons);
 router.patch("/:couponId/toggle", toggleCouponStatus);
 

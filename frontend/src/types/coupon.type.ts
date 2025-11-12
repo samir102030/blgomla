@@ -30,11 +30,7 @@ export interface CouponUsage {
 
 export interface CouponValidation {
   success: boolean;
-  coupon?: {
-    _id: string;
-    code: string;
-    discountType: string;
-    discountValue: number;
+  coupon?: Coupon & {
     discount: number;
     applicableItems: number;
   };
