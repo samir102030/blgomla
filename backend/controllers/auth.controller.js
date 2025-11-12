@@ -29,8 +29,9 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     phoneNumber,
     verificationToken,
     verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-    role: role !== "admin" ? role || "customer" : "customer", // default to customer if not provided
+    role: role !== "admin" ? role || "customer" : "customer", // default to customer
     lastLogin: new Date(),
+    active: true, // Set active to true by default
   });
   if (role === "store") {
     const store = new Store({
@@ -691,6 +692,50 @@ export const changePassword = controllerWrapper(
     return res.status(200).json({
       success: true,
       message: "Password changed successfully",
+    });
+  }
+);
+
+export const updateProfile = controllerWrapper(
+  "updateProfile",
+  async (req, res) => {
+    const userId = req.user._id;
+    const { name, phoneNumber, profilePicture } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Update allowed fields
+    if (name !== undefined) user.name = name;
+    if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
+    if (profilePicture !== undefined) user.profilePicture = profilePicture;
+
+    await user.save();
+
+    // Create profile update notification
+    try {
+      await Notification.create({
+        user: user._id,
+        title: "Profile Updated",
+        message: "Your profile has been successfully updated.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error creating profile update notification:", error);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
     });
   }
 );

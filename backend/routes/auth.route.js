@@ -24,7 +24,7 @@ import {
   safeDeleteUser,
   signup,
   toggleLoveProduct,
-  // updateProfile,
+  updateProfile,
   updateUser,
   verifyEmail,
 } from "../controllers/auth.controller.js";
@@ -50,7 +50,7 @@ router.put("/loveProduct/:productId", protectRoute, toggleLoveProduct); // Toggl
 
 // Profile update route for authenticated users
 router.get("/profile", protectRoute, getProfile);
-// router.put("/profile", protectRoute, updateProfile);
+router.put("/profile", protectRoute, updateProfile);
 
 // Password change route for authenticated users
 router.put("/changePassword", protectRoute, changePassword);
