@@ -37,7 +37,19 @@ export const getAllProducts = controllerWrapper(
   async (req, res) => {
     const { page = 1, limit = 20, search, ...filters } = req.query;
     let query = {};
-    if (search) query.$text = { $search: search };
+    if (search) {
+      // Use case-insensitive partial (regex) matching on name, description and tags
+      // to support prefix/substring searches (e.g. "ca" -> "cat golden").
+      const regex = new RegExp(
+        search.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&"),
+        "i"
+      );
+      query.$or = [
+        { name: { $regex: regex } },
+        { description: { $regex: regex } },
+        { tags: { $in: [regex] } },
+      ];
+    }
     // Add filters (category, brand, etc.)
     if (filters.categoryId) query.Category = filters.categoryId;
     if (filters.brandId) query.brand = filters.brandId;

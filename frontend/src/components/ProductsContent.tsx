@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
@@ -44,12 +45,21 @@ const ProductsContent: React.FC = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(20);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     fetchBrands();
     fetchCategories();
     fetchProducts({ isActive: true, deleted: false });
   }, [fetchBrands, fetchCategories, fetchProducts]);
+
+  // Set search from URL params
+  useEffect(() => {
+    const searchQuery = searchParams.get("search");
+    if (searchQuery) {
+      setFilters((prev) => ({ ...prev, search: searchQuery }));
+    }
+  }, [searchParams]);
 
   // Helper function to get all subcategory IDs recursively
   const getAllSubcategoryIds = (
@@ -176,12 +186,20 @@ const ProductsContent: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            All Products
-          </h1>
-          <p className="text-gray-600">
-            Discover all products from our marketplace
-          </p>
+          {!filters.search && (
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {filters.search
+                ? `Search results for "${filters.search}"`
+                : "All Products"}
+            </h1>
+          )}
+          {!filters.search && (
+            <p className="text-gray-600">
+              {filters.search
+                ? `Showing products matching "${filters.search}"`
+                : "Discover all products from our marketplace"}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

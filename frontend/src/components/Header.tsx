@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
+import { useProductStore } from "../stores/product.store";
 import NotificationBell from "./NotificationBell";
 
 interface NavigationItem {
@@ -12,7 +13,48 @@ interface NavigationItem {
 
 const Header: React.FC = () => {
   const user = useUserStore((state) => state.user);
+  const { fetchProducts, products, loading } = useProductStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const desktopSearchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const goToProduct = (productId: string) => {
+    navigate(`/product/${productId}`);
+    setShowDropdown(false);
+    setSearchQuery("");
+  };
+
+  // Debounced search effect
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim()) {
+        fetchProducts({ search: searchQuery, limit: 5 });
+        setShowDropdown(true);
+      } else {
+        setShowDropdown(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, fetchProducts]);
+
+  // Handle clicks outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        !desktopSearchRef.current?.contains(event.target as Node) &&
+        !mobileSearchRef.current?.contains(event.target as Node)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const role = user?.role;
   const showBecomeVendor = !role || role === "customer";
@@ -90,16 +132,92 @@ const Header: React.FC = () => {
             </div>
 
             {/* Search bar */}
-            <div className="flex-1 max-w-2xl mx-8 hidden md:block">
-              <div className="relative flex">
-                <input
-                  type="text"
-                  placeholder="Search for electronics, computers, accessories..."
-                  className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
-                />
-                <button className="px-6 py-3 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
-                  <span className="text-lg">🔍</span>
-                </button>
+            <div
+              className="flex-1 max-w-2xl mx-8 hidden md:block"
+              ref={desktopSearchRef}
+            >
+              <div className="relative">
+                <div className="relative flex">
+                  <input
+                    type="text"
+                    placeholder="Search for electronics, computers, accessories..."
+                    className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                  />
+                  <button className="px-6 py-3 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
+                    <span className="text-lg">🔍</span>
+                  </button>
+                </div>
+
+                {/* Search Dropdown */}
+                {showDropdown && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+                    {loading ? (
+                      <div className="p-4 text-center text-gray-500">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800 mx-auto"></div>
+                        <p className="mt-2">Searching...</p>
+                      </div>
+                    ) : products.length > 0 ? (
+                      <div className="py-2">
+                        {products.map((product) => (
+                          <button
+                            key={product._id}
+                            type="button"
+                            className="w-full text-left flex items-center px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            onClick={() => goToProduct(product._id)}
+                          >
+                            <img
+                              src={product.images[0]?.url || "/placeholder.png"}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded-md mr-3"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-medium text-gray-900 truncate">
+                                {product.name}
+                              </h4>
+                              <p className="text-xs text-gray-500 truncate">
+                                {product.description}
+                              </p>
+                              <div className="flex items-center mt-1">
+                                <span className="text-sm font-semibold text-green-600">
+                                  ${product.price}
+                                </span>
+                                {product.saleActive && (
+                                  <span className="ml-2 text-xs text-red-500 line-through">
+                                    ${product.salePrice}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                        <div className="px-4 py-2 border-t border-gray-100">
+                          <button
+                            type="button"
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            onClick={() => {
+                              navigate(
+                                `/products?search=${encodeURIComponent(
+                                  searchQuery
+                                )}`
+                              );
+                              setShowDropdown(false);
+                              setSearchQuery("");
+                            }}
+                          >
+                            View all results for "{searchQuery}"
+                          </button>
+                        </div>
+                      </div>
+                    ) : searchQuery.trim() ? (
+                      <div className="p-4 text-center text-gray-500">
+                        <p>No products found for "{searchQuery}"</p>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -158,16 +276,86 @@ const Header: React.FC = () => {
           </div>
 
           {/* Mobile search bar */}
-          <div className="mt-4 md:hidden">
-            <div className="relative flex">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
-              />
-              <button className="px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
-                🔍
-              </button>
+          <div className="mt-4 md:hidden" ref={mobileSearchRef}>
+            <div className="relative">
+              <div className="relative flex">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                />
+                <button className="px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
+                  🔍
+                </button>
+              </div>
+
+              {/* Mobile Search Dropdown */}
+              {showDropdown && (
+                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
+                  {loading ? (
+                    <div className="p-3 text-center text-gray-500">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-800 mx-auto"></div>
+                      <p className="mt-1 text-xs">Searching...</p>
+                    </div>
+                  ) : products.length > 0 ? (
+                    <div className="py-1">
+                      {products.map((product) => (
+                        <button
+                          key={product._id}
+                          type="button"
+                          className="w-full text-left flex items-center px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          onClick={() => goToProduct(product._id)}
+                        >
+                          <img
+                            src={product.images[0]?.url || "/placeholder.png"}
+                            alt={product.name}
+                            className="w-10 h-10 object-cover rounded-md mr-2"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-medium text-gray-900 truncate">
+                              {product.name}
+                            </h4>
+                            <div className="flex items-center mt-0.5">
+                              <span className="text-xs font-semibold text-green-600">
+                                ${product.price}
+                              </span>
+                              {product.saleActive && (
+                                <span className="ml-1 text-xs text-red-500 line-through">
+                                  ${product.salePrice}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                      <div className="px-3 py-2 border-t border-gray-100">
+                        <button
+                          type="button"
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                          onClick={() => {
+                            navigate(
+                              `/products?search=${encodeURIComponent(
+                                searchQuery
+                              )}`
+                            );
+                            setShowDropdown(false);
+                            setSearchQuery("");
+                          }}
+                        >
+                          View all results
+                        </button>
+                      </div>
+                    </div>
+                  ) : searchQuery.trim() ? (
+                    <div className="p-3 text-center text-gray-500">
+                      <p className="text-xs">No products found</p>
+                    </div>
+                  ) : null}
+                </div>
+              )}
             </div>
           </div>
         </div>
