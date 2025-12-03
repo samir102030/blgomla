@@ -9,8 +9,10 @@ import Services from "../components/Services";
 import Footer from "../components/Footer";
 import BrandLogos from "../components/BrandLogos";
 import { useUserStore } from "../stores";
+import { useTranslation } from "react-i18next";
 
 const HomePage: React.FC = () => {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   console.log("Current User:", user);
   return (
@@ -28,17 +30,17 @@ const HomePage: React.FC = () => {
             <div className="flex flex-col lg:flex-row md:flex-row items-center justify-between">
               <div className="w-full lg:flex-1 mb-6 lg:mb-0 text-center lg:text-left">
                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#333333] mb-4">
-                  Back to School Offers
+                  {t("Back to School Offers")}
                   <br />
                   <span className="text-2xl md:text-3xl lg:text-4xl">
-                    Up to 30% Off
+                    {t("Up to 30% Off")}
                   </span>
                 </h2>
                 <p className="text-lg md:text-xl text-[#333333] mb-6">
-                  Electronics
+                  {t("Electronics")}
                 </p>
                 <button className="bg-[#002B5B] text-white px-6 md:px-8 py-3 rounded-lg hover:bg-[#001a3d] transition-colors">
-                  Shop Now
+                  {t("Shop Now")}
                 </button>
               </div>
               <div className="w-full lg:flex-1 flex justify-center lg:justify-end">
@@ -56,12 +58,12 @@ const HomePage: React.FC = () => {
         <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             {[
-              { name: "Chromecast", image: "p1.jpeg" },
-              { name: "Set Top Box", image: "p2.jpeg" },
-              { name: "Gaming Console", image: "p3.jpeg" },
-              { name: "Sound System", image: "p4.jpeg" },
-              { name: "Apple TV", image: "p5.jpeg" },
-              { name: "Smart TV", image: "p1.jpeg" },
+              { name: t("Chromecast"), image: "p1.jpeg" },
+              { name: t("Set Top Box"), image: "p2.jpeg" },
+              { name: t("Gaming Console"), image: "p3.jpeg" },
+              { name: t("Sound System"), image: "p4.jpeg" },
+              { name: t("Apple TV"), image: "p5.jpeg" },
+              { name: t("Smart TV"), image: "p1.jpeg" },
             ].map((category, index) => (
               <div
                 key={index}
@@ -85,7 +87,7 @@ const HomePage: React.FC = () => {
         {/* All Products Section */}
         <section className="max-w-7xl mx-auto px-2 sm:px-4 py-8 sm:py-12">
           <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
-            All Products
+            {t("All Products")}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8">
             {/* Left images column */}

@@ -2,9 +2,11 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useProductStore } from "../stores/product.store";
 import { useUserStore } from "../stores/user.store";
+import { useTranslation } from "react-i18next";
 import type { User, UserLoveItem } from "../types/user.type";
 
 const FeaturedProducts: React.FC = () => {
+  const { t } = useTranslation();
   const fetchFeaturedProducts = useProductStore(
     (state) => state.fetchFeaturedProducts
   );
@@ -72,7 +74,7 @@ const FeaturedProducts: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900">
-            Featured Products
+            {t("Featured Products")}
           </h2>
 
           {/* Promotional banners */}
@@ -80,15 +82,15 @@ const FeaturedProducts: React.FC = () => {
             <div className="bg-blue-100 rounded-lg p-4 w-48">
               <div className="text-center">
                 <div className="text-4xl mb-2">📡</div>
-                <h3 className="font-semibold text-gray-900">Wi-Fi 6</h3>
-                <p className="text-sm text-gray-600">High Speed</p>
+                <h3 className="font-semibold text-gray-900">{t("Wi-Fi 6")}</h3>
+                <p className="text-sm text-gray-600">{t("High Speed")}</p>
               </div>
             </div>
             <div className="bg-green-100 rounded-lg p-4 w-48">
               <div className="text-center">
                 <div className="text-4xl mb-2">📹</div>
-                <h3 className="font-semibold text-gray-900">Security</h3>
-                <p className="text-sm text-gray-600">Smart Cameras</p>
+                <h3 className="font-semibold text-gray-900">{t("Security")}</h3>
+                <p className="text-sm text-gray-600">{t("Smart Cameras")}</p>
               </div>
             </div>
           </div>
@@ -106,7 +108,8 @@ const FeaturedProducts: React.FC = () => {
                 <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
                   {product.saleActive && product.salePercentage && (
                     <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
-                      {product.salePercentage}% OFF
+                      {product.salePercentage}
+                      {t("% OFF")}
                     </span>
                   )}
                 </div>
@@ -176,7 +179,8 @@ const FeaturedProducts: React.FC = () => {
                     </span>
                     {product.saleActive && product.salePercentage && (
                       <span className="text-sm bg-red-100 text-red-800 px-2 py-1 rounded">
-                        {product.salePercentage}% OFF
+                        {product.salePercentage}
+                        {t("% OFF")}
                       </span>
                     )}
                   </div>
@@ -184,7 +188,7 @@ const FeaturedProducts: React.FC = () => {
 
                 {/* Add to Cart Button */}
                 <button className="w-full mt-3 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors duration-300 text-sm font-medium">
-                  Add to Cart
+                  {t("Add to Cart")}
                 </button>
               </div>
             </div>

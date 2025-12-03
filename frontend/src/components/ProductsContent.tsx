@@ -5,6 +5,7 @@ import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
 import { useProductStore } from "../stores/product.store";
 import { useCategoryStore } from "../stores/category.store";
+import { useTranslation } from "react-i18next";
 
 interface FilterState {
   categories: string[];
@@ -19,6 +20,7 @@ interface FilterState {
 }
 
 const ProductsContent: React.FC = () => {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     subcategories: [],
@@ -189,15 +191,15 @@ const ProductsContent: React.FC = () => {
           {!filters.search && (
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               {filters.search
-                ? `Search results for "${filters.search}"`
-                : "All Products"}
+                ? `${t("Search results for")} "${filters.search}"`
+                : t("All Products")}
             </h1>
           )}
           {!filters.search && (
             <p className="text-gray-600">
               {filters.search
-                ? `Showing products matching "${filters.search}"`
-                : "Discover all products from our marketplace"}
+                ? `${t("Showing products matching")} "${filters.search}"`
+                : t("Discover all products from our marketplace")}
             </p>
           )}
         </div>
@@ -222,7 +224,7 @@ const ProductsContent: React.FC = () => {
                 <div className="flex-1 max-w-md">
                   <input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder={t("Search products...")}
                     value={filters.search}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -230,12 +232,12 @@ const ProductsContent: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-gray-600">
-                    Showing {startIndex + 1}-{Math.min(endIndex, totalProducts)}{" "}
-                    of {totalProducts} products
+                    {t("Showing")} {startIndex + 1}-
+                    {Math.min(endIndex, totalProducts)} {t("of products")}
                   </span>
                   <div className="flex items-center gap-2">
                     <label htmlFor="sort" className="text-sm text-gray-600">
-                      Sort by:
+                      {t("Sort by:")}
                     </label>
                     <select
                       id="sort"
@@ -243,11 +245,15 @@ const ProductsContent: React.FC = () => {
                       onChange={(e) => setSortBy(e.target.value)}
                       className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="name">Name</option>
-                      <option value="price-low">Price: Low to High</option>
-                      <option value="price-high">Price: High to Low</option>
-                      <option value="rating">Rating</option>
-                      <option value="newest">Newest</option>
+                      <option value="name">{t("Name")}</option>
+                      <option value="price-low">
+                        {t("Price: Low to High")}
+                      </option>
+                      <option value="price-high">
+                        {t("Price: High to Low")}
+                      </option>
+                      <option value="rating">{t("Rating")}</option>
+                      <option value="newest">{t("Newest")}</option>
                     </select>
                   </div>
                 </div>
@@ -258,7 +264,7 @@ const ProductsContent: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {loading ? (
                 <div className="col-span-full text-center py-12 text-gray-500">
-                  Loading...
+                  {t("Loading...")}
                 </div>
               ) : error ? (
                 <div className="col-span-full text-center py-12 text-red-500">
@@ -302,7 +308,7 @@ const ProductsContent: React.FC = () => {
                     disabled={currentPage === 1}
                     className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Previous
+                    {t("Previous")}
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter(
@@ -335,7 +341,7 @@ const ProductsContent: React.FC = () => {
                     disabled={currentPage === totalPages}
                     className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Next
+                    {t("Next")}
                   </button>
                 </div>
               </div>
@@ -346,10 +352,10 @@ const ProductsContent: React.FC = () => {
               <div className="text-center py-12">
                 <div className="text-gray-400 text-6xl mb-4">📦</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No products found
+                  {t("No products found")}
                 </h3>
                 <p className="text-gray-600">
-                  Try adjusting your filters or search terms.
+                  {t("Try adjusting your filters or search terms.")}
                 </p>
               </div>
             )}

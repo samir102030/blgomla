@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
+import { useTranslation } from "react-i18next";
+import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 
 interface NavigationItem {
@@ -12,11 +14,13 @@ interface NavigationItem {
 }
 
 const Header: React.FC = () => {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   const { fetchProducts, products, loading } = useProductStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [language, setLanguage] = useState(i18n.language);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -56,6 +60,18 @@ const Header: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Update language state when i18n changes
+  useEffect(() => {
+    const handleLanguageChange = (lng: string) => {
+      setLanguage(lng);
+    };
+
+    i18n.on("languageChanged", handleLanguageChange);
+    return () => {
+      i18n.off("languageChanged", handleLanguageChange);
+    };
+  }, []);
+
   const role = user?.role;
   const showBecomeVendor = !role || role === "customer";
   const showAdminDashboard = role === "admin" || role === "store";
@@ -67,33 +83,33 @@ const Header: React.FC = () => {
   // Navigation configuration
   const navigationItems: NavigationItem[] = [
     {
-      label: "Home",
+      label: t("Home"),
       path: "/",
       className: "border-r border-[#9E9E9E]/30 md:border-r-0",
     },
     {
-      label: "All Products",
+      label: t("All Products"),
       path: "/products",
       className: "border-r border-[#9E9E9E]/30 md:border-r-0",
     },
     {
-      label: "About Us",
+      label: t("About Us"),
       path: "/about",
       className: "border-r border-[#9E9E9E]/30 md:border-r-0",
     },
     {
-      label: "Contact",
+      label: t("Contact"),
       path: "/contact",
       className: "",
     },
     {
-      label: "🏪 Become a Vendor",
+      label: "🏪 " + t("Become a Vendor"),
       path: "/vendor-registration",
       condition: showBecomeVendor,
       className: "",
     },
     {
-      label: "🏪 Admin Dashboard",
+      label: "🏪 " + t("Admin Dashboard"),
       path: "/dashboard",
       condition: showAdminDashboard,
       className: "bg-[#673AB7]",
@@ -103,9 +119,22 @@ const Header: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 bg-[#FFD600] shadow-lg">
       <div className="flex items-center space-x-4">
-        <span className="text-[#333333] text-sm">English</span>
         <div className="flex items-center space-x-2">
-          <span className="text-[#333333] text-sm">Call us:</span>
+          <span className="text-[#333333] text-sm">🌐</span>
+          <select
+            value={language}
+            onChange={(e) => {
+              i18n.changeLanguage(e.target.value);
+              setLanguage(e.target.value);
+            }}
+            className="bg-white border border-gray-300 rounded-md px-3 py-1 text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+          >
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+          </select>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-[#333333] text-sm">{t("Call us:")}</span>
           <span className="text-[#333333] font-medium">📞 (+20)1009353639</span>
         </div>
       </div>
@@ -140,7 +169,9 @@ const Header: React.FC = () => {
                 <div className="relative flex">
                   <input
                     type="text"
-                    placeholder="Search for electronics, computers, accessories..."
+                    placeholder={t(
+                      "Search for electronics, computers, accessories..."
+                    )}
                     className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -157,7 +188,7 @@ const Header: React.FC = () => {
                     {loading ? (
                       <div className="p-4 text-center text-gray-500">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800 mx-auto"></div>
-                        <p className="mt-2">Searching...</p>
+                        <p className="mt-2">{t("Searching...")}</p>
                       </div>
                     ) : products.length > 0 ? (
                       <div className="py-2">
@@ -207,13 +238,15 @@ const Header: React.FC = () => {
                               setSearchQuery("");
                             }}
                           >
-                            View all results for "{searchQuery}"
+                            {t("View all results for")} "{searchQuery}"
                           </button>
                         </div>
                       </div>
                     ) : searchQuery.trim() ? (
                       <div className="p-4 text-center text-gray-500">
-                        <p>No products found for "{searchQuery}"</p>
+                        <p>
+                          {t("No products found for")} "{searchQuery}"
+                        </p>
                       </div>
                     ) : null}
                   </div>
@@ -229,7 +262,7 @@ const Header: React.FC = () => {
                   className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
                 >
                   <span className="text-xl mb-1">🔑</span>
-                  <span className="text-xs hidden sm:block">Login</span>
+                  <span className="text-xs hidden sm:block">{t("Login")}</span>
                 </Link>
               )}
               <Link
@@ -237,7 +270,7 @@ const Header: React.FC = () => {
                 className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
               >
                 <span className="text-xl mb-1">👤</span>
-                <span className="text-xs hidden sm:block">Account</span>
+                <span className="text-xs hidden sm:block">{t("Account")}</span>
               </Link>
               {user && <NotificationBell />}
               <Link
@@ -245,14 +278,14 @@ const Header: React.FC = () => {
                 className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
               >
                 <span className="text-xl mb-1">❤️</span>
-                <span className="text-xs hidden sm:block">Wishlist</span>
+                <span className="text-xs hidden sm:block">{t("Wishlist")}</span>
               </Link>
               <Link
                 to="/cart"
                 className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors relative"
               >
                 <span className="text-xl mb-1">🛒</span>
-                <span className="text-xs hidden sm:block">Cart</span>
+                <span className="text-xs hidden sm:block">{t("Cart")}</span>
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {user?.cart?.length
                     ? user.cart.reduce(
@@ -281,7 +314,7 @@ const Header: React.FC = () => {
               <div className="relative flex">
                 <input
                   type="text"
-                  placeholder="Search..."
+                  placeholder={t("Search...")}
                   className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -298,7 +331,7 @@ const Header: React.FC = () => {
                   {loading ? (
                     <div className="p-3 text-center text-gray-500">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-800 mx-auto"></div>
-                      <p className="mt-1 text-xs">Searching...</p>
+                      <p className="mt-1 text-xs">{t("Searching...")}</p>
                     </div>
                   ) : products.length > 0 ? (
                     <div className="py-1">
@@ -345,13 +378,13 @@ const Header: React.FC = () => {
                             setSearchQuery("");
                           }}
                         >
-                          View all results
+                          {t("View all results")}
                         </button>
                       </div>
                     </div>
                   ) : searchQuery.trim() ? (
                     <div className="p-3 text-center text-gray-500">
-                      <p className="text-xs">No products found</p>
+                      <p className="text-xs">{t("No products found")}</p>
                     </div>
                   ) : null}
                 </div>

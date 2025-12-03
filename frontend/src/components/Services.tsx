@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import { useTranslation } from "react-i18next";
 
 interface Service {
   id: number;
@@ -7,34 +8,37 @@ interface Service {
   description: string;
 }
 
-const services: Service[] = [
-  {
-    id: 1,
-    icon: "✈️",
-    title: "Free home delivery",
-    description: "Provide free home delivery for the all product over $100"
-  },
-  {
-    id: 2,
-    icon: "🏆",
-    title: "Quality Products",
-    description: "We ensure the product quality that is our main goal"
-  },
-  {
-    id: 3,
-    icon: "↩️",
-    title: "3 Days Return",
-    description: "Our Return Policy is very simple and easy for all"
-  },
-  {
-    id: 4,
-    icon: "🎧",
-    title: "Online Support",
-    description: "Provide 24/7 online support for any information"
-  }
-];
-
 const Services: React.FC = () => {
+  const { t } = useTranslation();
+
+  const services: Service[] = [
+    {
+      id: 1,
+      icon: "✈️",
+      title: t("Free home delivery"),
+      description: t(
+        "Provide free home delivery for the all product over $100"
+      ),
+    },
+    {
+      id: 2,
+      icon: "🏆",
+      title: t("Quality Products"),
+      description: t("We ensure the product quality that is our main goal"),
+    },
+    {
+      id: 3,
+      icon: "↩️",
+      title: t("3 Days Return"),
+      description: t("Our Return Policy is very simple and easy for all"),
+    },
+    {
+      id: 4,
+      icon: "🎧",
+      title: t("Online Support"),
+      description: t("Provide 24/7 online support for any information"),
+    },
+  ];
   return (
     <section className="py-16 bg-[#FAFAFA]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

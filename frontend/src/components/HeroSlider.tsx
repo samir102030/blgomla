@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Slide {
   id: number;
@@ -10,38 +11,39 @@ interface Slide {
   bgColor: string;
 }
 
-const slides: Slide[] = [
-  {
-    id: 1,
-    title: "Connect your",
-    subtitle: "Smart Home",
-    buttonText: "BUY NOW",
-    buttonLink: "/brands",
-    image: "/ban1.png", 
-    bgColor: "bg-gradient-to-r from-gray-100 to-gray-200"
-  },
-  {
-    id: 2,
-    title: "Professional",
-    subtitle: "Networking Equipment",
-    buttonText: "SHOP NOW",
-    buttonLink: "/brands",
-    image: "/ban2.jpg",
-    bgColor: "bg-gradient-to-r from-blue-50 to-blue-100"
-  },
-  {
-    id: 3,
-    title: "Advanced",
-    subtitle: "Security Cameras",
-    buttonText: "EXPLORE",
-    buttonLink: "/brands",
-    image: "/ban3.jpg", 
-    bgColor: "bg-gradient-to-r from-purple-50 to-purple-100"
-  }
-];
-
 const HeroSlider: React.FC = () => {
+  const { t } = useTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  const slides: Slide[] = [
+    {
+      id: 1,
+      title: t("Connect your"),
+      subtitle: t("Smart Home"),
+      buttonText: t("BUY NOW"),
+      buttonLink: "/brands",
+      image: "/ban1.png",
+      bgColor: "bg-gradient-to-r from-gray-100 to-gray-200",
+    },
+    {
+      id: 2,
+      title: t("Professional"),
+      subtitle: t("Networking Equipment"),
+      buttonText: t("SHOP NOW"),
+      buttonLink: "/brands",
+      image: "/ban2.jpg",
+      bgColor: "bg-gradient-to-r from-blue-50 to-blue-100",
+    },
+    {
+      id: 3,
+      title: t("Advanced"),
+      subtitle: t("Security Cameras"),
+      buttonText: t("EXPLORE"),
+      buttonLink: "/brands",
+      image: "/ban3.jpg",
+      bgColor: "bg-gradient-to-r from-purple-50 to-purple-100",
+    },
+  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -69,8 +71,11 @@ const HeroSlider: React.FC = () => {
         <div
           key={slide.id}
           className={`absolute inset-0 transition-transform duration-500 ease-in-out ${
-            index === currentSlide ? 'translate-x-0' : 
-            index < currentSlide ? '-translate-x-full' : 'translate-x-full'
+            index === currentSlide
+              ? "translate-x-0"
+              : index < currentSlide
+              ? "-translate-x-full"
+              : "translate-x-full"
           }`}
         >
           <div className={`w-full h-full ${slide.bgColor} flex items-center`}>
@@ -119,17 +124,37 @@ const HeroSlider: React.FC = () => {
         onClick={prevSlide}
         className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all duration-300 z-10"
       >
-        <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        <svg
+          className="w-6 h-6 text-gray-800"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
       </button>
-      
+
       <button
         onClick={nextSlide}
         className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all duration-300 z-10"
       >
-        <svg className="w-6 h-6 text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        <svg
+          className="w-6 h-6 text-gray-800"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
         </svg>
       </button>
 
@@ -140,9 +165,9 @@ const HeroSlider: React.FC = () => {
             key={index}
             onClick={() => goToSlide(index)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              index === currentSlide 
-                ? 'bg-white scale-110' 
-                : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+              index === currentSlide
+                ? "bg-white scale-110"
+                : "bg-white bg-opacity-50 hover:bg-opacity-75"
             }`}
           />
         ))}

@@ -3,8 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
+import { useTranslation } from "react-i18next";
 
-const LoginRegisterPage: React.FC = () => {
+// const LoginRegisterPage: React.FC = () => {
+  
+  const LoginRegisterPage: React.FC = () => {
+  const { t } = useTranslation();
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
@@ -38,10 +42,10 @@ const LoginRegisterPage: React.FC = () => {
       if (user) {
         navigate("/");
       } else {
-        setLoginError(error || "Login failed.");
+        setLoginError(error || t("Login failed."));
       }
     } catch (err: any) {
-      setLoginError(error || "Login failed.");
+      setLoginError(error || t("Login failed."));
     }
   };
 
@@ -50,7 +54,7 @@ const LoginRegisterPage: React.FC = () => {
     setRegisterError(null);
     setRegisterSuccess(null);
     if (registerData.password !== registerData.confirmPassword) {
-      setRegisterError("Passwords do not match.");
+      setRegisterError(t("Passwords do not match."));
       return;
     }
     try {
@@ -61,7 +65,7 @@ const LoginRegisterPage: React.FC = () => {
       });
       if (user) {
         setRegisterSuccess(
-          "Registration successful! Please check your email to verify your account."
+          t("Registration successful! Please check your email to verify your account.")
         );
         setRegisterData({
           name: "",
@@ -92,14 +96,14 @@ const LoginRegisterPage: React.FC = () => {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Login & Register
+            {t("Login & Register")}
           </h1>
           <nav className="text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">
               Home
             </Link>
             <span className="mx-2">/</span>
-            <span>Login & Register</span>
+            <span>{t("Login & Register")}</span>
           </nav>
         </div>
         {/* Camera Image positioned on the right */}
@@ -118,14 +122,14 @@ const LoginRegisterPage: React.FC = () => {
             {/* Login Form */}
             <div className="bg-white p-8 rounded-lg shadow-sm">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Already a Member?
+                {t("Already a Member?")}
               </h2>
 
               <form onSubmit={handleLoginSubmit} className="space-y-6">
                 <div>
                   <input
                     type="email"
-                    placeholder="Email or Username"
+                    placeholder={t("Email or Username")}
                     value={loginData.email}
                     onChange={(e) =>
                       setLoginData({ ...loginData, email: e.target.value })
@@ -137,7 +141,7 @@ const LoginRegisterPage: React.FC = () => {
                 <div>
                   <input
                     type="password"
-                    placeholder="Password"
+                    placeholder={t("Password")}
                     value={loginData.password}
                     onChange={(e) =>
                       setLoginData({ ...loginData, password: e.target.value })
@@ -154,7 +158,7 @@ const LoginRegisterPage: React.FC = () => {
                   className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60"
                   disabled={loading}
                 >
-                  {loading ? "Logging in..." : "LOGIN"}
+                  {loading ? t("Logging in...") : t("LOGIN")}
                 </button>
               </form>
 
@@ -163,7 +167,7 @@ const LoginRegisterPage: React.FC = () => {
                   to="/forgot-password"
                   className="text-sm text-blue-600 hover:text-blue-800"
                 >
-                  Forgot your password?
+                  {t("Forgot your password?")}
                 </Link>
               </div>
             </div>
@@ -171,7 +175,7 @@ const LoginRegisterPage: React.FC = () => {
             {/* Register Form */}
             <div className="bg-white p-8 rounded-lg shadow-sm">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Register Form
+                {t("Register Form")}
               </h2>
 
               <form onSubmit={handleRegisterSubmit} className="space-y-6">
@@ -179,7 +183,7 @@ const LoginRegisterPage: React.FC = () => {
                   <div>
                     <input
                       type="text"
-                      placeholder="Name"
+                      placeholder={t("Name")}
                       value={registerData.name}
                       onChange={(e) =>
                         setRegisterData({
@@ -194,7 +198,7 @@ const LoginRegisterPage: React.FC = () => {
                   <div>
                     <input
                       type="email"
-                      placeholder="Enter your email"
+                      placeholder={t("Enter your email")}
                       value={registerData.email}
                       onChange={(e) =>
                         setRegisterData({
@@ -211,7 +215,7 @@ const LoginRegisterPage: React.FC = () => {
                   <div>
                     <input
                       type="password"
-                      placeholder="Password"
+                      placeholder={t("Password")}
                       value={registerData.password}
                       onChange={(e) =>
                         setRegisterData({
@@ -226,7 +230,7 @@ const LoginRegisterPage: React.FC = () => {
                   <div>
                     <input
                       type="password"
-                      placeholder="Repeat Password"
+                      placeholder={t("Repeat Password")}
                       value={registerData.confirmPassword}
                       onChange={(e) =>
                         setRegisterData({
@@ -252,21 +256,21 @@ const LoginRegisterPage: React.FC = () => {
                   className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60"
                   disabled={loading}
                 >
-                  {loading ? "Registering..." : "REGISTER"}
+                  {loading ? t("Registering...") : t("REGISTER")}
                 </button>
               </form>
 
               <div className="mt-6 text-center text-sm text-gray-600">
-                By registering, you agree to our{" "}
+                {t("By registering, you agree to our")}{" "}
                 <Link to="/terms" className="text-blue-600 hover:text-blue-800">
-                  Terms & Conditions
+                  {t("Terms & Conditions")}
                 </Link>{" "}
-                and{" "}
+                {t("and")}{" "}
                 <Link
                   to="/privacy"
                   className="text-blue-600 hover:text-blue-800"
                 >
-                  Privacy Policy
+                  {t("Privacy Policy")}
                 </Link>
               </div>
             </div>

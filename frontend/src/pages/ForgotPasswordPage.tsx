@@ -4,8 +4,10 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const ForgotPasswordPage: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,7 @@ const ForgotPasswordPage: React.FC = () => {
     setError(null);
 
     if (!email.trim()) {
-      setError("Email is required");
+      setError(t("Email is required"));
       return;
     }
 
@@ -28,9 +30,9 @@ const ForgotPasswordPage: React.FC = () => {
       const success = await forgotPassword(email);
       if (success) {
         setIsSubmitted(true);
-        toast.success("Password reset link sent to your email!");
+        toast.success(t("Password reset link sent to your email!"));
       } else {
-        setError("Failed to send reset email. Please try again.");
+        setError(t("Failed to send reset email. Please try again."));
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || "An error occurred");
@@ -39,7 +41,7 @@ const ForgotPasswordPage: React.FC = () => {
 
   const handleResetPassword = () => {
     if (!token.trim()) {
-      toast.error("Please enter the reset token");
+      toast.error(t("Please enter the reset token"));
       return;
     }
     navigate(`/reset-password/${token}`);
@@ -60,14 +62,14 @@ const ForgotPasswordPage: React.FC = () => {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Forgot Password
+            {t("Forgot Password")}
           </h1>
           <nav className="text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">
-              Home
+              {t("Home")}
             </Link>
             <span className="mx-2">/</span>
-            <span>Forgot Password</span>
+            <span>{t("Forgot Password")}</span>
           </nav>
         </div>
       </div>
@@ -78,11 +80,12 @@ const ForgotPasswordPage: React.FC = () => {
             {!isSubmitted ? (
               <>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Reset Your Password
+                  {t("Reset Your Password")}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Enter your email address and we'll send you a link to reset
-                  your password.
+                  {t(
+                    "Enter your email address and we'll send you a link to reset your password."
+                  )}
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -91,7 +94,7 @@ const ForgotPasswordPage: React.FC = () => {
                       htmlFor="email"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Email Address
+                      {t("Email Address")}
                     </label>
                     <input
                       type="email"
@@ -99,7 +102,7 @@ const ForgotPasswordPage: React.FC = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter your email"
+                      placeholder={t("Enter your email")}
                       required
                     />
                   </div>
@@ -111,7 +114,7 @@ const ForgotPasswordPage: React.FC = () => {
                     className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60"
                     disabled={loading}
                   >
-                    {loading ? "Sending..." : "Send Reset Link"}
+                    {loading ? t("Sending...") : t("Send Reset Link")}
                   </button>
                 </form>
 
@@ -120,7 +123,7 @@ const ForgotPasswordPage: React.FC = () => {
                     to="/login"
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
-                    Back to Login
+                    {t("Back to Login")}
                   </Link>
                 </div>
               </>
@@ -143,15 +146,16 @@ const ForgotPasswordPage: React.FC = () => {
                     </svg>
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                    Check Your Email
+                    {t("Check Your Email")}
                   </h2>
                   <p className="text-gray-600 mb-6">
-                    We've sent a password reset link to{" "}
+                    {t("We've sent a password reset link to")}{" "}
                     <span className="font-medium">{email}</span>
                   </p>
                   <p className="text-sm text-gray-500 mb-6">
-                    If you don't see the email in your inbox, please check your
-                    spam folder.
+                    {t(
+                      "If you don't see the email in your inbox, please check your spam folder."
+                    )}
                   </p>
 
                   <div className="space-y-3">
@@ -159,20 +163,20 @@ const ForgotPasswordPage: React.FC = () => {
                       to="/login"
                       className="block w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors text-center"
                     >
-                      Back to Login
+                      {t("Back to Login")}
                     </Link>
                     <button
                       onClick={() => setIsSubmitted(false)}
                       className="block w-full text-gray-600 hover:text-gray-800 text-sm"
                     >
-                      Didn't receive the email? Try again
+                      {t("Didn't receive the email? Try again")}
                     </button>
                     <div className="mt-6">
                       <label
                         htmlFor="token"
                         className="block text-sm font-medium text-gray-700 mb-2"
                       >
-                        Reset Token
+                        {t("Reset Token")}
                       </label>
                       <input
                         type="text"
@@ -180,13 +184,13 @@ const ForgotPasswordPage: React.FC = () => {
                         value={token}
                         onChange={(e) => setToken(e.target.value)}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
-                        placeholder="Enter the reset token"
+                        placeholder={t("Enter the reset token")}
                       />
                       <button
                         onClick={handleResetPassword}
                         className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                       >
-                        Go to Reset Password
+                        {t("Go to Reset Password")}
                       </button>
                     </div>
                   </div>

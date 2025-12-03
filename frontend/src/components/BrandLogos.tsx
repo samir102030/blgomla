@@ -1,6 +1,8 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const BrandLogos: React.FC = () => {
+  const { t } = useTranslation();
   const brands = [
     {
       name: "Infinix",
@@ -69,10 +71,10 @@ const BrandLogos: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Shop by Brand
+            {t("Shop by Brand")}
           </h2>
           <p className="text-gray-600">
-            Discover products from top technology brands
+            {t("Discover products from top technology brands")}
           </p>
         </div>
 

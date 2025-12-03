@@ -1,5 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import HomePage from "./pages/HomePage";
 import ContactPage from "./pages/ContactPage";
 import BrandsPage from "./pages/BrandsPage";
@@ -22,6 +24,21 @@ import VendorRoutes from "./routes/VendorRoutes";
 import GeneralSupportChat from "./components/GeneralSupportChat";
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    const handleLanguageChange = (lng: string) => {
+      document.documentElement.dir = lng === "ar" ? "rtl" : "ltr";
+    };
+
+    i18n.on("languageChanged", handleLanguageChange);
+    handleLanguageChange(i18n.language); // initial
+
+    return () => {
+      i18n.off("languageChanged", handleLanguageChange);
+    };
+  }, [i18n]);
+
   return (
     <Router>
       <Routes>

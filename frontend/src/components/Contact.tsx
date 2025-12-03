@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ContactForm {
   name: string;
@@ -9,39 +10,42 @@ interface ContactForm {
 }
 
 const Contact: React.FC = () => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<ContactForm>({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle form submission here
-    console.log('Contact form submitted:', formData);
+    console.log("Contact form submitted:", formData);
     setIsSubmitted(true);
-    
+
     // Reset form after 3 seconds
     setTimeout(() => {
       setIsSubmitted(false);
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: ''
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
       });
     }, 3000);
   };
@@ -55,10 +59,12 @@ const Contact: React.FC = () => {
             <div className="bg-gray-200 rounded-lg p-8 h-full">
               {/* Address Section */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Address</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {t("Address")}
+                </h3>
                 <div className="text-gray-700 space-y-1">
                   <p></p>
-                  <p>October, Egypt</p>
+                  <p>{t("October, Egypt")}</p>
                 </div>
               </div>
 
@@ -66,11 +72,16 @@ const Contact: React.FC = () => {
 
               {/* Phone Section */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Phone</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {t("Phone")}
+                </h3>
                 <div className="text-gray-700 space-y-2">
                   <p>
-                    <a href="tel:+8801265897568" className="text-blue-600 hover:text-blue-800 transition-colors">
-                      (+20)1009353639
+                    <a
+                      href="tel:+8801265897568"
+                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      {t("(+20)1009353639")}
                     </a>
                   </p>
                 </div>
@@ -80,16 +91,26 @@ const Contact: React.FC = () => {
 
               {/* Web Section */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Web</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {t("Web")}
+                </h3>
                 <div className="text-gray-700 space-y-2">
                   <p>
-                    <a href="mailto:info@example.com" className="text-blue-600 hover:text-blue-800 transition-colors">
-                      Blgmla.com
+                    <a
+                      href="mailto:info@example.com"
+                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      {t("Blgmla.com")}
                     </a>
                   </p>
                   <p>
-                    <a href="https://www.example.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors">
-                      www.Blgmla.com
+                    <a
+                      href="https://www.example.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      {t("www.Blgmla.com")}
                     </a>
                   </p>
                 </div>
@@ -100,15 +121,21 @@ const Contact: React.FC = () => {
           {/* Contact Form */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Get in Touch</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {t("Get in Touch")}
+              </h2>
               <p className="text-gray-600 mb-8">
-                Terms & Conditions erases and corrupts sorrows and what troubles they will face, they are not similar in fault, the ways of times are falling on them, pain
+                {t(
+                  "Terms & Conditions erases and corrupts sorrows and what troubles they will face, they are not similar in fault, the ways of times are falling on them, pain"
+                )}
               </p>
 
               {isSubmitted && (
                 <div className="mb-6 p-4 bg-green-100 border border-green-300 rounded-lg">
                   <p className="text-green-700">
-                    ✅ Thank you for your message! We'll get back to you soon.
+                    {t(
+                      "✅ Thank you for your message! We'll get back to you soon."
+                    )}
                   </p>
                 </div>
               )}
@@ -122,7 +149,7 @@ const Contact: React.FC = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      placeholder="Name"
+                      placeholder={t("Name")}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300"
                       required
                     />
@@ -133,7 +160,7 @@ const Contact: React.FC = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      placeholder="Email"
+                      placeholder={t("Email")}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300"
                       required
                     />
@@ -148,7 +175,7 @@ const Contact: React.FC = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      placeholder="Phone"
+                      placeholder={t("Phone")}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300"
                     />
                   </div>
@@ -158,7 +185,7 @@ const Contact: React.FC = () => {
                       name="subject"
                       value={formData.subject}
                       onChange={handleInputChange}
-                      placeholder="Subject"
+                      placeholder={t("Subject")}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300"
                       required
                     />
@@ -171,7 +198,7 @@ const Contact: React.FC = () => {
                     name="message"
                     value={formData.message}
                     onChange={handleInputChange}
-                    placeholder="Write message here..."
+                    placeholder={t("Write message here...")}
                     rows={6}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-300 resize-vertical"
                     required
@@ -184,7 +211,7 @@ const Contact: React.FC = () => {
                     type="submit"
                     className="bg-black text-white px-8 py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-300 uppercase tracking-wide"
                   >
-                    Submit
+                    {t("Submit")}
                   </button>
                 </div>
               </form>

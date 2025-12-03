@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import type { Category } from "../types/category.type";
 import type { Brand } from "../types/brand.type";
+import { useTranslation } from "react-i18next";
 
 interface FilterState {
   categories: string[];
@@ -28,6 +29,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
   brands,
   onFilterChange,
 }) => {
+  const { t } = useTranslation();
   const [expandedSections, setExpandedSections] = useState({
     category: true,
     brand: false,
@@ -102,7 +104,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
           onClick={() => toggleSection("category")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
-          <h3 className="font-semibold text-gray-900">Category</h3>
+          <h3 className="font-semibold text-gray-900">{t("Category")}</h3>
           <span className="text-gray-500">
             {expandedSections.category ? "−" : "+"}
           </span>
@@ -144,7 +146,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
           onClick={() => toggleSection("brand")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
-          <h3 className="font-semibold text-gray-900">Brand</h3>
+          <h3 className="font-semibold text-gray-900">{t("Brand")}</h3>
           <span className="text-gray-500">
             {expandedSections.brand ? "−" : "+"}
           </span>
@@ -184,7 +186,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
           onClick={() => toggleSection("price")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
-          <h3 className="font-semibold text-gray-900">Price Range</h3>
+          <h3 className="font-semibold text-gray-900">{t("Price Range")}</h3>
           <span className="text-gray-500">
             {expandedSections.price ? "−" : "+"}
           </span>
@@ -194,7 +196,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
             <div className="flex items-center space-x-2">
               <input
                 type="number"
-                placeholder="Min"
+                placeholder={t("Min")}
                 value={filters.minPrice}
                 onChange={(e) => handlePriceChange("minPrice", e.target.value)}
                 className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -202,7 +204,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
               <span className="text-gray-500">-</span>
               <input
                 type="number"
-                placeholder="Max"
+                placeholder={t("Max")}
                 value={filters.maxPrice}
                 onChange={(e) => handlePriceChange("maxPrice", e.target.value)}
                 className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
@@ -218,7 +220,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
           onClick={() => toggleSection("rating")}
           className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
         >
-          <h3 className="font-semibold text-gray-900">Minimum Rating</h3>
+          <h3 className="font-semibold text-gray-900">{t("Minimum Rating")}</h3>
           <span className="text-gray-500">
             {expandedSections.rating ? "−" : "+"}
           </span>
@@ -236,7 +238,9 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                     onChange={(e) => handleRatingChange(e.target.value)}
                     className="mr-3"
                   />
-                  <span className="text-sm text-gray-700">{rating}+ Stars</span>
+                  <span className="text-sm text-gray-700">
+                    {rating}+ {t("Stars")}
+                  </span>
                 </label>
               ))}
             </div>
@@ -254,7 +258,9 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
               onChange={(e) => handleFeaturedChange(e.target.checked)}
               className="mr-3"
             />
-            <span className="text-sm text-gray-700">Featured Products</span>
+            <span className="text-sm text-gray-700">
+              {t("Featured Products")}
+            </span>
           </label>
         </div>
       </div>
@@ -269,7 +275,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
               onChange={(e) => handleOnSaleChange(e.target.checked)}
               className="mr-3"
             />
-            <span className="text-sm text-gray-700">On Sale</span>
+            <span className="text-sm text-gray-700">{t("On Sale")}</span>
           </label>
         </div>
       </div>

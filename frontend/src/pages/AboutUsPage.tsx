@@ -2,15 +2,18 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { useTranslation } from "react-i18next";
 
 const AboutUsPage: React.FC = () => {
+  const { t } = useTranslation();
   const teamMembers = [
     {
-      name: " Halafawy",
-      position: "CEO & Founder",
+      name: t("Halafawy"),
+      position: t("CEO & Founder"),
       image: "uncle.enc",
-      description:
-        "Enthusiast with 15+ years of experience in the Network industry.",
+      description: t(
+        "Enthusiast with 15+ years of experience in the Network industry."
+      ),
     },
     //{
     //  name: 'person2',
@@ -33,36 +36,40 @@ const AboutUsPage: React.FC = () => {
   ];
 
   const stats = [
-    { number: "50,000+", label: "Happy Customers" },
-    { number: "10,000+", label: "Products Sold" },
-    { number: "15+", label: "Years Experience" },
-    { number: "24/7", label: "Customer Support" },
+    { number: "50,000+", label: t("Happy Customers") },
+    { number: "10,000+", label: t("Products Sold") },
+    { number: "15+", label: t("Years Experience") },
+    { number: "24/7", label: t("Customer Support") },
   ];
 
   const values = [
     {
       icon: "🎯",
-      title: "Quality First",
-      description:
-        "We only stock cameras and equipment from trusted brands known for their reliability and performance.",
+      title: t("Quality First"),
+      description: t(
+        "We only stock cameras and equipment from trusted brands known for their reliability and performance."
+      ),
     },
     {
       icon: "💡",
-      title: "Expert Guidance",
-      description:
-        "Our team of photography experts is here to help you find the perfect camera for your needs.",
+      title: t("Expert Guidance"),
+      description: t(
+        "Our team of photography experts is here to help you find the perfect camera for your needs."
+      ),
     },
     {
       icon: "🚚",
-      title: "Fast Delivery",
-      description:
-        "Quick and secure shipping to get your new camera equipment to you as soon as possible.",
+      title: t("Fast Delivery"),
+      description: t(
+        "Quick and secure shipping to get your new camera equipment to you as soon as possible."
+      ),
     },
     {
       icon: "🛡️",
-      title: "Warranty Protection",
-      description:
-        "All our products come with comprehensive warranty coverage for your peace of mind.",
+      title: t("Warranty Protection"),
+      description: t(
+        "All our products come with comprehensive warranty coverage for your peace of mind."
+      ),
     },
   ];
 
@@ -81,20 +88,19 @@ const AboutUsPage: React.FC = () => {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            About Belgomla
+            {t("About Belgomla")}
           </h1>
           <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-8">
-            Your trusted partner in building seamless connections. For over 15
-            years, we've supported IT professionals and businesses with top-tier
-            networking equipment and expert guidance to keep you connected and
-            secure.
+            {t(
+              "Your trusted partner in building seamless connections. For over 15 years, we've supported IT professionals and businesses with top-tier networking equipment and expert guidance to keep you connected and secure."
+            )}
           </p>
           <nav className="text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">
-              Home
+              {t("Home")}
             </Link>
             <span className="mx-2">/</span>
-            <span>About Us</span>
+            <span>{t("About Us")}</span>
           </nav>
         </div>
       </div>
@@ -106,30 +112,23 @@ const AboutUsPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  Our Story
+                  {t("Our Story")}
                 </h2>
                 <div className="space-y-4 text-gray-600">
                   <p>
-                    Founded in 2009, Belgomla began as a small networking gear
-                    provider with a bold vision: to make high-quality network
-                    infrastructure accessible to everyone. What started as a
-                    passion project by tech enthusiasts has grown into one of
-                    the region’s most trusted names in networking solutions,
-                    serving professionals, businesses, and IT teams with
-                    reliable equipment and expert support.
+                    {t(
+                      "Founded in 2009, Belgomla began as a small networking gear provider with a bold vision: to make high-quality network infrastructure accessible to everyone. What started as a passion project by tech enthusiasts has grown into one of the region's most trusted names in networking solutions, serving professionals, businesses, and IT teams with reliable equipment and expert support."
+                    )}
                   </p>
                   <p>
-                    We believe that every connection should be fast, secure, and
-                    reliable. Whether you're an IT professional, a growing
-                    business, or a home user looking to upgrade your setup, we
-                    offer the right networking equipment and solutions to keep
-                    you connected and in control.
+                    {t(
+                      "We believe that every connection should be fast, secure, and reliable. Whether you're an IT professional, a growing business, or a home user looking to upgrade your setup, we offer the right networking equipment and solutions to keep you connected and in control."
+                    )}
                   </p>
                   <p>
-                    Our commitment to quality, customer service, and competitive
-                    pricing has earned us the trust of thousands of customers.
-                    We're not just selling cameras; we're helping people
-                    preserve their memories and express their creativity.
+                    {t(
+                      "Our commitment to quality, customer service, and competitive pricing has earned us the trust of thousands of customers. We're not just selling cameras; we're helping people preserve their memories and express their creativity."
+                    )}
                   </p>
                 </div>
               </div>
@@ -143,7 +142,7 @@ const AboutUsPage: React.FC = () => {
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600">15+</div>
                     <div className="text-sm text-gray-600">
-                      Years of Excellence
+                      {t("Years of Excellence")}
                     </div>
                   </div>
                 </div>
@@ -157,10 +156,10 @@ const AboutUsPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Our Achievements
+                {t("Our Achievements")}
               </h2>
               <p className="text-xl text-gray-600">
-                Numbers that speak for our commitment to excellence
+                {t("Numbers that speak for our commitment to excellence")}
               </p>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -181,10 +180,10 @@ const AboutUsPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Our Values
+                {t("Our Values")}
               </h2>
               <p className="text-xl text-gray-600">
-                What drives us to serve you better every day
+                {t("What drives us to serve you better every day")}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -206,10 +205,10 @@ const AboutUsPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Meet Our Team
+                {t("Meet Our Team")}
               </h2>
               <p className="text-xl text-gray-600">
-                The passionate people behind Belgomla
+                {t("The passionate people behind Belgomla")}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -244,25 +243,24 @@ const AboutUsPage: React.FC = () => {
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-blue-600 rounded-2xl p-12 text-center text-white">
-              <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
+              <h2 className="text-3xl font-bold mb-6">{t("Our Mission")}</h2>
               <p className="text-xl mb-8 max-w-4xl mx-auto">
-                To empower users of all levels with high-quality networking
-                equipment, expert support, and outstanding service—enabling them
-                to build, manage, and secure reliable connections in a
-                fast-moving digital world.
+                {t(
+                  "To empower users of all levels with high-quality networking equipment, expert support, and outstanding service—enabling them to build, manage, and secure reliable connections in a fast-moving digital world."
+                )}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/brands"
                   className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
                 >
-                  Shop Now
+                  {t("Shop Now")}
                 </Link>
                 <Link
                   to="/contact"
                   className="border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition-colors"
                 >
-                  Contact Us
+                  {t("Contact Us")}
                 </Link>
               </div>
             </div>
@@ -274,7 +272,7 @@ const AboutUsPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Why Choose Belgomla?
+                {t("Why Choose Belgomla?")}
               </h2>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -296,11 +294,12 @@ const AboutUsPage: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Authentic Products Only
+                        {t("Authentic Products Only")}
                       </h3>
                       <p className="text-gray-600">
-                        All our cameras and accessories are 100% genuine and
-                        come with official warranties.
+                        {t(
+                          "All our cameras and accessories are 100% genuine and come with official warranties."
+                        )}
                       </p>
                     </div>
                   </li>
@@ -320,11 +319,12 @@ const AboutUsPage: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Expert Support
+                        {t("Expert Support")}
                       </h3>
                       <p className="text-gray-600">
-                        Our knowledgeable team provides personalized
-                        recommendations and technical support.
+                        {t(
+                          "Our knowledgeable team provides personalized recommendations and technical support."
+                        )}
                       </p>
                     </div>
                   </li>
@@ -344,11 +344,12 @@ const AboutUsPage: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Competitive Pricing
+                        {t("Competitive Pricing")}
                       </h3>
                       <p className="text-gray-600">
-                        We offer the best prices in the market without
-                        compromising on quality or service.
+                        {t(
+                          "We offer the best prices in the market without compromising on quality or service."
+                        )}
                       </p>
                     </div>
                   </li>
@@ -368,11 +369,12 @@ const AboutUsPage: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        Hassle-Free Returns
+                        {t("Hassle-Free Returns")}
                       </h3>
                       <p className="text-gray-600">
-                        30-day return policy with no questions asked if you're
-                        not completely satisfied.
+                        {t(
+                          "30-day return policy with no questions asked if you're not completely satisfied."
+                        )}
                       </p>
                     </div>
                   </li>
