@@ -124,17 +124,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
   return (
     <div
       className={`bg-gradient-to-b from-[#001F3F] to-[#002B5B] shadow-2xl transition-all duration-500 ease-in-out ${
-        collapsed ? "w-16" : "w-72"
+        collapsed ? "w-16 sm:w-20" : "w-48 sm:w-56 md:w-72"
       } flex flex-col border-r border-[#FFD600]/20 backdrop-blur-sm`}
     >
       {/* Logo */}
-      <div className="p-6 border-b border-[#FFD600]/30 bg-gradient-to-r from-[#FFD600]/10 to-transparent">
+      <div className="p-3 sm:p-4 md:p-6 border-b border-[#FFD600]/30 bg-gradient-to-r from-[#FFD600]/10 to-transparent">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#FFD600] to-[#FFA500] rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
-            <span className="text-[#333333] font-bold text-lg">B</span>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#FFD600] to-[#FFA500] rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
+            <span className="text-[#333333] font-bold text-xs sm:text-sm lg:text-lg">B</span>
           </div>
           {!collapsed && (
-            <span className="ml-4 text-2xl font-bold text-[#FFD600] tracking-wide">
+            <span className="ml-2 sm:ml-3 md:ml-4 text-lg sm:text-xl md:text-2xl font-bold text-[#FFD600] tracking-wide">
               <Link to="/">ELGOMLA</Link>
             </span>
           )}
@@ -143,17 +143,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
 
       {/* Active Page Icon (when collapsed) */}
       {collapsed && activeItem && (
-        <div className="p-4 border-b border-[#FFD600]/20">
+        <div className="p-2 sm:p-3 md:p-4 border-b border-[#FFD600]/20">
           <div className="flex justify-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#FFD600]/30 to-[#FFD600]/10 rounded-xl flex items-center justify-center shadow-lg border border-[#FFD600]/50">
-              <activeItem.icon className="w-6 h-6 text-[#FFD600]" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FFD600]/30 to-[#FFD600]/10 rounded-xl flex items-center justify-center shadow-lg border border-[#FFD600]/50">
+              <activeItem.icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD600]" />
             </div>
           </div>
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-3 overflow-y-auto">
+      <nav className="flex-1 p-2 sm:p-3 md:p-4 space-y-1 sm:space-y-2 md:space-y-3 overflow-y-auto">
         {menuItems
           .filter((item) => {
             // Check if user has access to the item itself
@@ -196,17 +196,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               {item.children ? (
                 <div className="group">
                   <div
-                    className="flex items-center px-4 py-3 text-[#E0E0E0] hover:bg-gradient-to-r hover:from-[#FFD600]/20 hover:to-[#FFD600]/10 hover:text-[#FFD600] rounded-xl cursor-pointer transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-[#FFD600]/30"
+                    className="flex items-center px-3 sm:px-4 py-2 sm:py-3 text-[#E0E0E0] hover:bg-gradient-to-r hover:from-[#FFD600]/20 hover:to-[#FFD600]/10 hover:text-[#FFD600] rounded-xl cursor-pointer transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-[#FFD600]/30"
                     onClick={() => toggleExpanded(item.name)}
                   >
-                    <item.icon className="w-6 h-6" />
+                    <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     {!collapsed && (
                       <>
-                        <span className="ml-4 text-sm font-semibold">
+                        <span className="ml-2 sm:ml-3 md:ml-4 text-xs sm:text-sm font-semibold">
                           {item.name}
                         </span>
                         <svg
-                          className={`ml-auto w-5 h-5 transition-transform duration-300 ${
+                          className={`ml-auto w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 ${
                             expandedItems.has(item.name) ? "rotate-180" : ""
                           }`}
                           fill="none"
@@ -224,7 +224,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                     )}
                   </div>
                   {!collapsed && expandedItems.has(item.name) && (
-                    <div className="ml-10 mt-2 space-y-2">
+                    <div className="ml-6 sm:ml-8 md:ml-10 mt-1 sm:mt-2 space-y-1 sm:space-y-2">
                       {item.children
                         .filter(
                           (child) =>
@@ -235,7 +235,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                           <Link
                             key={childIndex}
                             to={child.href}
-                            className={`block px-4 py-2 text-sm rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-1 ${
+                            className={`block px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-1 ${
                               isActive(child.href)
                                 ? "bg-gradient-to-r from-[#FFD600]/30 to-[#FFD600]/20 text-[#FFD600] font-semibold shadow-lg border border-[#FFD600]/50"
                                 : "text-[#B0B0B0] hover:bg-gradient-to-r hover:from-[#FFD600]/15 hover:to-[#FFD600]/5 hover:text-[#FFD600] border border-transparent hover:border-[#FFD600]/20"
@@ -250,15 +250,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               ) : (
                 <Link
                   to={item.href}
-                  className={`flex items-center px-4 py-3 rounded-xl transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-[#FFD600]/30 ${
+                  className={`flex items-center px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-[#FFD600]/30 ${
                     isActive(item.href)
                       ? "bg-gradient-to-r from-[#FFD600]/30 to-[#FFD600]/20 text-[#FFD600] font-semibold shadow-lg border-[#FFD600]/50"
                       : "text-[#E0E0E0] hover:bg-gradient-to-r hover:from-[#FFD600]/20 hover:to-[#FFD600]/10 hover:text-[#FFD600]"
                   }`}
                 >
-                  <item.icon className="w-6 h-6" />
+                  <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                   {!collapsed && (
-                    <span className="ml-4 text-sm font-semibold">
+                    <span className="ml-2 sm:ml-3 md:ml-4 text-xs sm:text-sm font-semibold">
                       {item.name}
                     </span>
                   )}

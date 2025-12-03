@@ -86,7 +86,7 @@ import { useTranslation } from "react-i18next";
       <Header />
 
       {/* Hero Section with Camera Image */}
-      <div className="relative bg-gray-100 py-16">
+      <div className="relative bg-gray-100 py-8 sm:py-12 lg:py-16">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=400&fit=crop"
@@ -95,10 +95,10 @@ import { useTranslation } from "react-i18next";
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
             {t("Login & Register")}
           </h1>
-          <nav className="text-sm text-gray-600">
+          <nav className="text-xs sm:text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">
               Home
             </Link>
@@ -116,16 +116,16 @@ import { useTranslation } from "react-i18next";
         </div>
       </div>
 
-      <main className="py-16">
+      <main className="py-8 sm:py-12 lg:py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {/* Login Form */}
-            <div className="bg-white p-8 rounded-lg shadow-sm">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-sm">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 {t("Already a Member?")}
               </h2>
 
-              <form onSubmit={handleLoginSubmit} className="space-y-6">
+              <form onSubmit={handleLoginSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
                 <div>
                   <input
                     type="email"
@@ -134,7 +134,7 @@ import { useTranslation } from "react-i18next";
                     onChange={(e) =>
                       setLoginData({ ...loginData, email: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
@@ -146,26 +146,26 @@ import { useTranslation } from "react-i18next";
                     onChange={(e) =>
                       setLoginData({ ...loginData, password: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 </div>
                 {loginError && (
-                  <div className="text-red-600 text-sm">{loginError}</div>
+                  <div className="text-red-600 text-xs sm:text-sm">{loginError}</div>
                 )}
                 <button
                   type="submit"
-                  className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60"
+                  className="w-full bg-black text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors disabled:opacity-60"
                   disabled={loading}
                 >
                   {loading ? t("Logging in...") : t("LOGIN")}
                 </button>
               </form>
 
-              <div className="mt-6 text-center">
+              <div className="mt-4 sm:mt-6 text-center">
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="text-xs sm:text-sm text-blue-600 hover:text-blue-800"
                 >
                   {t("Forgot your password?")}
                 </Link>
@@ -173,13 +173,13 @@ import { useTranslation } from "react-i18next";
             </div>
 
             {/* Register Form */}
-            <div className="bg-white p-8 rounded-lg shadow-sm">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-sm">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 {t("Register Form")}
               </h2>
 
-              <form onSubmit={handleRegisterSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleRegisterSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
                   <div>
                     <input
                       type="text"
@@ -191,7 +191,7 @@ import { useTranslation } from "react-i18next";
                           name: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
@@ -206,12 +206,12 @@ import { useTranslation } from "react-i18next";
                           email: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
                   <div>
                     <input
                       type="password"
@@ -223,7 +223,7 @@ import { useTranslation } from "react-i18next";
                           password: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
@@ -238,29 +238,29 @@ import { useTranslation } from "react-i18next";
                           confirmPassword: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     />
                   </div>
                 </div>
                 {registerError && (
-                  <div className="text-red-600 text-sm">{registerError}</div>
+                  <div className="text-red-600 text-xs sm:text-sm">{registerError}</div>
                 )}
                 {registerSuccess && (
-                  <div className="text-green-600 text-sm">
+                  <div className="text-green-600 text-xs sm:text-sm">
                     {registerSuccess}
                   </div>
                 )}
                 <button
                   type="submit"
-                  className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60"
+                  className="w-full bg-black text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors disabled:opacity-60"
                   disabled={loading}
                 >
                   {loading ? t("Registering...") : t("REGISTER")}
                 </button>
               </form>
 
-              <div className="mt-6 text-center text-sm text-gray-600">
+              <div className="mt-4 sm:mt-6 text-center text-xs sm:text-sm text-gray-600">
                 {t("By registering, you agree to our")}{" "}
                 <Link to="/terms" className="text-blue-600 hover:text-blue-800">
                   {t("Terms & Conditions")}

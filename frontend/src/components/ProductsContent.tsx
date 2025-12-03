@@ -184,19 +184,19 @@ const ProductsContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-6 sm:py-8 lg:py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Page Header */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           {!filters.search && (
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
               {filters.search
                 ? `${t("Search results for")} "${filters.search}"`
                 : t("All Products")}
             </h1>
           )}
           {!filters.search && (
-            <p className="text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600">
               {filters.search
                 ? `${t("Showing products matching")} "${filters.search}"`
                 : t("Discover all products from our marketplace")}
@@ -204,9 +204,9 @@ const ProductsContent: React.FC = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          {/* Sidebar - collapsible on mobile */}
+          <div className="md:col-span-1 order-2 md:order-1">
             <ProductFilterSidebar
               filters={filters}
               categories={categories}
@@ -217,33 +217,33 @@ const ProductsContent: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className="md:col-span-3 order-1 md:order-2">
             {/* Search and Sort Bar */}
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex-1 max-w-md">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6">
+              <div className="flex flex-col gap-3 sm:gap-4">
+                <div className="flex-1">
                   <input
                     type="text"
                     placeholder={t("Search products...")}
                     value={filters.search}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-gray-600">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
+                  <span className="text-xs sm:text-sm text-gray-600">
                     {t("Showing")} {startIndex + 1}-
                     {Math.min(endIndex, totalProducts)} {t("of products")}
                   </span>
-                  <div className="flex items-center gap-2">
-                    <label htmlFor="sort" className="text-sm text-gray-600">
-                      {t("Sort by:")}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label htmlFor="sort" className="text-xs sm:text-sm text-gray-600">
+                      {t("Sort:")}
                     </label>
                     <select
                       id="sort"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="name">{t("Name")}</option>
                       <option value="price-low">
@@ -261,13 +261,13 @@ const ProductsContent: React.FC = () => {
             </div>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {loading ? (
-                <div className="col-span-full text-center py-12 text-gray-500">
+                <div className="col-span-full text-center py-12 text-gray-500 text-sm sm:text-base">
                   {t("Loading...")}
                 </div>
               ) : error ? (
-                <div className="col-span-full text-center py-12 text-red-500">
+                <div className="col-span-full text-center py-12 text-red-500 text-sm sm:text-base">
                   {error}
                 </div>
               ) : (
@@ -299,14 +299,14 @@ const ProductsContent: React.FC = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-8">
-                <div className="flex items-center gap-2">
+              <div className="flex justify-center mt-6 sm:mt-8">
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                   <button
                     onClick={() =>
                       setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
                     disabled={currentPage === 1}
-                    className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                   >
                     {t("Previous")}
                   </button>
@@ -320,11 +320,11 @@ const ProductsContent: React.FC = () => {
                     .map((page, index, arr) => (
                       <React.Fragment key={page}>
                         {index > 0 && arr[index - 1] !== page - 1 && (
-                          <span className="px-2">...</span>
+                          <span className="px-1 sm:px-2 text-xs sm:text-sm">...</span>
                         )}
                         <button
                           onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-2 border rounded-md ${
+                          className={`px-2 sm:px-3 py-1 sm:py-2 border rounded-md text-xs sm:text-sm ${
                             currentPage === page
                               ? "bg-blue-600 text-white border-blue-600"
                               : "border-gray-300 hover:bg-gray-50"
@@ -339,7 +339,7 @@ const ProductsContent: React.FC = () => {
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
                     disabled={currentPage === totalPages}
-                    className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                   >
                     {t("Next")}
                   </button>
@@ -350,11 +350,11 @@ const ProductsContent: React.FC = () => {
             {/* No Products Message */}
             {totalProducts === 0 && !loading && (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">📦</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="text-gray-400 text-4xl sm:text-6xl mb-3 sm:mb-4">📦</div>
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
                   {t("No products found")}
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {t("Try adjusting your filters or search terms.")}
                 </p>
               </div>

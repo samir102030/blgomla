@@ -28,77 +28,77 @@ const VendorDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">
+      <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg p-4 sm:p-6 text-white">
+        <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
           Welcome back, {vendorStore?.name || user?.name}! 👋
         </h1>
-        <p className="text-yellow-100">
+        <p className="text-xs sm:text-sm lg:text-base text-yellow-100">
           Here's what's happening with your store today.
         </p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
-          <div className="flex items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-blue-500">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 text-lg">📦</span>
+              <div className="w-7 sm:w-8 h-7 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 text-base sm:text-lg">📦</span>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Products</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Products</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {dashboardStats?.totalProducts || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
-          <div className="flex items-center">
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-green-600 text-lg">🛒</span>
+              <div className="w-7 sm:w-8 h-7 sm:h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 text-base sm:text-lg">🛒</span>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Orders</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {dashboardStats?.totalOrders || 0}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
-          <div className="flex items-center">
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-yellow-500">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-yellow-600 text-lg">💰</span>
+              <div className="w-7 sm:w-8 h-7 sm:h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <span className="text-yellow-600 text-base sm:text-lg">💰</span>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 ${dashboardStats?.totalRevenue?.toLocaleString() || '0'}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border-l-4 border-purple-500">
-          <div className="flex items-center">
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border-l-4 border-purple-500">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                <span className="text-purple-600 text-lg">⭐</span>
+              <div className="w-7 sm:w-8 h-7 sm:h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span className="text-purple-600 text-base sm:text-lg">⭐</span>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Average Rating</p>
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium text-gray-600">Average Rating</p>
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {dashboardStats?.averageRating?.toFixed(1) || '0.0'}
               </p>
             </div>
@@ -107,74 +107,74 @@ const VendorDashboard: React.FC = () => {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-              <span className="text-blue-600 text-lg">➕</span>
+      <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+          <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
+            <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-blue-600 text-sm sm:text-lg">➕</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-gray-900">Add Product</p>
-              <p className="text-sm text-gray-500">Create new product</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">Add Product</p>
+              <p className="text-xs text-gray-500 hidden sm:block">Create new product</p>
             </div>
           </button>
 
-          <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-              <span className="text-green-600 text-lg">📋</span>
+          <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
+            <div className="w-8 sm:w-10 h-8 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-green-600 text-sm sm:text-lg">📋</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-gray-900">View Orders</p>
-              <p className="text-sm text-gray-500">Manage your orders</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">View Orders</p>
+              <p className="text-xs text-gray-500 hidden sm:block">Manage your orders</p>
             </div>
           </button>
 
-          <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-3">
-              <span className="text-yellow-600 text-lg">🏪</span>
+          <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
+            <div className="w-8 sm:w-10 h-8 sm:h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-yellow-600 text-sm sm:text-lg">🏪</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-gray-900">Store Settings</p>
-              <p className="text-sm text-gray-500">Customize your store</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">Store Settings</p>
+              <p className="text-xs text-gray-500 hidden sm:block">Customize your store</p>
             </div>
           </button>
 
-          <button className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-              <span className="text-purple-600 text-lg">📊</span>
+          <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
+            <div className="w-8 sm:w-10 h-8 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-purple-600 text-sm sm:text-lg">📊</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-gray-900">Analytics</p>
-              <p className="text-sm text-gray-500">View performance</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">Analytics</p>
+              <p className="text-xs text-gray-500 hidden sm:block">View performance</p>
             </div>
           </button>
         </div>
       </div>
 
       {/* Recent Activity & Pending Orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Recent Orders */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Orders</h2>
-            <button className="text-yellow-600 hover:text-yellow-700 text-sm font-medium">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent Orders</h2>
+            <button className="text-yellow-600 hover:text-yellow-700 text-xs sm:text-sm font-medium">
               View All
             </button>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             {/* Placeholder for recent orders */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-blue-600 text-sm font-medium">#001</span>
+            <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 text-xs sm:text-sm font-medium">#001</span>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">Order #12345</p>
-                  <p className="text-sm text-gray-500">2 items • $45.99</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-xs sm:text-sm text-gray-900">Order #12345</p>
+                  <p className="text-xs text-gray-500">2 items • $45.99</p>
                 </div>
               </div>
-              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex-shrink-0">
                 Pending
               </span>
             </div>

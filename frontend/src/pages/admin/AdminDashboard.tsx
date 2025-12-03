@@ -56,36 +56,34 @@ const AdminDashboard: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               {user?.role === "admin" ? "Admin Dashboard" : "Store Dashboard"}
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
               Welcome back! Here's what's happening with your{" "}
               {user?.role === "admin" ? "platform" : "store"}.
             </p>
           </div>
-          <div className="flex items-center space-x-4">
-            <div className="bg-white px-4 py-2 rounded-lg shadow-sm">
-              <span className="text-sm text-gray-500">Last updated:</span>
-              <span className="text-sm font-medium ml-2">
-                {new Date().toLocaleDateString()}
-              </span>
-            </div>
+          <div className="bg-white px-3 sm:px-4 py-2 rounded-lg shadow-sm whitespace-nowrap">
+            <span className="text-xs sm:text-sm text-gray-500">Last updated:</span>
+            <span className="text-xs sm:text-sm font-medium ml-2">
+              {new Date().toLocaleDateString()}
+            </span>
           </div>
         </div>
         {/* Error Alert */}
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="text-red-500 mr-3">
+          <div className="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="text-red-500 flex-shrink-0 mt-0.5">
                   <svg
-                    className="w-6 h-6"
+                    className="w-5 sm:w-6 h-5 sm:h-6"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -97,20 +95,20 @@ const AdminDashboard: React.FC = () => {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-red-800 font-medium">Error loading data</p>
-                  <p className="text-red-600 text-sm">{error}</p>
+                  <p className="text-red-800 font-medium text-sm">Error loading data</p>
+                  <p className="text-red-600 text-xs">{error}</p>
                 </div>
               </div>
-              <div className="space-x-2">
+              <div className="space-x-2 flex">
                 <button
                   onClick={retry}
-                  className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors whitespace-nowrap"
                 >
                   Retry
                 </button>
                 <button
                   onClick={() => clearError()}
-                  className="px-4 py-2 bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap"
                 >
                   Dismiss
                 </button>
@@ -120,86 +118,86 @@ const AdminDashboard: React.FC = () => {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">
+              <div className="min-w-0">
+                <p className="text-blue-100 text-xs sm:text-sm font-medium">
                   Total Revenue
                 </p>
-                <p className="text-2xl font-bold mt-1">
+                <p className="text-lg sm:text-2xl font-bold mt-1 truncate">
                   ${dashboardStats?.totalRevenue?.toLocaleString() || "0"}
                 </p>
               </div>
-              <div className="bg-blue-400 bg-opacity-30 p-3 rounded-lg">
-                <CurrencyDollarIcon className="w-6 h-6" />
+              <div className="bg-blue-400 bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                <CurrencyDollarIcon className="w-5 sm:w-6 h-5 sm:h-6" />
               </div>
             </div>
-            <div className="flex items-center mt-4">
-              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
-              <span className="text-sm text-blue-100">
+            <div className="flex items-center mt-3 sm:mt-4">
+              <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-blue-100 truncate">
                 {dashboardStats?.salesChange || "0%"} from last month
               </span>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">
+              <div className="min-w-0">
+                <p className="text-green-100 text-xs sm:text-sm font-medium">
                   Total Orders
                 </p>
-                <p className="text-2xl font-bold mt-1">
+                <p className="text-lg sm:text-2xl font-bold mt-1">
                   {dashboardStats?.totalOrders || 0}
                 </p>
               </div>
-              <div className="bg-green-400 bg-opacity-30 p-3 rounded-lg">
-                <ClipboardDocumentListIcon className="w-6 h-6" />
+              <div className="bg-green-400 bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                <ClipboardDocumentListIcon className="w-5 sm:w-6 h-5 sm:h-6" />
               </div>
             </div>
-            <div className="flex items-center mt-4">
-              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
-              <span className="text-sm text-green-100">Active orders</span>
+            <div className="flex items-center mt-3 sm:mt-4">
+              <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-green-100">Active orders</span>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">
+              <div className="min-w-0">
+                <p className="text-purple-100 text-xs sm:text-sm font-medium">
                   Total Customers
                 </p>
-                <p className="text-2xl font-bold mt-1">
+                <p className="text-lg sm:text-2xl font-bold mt-1">
                   {dashboardStats?.totalUsers || 0}
                 </p>
               </div>
-              <div className="bg-purple-400 bg-opacity-30 p-3 rounded-lg">
-                <UsersIcon className="w-6 h-6" />
+              <div className="bg-purple-400 bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                <UsersIcon className="w-5 sm:w-6 h-5 sm:h-6" />
               </div>
             </div>
-            <div className="flex items-center mt-4">
-              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
-              <span className="text-sm text-purple-100">New this month</span>
+            <div className="flex items-center mt-3 sm:mt-4">
+              <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-purple-100">New this month</span>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100 text-sm font-medium">
+              <div className="min-w-0">
+                <p className="text-orange-100 text-xs sm:text-sm font-medium">
                   Total Products
                 </p>
-                <p className="text-2xl font-bold mt-1">
+                <p className="text-lg sm:text-2xl font-bold mt-1">
                   {dashboardStats?.totalProducts || 0}
                 </p>
               </div>
-              <div className="bg-orange-400 bg-opacity-30 p-3 rounded-lg">
-                <ShoppingBagIcon className="w-6 h-6" />
+              <div className="bg-orange-400 bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
+                <ShoppingBagIcon className="w-5 sm:w-6 h-5 sm:h-6" />
               </div>
             </div>
-            <div className="flex items-center mt-4">
-              <ArrowUpIcon className="w-4 h-4 text-green-300 mr-1" />
-              <span className="text-sm text-orange-100">In stock</span>
+            <div className="flex items-center mt-3 sm:mt-4">
+              <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-orange-100">In stock</span>
             </div>
           </div>
         </div>

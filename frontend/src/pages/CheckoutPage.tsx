@@ -539,7 +539,7 @@ const CheckoutPage: React.FC = () => {
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-16">
+      <div className="relative bg-gray-100 py-8 sm:py-12 lg:py-16">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=400&fit=crop"
@@ -548,8 +548,8 @@ const CheckoutPage: React.FC = () => {
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Checkout</h1>
-          <nav className="text-sm text-gray-600">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Checkout</h1>
+          <nav className="text-xs sm:text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">
               Home
             </Link>
@@ -567,29 +567,29 @@ const CheckoutPage: React.FC = () => {
         </div>
       </div>
 
-      <main className="py-12">
+      <main className="py-8 sm:py-10 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
               {/* Billing Address */}
-              <div className="bg-white p-8 rounded-lg shadow-sm">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-sm">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                   Billing Address
                 </h2>
 
                 {/* Address Selection */}
                 {addresses && addresses.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <div className="mb-4 sm:mb-6">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
                       Select Shipping Address
                     </h3>
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {addresses
                         .filter((addr) => addr.type === "Shipping")
                         .map((address) => (
                           <label
                             key={address._id}
-                            className="flex items-start p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300"
+                            className="flex items-start p-3 sm:p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300"
                           >
                             <input
                               type="radio"
@@ -658,10 +658,10 @@ const CheckoutPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         First Name*
                       </label>
                       <input
@@ -674,12 +674,12 @@ const CheckoutPage: React.FC = () => {
                             firstName: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Last Name*
                       </label>
                       <input
@@ -692,15 +692,15 @@ const CheckoutPage: React.FC = () => {
                             lastName: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Email Address*
                       </label>
                       <input
@@ -713,12 +713,12 @@ const CheckoutPage: React.FC = () => {
                             email: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Phone No*
                       </label>
                       <input
@@ -731,14 +731,14 @@ const CheckoutPage: React.FC = () => {
                             phone: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Company Name
                     </label>
                     <input
@@ -751,12 +751,12 @@ const CheckoutPage: React.FC = () => {
                           company: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Address*
                     </label>
                     <input
@@ -769,7 +769,7 @@ const CheckoutPage: React.FC = () => {
                           address1: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
+                      className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2 sm:mb-3"
                       required
                     />
                     <input
@@ -782,11 +782,11 @@ const CheckoutPage: React.FC = () => {
                           address2: e.target.value,
                         })
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Country*
@@ -805,7 +805,7 @@ const CheckoutPage: React.FC = () => {
                       </select>
                     </div> */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Town/City*
                       </label>
                       <input
@@ -818,15 +818,15 @@ const CheckoutPage: React.FC = () => {
                             city: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         State*
                       </label>
                       <input
@@ -839,12 +839,12 @@ const CheckoutPage: React.FC = () => {
                             state: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                         Zip Code*
                       </label>
                       <input
@@ -857,7 +857,7 @@ const CheckoutPage: React.FC = () => {
                             zipCode: e.target.value,
                           })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       />
                     </div>
@@ -901,21 +901,21 @@ const CheckoutPage: React.FC = () => {
               </div>
 
               {/* Order Summary */}
-              <div className="bg-white p-8 rounded-lg shadow-sm">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg shadow-sm">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                   Cart Total
                 </h2>
 
                 {/* Order Items */}
-                <div className="space-y-4 mb-6">
-                  <div className="flex justify-between font-medium border-b pb-2">
+                <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+                  <div className="flex justify-between font-medium border-b pb-2 text-xs sm:text-sm">
                     <span>Product</span>
                     <span>Total</span>
                   </div>
                   {cartItems.map((item) => (
                     <div
                       key={item.product}
-                      className="flex justify-between text-sm"
+                      className="flex justify-between text-xs sm:text-sm"
                     >
                       <span>
                         {item.productDetails?.name || "Product"} X{" "}
@@ -927,22 +927,22 @@ const CheckoutPage: React.FC = () => {
                     </div>
                   ))}
 
-                  <div className="border-t pt-4 space-y-2">
-                    <div className="flex justify-between">
+                  <div className="border-t pt-3 sm:pt-4 space-y-1 sm:space-y-2">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span>Sub Total</span>
                       <span>${subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span>Shipping Fee</span>
                       <span>${shippingFee.toFixed(2)}</span>
                     </div>
                     {discountAmount > 0 && (
-                      <div className="flex justify-between text-green-600">
+                      <div className="flex justify-between text-xs sm:text-sm text-green-600">
                         <span>Coupon Discount</span>
                         <span>-${discountAmount.toFixed(2)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-lg font-bold border-t pt-2">
+                    <div className="flex justify-between text-base sm:text-lg font-bold border-t pt-2">
                       <span>Grand Total</span>
                       <span>${grandTotal.toFixed(2)}</span>
                     </div>
@@ -950,12 +950,12 @@ const CheckoutPage: React.FC = () => {
                 </div>
 
                 {/* Coupon Code */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-4">
                     Coupon Code
                   </h3>
                   {!appliedCoupon ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         placeholder="Enter coupon code"
@@ -963,30 +963,30 @@ const CheckoutPage: React.FC = () => {
                         onChange={(e) =>
                           setCouponCode(e.target.value.toUpperCase())
                         }
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="flex-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <button
                         type="button"
                         onClick={handleApplyCoupon}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="bg-blue-600 text-white px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
                       >
                         Apply
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200">
-                      <div className="flex items-center">
-                        <span className="text-green-800 font-medium">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-green-50 p-2 sm:p-3 rounded-lg border border-green-200 gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span className="text-green-800 font-medium text-sm sm:text-base">
                           {appliedCoupon.code}
                         </span>
-                        <span className="text-green-600 ml-2">
+                        <span className="text-green-600 text-xs sm:text-sm">
                           (-${discountAmount.toFixed(2)})
                         </span>
                       </div>
                       <button
                         type="button"
                         onClick={handleRemoveCoupon}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="text-red-600 hover:text-red-800 text-xs sm:text-sm"
                       >
                         Remove
                       </button>
@@ -995,11 +995,11 @@ const CheckoutPage: React.FC = () => {
                 </div>
 
                 {/* Payment Method */}
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <div className="mb-4 sm:mb-6">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-4">
                     Payment Method
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <label className="flex items-center">
                       <input
                         type="radio"
@@ -1010,7 +1010,7 @@ const CheckoutPage: React.FC = () => {
                         className="text-blue-600 focus:ring-blue-500"
                         required
                       />
-                      <span className="ml-2 text-sm text-gray-700">
+                      <span className="ml-2 text-xs sm:text-sm text-gray-700">
                         Cash On Delivery
                       </span>
                     </label>
@@ -1018,20 +1018,20 @@ const CheckoutPage: React.FC = () => {
                 </div>
 
                 {/* Terms and Conditions */}
-                <div className="mb-6">
-                  <label className="flex items-start">
+                <div className="mb-4 sm:mb-6">
+                  <label className="flex items-start gap-2">
                     <input
                       type="checkbox"
                       checked={acceptTerms}
                       onChange={(e) => setAcceptTerms(e.target.checked)}
-                      className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4 flex-shrink-0"
                       required
                     />
-                    <span className="ml-2 text-sm text-gray-700">
+                    <span className="text-xs sm:text-sm text-gray-700">
                       I've Read And Accept The{" "}
                       <Link
                         to="/terms"
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 hover:text-blue-800 font-medium"
                       >
                         Terms & Conditions
                       </Link>
@@ -1043,7 +1043,7 @@ const CheckoutPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-black text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? "PLACING ORDER..." : "PLACE ORDER"}
                 </button>

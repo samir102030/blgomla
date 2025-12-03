@@ -118,7 +118,8 @@ const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-[#FFD600] shadow-lg">
-      <div className="flex items-center space-x-4">
+      {/* Top bar - responsive */}
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 gap-2 sm:gap-4">
         <div className="flex items-center space-x-2">
           <span className="text-[#333333] text-sm">🌐</span>
           <select
@@ -127,58 +128,56 @@ const Header: React.FC = () => {
               i18n.changeLanguage(e.target.value);
               setLanguage(e.target.value);
             }}
-            className="bg-white border border-gray-300 rounded-md px-3 py-1 text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
+            className="bg-white border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
           >
             <option value="en">English</option>
             <option value="ar">العربية</option>
           </select>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="text-[#333333] text-sm">{t("Call us:")}</span>
-          <span className="text-[#333333] font-medium">📞 (+20)1009353639</span>
+        <div className="hidden sm:flex items-center space-x-2">
+          <span className="text-[#333333] text-xs sm:text-sm">{t("Call us:")}</span>
+          <span className="text-[#333333] font-medium text-xs sm:text-sm">📞 (+20)1009353639</span>
         </div>
       </div>
 
       {/* Main header */}
-      <div className="py-4 bg-[#FFD600]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
+      <div className="py-2 sm:py-3 lg:py-4 bg-[#FFD600]">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link
                 to="/"
-                className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
                 <img
                   src="/logo.png"
                   alt="Belgomla Logo"
-                  className="w-10 h-10 object-contain"
+                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
                 />
-                <span className="text-2xl font-bold text-[#333333]">
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[#333333] hidden sm:inline">
                   Belgomla
                 </span>
               </Link>
             </div>
 
-            {/* Search bar */}
+            {/* Search bar - hide on mobile, show on md and up */}
             <div
-              className="flex-1 max-w-2xl mx-8 hidden md:block"
+              className="flex-1 max-w-2xl mx-2 sm:mx-4 hidden md:block"
               ref={desktopSearchRef}
             >
               <div className="relative">
                 <div className="relative flex">
                   <input
                     type="text"
-                    placeholder={t(
-                      "Search for electronics, computers, accessories..."
-                    )}
-                    className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
+                    placeholder={t("Search...")}
+                    className="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-xs sm:text-sm bg-white"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                   />
-                  <button className="px-6 py-3 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
-                    <span className="text-lg">🔍</span>
+                  <button className="px-3 sm:px-6 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
+                    <span className="text-sm sm:text-lg">🔍</span>
                   </button>
                 </div>
 
@@ -188,7 +187,7 @@ const Header: React.FC = () => {
                     {loading ? (
                       <div className="p-4 text-center text-gray-500">
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800 mx-auto"></div>
-                        <p className="mt-2">{t("Searching...")}</p>
+                        <p className="mt-2 text-sm">{t("Searching...")}</p>
                       </div>
                     ) : products.length > 0 ? (
                       <div className="py-2">
@@ -196,27 +195,27 @@ const Header: React.FC = () => {
                           <button
                             key={product._id}
                             type="button"
-                            className="w-full text-left flex items-center px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                            className="w-full text-left flex items-center px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                             onClick={() => goToProduct(product._id)}
                           >
                             <img
                               src={product.images[0]?.url || "/placeholder.png"}
                               alt={product.name}
-                              className="w-12 h-12 object-cover rounded-md mr-3"
+                              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md mr-2 sm:mr-3"
                             />
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-medium text-gray-900 truncate">
+                              <h4 className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                                 {product.name}
                               </h4>
-                              <p className="text-xs text-gray-500 truncate">
+                              <p className="text-xs text-gray-500 truncate hidden sm:block">
                                 {product.description}
                               </p>
-                              <div className="flex items-center mt-1">
-                                <span className="text-sm font-semibold text-green-600">
+                              <div className="flex items-center mt-0 sm:mt-1">
+                                <span className="text-xs sm:text-sm font-semibold text-green-600">
                                   ${product.price}
                                 </span>
                                 {product.saleActive && (
-                                  <span className="ml-2 text-xs text-red-500 line-through">
+                                  <span className="ml-1 sm:ml-2 text-xs text-red-500 line-through">
                                     ${product.salePrice}
                                   </span>
                                 )}
@@ -224,10 +223,10 @@ const Header: React.FC = () => {
                             </div>
                           </button>
                         ))}
-                        <div className="px-4 py-2 border-t border-gray-100">
+                        <div className="px-3 sm:px-4 py-2 border-t border-gray-100">
                           <button
                             type="button"
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                            className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium"
                             onClick={() => {
                               navigate(
                                 `/products?search=${encodeURIComponent(
@@ -244,7 +243,7 @@ const Header: React.FC = () => {
                       </div>
                     ) : searchQuery.trim() ? (
                       <div className="p-4 text-center text-gray-500">
-                        <p>
+                        <p className="text-sm">
                           {t("No products found for")} "{searchQuery}"
                         </p>
                       </div>
@@ -255,38 +254,38 @@ const Header: React.FC = () => {
             </div>
 
             {/* Header actions */}
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               {!user && (
                 <Link
                   to="/login"
                   className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
                 >
-                  <span className="text-xl mb-1">🔑</span>
-                  <span className="text-xs hidden sm:block">{t("Login")}</span>
+                  <span className="text-lg sm:text-xl mb-0 sm:mb-1">🔑</span>
+                  <span className="text-xs hidden md:block">{t("Login")}</span>
                 </Link>
               )}
               <Link
                 to="/account"
                 className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
               >
-                <span className="text-xl mb-1">👤</span>
-                <span className="text-xs hidden sm:block">{t("Account")}</span>
+                <span className="text-lg sm:text-xl mb-0 sm:mb-1">👤</span>
+                <span className="text-xs hidden md:block">{t("Account")}</span>
               </Link>
               {user && <NotificationBell />}
               <Link
                 to="/wishlist"
                 className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
               >
-                <span className="text-xl mb-1">❤️</span>
-                <span className="text-xs hidden sm:block">{t("Wishlist")}</span>
+                <span className="text-lg sm:text-xl mb-0 sm:mb-1">❤️</span>
+                <span className="text-xs hidden md:block">{t("Wishlist")}</span>
               </Link>
               <Link
                 to="/cart"
                 className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors relative"
               >
-                <span className="text-xl mb-1">🛒</span>
-                <span className="text-xs hidden sm:block">{t("Cart")}</span>
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="text-lg sm:text-xl mb-0 sm:mb-1">🛒</span>
+                <span className="text-xs hidden md:block">{t("Cart")}</span>
+                <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
                   {user?.cart?.length
                     ? user.cart.reduce(
                         (acc, item) => acc + (item.quantity || 0),
@@ -299,28 +298,40 @@ const Header: React.FC = () => {
 
             {/* Mobile menu toggle */}
             <button
-              className="md:hidden flex flex-col space-y-1 p-2"
+              className="lg:hidden flex flex-col space-y-1 p-1 ml-2"
               onClick={toggleMenu}
             >
-              <span className="w-6 h-0.5 bg-gray-800 transition-all"></span>
-              <span className="w-6 h-0.5 bg-gray-800 transition-all"></span>
-              <span className="w-6 h-0.5 bg-gray-800 transition-all"></span>
+              <span
+                className={`w-5 h-0.5 bg-gray-800 transition-all duration-300 ${
+                  isMenuOpen ? "rotate-45 translate-y-1.5" : ""
+                }`}
+              ></span>
+              <span
+                className={`w-5 h-0.5 bg-gray-800 transition-all duration-300 ${
+                  isMenuOpen ? "opacity-0" : ""
+                }`}
+              ></span>
+              <span
+                className={`w-5 h-0.5 bg-gray-800 transition-all duration-300 ${
+                  isMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+                }`}
+              ></span>
             </button>
           </div>
 
           {/* Mobile search bar */}
-          <div className="mt-4 md:hidden" ref={mobileSearchRef}>
+          <div className="mt-2 md:hidden" ref={mobileSearchRef}>
             <div className="relative">
               <div className="relative flex">
                 <input
                   type="text"
                   placeholder={t("Search...")}
-                  className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-sm bg-white"
+                  className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-xs sm:text-sm bg-white"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                 />
-                <button className="px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
+                <button className="px-3 sm:px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
                   🔍
                 </button>
               </div>
@@ -339,13 +350,13 @@ const Header: React.FC = () => {
                         <button
                           key={product._id}
                           type="button"
-                          className="w-full text-left flex items-center px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                          className="w-full text-left flex items-center px-2 sm:px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
                           onClick={() => goToProduct(product._id)}
                         >
                           <img
                             src={product.images[0]?.url || "/placeholder.png"}
                             alt={product.name}
-                            className="w-10 h-10 object-cover rounded-md mr-2"
+                            className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-md mr-2"
                           />
                           <div className="flex-1 min-w-0">
                             <h4 className="text-xs font-medium text-gray-900 truncate">
@@ -364,7 +375,7 @@ const Header: React.FC = () => {
                           </div>
                         </button>
                       ))}
-                      <div className="px-3 py-2 border-t border-gray-100">
+                      <div className="px-2 sm:px-3 py-2 border-t border-gray-100">
                         <button
                           type="button"
                           className="text-xs text-blue-600 hover:text-blue-800 font-medium"
@@ -396,19 +407,20 @@ const Header: React.FC = () => {
 
       {/* Navigation */}
       <nav
-        className={`bg-[#002B5B] text-white ${
+        className={`bg-[#002B5B] text-white transition-all duration-300 ${
           isMenuOpen ? "block" : "hidden"
-        } md:block`}
+        } lg:block`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ul className="flex flex-col md:flex-row md:space-x-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <ul className="flex flex-col lg:flex-row lg:space-x-4 xl:space-x-8">
             {navigationItems
-              .filter((item) => item.condition === undefined || item.condition) // Show items where condition is undefined (default true) or true
+              .filter((item) => item.condition === undefined || item.condition)
               .map((item) => (
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`block py-3 px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors ${item.className}`}
+                    className={`block py-3 sm:py-4 lg:py-3 px-3 sm:px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors text-sm sm:text-base ${item.className}`}
+                    onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}
                   </Link>

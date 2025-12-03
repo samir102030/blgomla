@@ -345,17 +345,17 @@ const ShoppingCartPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center py-16 sm:py-20 px-4">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
               Your Cart is Empty
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
               Add some products to your cart to get started.
             </p>
             <Link
               to="/brands"
-              className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
+              className="bg-[#FFD600] text-[#333333] px-4 sm:px-6 py-2 sm:py-3 rounded-md hover:bg-[#e6c100] font-medium inline-block text-sm sm:text-base"
             >
               Browse Products
             </Link>
@@ -371,7 +371,7 @@ const ShoppingCartPage: React.FC = () => {
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-16">
+      <div className="relative bg-gray-100 py-8 sm:py-12 lg:py-16">
         <div className="absolute inset-0">
           <img
             src="net1.jpeg"
@@ -380,10 +380,10 @@ const ShoppingCartPage: React.FC = () => {
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
             Shopping Cart
           </h1>
-          <nav className="text-sm text-gray-600">
+          <nav className="text-xs sm:text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">
               Home
             </Link>
@@ -401,30 +401,31 @@ const ShoppingCartPage: React.FC = () => {
         </div>
       </div>
 
-      <main className="py-12">
+      <main className="py-8 sm:py-10 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Cart Items Table */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
-            <div className="overflow-x-auto">
+          {/* Cart Items Table - Responsive */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6 sm:mb-8">
+            {/* Desktop view - table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
                       Image
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
                       Product
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
                       Price
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
                       Quantity
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
                       Total
                     </th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
                       Remove
                     </th>
                   </tr>
@@ -432,7 +433,7 @@ const ShoppingCartPage: React.FC = () => {
                 <tbody className="divide-y divide-gray-200">
                   {cartItems.map((item) => (
                     <tr key={item.product}>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <button
                           onClick={() => handleProductClick(item.product)}
                           className="cursor-pointer hover:opacity-80 transition-opacity"
@@ -443,21 +444,21 @@ const ShoppingCartPage: React.FC = () => {
                               "/placeholder.png"
                             }
                             alt={item.productDetails?.name || "Product"}
-                            className="w-16 h-16 object-cover rounded-lg"
+                            className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
                           />
                         </button>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900">
                           {item.productDetails?.name ||
                             "Product Name Not Available"}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="text-xs sm:text-sm text-gray-900">
                           {item.productDetails?.saleActive ? (
                             <div className="flex flex-col">
-                              <span className="line-through text-gray-500">
+                              <span className="line-through text-gray-500 text-xs">
                                 ${item.productDetails.price.toFixed(2)}
                               </span>
                               <span className="font-medium text-red-600">
@@ -474,18 +475,18 @@ const ShoppingCartPage: React.FC = () => {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <button
                             onClick={() =>
                               updateQuantity(item.product, item.quantity - 1)
                             }
                             disabled={updatingItem === item.product}
-                            className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50"
+                            className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
                           >
                             -
                           </button>
-                          <span className="px-4 py-1 border-t border-b border-gray-300 bg-white">
+                          <span className="px-3 sm:px-4 py-1 border-t border-b border-gray-300 bg-white text-xs sm:text-sm">
                             {updatingItem === item.product
                               ? "..."
                               : item.quantity}
@@ -495,25 +496,25 @@ const ShoppingCartPage: React.FC = () => {
                               updateQuantity(item.product, item.quantity + 1)
                             }
                             disabled={updatingItem === item.product}
-                            className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50"
+                            className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
                           >
                             +
                           </button>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <td className="px-4 sm:px-6 py-4">
+                        <div className="text-xs sm:text-sm font-medium text-gray-900">
                           ${getItemTotal(item).toFixed(2)}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <button
                           onClick={() => removeItem(item.product)}
                           disabled={updatingItem === item.product}
                           className="text-red-600 hover:text-red-800 disabled:opacity-50"
                         >
                           <svg
-                            className="w-5 h-5"
+                            className="w-4 h-4 sm:w-5 sm:h-5"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -532,17 +533,118 @@ const ShoppingCartPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile view - card layout */}
+            <div className="md:hidden space-y-4 p-4">
+              {cartItems.map((item) => (
+                <div
+                  key={item.product}
+                  className="border border-gray-200 rounded-lg p-4 space-y-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <button
+                      onClick={() => handleProductClick(item.product)}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <img
+                        src={
+                          item.productDetails?.images?.[0]?.url ||
+                          "/placeholder.png"
+                        }
+                        alt={item.productDetails?.name || "Product"}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                    </button>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900">
+                        {item.productDetails?.name ||
+                          "Product Name Not Available"}
+                      </h3>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {item.productDetails?.saleActive ? (
+                          <>
+                            <span className="line-through text-gray-500">
+                              ${item.productDetails.price.toFixed(2)}
+                            </span>
+                            <span className="ml-2 font-medium text-red-600">
+                              ${getItemPrice(item).toFixed(2)}
+                            </span>
+                          </>
+                        ) : (
+                          <span>${getItemPrice(item).toFixed(2)}</span>
+                        )}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => removeItem(item.product)}
+                      disabled={updatingItem === item.product}
+                      className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Quantity:</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.product, item.quantity - 1)
+                        }
+                        disabled={updatingItem === item.product}
+                        className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 text-xs"
+                      >
+                        -
+                      </button>
+                      <span className="px-3 py-1 border-t border-b border-gray-300 bg-white text-xs">
+                        {updatingItem === item.product
+                          ? "..."
+                          : item.quantity}
+                      </span>
+                      <button
+                        onClick={() =>
+                          updateQuantity(item.product, item.quantity + 1)
+                        }
+                        disabled={updatingItem === item.product}
+                        className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 text-xs"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <span className="text-xs font-medium text-gray-900">
+                      Total:
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      ${getItemTotal(item).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Left Column - Shipping & Coupon */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Calculate Shipping */}
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
                   Calculate Shipping
                 </h3>
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4">
                   <select
                     value={shippingInfo.country}
                     onChange={(e) =>
@@ -551,7 +653,7 @@ const ShoppingCartPage: React.FC = () => {
                         country: e.target.value,
                       })
                     }
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   >
                     <option value="Egypt">Egypt</option>
                   </select>
@@ -560,7 +662,7 @@ const ShoppingCartPage: React.FC = () => {
                     onChange={(e) =>
                       setShippingInfo({ ...shippingInfo, city: e.target.value })
                     }
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   >
                     <option value="Cairo">Cairo</option>
                   </select>
@@ -575,24 +677,24 @@ const ShoppingCartPage: React.FC = () => {
                       postcode: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4 text-xs sm:text-sm"
                 />
-                <button className="w-full bg-[#002B5B] text-white py-2 px-4 rounded-lg hover:bg-[#001a3d] transition-colors">
+                <button className="w-full bg-[#002B5B] text-white py-2 px-4 rounded-lg hover:bg-[#001a3d] transition-colors text-xs sm:text-sm font-medium">
                   ESTIMATE
                 </button>
               </div>
 
               {/* Discount Coupon */}
-              <div className="bg-[#FAFAFA] p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
-                <h3 className="text-lg font-semibold text-[#333333] mb-4">
+              <div className="bg-[#FAFAFA] p-4 sm:p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
+                <h3 className="text-base sm:text-lg font-semibold text-[#333333] mb-3 sm:mb-4">
                   Discount Coupon Code
                 </h3>
 
                 {appliedCoupon ? (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center justify-between">
+                  <div className="mb-4 p-2 sm:p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm font-medium text-green-800">
+                        <p className="text-xs sm:text-sm font-medium text-green-800">
                           Coupon Applied: {appliedCoupon.code}
                         </p>
                         <p className="text-xs text-green-600">
@@ -603,26 +705,26 @@ const ShoppingCartPage: React.FC = () => {
                       </div>
                       <button
                         onClick={handleRemoveCoupon}
-                        className="text-red-600 hover:text-red-800 text-sm underline"
+                        className="text-red-600 hover:text-red-800 text-xs underline flex-shrink-0"
                       >
                         Remove
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
                       placeholder="Coupon Code"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
+                      className="flex-1 px-3 py-2 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent text-xs sm:text-sm"
                       disabled={couponLoading}
                     />
                     <button
                       onClick={handleApplyCoupon}
                       disabled={couponLoading || !couponCode.trim()}
-                      className="bg-[#D32F2F] text-white px-6 py-2 rounded-lg hover:bg-[#b71c1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-[#D32F2F] text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-[#b71c1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium whitespace-nowrap"
                     >
                       {couponLoading ? "APPLYING..." : "APPLY CODE"}
                     </button>
@@ -632,32 +734,32 @@ const ShoppingCartPage: React.FC = () => {
             </div>
 
             {/* Right Column - Cart Summary */}
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
                 Cart Summary
               </h3>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between">
+              <div className="space-y-3 sm:space-y-4 mb-6">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Sub Total</span>
                   <span className="font-medium">${subtotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Shipping Cost</span>
                   <span className="font-medium">
                     ${shippingCost.toFixed(2)}
                   </span>
                 </div>
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-xs sm:text-sm text-green-600">
                     <span>Coupon Discount ({appliedCoupon?.code})</span>
                     <span className="font-medium">
                       -${couponDiscount.toFixed(2)}
                     </span>
                   </div>
                 )}
-                <div className="border-t pt-4">
-                  <div className="flex justify-between text-lg font-semibold">
+                <div className="border-t pt-3 sm:pt-4">
+                  <div className="flex justify-between text-base sm:text-lg font-semibold">
                     <span>Grand Total</span>
                     <span>${grandTotal.toFixed(2)}</span>
                   </div>
@@ -667,7 +769,7 @@ const ShoppingCartPage: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={handleCheckout}
-                  className="w-full bg-[#FFD600] text-[#333333] py-3 px-6 rounded-lg font-medium hover:bg-[#e6c100] transition-colors text-center"
+                  className="w-full bg-[#FFD600] text-[#333333] py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-[#e6c100] transition-colors text-center text-xs sm:text-sm"
                 >
                   CHECKOUT
                 </button>

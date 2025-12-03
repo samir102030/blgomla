@@ -207,18 +207,18 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
 
             {previews.length > 0 && (
-              <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="mt-2 sm:mt-3 grid grid-cols-3 sm:grid-cols-4 gap-1 sm:gap-2">
                 {previews.map((src, idx) => (
                   <div key={idx} className="relative group">
                     <img
                       src={src}
                       alt={`preview-${idx}`}
-                      className="h-20 w-full object-cover rounded"
+                      className="h-16 sm:h-20 w-full object-cover rounded"
                     />
                     <button
                       type="button"
                       onClick={() => removeFile(idx)}
-                      className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                      className="absolute top-0 right-0 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition text-xs"
                     >
                       ✕
                     </button>
@@ -229,10 +229,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           </div>
 
           {/* Right: form fields */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2 space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Name
                 </label>
                 <input
@@ -240,11 +240,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   placeholder="Product name"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  className="mt-1 block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Price
                 </label>
                 <input
@@ -254,20 +254,20 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   step="0.01"
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  className="mt-1 block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Brand
                 </label>
                 <select
                   value={form.brand}
                   onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                  className="mt-1 block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 >
                   <option value="">Select brand</option>
                   {brands?.map((b: any) => (

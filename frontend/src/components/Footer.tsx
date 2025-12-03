@@ -5,48 +5,48 @@ const Footer: React.FC = () => {
   const { t } = useTranslation();
   return (
     <footer className="bg-[#002B5B] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* About Us */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-[#FFD600]">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#FFD600]">
               {t("About us")}
             </h3>
-            <p className="text-[#9E9E9E] text-sm leading-relaxed mb-6">
+            <p className="text-[#9E9E9E] text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
               {t("Belgomla, Your Trusted Partner for Networking Solutions")}
             </p>
             <div>
-              <h4 className="text-sm font-medium mb-3">{t("Follow us")}</h4>
-              <div className="flex space-x-3">
+              <h4 className="text-xs sm:text-sm font-medium mb-2 sm:mb-3">{t("Follow us")}</h4>
+              <div className="flex space-x-2 sm:space-x-3">
                 <a
                   href="#"
-                  className="w-8 h-8 bg-[#9E9E9E]/20 rounded-full flex items-center justify-center hover:bg-[#FFD600] hover:text-[#333333] transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-[#9E9E9E]/20 rounded-full flex items-center justify-center hover:bg-[#FFD600] hover:text-[#333333] transition-colors text-xs sm:text-sm"
                 >
-                  <span className="text-sm">f</span>
+                  <span>f</span>
                 </a>
                 <a
                   href="#"
-                  className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-400 transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-400 transition-colors text-xs sm:text-sm"
                 >
-                  <span className="text-sm">t</span>
+                  <span>t</span>
                 </a>
                 <a
                   href="#"
-                  className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-orange-500 transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-orange-500 transition-colors text-xs sm:text-sm"
                 >
-                  <span className="text-sm">📧</span>
+                  <span>📧</span>
                 </a>
                 <a
                   href="#"
-                  className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors text-xs sm:text-sm"
                 >
-                  <span className="text-sm">g+</span>
+                  <span>g+</span>
                 </a>
                 <a
                   href="#"
-                  className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors text-xs sm:text-sm"
                 >
-                  <span className="text-sm">in</span>
+                  <span>in</span>
                 </a>
               </div>
             </div>
@@ -54,10 +54,10 @@ const Footer: React.FC = () => {
 
           {/* Information */}
           <div>
-            <h3 className="text-lg font-semibold mb-4 text-[#FFD600]">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#FFD600]">
               {t("Information")}
             </h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
               <li>
                 <a
                   href="/about"
@@ -111,8 +111,8 @@ const Footer: React.FC = () => {
 
           {/* My Account */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t("My Account")}</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t("My Account")}</h3>
+            <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
               <li>
                 <a
                   href="/account"
@@ -166,8 +166,8 @@ const Footer: React.FC = () => {
 
           {/* Get In Touch */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">{t("Get In Touch")}</h3>
-            <div className="space-y-3 text-sm">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">{t("Get In Touch")}</h3>
+            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
               <div className="flex items-start">
                 <span className="text-gray-400 mr-2">📍</span>
                 <span className="text-gray-300">6 October.</span>
@@ -178,14 +178,14 @@ const Footer: React.FC = () => {
               </div>
               <div className="flex items-center">
                 <span className="text-gray-400 mr-2">✉️</span>
-                <span className="text-gray-300">Halafawy@gmail.com</span>
+                <span className="text-gray-300 break-all">Halafawy@gmail.com</span>
               </div>
             </div>
 
             {/* Payment Methods */}
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               <div className="flex space-x-2">
-                <div className="w-10 h-6 bg-[#002B5B] rounded text-xs flex items-center justify-center text-[#FFD600] font-bold border border-[#FFD600]">
+                <div className="w-10 h-6 sm:w-12 sm:h-7 bg-[#002B5B] rounded text-xs flex items-center justify-center text-[#FFD600] font-bold border border-[#FFD600]">
                   VISA
                 </div>
               </div>
@@ -194,8 +194,8 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-[#9E9E9E]/30 mt-8 pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-center text-sm text-[#9E9E9E]">
+        <div className="border-t border-[#9E9E9E]/30 mt-6 sm:mt-8 lg:mt-8 pt-4 sm:pt-6">
+          <div className="flex flex-col sm:flex-row justify-between items-center text-xs sm:text-sm text-[#9E9E9E] text-center sm:text-left">
             <p>{t("© 2025 Garcia. Made with ❤️ By MMS Theme")}</p>
           </div>
         </div>
