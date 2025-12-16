@@ -83,7 +83,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       name: "Customer Support",
       href: "/dashboard/support",
       icon: ChatBubbleLeftRightIcon,
-      roles: ["admin", "store"],
+      roles: ["admin"],
     },
     {
       name: "Sales",

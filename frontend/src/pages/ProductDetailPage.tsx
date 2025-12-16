@@ -8,7 +8,6 @@ import { useBrandStore } from "../stores/brand.store";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { ProductReview } from "../types/product.type";
-import ProductChat from "../components/ProductChat";
 
 const ProductDetailPage: React.FC = () => {
   const [tab, setTab] = useState("description");
@@ -779,11 +778,6 @@ const ProductDetailPage: React.FC = () => {
       </main>
 
       <Footer />
-
-      {/* Product Chat Widget */}
-      {user && productId && (
-        <ProductChat productId={productId} productName={product?.name || ""} />
-      )}
     </div>
   );
 };
