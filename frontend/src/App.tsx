@@ -29,6 +29,7 @@ function App() {
   useEffect(() => {
     const handleLanguageChange = (lng: string) => {
       document.documentElement.dir = lng === "ar" ? "rtl" : "ltr";
+      document.documentElement.lang = lng;
     };
 
     i18n.on("languageChanged", handleLanguageChange);

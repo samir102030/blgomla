@@ -3,6 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import { useTranslation } from "react-i18next";
+import {
+  ArrowRightOnRectangleIcon,
+  HeartIcon,
+  MagnifyingGlassIcon,
+  ShoppingCartIcon,
+  UserCircleIcon,
+} from "@heroicons/react/24/outline";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 
@@ -103,13 +110,13 @@ const Header: React.FC = () => {
       className: "",
     },
     {
-      label: "🏪 " + t("Become a Vendor"),
+      label: t("Become a Vendor"),
       path: "/vendor-registration",
       condition: showBecomeVendor,
       className: "",
     },
     {
-      label: "🏪 " + t("Admin Dashboard"),
+      label: t("Admin Dashboard"),
       path: "/dashboard",
       condition: showAdminDashboard,
       className: "bg-[#673AB7]",
@@ -121,8 +128,9 @@ const Header: React.FC = () => {
       {/* Top bar - responsive */}
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 gap-2 sm:gap-4">
         <div className="flex items-center space-x-2">
-          <span className="text-[#333333] text-sm">🌐</span>
+          <span className="text-[#333333] text-sm font-semibold">{t("Language")}</span>
           <select
+            aria-label={t("Language")}
             value={language}
             onChange={(e) => {
               i18n.changeLanguage(e.target.value);
@@ -130,13 +138,15 @@ const Header: React.FC = () => {
             }}
             className="bg-white border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
           >
-            <option value="en">English</option>
-            <option value="ar">العربية</option>
+            <option value="en">{t("English")}</option>
+            <option value="ar">{t("Arabic")}</option>
           </select>
         </div>
         <div className="hidden sm:flex items-center space-x-2">
           <span className="text-[#333333] text-xs sm:text-sm">{t("Call us:")}</span>
-          <span className="text-[#333333] font-medium text-xs sm:text-sm">📞 (+20)1009353639</span>
+          <span className="text-[#333333] font-medium text-xs sm:text-sm">
+            {t("(+20)1009353639")}
+          </span>
         </div>
       </div>
 
@@ -176,8 +186,14 @@ const Header: React.FC = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                   />
-                  <button className="px-3 sm:px-6 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
-                    <span className="text-sm sm:text-lg">🔍</span>
+                  <button
+                    className="px-3 sm:px-6 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors"
+                    aria-label={t("Search...")}
+                  >
+                    <MagnifyingGlassIcon
+                      className="w-4 h-4 sm:w-5 sm:h-5"
+                      aria-hidden="true"
+                    />
                   </button>
                 </div>
 
@@ -255,35 +271,47 @@ const Header: React.FC = () => {
 
             {/* Header actions */}
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-              {!user && (
-                <Link
-                  to="/login"
-                  className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
-                >
-                  <span className="text-lg sm:text-xl mb-0 sm:mb-1">🔑</span>
-                  <span className="text-xs hidden md:block">{t("Login")}</span>
-                </Link>
-              )}
+                {!user && (
+                  <Link
+                    to="/login"
+                    className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
+                  >
+                    <ArrowRightOnRectangleIcon
+                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs hidden md:block">{t("Login")}</span>
+                  </Link>
+                )}
               <Link
                 to="/account"
-                className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
+                className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
               >
-                <span className="text-lg sm:text-xl mb-0 sm:mb-1">👤</span>
+                <UserCircleIcon
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  aria-hidden="true"
+                />
                 <span className="text-xs hidden md:block">{t("Account")}</span>
               </Link>
               {user && <NotificationBell />}
               <Link
                 to="/wishlist"
-                className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors"
+                className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
               >
-                <span className="text-lg sm:text-xl mb-0 sm:mb-1">❤️</span>
+                <HeartIcon
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  aria-hidden="true"
+                />
                 <span className="text-xs hidden md:block">{t("Wishlist")}</span>
               </Link>
               <Link
                 to="/cart"
-                className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors relative"
+                className="flex flex-col items-center gap-0.5 text-gray-800 hover:text-gray-600 transition-colors relative"
               >
-                <span className="text-lg sm:text-xl mb-0 sm:mb-1">🛒</span>
+                <ShoppingCartIcon
+                  className="w-5 h-5 sm:w-6 sm:h-6"
+                  aria-hidden="true"
+                />
                 <span className="text-xs hidden md:block">{t("Cart")}</span>
                 <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
                   {user?.cart?.length
@@ -331,8 +359,14 @@ const Header: React.FC = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                 />
-                <button className="px-3 sm:px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors">
-                  🔍
+                <button
+                  className="px-3 sm:px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors"
+                  aria-label={t("Search...")}
+                >
+                  <MagnifyingGlassIcon
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    aria-hidden="true"
+                  />
                 </button>
               </div>
 

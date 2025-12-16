@@ -122,7 +122,7 @@ const Contact: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm p-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {t("Get in Touch")}
+                {t("Get In Touch")}
               </h2>
               <p className="text-gray-600 mb-8">
                 {t(
