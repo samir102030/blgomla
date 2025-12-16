@@ -12,6 +12,7 @@ import { useBrandStore } from "../../stores/brand.store";
 import { useCategoryStore } from "../../stores/category.store";
 import { useUserStore } from "../../stores/user.store";
 import { useVendorStore } from "../../stores/vendor.store";
+import { axiosInstance } from "../../lib/axios";
 import AddProductModal from "../../components/AddProductModal";
 import ProductDetailsModal from "../../components/ProductDetailsModal";
 import EditProductModal from "../../components/EditProductModal";
@@ -29,6 +30,7 @@ const ProductsPage: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<any>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [advancedFilters, setAdvancedFilters] = useState<ProductFilters>({
     brand: "",
     category: "",
@@ -36,6 +38,7 @@ const ProductsPage: React.FC = () => {
     priceMax: "",
     stockStatus: "",
     productStatus: "",
+    vendor: "",
   });
 
   const products = useProductStore((s) => s.products);
@@ -56,6 +59,19 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     fetchBrands();
     fetchCategories();
+
+    // Fetch vendors/stores for the filter
+    const fetchVendorsData = async () => {
+      try {
+        const response = await axiosInstance.get("/stores");
+        setVendors(response.data.data || response.data || []);
+      } catch (error) {
+        console.error("Error fetching vendors:", error);
+        setVendors([]);
+      }
+    };
+
+    fetchVendorsData();
   }, [fetchBrands, fetchCategories]);
 
   // Fetch products based on user role
@@ -140,6 +156,12 @@ const ProductsPage: React.FC = () => {
       (advancedFilters.productStatus === "active" && product.isActive) ||
       (advancedFilters.productStatus === "inactive" && !product.isActive);
 
+    const matchesVendor =
+      !advancedFilters.vendor ||
+      (typeof product.store === "string"
+        ? product.store === advancedFilters.vendor
+        : (product.store as any)?._id === advancedFilters.vendor);
+
     return (
       matchesSearch &&
       matchesCategory &&
@@ -148,7 +170,8 @@ const ProductsPage: React.FC = () => {
       matchesPriceMin &&
       matchesPriceMax &&
       matchesStockStatus &&
-      matchesProductStatus
+      matchesProductStatus &&
+      matchesVendor
     );
   });
 
@@ -273,6 +296,7 @@ const ProductsPage: React.FC = () => {
           currentFilters={advancedFilters}
           brands={safeBrands}
           categories={safeCategories}
+          vendors={vendors}
         />
       )}
 

@@ -13,7 +13,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import WishlistPage from "./pages/WishlistPage";
 import MyAccountPage from "./pages/MyAccountPage";
-import AboutUsPage from "./pages/AboutUsPage";
+// import AboutUsPage from "./pages/AboutUsPage";
 import VendorRegistrationPage from "./pages/VendorRegistrationPage";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -60,7 +60,7 @@ function App() {
         />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/account" element={<MyAccountPage />} />
-        <Route path="/about" element={<AboutUsPage />} />
+        {/* <Route path="/about" element={<AboutUsPage />} /> */}
         <Route
           path="/vendor-registration"
           element={<VendorRegistrationPage />}

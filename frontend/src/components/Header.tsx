@@ -99,11 +99,11 @@ const Header: React.FC = () => {
       path: "/products",
       className: "border-r border-[#9E9E9E]/30 md:border-r-0",
     },
-    {
-      label: t("About Us"),
-      path: "/about",
-      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
-    },
+    // {
+    //   label: t("About Us"),
+    //   path: "/about",
+    //   className: "border-r border-[#9E9E9E]/30 md:border-r-0",
+    // },
     {
       label: t("Contact"),
       path: "/contact",
@@ -128,7 +128,9 @@ const Header: React.FC = () => {
       {/* Top bar - responsive */}
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 gap-2 sm:gap-4">
         <div className="flex items-center space-x-2">
-          <span className="text-[#333333] text-sm font-semibold">{t("Language")}</span>
+          <span className="text-[#333333] text-sm font-semibold">
+            {t("Language")}
+          </span>
           <select
             aria-label={t("Language")}
             value={language}
@@ -143,7 +145,9 @@ const Header: React.FC = () => {
           </select>
         </div>
         <div className="hidden sm:flex items-center space-x-2">
-          <span className="text-[#333333] text-xs sm:text-sm">{t("Call us:")}</span>
+          <span className="text-[#333333] text-xs sm:text-sm">
+            {t("Call us:")}
+          </span>
           <span className="text-[#333333] font-medium text-xs sm:text-sm">
             {t("(+20)1009353639")}
           </span>
@@ -271,18 +275,18 @@ const Header: React.FC = () => {
 
             {/* Header actions */}
             <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-                {!user && (
-                  <Link
-                    to="/login"
-                    className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
-                  >
-                    <ArrowRightOnRectangleIcon
-                      className="w-5 h-5 sm:w-6 sm:h-6"
-                      aria-hidden="true"
-                    />
-                    <span className="text-xs hidden md:block">{t("Login")}</span>
-                  </Link>
-                )}
+              {!user && (
+                <Link
+                  to="/login"
+                  className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon
+                    className="w-5 h-5 sm:w-6 sm:h-6"
+                    aria-hidden="true"
+                  />
+                  <span className="text-xs hidden md:block">{t("Login")}</span>
+                </Link>
+              )}
               <Link
                 to="/account"
                 className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
@@ -313,7 +317,7 @@ const Header: React.FC = () => {
                   aria-hidden="true"
                 />
                 <span className="text-xs hidden md:block">{t("Cart")}</span>
-                <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
+                <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white  rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
                   {user?.cart?.length
                     ? user.cart.reduce(
                         (acc, item) => acc + (item.quantity || 0),

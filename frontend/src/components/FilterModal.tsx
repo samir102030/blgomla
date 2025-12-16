@@ -11,6 +11,7 @@ interface FilterModalProps {
   currentFilters: ProductFilters;
   brands: any[];
   categories: any[];
+  vendors?: any[];
 }
 
 export interface ProductFilters {
@@ -20,6 +21,7 @@ export interface ProductFilters {
   priceMax: string;
   stockStatus: string;
   productStatus: string;
+  vendor?: string;
 }
 
 const FilterModal: React.FC<FilterModalProps> = ({
@@ -29,6 +31,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   currentFilters,
   brands,
   categories,
+  vendors = [],
 }) => {
   const [filters, setFilters] = useState<ProductFilters>(currentFilters);
 
@@ -49,6 +52,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       priceMax: "",
       stockStatus: "",
       productStatus: "",
+      vendor: "",
     };
     setFilters(clearedFilters);
     onApplyFilters(clearedFilters);
@@ -126,6 +130,25 @@ const FilterModal: React.FC<FilterModalProps> = ({
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Vendor Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Vendor
+            </label>
+            <select
+              value={filters.vendor || ""}
+              onChange={(e) => handleInputChange("vendor", e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Vendors</option>
+              {vendors.map((vendor) => (
+                <option key={vendor._id} value={vendor._id}>
+                  {vendor.name}
                 </option>
               ))}
             </select>
