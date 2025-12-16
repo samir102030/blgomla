@@ -540,6 +540,117 @@ export const requestUnhideReview = controllerWrapper(
   }
 );
 
+// Get vendor's own review requests
+export const getVendorReviewRequests = controllerWrapper(
+  "getVendorReviewRequests",
+  async (req, res) => {
+    const user = req.user;
+
+    // Only vendors can view their own requests
+    if (user.role !== "store") {
+      return res.status(403).json({
+        success: false,
+        message: "Only vendors can view their own review requests",
+      });
+    }
+
+    const { page = 1, limit = 20, status } = req.query;
+
+    // Find the store owned by this vendor
+    const Store = (await import("../models/store.model.js")).default;
+    const userStore = await Store.findOne({ owner: user._id });
+
+    if (!userStore) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        total: 0,
+        page: Number(page),
+        limit: Number(limit),
+        pages: 0,
+      });
+    }
+
+    // Find all products owned by this vendor's store with requests
+    const products = await Product.find({
+      store: userStore._id,
+      "reviewRequests.0": { $exists: true },
+    }).populate("store", "name");
+
+    let allRequests = [];
+    for (const product of products) {
+      for (const request of product.reviewRequests) {
+        // Filter by vendor's own requests
+        if (request.vendorId.toString() !== user._id.toString()) {
+          continue;
+        }
+
+        // Filter by status if provided
+        if (status && request.status !== status) {
+          continue;
+        }
+
+        const review = product.reviews.id(request.review);
+        const User = (await import("../models/user.model.js")).default;
+
+        let reviewData;
+        if (review) {
+          const reviewUser = await User.findById(review.user).select(
+            "name email"
+          );
+          reviewData = {
+            reviewComment: review.comment,
+            reviewRating: review.rating,
+            reviewerName: reviewUser?.name,
+            reviewerEmail: reviewUser?.email,
+          };
+        } else {
+          // Review has been deleted, but keep the request for history
+          reviewData = {
+            reviewComment: "[Review Deleted]",
+            reviewRating: 0,
+            reviewerName: "[Deleted]",
+            reviewerEmail: "[Deleted]",
+          };
+        }
+
+        allRequests.push({
+          requestId: request._id,
+          productId: product._id,
+          productName: product.name,
+          reviewId: request.review,
+          ...reviewData,
+          requestType: request.requestType,
+          status: request.status,
+          rejectionReason: request.rejectionReason,
+          createdAt: request.createdAt,
+        });
+      }
+    }
+
+    // Sort by creation date (newest first)
+    allRequests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Pagination
+    const total = allRequests.length;
+    const pages = Math.ceil(total / limit);
+    const startIndex = (page - 1) * limit;
+    const paginatedRequests = allRequests.slice(
+      startIndex,
+      startIndex + Number(limit)
+    );
+
+    res.status(200).json({
+      success: true,
+      data: paginatedRequests,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      pages,
+    });
+  }
+);
+
 // Get review requests (admin only)
 export const getReviewRequests = controllerWrapper(
   "getReviewRequests",
@@ -571,30 +682,43 @@ export const getReviewRequests = controllerWrapper(
       for (const request of product.reviewRequests) {
         if (request.status === status) {
           const review = product.reviews.id(request.review);
+          const User = (await import("../models/user.model.js")).default;
+
+          let reviewData;
           if (review) {
-            const User = (await import("../models/user.model.js")).default;
             const reviewUser = await User.findById(review.user).select(
               "name email"
             );
-
-            allRequests.push({
-              requestId: request._id,
-              productId: product._id,
-              productName: product.name,
-              reviewId: request.review,
+            reviewData = {
               reviewComment: review.comment,
               reviewRating: review.rating,
               reviewerName: reviewUser?.name,
               reviewerEmail: reviewUser?.email,
-              vendorId: request.vendorId._id,
-              vendorName: request.vendorId.name,
-              vendorEmail: request.vendorId.email,
-              requestType: request.requestType,
-              status: request.status,
-              rejectionReason: request.rejectionReason,
-              createdAt: request.createdAt,
-            });
+            };
+          } else {
+            // Review has been deleted, but keep the request for history
+            reviewData = {
+              reviewComment: "[Review Deleted]",
+              reviewRating: 0,
+              reviewerName: "[Deleted]",
+              reviewerEmail: "[Deleted]",
+            };
           }
+
+          allRequests.push({
+            requestId: request._id,
+            productId: product._id,
+            productName: product.name,
+            reviewId: request.review,
+            ...reviewData,
+            vendorId: request.vendorId._id,
+            vendorName: request.vendorId.name,
+            vendorEmail: request.vendorId.email,
+            requestType: request.requestType,
+            status: request.status,
+            rejectionReason: request.rejectionReason,
+            createdAt: request.createdAt,
+          });
         }
       }
     }

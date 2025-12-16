@@ -12,6 +12,7 @@ import {
   requestDeleteReview,
   requestUnhideReview,
   getReviewRequests,
+  getVendorReviewRequests,
   approveReviewRequest,
   rejectReviewRequest,
 } from "../controllers/review.controller.js";
@@ -35,6 +36,7 @@ router.post("/:productId/:reviewId/request-unhide", requestUnhideReview);
 
 // Admin request management endpoints
 router.get("/requests/list/all", getReviewRequests);
+router.get("/requests/vendor/my-requests", getVendorReviewRequests);
 router.put("/:productId/requests/:requestId/approve", approveReviewRequest);
 router.put("/:productId/requests/:requestId/reject", rejectReviewRequest);
 

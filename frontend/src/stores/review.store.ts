@@ -36,6 +36,7 @@ interface ReviewStore {
     reviewId: string
   ) => Promise<boolean>;
   fetchReviewRequests: (page?: number, status?: string) => Promise<void>;
+  fetchVendorReviewRequests: (page?: number, status?: string) => Promise<void>;
   approveReviewRequest: (
     productId: string,
     requestId: string
@@ -248,6 +249,37 @@ export const useReviewStore = create<ReviewStore>()(
           }>("/reviews/requests/list/all", {
             params: { page, limit: 20, status },
           });
+
+          set({
+            reviewRequests: data.data,
+            requestsTotal: data.total,
+            requestsPage: data.page,
+            requestsPages: data.pages,
+            loading: false,
+          });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      // Fetch vendor's own review requests
+      fetchVendorReviewRequests: async (page = 1, status?: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          const params: any = { page, limit: 20 };
+          if (status) params.status = status;
+
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            data: any[];
+            total: number;
+            page: number;
+            limit: number;
+            pages: number;
+          }>("/reviews/requests/vendor/my-requests", { params });
 
           set({
             reviewRequests: data.data,
