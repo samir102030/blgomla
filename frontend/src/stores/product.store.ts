@@ -46,9 +46,17 @@ interface ProductStore {
   removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   // Review actions
-  addReview: (productId: string, review: { rating: number; comment: string }) => Promise<void>;
-  updateReview: (productId: string, reviewId: string, review: { rating: number; comment: string }) => Promise<void>;
+  addReview: (
+    productId: string,
+    review: { rating: number; comment: string }
+  ) => Promise<void>;
+  updateReview: (
+    productId: string,
+    reviewId: string,
+    review: { rating: number; comment: string }
+  ) => Promise<void>;
   deleteReview: (productId: string, reviewId: string) => Promise<void>;
+  checkReviewEligibility: (productId: string) => Promise<boolean>;
   // ...add more actions as needed (reviews, features, attributes)
 }
 
@@ -162,7 +170,7 @@ export const useProductStore = create<ProductStore>()(
             `/products/${productId}`
           );
           console.log("fetchProductById response:", data);
-          
+
           // Handle different response formats
           const product = data.product || data.data?.[0] || data;
           set({ product, loading: false });
@@ -300,7 +308,10 @@ export const useProductStore = create<ProductStore>()(
       },
 
       // Review actions
-      addReview: async (productId: string, review: { rating: number; comment: string }) => {
+      addReview: async (
+        productId: string,
+        review: { rating: number; comment: string }
+      ) => {
         set({ loading: true, error: undefined });
         try {
           const { data } = await axiosInstance.post<any>(
@@ -319,7 +330,11 @@ export const useProductStore = create<ProductStore>()(
         }
       },
 
-      updateReview: async (productId: string, reviewId: string, review: { rating: number; comment: string }) => {
+      updateReview: async (
+        productId: string,
+        reviewId: string,
+        review: { rating: number; comment: string }
+      ) => {
         set({ loading: true, error: undefined });
         try {
           const { data } = await axiosInstance.put<any>(
@@ -353,6 +368,19 @@ export const useProductStore = create<ProductStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+        }
+      },
+
+      checkReviewEligibility: async (productId: string) => {
+        try {
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            eligible: boolean;
+          }>(`/products/${productId}/reviews/eligibility`);
+          return Boolean(data.eligible);
+        } catch (error: any) {
+          set({ error: error?.response?.data?.message || error.message });
+          return false;
         }
       },
     }),

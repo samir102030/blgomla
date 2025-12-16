@@ -17,6 +17,10 @@ const ProductDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
 
+  // Review eligibility
+  const [canReview, setCanReview] = useState(false);
+  const [checkingEligibility, setCheckingEligibility] = useState(false);
+
   // Review states
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -31,6 +35,9 @@ const ProductDetailPage: React.FC = () => {
   const addReview = useProductStore((state) => state.addReview);
   const updateReview = useProductStore((state) => state.updateReview);
   const deleteReview = useProductStore((state) => state.deleteReview);
+  const checkReviewEligibility = useProductStore(
+    (state) => state.checkReviewEligibility
+  );
   const fetchCart = useUserStore((state) => state.fetchCart);
   const toggleLoveProduct = useUserStore((state) => state.toggleLoveProduct);
   const getLovedProducts = useUserStore((state) => state.getLovedProducts);
@@ -48,6 +55,33 @@ const ProductDetailPage: React.FC = () => {
   useEffect(() => {
     if (productId) fetchProductById(productId);
   }, [productId, fetchProductById]);
+
+  // Check if the current user purchased this product
+  useEffect(() => {
+    if (!user || !productId) {
+      setCanReview(false);
+      setCheckingEligibility(false);
+      return;
+    }
+
+    let isActive = true;
+    const verify = async () => {
+      setCheckingEligibility(true);
+      try {
+        const eligible = await checkReviewEligibility(productId);
+        if (isActive) setCanReview(eligible);
+      } catch (err) {
+        if (isActive) setCanReview(false);
+      } finally {
+        if (isActive) setCheckingEligibility(false);
+      }
+    };
+
+    verify();
+    return () => {
+      isActive = false;
+    };
+  }, [user?._id, productId, checkReviewEligibility]);
 
   // Check if product is already in cart
   const isProductInCart = () => {
@@ -76,6 +110,8 @@ const ProductDetailPage: React.FC = () => {
     return product.reviews.find((review) => review.user._id === user._id);
   };
 
+  const userReview = getUserReview();
+
   // Filter reviews based on visibility and ownership
   const getFilteredReviews = () => {
     if (!product?.reviews) return [];
@@ -96,6 +132,12 @@ const ProductDetailPage: React.FC = () => {
 
   // Handle review submission
   const handleSubmitReview = async () => {
+    if (!editingReview && !canReview) {
+      toast.error(
+        "Only customers who purchased this product can leave a review"
+      );
+      return;
+    }
     if (!productId || !reviewComment.trim()) {
       toast.error("Please provide a comment for your review");
       return;
@@ -160,6 +202,12 @@ const ProductDetailPage: React.FC = () => {
     setReviewRating(5);
     setEditingReview(null);
   };
+
+  useEffect(() => {
+    if (!canReview && !userReview) {
+      setShowReviewForm(false);
+    }
+  }, [canReview, userReview]);
 
   const handleLoveProduct = async () => {
     if (!productId) return;
@@ -543,28 +591,41 @@ const ProductDetailPage: React.FC = () => {
                   {/* Review Form */}
                   {user ? (
                     <div className="mb-8">
-                      {!getUserReview() ? (
-                        <button
-                          onClick={() => setShowReviewForm(true)}
-                          className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 mb-6"
-                        >
-                          Write a Review
-                        </button>
+                      {!userReview ? (
+                        <div className="mb-4 flex items-center gap-3 flex-wrap">
+                          <button
+                            onClick={() => setShowReviewForm(true)}
+                            disabled={!canReview || checkingEligibility}
+                            className={`bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 mb-2 ${
+                              !canReview || checkingEligibility
+                                ? "opacity-60 cursor-not-allowed"
+                                : ""
+                            }`}
+                          >
+                            {checkingEligibility
+                              ? "Checking eligibility..."
+                              : "Write a Review"}
+                          </button>
+                          {!canReview && !checkingEligibility && (
+                            <span className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2">
+                              Only customers who purchased this product can
+                              leave a review.
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <div className="mb-6 p-4 bg-gray-50 rounded-md">
                           <p className="text-gray-600 mb-2">
                             You have already reviewed this product.
                           </p>
                           <button
-                            onClick={() => handleEditReview(getUserReview()!)}
+                            onClick={() => handleEditReview(userReview!)}
                             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 mr-2"
                           >
                             Edit Review
                           </button>
                           <button
-                            onClick={() =>
-                              handleDeleteReview(getUserReview()!._id)
-                            }
+                            onClick={() => handleDeleteReview(userReview!._id)}
                             className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
                           >
                             Delete Review

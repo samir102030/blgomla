@@ -39,6 +39,7 @@ import {
   updateProductFeature,
   updateProductReview,
   updateProductStock,
+  checkReviewEligibility,
 } from "../controllers/product.controller.js";
 
 import {
@@ -117,6 +118,11 @@ router.put(
 router.delete("/:productId", protectRoute, adminOrStoreRoute, deleteProduct); // Delete product
 
 // Reviews (authenticated users)
+router.get(
+  "/:productId/reviews/eligibility",
+  protectRoute,
+  checkReviewEligibility
+); // Check if user can review this product
 router.post(
   "/:productId/reviews",
   protectRoute,

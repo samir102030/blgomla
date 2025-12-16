@@ -5,6 +5,7 @@ import User from "../models/user.model.js";
 import Notification from "../models/notification.model.js";
 import BrandRequest from "../models/brandRequest.model.js";
 import CategoryRequest from "../models/categoryRequest.model.js";
+import Order from "../models/order.model.js";
 import mongoose from "mongoose";
 
 // Create Product
@@ -410,6 +411,32 @@ export const getStoreProducts = controllerWrapper(
 );
 
 // Reviews
+export const checkReviewEligibility = controllerWrapper(
+  "checkReviewEligibility",
+  async (req, res) => {
+    const { productId } = req.params;
+    const userId = req.user._id;
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+
+    const hasPaidOrder = await Order.exists({
+      user: userId,
+      "orderItems.product": productId,
+      cancelled: { $ne: true },
+      status: { $ne: "cancelled" },
+    });
+
+    return res.status(200).json({
+      success: true,
+      eligible: Boolean(hasPaidOrder),
+    });
+  }
+);
+
 export const addProductReview = controllerWrapper(
   "addProductReview",
   async (req, res) => {
@@ -421,6 +448,21 @@ export const addProductReview = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
+
+    // Ensure the user has paid for this product before leaving a review
+    const hasPaidOrder = await Order.exists({
+      user: userId,
+      "orderItems.product": productId,
+      cancelled: { $ne: true },
+      status: { $ne: "cancelled" },
+    });
+
+    if (!hasPaidOrder) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only review products you have purchased",
+      });
+    }
     // Prevent duplicate review by same user
     if (product.reviews.some((r) => r.user.toString() === userId.toString())) {
       return res.status(400).json({
