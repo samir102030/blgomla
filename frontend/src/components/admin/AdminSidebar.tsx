@@ -138,7 +138,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       <div className="p-3 sm:p-4 md:p-6 border-b border-[#FFD600]/30 bg-gradient-to-r from-[#FFD600]/10 to-transparent">
         <div className="flex items-center">
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#FFD600] to-[#FFA500] rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
-            <span className="text-[#333333] font-bold text-xs sm:text-sm lg:text-lg">B</span>
+            <span className="text-[#333333] font-bold text-xs sm:text-sm lg:text-lg">
+              B
+            </span>
           </div>
           {!collapsed && (
             <span className="ml-2 sm:ml-3 md:ml-4 text-lg sm:text-xl md:text-2xl font-bold text-[#FFD600] tracking-wide">
