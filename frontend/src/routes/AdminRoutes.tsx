@@ -12,6 +12,7 @@ import CustomerReviewsPage from "../pages/admin/CustomerReviewsPage";
 import CustomerSupportPage from "../pages/admin/CustomerSupportPage";
 import VendorManagement from "../pages/admin/vendors/VendorManagement";
 import CouponsPage from "../pages/vendor/CouponsPage";
+import RequestsPage from "../pages/admin/RequestsPage";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -35,6 +36,7 @@ const AdminRoutes: React.FC = () => {
 
         {/* Vendor Management */}
         <Route path="/vendors" element={<VendorManagement />} />
+        <Route path="/requests" element={<RequestsPage />} />
 
         {/* E-commerce */}
         <Route path="/category" element={<CategoriesPage />} />

@@ -3,14 +3,80 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import User from "../models/user.model.js";
 import Notification from "../models/notification.model.js";
+import BrandRequest from "../models/brandRequest.model.js";
+import CategoryRequest from "../models/categoryRequest.model.js";
 import mongoose from "mongoose";
 
 // Create Product
 export const createProduct = controllerWrapper(
   "createProduct",
   async (req, res) => {
-    const productData = req.body;
+    const { newBrand, newCategory, ...productData } = req.body;
     const product = new Product(productData);
+
+    let hasPendingRequests = false;
+    const userId = req.user._id;
+
+    // Handle new brand request
+    if (newBrand && newBrand.name) {
+      const brandRequest = new BrandRequest({
+        name: newBrand.name,
+        description: newBrand.description,
+        requestedBy: userId,
+        store: productData.store,
+        product: product._id,
+        status: "pending",
+      });
+      await brandRequest.save();
+
+      product.pendingBrandRequest = brandRequest._id;
+      hasPendingRequests = true;
+
+      // Notify all admin users
+      const admins = await User.find({ role: "admin" });
+      for (const admin of admins) {
+        await Notification.create({
+          user: admin._id,
+          title: "New Brand Request",
+          message: `Vendor requested to create a new brand: "${newBrand.name}" for product "${product.name}"`,
+          type: "brand_request",
+        });
+      }
+    }
+
+    // Handle new category request
+    if (newCategory && newCategory.name) {
+      const categoryRequest = new CategoryRequest({
+        name: newCategory.name,
+        description: newCategory.description,
+        requestedBy: userId,
+        store: productData.store,
+        product: product._id,
+        status: "pending",
+      });
+      await categoryRequest.save();
+
+      product.pendingCategoryRequest = categoryRequest._id;
+      hasPendingRequests = true;
+
+      // Notify all admin users
+      const admins = await User.find({ role: "admin" });
+      for (const admin of admins) {
+        await Notification.create({
+          user: admin._id,
+          title: "New Category Request",
+          message: `Vendor requested to create a new category: "${newCategory.name}" for product "${product.name}"`,
+          type: "category_request",
+        });
+      }
+    }
+
+    // Set product status based on pending requests
+    product.hasPendingRequests = hasPendingRequests;
+    if (hasPendingRequests) {
+      product.isActive = false; // Product won't be published until approved
+    }
+
     await product.save();
 
     // Create notification for store owner
@@ -19,10 +85,14 @@ export const createProduct = controllerWrapper(
       .findById(product.store)
       .populate("owner");
     if (store && store.owner) {
+      const message = hasPendingRequests
+        ? `Your product "${product.name}" has been created and is pending admin approval for new brand/category`
+        : `Your product "${product.name}" has been added successfully`;
+
       await Notification.create({
         user: store.owner._id,
         title: "New Product Added",
-        message: `Your product "${product.name}" has been added successfully`,
+        message,
         type: "product",
       });
     }

@@ -12,6 +12,8 @@ import reviewRoutes from "./review.route.js";
 import chatRoutes from "./chat.route.js";
 import notificationRoutes from "./notification.route.js";
 import couponRoutes from "./coupon.route.js";
+import brandRequestRoutes from "./brandRequest.route.js";
+import categoryRequestRoutes from "./categoryRequest.route.js";
 
 const router = express.Router();
 
@@ -28,5 +30,7 @@ router.use("/reviews", reviewRoutes);
 router.use("/chat", chatRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/coupons", couponRoutes);
+router.use("/brand-requests", brandRequestRoutes);
+router.use("/category-requests", categoryRequestRoutes);
 
 export default router;

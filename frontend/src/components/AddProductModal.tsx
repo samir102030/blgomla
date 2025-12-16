@@ -28,6 +28,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     stock: "0",
     brand: "",
     category: "",
+    newBrandName: "",
+    newBrandDescription: "",
+    newCategoryName: "",
+    newCategoryDescription: "",
     salePercentage: "",
     saleActive: false,
     isActive: true,
@@ -49,6 +53,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         stock: "0",
         brand: "",
         category: "",
+        newBrandName: "",
+        newBrandDescription: "",
+        newCategoryName: "",
+        newCategoryDescription: "",
         salePercentage: "",
         saleActive: false,
         isActive: true,
@@ -129,8 +137,25 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         payload.store = vendorStore._id;
       }
 
-      if (form.brand) payload.brand = form.brand;
-      if (form.category) payload.Category = form.category;
+      // Handle brand selection or new brand request
+      if (form.brand === "CREATE_NEW") {
+        payload.newBrand = {
+          name: form.newBrandName,
+          description: form.newBrandDescription,
+        };
+      } else if (form.brand) {
+        payload.brand = form.brand;
+      }
+
+      // Handle category selection or new category request
+      if (form.category === "CREATE_NEW") {
+        payload.newCategory = {
+          name: form.newCategoryName,
+          description: form.newCategoryDescription,
+        };
+      } else if (form.category) {
+        payload.Category = form.category;
+      }
 
       // Import createProduct from store here to avoid circular imports
       const { useProductStore } = await import("../stores/product.store");
@@ -275,7 +300,36 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       {b.name}
                     </option>
                   ))}
+                  <option value="CREATE_NEW">+ Create New Brand</option>
                 </select>
+                {form.brand === "CREATE_NEW" && (
+                  <div className="mt-2 space-y-2">
+                    <input
+                      required
+                      placeholder="New brand name"
+                      value={form.newBrandName}
+                      onChange={(e) =>
+                        setForm({ ...form, newBrandName: e.target.value })
+                      }
+                      className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    />
+                    <textarea
+                      placeholder="Brand description (optional)"
+                      value={form.newBrandDescription}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          newBrandDescription: e.target.value,
+                        })
+                      }
+                      className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    />
+                    <p className="text-xs text-amber-600">
+                      ⚠️ This brand will need admin approval before your product
+                      is published
+                    </p>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
@@ -294,7 +348,36 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       {c.name}
                     </option>
                   ))}
+                  <option value="CREATE_NEW">+ Create New Category</option>
                 </select>
+                {form.category === "CREATE_NEW" && (
+                  <div className="mt-2 space-y-2">
+                    <input
+                      required
+                      placeholder="New category name"
+                      value={form.newCategoryName}
+                      onChange={(e) =>
+                        setForm({ ...form, newCategoryName: e.target.value })
+                      }
+                      className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    />
+                    <textarea
+                      placeholder="Category description (optional)"
+                      value={form.newCategoryDescription}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          newCategoryDescription: e.target.value,
+                        })
+                      }
+                      className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                    />
+                    <p className="text-xs text-amber-600">
+                      ⚠️ This category will need admin approval before your
+                      product is published
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 

@@ -12,6 +12,7 @@ import {
   ChartBarIcon,
   BuildingStorefrontIcon,
   ChatBubbleLeftRightIcon,
+  ClipboardDocumentListIcon,
   // StarIcon,
 } from "@heroicons/react/24/outline";
 
@@ -43,6 +44,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       name: "Vendors",
       href: "/dashboard/vendors",
       icon: BuildingStorefrontIcon,
+      roles: ["admin"],
+    },
+    {
+      name: "Requests",
+      href: "/dashboard/requests",
+      icon: ClipboardDocumentListIcon,
       roles: ["admin"],
     },
     {

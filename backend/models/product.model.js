@@ -151,6 +151,18 @@ const productSchema = new mongoose.Schema(
       },
     ],
     reviewRequests: [reviewRequestSchema],
+    pendingBrandRequest: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BrandRequest",
+    },
+    pendingCategoryRequest: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CategoryRequest",
+    },
+    hasPendingRequests: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

@@ -22,6 +22,7 @@ const VendorProductManagement: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | "pending">("all");
 
   const [productForm, setProductForm] = useState({
     name: "",
@@ -126,8 +127,15 @@ const VendorProductManagement: React.FC = () => {
         product.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory =
       !categoryFilter || product.Category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesTab =
+      activeTab === "all" ||
+      (activeTab === "pending" && (product as any).hasPendingRequests === true);
+    return matchesSearch && matchesCategory && matchesTab;
   });
+
+  const pendingCount = products.filter(
+    (p) => (p as any).hasPendingRequests === true
+  ).length;
 
   const categories = [
     "Electronics",
@@ -157,6 +165,34 @@ const VendorProductManagement: React.FC = () => {
         >
           Add New Product
         </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="border-b">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeTab === "all"
+                  ? "border-b-2 border-yellow-500 text-gray-900 bg-yellow-50"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              All Products ({products.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("pending")}
+              className={`px-6 py-3 font-medium text-sm transition-colors ${
+                activeTab === "pending"
+                  ? "border-b-2 border-yellow-500 text-gray-900 bg-yellow-50"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Pending Approval ({pendingCount})
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -193,8 +229,19 @@ const VendorProductManagement: React.FC = () => {
         {filteredProducts.map((product) => (
           <div
             key={product._id}
-            className="bg-white rounded-lg shadow-sm overflow-hidden"
+            className={`bg-white rounded-lg shadow-sm overflow-hidden ${
+              (product as any).hasPendingRequests
+                ? "border-2 border-yellow-400"
+                : ""
+            }`}
           >
+            {(product as any).hasPendingRequests && (
+              <div className="bg-yellow-100 border-b border-yellow-200 px-4 py-2 flex items-center gap-2">
+                <span className="text-yellow-700 text-sm font-medium">
+                  ⏳ Pending Admin Approval
+                </span>
+              </div>
+            )}
             <div className="aspect-w-16 aspect-h-9">
               <img
                 src={product.images[0]?.url || "/placeholder-product.jpg"}
