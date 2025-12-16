@@ -6,8 +6,8 @@ import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 
 // const LoginRegisterPage: React.FC = () => {
-  
-  const LoginRegisterPage: React.FC = () => {
+
+const LoginRegisterPage: React.FC = () => {
   const { t } = useTranslation();
   const [loginData, setLoginData] = useState({
     email: "",
@@ -64,15 +64,7 @@ import { useTranslation } from "react-i18next";
         password: registerData.password,
       });
       if (user) {
-        setRegisterSuccess(
-          t("Registration successful! Please check your email to verify your account.")
-        );
-        setRegisterData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        });
+        navigate("/");
       } else {
         setRegisterError(error || "Registration failed.");
       }
@@ -125,7 +117,10 @@ import { useTranslation } from "react-i18next";
                 {t("Already a Member?")}
               </h2>
 
-              <form onSubmit={handleLoginSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
+              <form
+                onSubmit={handleLoginSubmit}
+                className="space-y-3 sm:space-y-4 lg:space-y-6"
+              >
                 <div>
                   <input
                     type="email"
@@ -151,7 +146,9 @@ import { useTranslation } from "react-i18next";
                   />
                 </div>
                 {loginError && (
-                  <div className="text-red-600 text-xs sm:text-sm">{loginError}</div>
+                  <div className="text-red-600 text-xs sm:text-sm">
+                    {loginError}
+                  </div>
                 )}
                 <button
                   type="submit"
@@ -178,7 +175,10 @@ import { useTranslation } from "react-i18next";
                 {t("Register Form")}
               </h2>
 
-              <form onSubmit={handleRegisterSubmit} className="space-y-3 sm:space-y-4 lg:space-y-6">
+              <form
+                onSubmit={handleRegisterSubmit}
+                className="space-y-3 sm:space-y-4 lg:space-y-6"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
                   <div>
                     <input
@@ -244,7 +244,9 @@ import { useTranslation } from "react-i18next";
                   </div>
                 </div>
                 {registerError && (
-                  <div className="text-red-600 text-xs sm:text-sm">{registerError}</div>
+                  <div className="text-red-600 text-xs sm:text-sm">
+                    {registerError}
+                  </div>
                 )}
                 {registerSuccess && (
                   <div className="text-green-600 text-xs sm:text-sm">
