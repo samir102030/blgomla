@@ -25,6 +25,35 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const reviewRequestSchema = new mongoose.Schema(
+  {
+    review: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    requestType: {
+      type: String,
+      enum: ["hide", "delete", "unhide"],
+      required: true,
+    },
+    vendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
+    },
+  },
+  { timestamps: true }
+);
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -121,6 +150,7 @@ const productSchema = new mongoose.Schema(
         ref: "Coupon",
       },
     ],
+    reviewRequests: [reviewRequestSchema],
   },
   { timestamps: true }
 );

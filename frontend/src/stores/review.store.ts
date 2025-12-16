@@ -13,6 +13,10 @@ interface ReviewStore {
   page: number;
   limit: number;
   pages: number;
+  reviewRequests: any[];
+  requestsTotal: number;
+  requestsPage: number;
+  requestsPages: number;
 
   // Actions
   fetchReviews: (filters?: ReviewFilters) => Promise<void>;
@@ -22,6 +26,25 @@ interface ReviewStore {
     reviewId: string
   ) => Promise<boolean>;
   deleteReview: (productId: string, reviewId: string) => Promise<boolean>;
+  requestHideReview: (productId: string, reviewId: string) => Promise<boolean>;
+  requestDeleteReview: (
+    productId: string,
+    reviewId: string
+  ) => Promise<boolean>;
+  requestUnhideReview: (
+    productId: string,
+    reviewId: string
+  ) => Promise<boolean>;
+  fetchReviewRequests: (page?: number, status?: string) => Promise<void>;
+  approveReviewRequest: (
+    productId: string,
+    requestId: string
+  ) => Promise<boolean>;
+  rejectReviewRequest: (
+    productId: string,
+    requestId: string,
+    reason?: string
+  ) => Promise<boolean>;
 
   // Utility
   clearError: () => void;
@@ -40,6 +63,10 @@ export const useReviewStore = create<ReviewStore>()(
       page: 1,
       limit: 20,
       pages: 0,
+      reviewRequests: [],
+      requestsTotal: 0,
+      requestsPage: 1,
+      requestsPages: 0,
 
       // Fetch Reviews
       fetchReviews: async (filters?: ReviewFilters) => {
@@ -150,6 +177,144 @@ export const useReviewStore = create<ReviewStore>()(
         }
       },
 
+      // Request to hide review (vendor)
+      requestHideReview: async (productId: string, reviewId: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.post(
+            `/reviews/${productId}/${reviewId}/request-hide`
+          );
+
+          set({ loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+
+      // Request to delete review (vendor)
+      requestDeleteReview: async (productId: string, reviewId: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.post(
+            `/reviews/${productId}/${reviewId}/request-delete`
+          );
+
+          set({ loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+
+      // Request to unhide review (vendor)
+      requestUnhideReview: async (productId: string, reviewId: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.post(
+            `/reviews/${productId}/${reviewId}/request-unhide`
+          );
+
+          set({ loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+
+      // Fetch review requests (admin)
+      fetchReviewRequests: async (page = 1, status = "pending") => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            data: any[];
+            total: number;
+            page: number;
+            limit: number;
+            pages: number;
+          }>("/reviews/requests/list/all", {
+            params: { page, limit: 20, status },
+          });
+
+          set({
+            reviewRequests: data.data,
+            requestsTotal: data.total,
+            requestsPage: data.page,
+            requestsPages: data.pages,
+            loading: false,
+          });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      // Approve review request (admin)
+      approveReviewRequest: async (productId: string, requestId: string) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.put(
+            `/reviews/${productId}/requests/${requestId}/approve`
+          );
+
+          // Refresh requests
+          const state = get();
+          await state.fetchReviewRequests(state.requestsPage, "pending");
+
+          set({ loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+
+      // Reject review request (admin)
+      rejectReviewRequest: async (
+        productId: string,
+        requestId: string,
+        reason = ""
+      ) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.put(
+            `/reviews/${productId}/requests/${requestId}/reject`,
+            { rejectionReason: reason }
+          );
+
+          // Refresh requests
+          const state = get();
+          await state.fetchReviewRequests(state.requestsPage, "pending");
+
+          set({ loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+
       // Clear Error
       clearError: () => set({ error: undefined }),
 
@@ -164,6 +329,10 @@ export const useReviewStore = create<ReviewStore>()(
           page: 1,
           limit: 20,
           pages: 0,
+          reviewRequests: [],
+          requestsTotal: 0,
+          requestsPage: 1,
+          requestsPages: 0,
         }),
     }),
     {

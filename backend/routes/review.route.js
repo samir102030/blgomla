@@ -8,6 +8,12 @@ import {
   toggleReviewVisibility,
   deleteReview,
   getReviewStats,
+  requestHideReview,
+  requestDeleteReview,
+  requestUnhideReview,
+  getReviewRequests,
+  approveReviewRequest,
+  rejectReviewRequest,
 } from "../controllers/review.controller.js";
 
 const router = express.Router();
@@ -22,10 +28,20 @@ router.get("/", getAllReviews);
 // Get review statistics
 router.get("/stats", getReviewStats);
 
-// Toggle review visibility (show/hide)
+// Request endpoints (for vendors)
+router.post("/:productId/:reviewId/request-hide", requestHideReview);
+router.post("/:productId/:reviewId/request-delete", requestDeleteReview);
+router.post("/:productId/:reviewId/request-unhide", requestUnhideReview);
+
+// Admin request management endpoints
+router.get("/requests/list/all", getReviewRequests);
+router.put("/:productId/requests/:requestId/approve", approveReviewRequest);
+router.put("/:productId/requests/:requestId/reject", rejectReviewRequest);
+
+// Toggle review visibility (show/hide) - Admin only
 router.put("/:productId/:reviewId/visibility", toggleReviewVisibility);
 
-// Delete review
+// Delete review - Admin only
 router.delete("/:productId/:reviewId", deleteReview);
 
 export default router;
