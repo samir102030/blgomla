@@ -9,6 +9,7 @@ import { useCouponStore } from "../stores/coupon.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import type { Coupon } from "../types/coupon.type";
+import { useTranslation } from "react-i18next";
 
 interface CartItemWithProduct {
   _id?: string;
@@ -27,6 +28,7 @@ interface CartItemWithProduct {
 }
 
 const CheckoutPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -516,16 +518,16 @@ const CheckoutPage: React.FC = () => {
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Your Cart is Empty
+              {t("Your Cart is Empty")}
             </h2>
             <p className="text-gray-600 mb-6">
-              Add some products to your cart before checkout.
+              {t("Add some products to your cart before checkout.")}
             </p>
             <Link
               to="/brands"
               className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
             >
-              Browse Products
+              {t("Browse Products")}
             </Link>
           </div>
         </div>
@@ -997,7 +999,7 @@ const CheckoutPage: React.FC = () => {
                 {/* Payment Method */}
                 <div className="mb-4 sm:mb-6">
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 sm:mb-4">
-                    Payment Method
+                    {t("Payment Method")}
                   </h3>
                   <div className="space-y-2 sm:space-y-3">
                     <label className="flex items-center">
@@ -1011,7 +1013,7 @@ const CheckoutPage: React.FC = () => {
                         required
                       />
                       <span className="ml-2 text-xs sm:text-sm text-gray-700">
-                        Cash On Delivery
+                        {t("Cash On Delivery")}
                       </span>
                     </label>
                   </div>
@@ -1028,12 +1030,12 @@ const CheckoutPage: React.FC = () => {
                       required
                     />
                     <span className="text-xs sm:text-sm text-gray-700">
-                      I've Read And Accept The{" "}
+                      {t("I've Read And Accept The")}{" "}
                       <Link
                         to="/terms"
                         className="text-blue-600 hover:text-blue-800 font-medium"
                       >
-                        Terms & Conditions
+                        {t("Terms & Conditions")}
                       </Link>
                     </span>
                   </label>
@@ -1045,7 +1047,7 @@ const CheckoutPage: React.FC = () => {
                   disabled={loading}
                   className="w-full bg-black text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? "PLACING ORDER..." : "PLACE ORDER"}
+                  {loading ? t("PLACING ORDER...") : t("PLACE ORDER")}
                 </button>
               </div>
             </div>

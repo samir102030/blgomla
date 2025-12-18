@@ -9,6 +9,7 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import PleaseLogin from "../components/PleaseLogin";
 import type { Coupon } from "../types/coupon.type";
+import { useTranslation } from "react-i18next";
 // import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
@@ -27,6 +28,7 @@ interface CartItemWithProduct {
 }
 
 const ShoppingCartPage: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
@@ -166,12 +168,12 @@ const ShoppingCartPage: React.FC = () => {
         try {
           await removeItem(item.product);
           toast.error(
-            `Stock Error: ${item.productDetails?.name} is out of stock and has been removed from your cart`
+            `${t("Stock Error:")} ${item.productDetails?.name} ${t("is out of stock and has been removed from your cart")}`
           );
         } catch (error) {
           console.error("Error removing out-of-stock item:", error);
           toast.error(
-            `Stock Error: Failed to remove out-of-stock item ${item.productDetails?.name}. Please remove it manually`
+            `${t("Stock Error:")} ${t("Failed to remove out-of-stock item")} ${item.productDetails?.name}. ${t("Please remove it manually")}`
           );
         }
       }
@@ -348,16 +350,16 @@ const ShoppingCartPage: React.FC = () => {
         <div className="flex items-center justify-center py-16 sm:py-20 px-4">
           <div className="text-center">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
-              Your Cart is Empty
+              {t("Your Cart is Empty")}
             </h2>
             <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-              Add some products to your cart to get started.
+              {t("Add some products to your cart to get started.")}
             </p>
             <Link
               to="/brands"
               className="bg-[#FFD600] text-[#333333] px-4 sm:px-6 py-2 sm:py-3 rounded-md hover:bg-[#e6c100] font-medium inline-block text-sm sm:text-base"
             >
-              Browse Products
+              {t("Browse Products")}
             </Link>
           </div>
         </div>
@@ -695,19 +697,19 @@ const ShoppingCartPage: React.FC = () => {
                     <div className="flex items-center justify-between gap-2">
                       <div>
                         <p className="text-xs sm:text-sm font-medium text-green-800">
-                          Coupon Applied: {appliedCoupon.code}
+                          {t("Coupon Applied:")} {appliedCoupon.code}
                         </p>
                         <p className="text-xs text-green-600">
                           {appliedCoupon.discountType === "percentage"
-                            ? `${appliedCoupon.discountValue}% off`
-                            : `$${appliedCoupon.discountValue} off`}
+                            ? `${appliedCoupon.discountValue}% ${t("off")}`
+                            : `$${appliedCoupon.discountValue} ${t("off")}`}
                         </p>
                       </div>
                       <button
                         onClick={handleRemoveCoupon}
                         className="text-red-600 hover:text-red-800 text-xs underline flex-shrink-0"
                       >
-                        Remove
+                        {t("Remove")}
                       </button>
                     </div>
                   </div>
@@ -715,7 +717,7 @@ const ShoppingCartPage: React.FC = () => {
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
-                      placeholder="Coupon Code"
+                      placeholder={t("Coupon Code")}
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
                       className="flex-1 px-3 py-2 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent text-xs sm:text-sm"

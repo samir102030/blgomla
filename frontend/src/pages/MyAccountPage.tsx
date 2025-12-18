@@ -13,8 +13,10 @@ import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
 import { useVendorStore } from "../stores/vendor.store";
 import PleaseLogin from "../components/PleaseLogin";
+import { useTranslation } from "react-i18next";
 
 const MyAccountPage: React.FC = () => {
+  const { t } = useTranslation();
   const logout = useUserStore((state) => state.logout);
   const user = useUserStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -46,15 +48,15 @@ const MyAccountPage: React.FC = () => {
   ]);
 
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: "📊" },
-    { id: "orders", label: "Orders", icon: "📦" },
-    { id: "addresses", label: "Addresses", icon: "📍" },
-    { id: "profile", label: "Account Details", icon: "👤" },
-    { id: "password", label: "Change Password", icon: "🔒" },
+    { id: "dashboard", label: t("account.dashboard"), icon: "📊" },
+    { id: "orders", label: t("account.orders"), icon: "📦" },
+    { id: "addresses", label: t("account.addresses"), icon: "📍" },
+    { id: "profile", label: t("account.accountDetails"), icon: "👤" },
+    { id: "password", label: t("account.changePassword"), icon: "🔒" },
     ...(user?.role === "store"
-      ? [{ id: "store", label: "My Store", icon: "🏪" }]
+      ? [{ id: "store", label: t("account.myStore"), icon: "🏪" }]
       : []),
-    { id: "logout", label: "Logout", icon: "🚪" },
+    { id: "logout", label: t("account.logout"), icon: "🚪" },
   ];
 
   if (!user) return <PleaseLogin />;

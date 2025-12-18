@@ -5,8 +5,10 @@ import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import type { Product } from "../types/product.type";
 import PleaseLogin from "../components/PleaseLogin";
+import { useTranslation } from "react-i18next";
 
 const WishlistPage: React.FC = () => {
+  const { t } = useTranslation();
   const {
     getLovedProducts,
     toggleLoveProduct,
@@ -89,16 +91,16 @@ const WishlistPage: React.FC = () => {
           ) : isLoading ? (
             <div className="text-center py-16">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Loading your wishlist...</p>
+              <p className="mt-4 text-gray-600">{t("Loading your wishlist...")}</p>
             </div>
           ) : lovedProducts.length === 0 ? (
             <div className="text-center py-12 sm:py-16">
               <div className="text-gray-400 text-5xl sm:text-6xl mb-4">💝</div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-                Your Wishlist is Empty
+                {t("Your Wishlist is Empty")}
               </h2>
               <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">
-                Add some products to your wishlist to see them here.
+                {t("Add some products to your wishlist to see them here.")}
               </p>
               <Link
                 to="/brands"

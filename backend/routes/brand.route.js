@@ -13,6 +13,7 @@ import {
   getAllBrands,
   getBrandById,
 } from "../controllers/brand.controller.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
@@ -38,7 +39,7 @@ router.put(
 );
 
 // Getters
-router.get("/", getAllBrands);
-router.get("/:brandId", getBrandById);
+router.get("/", translateResponse, getAllBrands);
+router.get("/:brandId", translateResponse, getBrandById);
 
 export default router;

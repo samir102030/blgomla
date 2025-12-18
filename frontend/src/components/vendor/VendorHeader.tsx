@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserStore } from '../../stores/user.store';
 import { useVendorStore } from '../../stores/vendor.store';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../lib/i18n';
 
 interface VendorHeaderProps {
   onMenuClick: () => void;
 }
 
 const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
+  const { t } = useTranslation();
   const { user, logout } = useUserStore();
   const { vendorStore } = useVendorStore();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [language, setLanguage] = useState(i18n.language);
 
   const notifications = [
     { id: 1, title: 'New order received', time: '2 min ago', type: 'order' },
@@ -33,6 +37,18 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
     logout();
     window.location.href = '/';
   };
+
+  // Update language state when i18n changes
+  useEffect(() => {
+    const handleLanguageChange = (lng: string) => {
+      setLanguage(lng);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, []);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -57,7 +73,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
               </div>
               <input
                 type="text"
-                placeholder="Search products, orders, customers..."
+                placeholder={t('vendor.searchPlaceholder')}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
               />
             </div>
@@ -65,6 +81,22 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Language Switcher */}
+          <div className="flex items-center space-x-2">
+            <select
+              aria-label={t('Language')}
+              value={language}
+              onChange={(e) => {
+                i18n.changeLanguage(e.target.value);
+                setLanguage(e.target.value);
+              }}
+              className="bg-white border border-gray-300 rounded-md px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors"
+            >
+              <option value="en">{t('English')}</option>
+              <option value="ar">{t('Arabic')}</option>
+            </select>
+          </div>
+
           {/* Store Status */}
           {vendorStore && (
             <div className="hidden md:flex items-center space-x-2">
@@ -72,7 +104,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
                 vendorStore.isActive ? 'bg-green-500' : 'bg-red-500'
               }`}></span>
               <span className="text-sm text-gray-600">
-                Store: {vendorStore.isActive ? 'Active' : 'Inactive'}
+                {vendorStore.isActive ? t('vendor.storeActive') : t('vendor.storeInactive')}
               </span>
             </div>
           )}
@@ -92,7 +124,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
               <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
                 <div className="py-1">
                   <div className="px-4 py-2 border-b border-gray-100">
-                    <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
+                    <h3 className="text-sm font-medium text-gray-900">{t('vendor.notifications')}</h3>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
                     {notifications.map((notification) => (
@@ -109,7 +141,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
                   </div>
                   <div className="px-4 py-2 border-t border-gray-100">
                     <button className="text-sm text-yellow-600 hover:text-yellow-700 font-medium">
-                      View all notifications
+                      {t('vendor.viewAllNotifications')}
                     </button>
                   </div>
                 </div>
@@ -118,7 +150,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
           </div>
 
           {/* Quick Actions */}
-          <button className="p-2 text-gray-400 hover:text-gray-500" title="Quick Add Product">
+          <button className="p-2 text-gray-400 hover:text-gray-500" title={t('vendor.quickAddProduct')}>
             <span className="text-xl">➕</span>
           </button>
 
@@ -148,23 +180,23 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
                   <a href="/vendor/settings/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    👤 Your Profile
+                    👤 {t('vendor.yourProfile')}
                   </a>
                   <a href="/vendor/store" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    🏪 Store Settings
+                    🏪 {t('vendor.storeSettings')}
                   </a>
                   <a href="/vendor/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    ⚙️ Settings
+                    ⚙️ {t('vendor.settings')}
                   </a>
                   <a href="/vendor/support" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    🎧 Support
+                    🎧 {t('vendor.support')}
                   </a>
                   <div className="border-t border-gray-100"></div>
-                  <button 
+                  <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    🚪 Sign out
+                    🚪 {t('vendor.signOut')}
                   </button>
                 </div>
               </div>
@@ -180,17 +212,17 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
             <div className="flex items-center space-x-2">
               <span className={`${vendorStore?.isActive ? 'text-green-600' : 'text-red-600'}`}>●</span>
               <span className="text-gray-600">
-                Store Status: {vendorStore?.isActive ? 'Online' : 'Offline'}
+                {t('vendor.storeStatus')}: {vendorStore?.isActive ? t('vendor.online') : t('vendor.offline')}
               </span>
             </div>
             <div className="text-gray-600">
-              Last updated: {new Date().toLocaleTimeString()}
+              {t('vendor.lastUpdated')}: {new Date().toLocaleTimeString()}
             </div>
           </div>
           <div className="flex items-center space-x-4 text-xs">
-            <span className="text-gray-500">Pending Orders: 5</span>
-            <span className="text-gray-500">Low Stock Items: 3</span>
-            <span className="text-gray-500">New Reviews: 2</span>
+            <span className="text-gray-500">{t('vendor.pendingOrdersCount')}: 5</span>
+            <span className="text-gray-500">{t('vendor.lowStockItems')}: 3</span>
+            <span className="text-gray-500">{t('vendor.newReviews')}: 2</span>
           </div>
         </div>
       </div>

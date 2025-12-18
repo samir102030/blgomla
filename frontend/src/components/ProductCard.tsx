@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface ProductCardProps {
   id: string;
@@ -32,6 +33,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isFeatured = false,
   salePercentage,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, toggleLoveProduct, getLovedProducts } = useUserStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -92,17 +94,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="absolute top-2 sm:top-3 lg:top-4 left-2 sm:left-3 lg:left-4 flex flex-col gap-0.5 sm:gap-1 z-10">
         {isFeatured && (
           <span className="bg-[#FF6B35] text-white px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded">
-            Featured
+            {t("Featured")}
           </span>
         )}
         {isNew && (
           <span className="bg-[#009688] text-white px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded">
-            New
+            {t("New")}
           </span>
         )}
         {isOnSale && salePercentage && (
           <span className="bg-[#D32F2F] text-white px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded">
-            {salePercentage}% OFF
+            {salePercentage}{t("% OFF")}
           </span>
         )}
       </div>

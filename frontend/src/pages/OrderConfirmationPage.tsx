@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useOrderStore } from "../stores/order.store";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface OrderItem {
   product: {
@@ -37,6 +38,7 @@ interface PopulatedOrder {
 }
 
 const OrderConfirmationPage: React.FC = () => {
+  const { t } = useTranslation();
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ const OrderConfirmationPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <span className="text-lg text-gray-600">Loading order details...</span>
+        <span className="text-lg text-gray-600">{t("Loading order details...")}</span>
       </div>
     );
   }
@@ -80,16 +82,16 @@ const OrderConfirmationPage: React.FC = () => {
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Order Not Found
+              {t("Order Not Found")}
             </h2>
             <p className="text-gray-600 mb-6">
-              The order you're looking for doesn't exist.
+              {t("The order you're looking for doesn't exist.")}
             </p>
             <Link
               to="/"
               className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
             >
-              Go Home
+              {t("Go Home")}
             </Link>
           </div>
         </div>
@@ -130,10 +132,10 @@ const OrderConfirmationPage: React.FC = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Order Confirmed!
+            {t("Order Confirmed!")}
           </h1>
           <p className="text-lg text-gray-600">
-            Thank you for your order. Your order has been successfully placed.
+            {t("Thank you for your order!")}
           </p>
         </div>
       </div>
@@ -144,17 +146,17 @@ const OrderConfirmationPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
             <div className="border-b border-gray-200 pb-6 mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Order #{order!._id.slice(-8).toUpperCase()}
+                {t("Order")} #{order!._id.slice(-8).toUpperCase()}
               </h2>
               <p className="text-gray-600">
-                Placed on{" "}
+                {t("Placed on")}{" "}
                 {new Date(order!.createdAt || Date.now()).toLocaleDateString()}{" "}
-                at{" "}
+                {t("at")}{" "}
                 {new Date(order!.createdAt || Date.now()).toLocaleTimeString()}
               </p>
               <div className="mt-2">
                 <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  Status: {order!.status}
+                  {t("Status:")} {order!.status}
                 </span>
               </div>
             </div>
@@ -163,7 +165,7 @@ const OrderConfirmationPage: React.FC = () => {
               {/* Order Items */}
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Order Items
+                  {t("Order Items")}
                 </h3>
                 <div className="space-y-4">
                   {order!.orderItems.map((item, index) => (
@@ -180,7 +182,7 @@ const OrderConfirmationPage: React.FC = () => {
                           {item.product.name}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          Quantity: {item.quantity}
+                          {t("Quantity:")} {item.quantity}
                         </p>
                         <p className="text-sm font-medium text-gray-900">
                           ${(item.product.price * item.quantity).toFixed(2)}
@@ -196,24 +198,24 @@ const OrderConfirmationPage: React.FC = () => {
                 {/* Order Summary */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Order Summary
+                    {t("Order Summary")}
                   </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span>Subtotal</span>
+                      <span>{t("Subtotal")}</span>
                       <span>${order!.itemsPrice.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Shipping</span>
+                      <span>{t("Shipping")}</span>
                       <span>${order!.shippingPrice.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Tax</span>
+                      <span>{t("Tax")}</span>
                       <span>${order!.taxPrice.toFixed(2)}</span>
                     </div>
                     <div className="border-t pt-2">
                       <div className="flex justify-between text-lg font-bold">
-                        <span>Total</span>
+                        <span>{t("Total")}</span>
                         <span>${order!.totalPrice.toFixed(2)}</span>
                       </div>
                     </div>
@@ -223,11 +225,11 @@ const OrderConfirmationPage: React.FC = () => {
                 {/* Payment Method */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Payment Method
+                    {t("Payment Method")}
                   </h3>
                   <p className="text-gray-600 capitalize">
                     {order!.paymentMethod === "cod"
-                      ? "Cash on Delivery"
+                      ? t("Cash on Delivery")
                       : order!.paymentMethod}
                   </p>
                 </div>
@@ -235,7 +237,7 @@ const OrderConfirmationPage: React.FC = () => {
                 {/* Shipping Address */}
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Shipping Address
+                    {t("Shipping Address")}
                   </h3>
                   <div className="text-gray-600">
                     <p className="font-medium">{order!.shippingAddress.name}</p>
@@ -259,13 +261,13 @@ const OrderConfirmationPage: React.FC = () => {
               to="/brands"
               className="bg-[#FFD600] text-[#333333] px-8 py-3 rounded-md hover:bg-[#e6c100] font-medium text-center transition-colors"
             >
-              Continue Shopping
+              {t("Continue Shopping")}
             </Link>
             <Link
               to="/account?tab=orders"
-              className="bg-[#002B5B] text-white px-8 py-3 rounded-md hover:bg-[#001a3d] font-medium text-center transition-colors"
+              className="bg-[#002B5B] text-white px-8 py-3 rounded-md hover:bg-[#e6c100] font-medium text-center transition-colors"
             >
-              View My Orders
+              {t("View My Orders")}
             </Link>
           </div>
         </div>

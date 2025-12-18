@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNotificationStore } from "../stores/notification.store";
 import type { Notification } from "../types/notification.type";
+import { useTranslation } from "react-i18next";
 
 const NotificationBell: React.FC = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -100,7 +102,7 @@ const NotificationBell: React.FC = () => {
         className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors relative"
       >
         <span className="text-xl mb-1">🔔</span>
-        <span className="text-xs hidden sm:block">Notifications</span>
+        <span className="text-xs hidden sm:block">{t('notification.notifications')}</span>
         {unreadCount > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -114,7 +116,7 @@ const NotificationBell: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-900">
-              Notifications
+              {t('notification.notifications')}
             </h3>
             <div className="flex items-center space-x-2">
               {hideReadNotifications ? (
@@ -123,7 +125,7 @@ const NotificationBell: React.FC = () => {
                   className="text-sm text-green-600 hover:text-green-800"
                   disabled={loading}
                 >
-                  Show All
+                  {t('notification.showAll')}
                 </button>
               ) : (
                 <button
@@ -131,7 +133,7 @@ const NotificationBell: React.FC = () => {
                   className="text-sm text-orange-600 hover:text-orange-800"
                   disabled={loading}
                 >
-                  Hide Read
+                  {t('notification.hideRead')}
                 </button>
               )}
               {unreadCount > 0 && (
@@ -140,7 +142,7 @@ const NotificationBell: React.FC = () => {
                   className="text-sm text-blue-600 hover:text-blue-800"
                   disabled={loading}
                 >
-                  Mark all read
+                  {t('notification.markAllRead')}
                 </button>
               )}
             </div>
@@ -150,13 +152,13 @@ const NotificationBell: React.FC = () => {
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500">
-                Loading notifications...
+                {t('notification.loading')}
               </div>
             ) : displayedNotifications.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 {hideReadNotifications
-                  ? "No unread notifications"
-                  : "No notifications yet"}
+                  ? t('notification.noUnread')
+                  : t('notification.noNotifications')}
               </div>
             ) : (
               displayedNotifications.map((notification) => (
@@ -201,7 +203,7 @@ const NotificationBell: React.FC = () => {
               }}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
             >
-              View all notifications
+              {t('notification.viewAll')}
             </button>
           </div>
         </div>

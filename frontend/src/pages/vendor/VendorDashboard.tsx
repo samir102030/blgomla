@@ -1,15 +1,17 @@
 import React, { useEffect } from 'react';
 import { useVendorStore } from '../../stores/vendor.store';
 import { useUserStore } from '../../stores/user.store';
+import { useTranslation } from 'react-i18next';
 
 const VendorDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useUserStore();
-  const { 
-    dashboardStats, 
-    vendorStore, 
-    loading, 
-    fetchDashboardStats, 
-    fetchVendorStore 
+  const {
+    dashboardStats,
+    vendorStore,
+    loading,
+    fetchDashboardStats,
+    fetchVendorStore
   } = useVendorStore();
 
   useEffect(() => {
@@ -32,10 +34,10 @@ const VendorDashboard: React.FC = () => {
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg p-4 sm:p-6 text-white">
         <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2">
-          Welcome back, {vendorStore?.name || user?.name}! 👋
+          {t('vendor.welcomeBack', { name: vendorStore?.name || user?.name })} 👋
         </h1>
         <p className="text-xs sm:text-sm lg:text-base text-yellow-100">
-          Here's what's happening with your store today.
+          {t('vendor.storeToday')}
         </p>
       </div>
 
@@ -49,7 +51,7 @@ const VendorDashboard: React.FC = () => {
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Products</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">{t('vendor.totalProducts')}</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {dashboardStats?.totalProducts || 0}
               </p>
@@ -65,7 +67,7 @@ const VendorDashboard: React.FC = () => {
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Orders</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">{t('vendor.totalOrders')}</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {dashboardStats?.totalOrders || 0}
               </p>
@@ -81,7 +83,7 @@ const VendorDashboard: React.FC = () => {
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">{t('vendor.totalRevenue')}</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 ${dashboardStats?.totalRevenue?.toLocaleString() || '0'}
               </p>
@@ -97,7 +99,7 @@ const VendorDashboard: React.FC = () => {
               </div>
             </div>
             <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">Average Rating</p>
+              <p className="text-xs sm:text-sm font-medium text-gray-600">{t('vendor.averageRating')}</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {dashboardStats?.averageRating?.toFixed(1) || '0.0'}
               </p>
@@ -108,15 +110,15 @@ const VendorDashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Quick Actions</h2>
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t('vendor.quickActions')}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
           <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
             <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-blue-600 text-sm sm:text-lg">➕</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">Add Product</p>
-              <p className="text-xs text-gray-500 hidden sm:block">Create new product</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.addProduct')}</p>
+              <p className="text-xs text-gray-500 hidden sm:block">{t('vendor.createNewProduct')}</p>
             </div>
           </button>
 
@@ -125,8 +127,8 @@ const VendorDashboard: React.FC = () => {
               <span className="text-green-600 text-sm sm:text-lg">📋</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">View Orders</p>
-              <p className="text-xs text-gray-500 hidden sm:block">Manage your orders</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.viewOrders')}</p>
+              <p className="text-xs text-gray-500 hidden sm:block">{t('vendor.manageOrders')}</p>
             </div>
           </button>
 
@@ -135,8 +137,8 @@ const VendorDashboard: React.FC = () => {
               <span className="text-yellow-600 text-sm sm:text-lg">🏪</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">Store Settings</p>
-              <p className="text-xs text-gray-500 hidden sm:block">Customize your store</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.storeSettings')}</p>
+              <p className="text-xs text-gray-500 hidden sm:block">{t('vendor.customizeStore')}</p>
             </div>
           </button>
 
@@ -145,8 +147,8 @@ const VendorDashboard: React.FC = () => {
               <span className="text-purple-600 text-sm sm:text-lg">📊</span>
             </div>
             <div className="text-left">
-              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">Analytics</p>
-              <p className="text-xs text-gray-500 hidden sm:block">View performance</p>
+              <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.analytics')}</p>
+              <p className="text-xs text-gray-500 hidden sm:block">{t('vendor.viewPerformance')}</p>
             </div>
           </button>
         </div>
@@ -157,9 +159,9 @@ const VendorDashboard: React.FC = () => {
         {/* Recent Orders */}
         <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900">Recent Orders</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">{t('vendor.recentOrders')}</h2>
             <button className="text-yellow-600 hover:text-yellow-700 text-xs sm:text-sm font-medium">
-              View All
+              {t('vendor.viewAll')}
             </button>
           </div>
           <div className="space-y-2 sm:space-y-4">
@@ -170,12 +172,12 @@ const VendorDashboard: React.FC = () => {
                   <span className="text-blue-600 text-xs sm:text-sm font-medium">#001</span>
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-xs sm:text-sm text-gray-900">Order #12345</p>
-                  <p className="text-xs text-gray-500">2 items • $45.99</p>
+                  <p className="font-medium text-xs sm:text-sm text-gray-900">{t('vendor.order')} #12345</p>
+                  <p className="text-xs text-gray-500">2 {t('vendor.items')} • $45.99</p>
                 </div>
               </div>
               <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex-shrink-0">
-                Pending
+                {t('vendor.pending')}
               </span>
             </div>
 
@@ -185,77 +187,77 @@ const VendorDashboard: React.FC = () => {
                   <span className="text-green-600 text-sm font-medium">#002</span>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">Order #12344</p>
-                  <p className="text-sm text-gray-500">1 item • $29.99</p>
+                  <p className="font-medium text-gray-900">{t('vendor.order')} #12344</p>
+                  <p className="text-sm text-gray-500">1 {t('vendor.item')} • $29.99</p>
                 </div>
               </div>
               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                Completed
+                {t('vendor.completed')}
               </span>
             </div>
 
             <div className="text-center py-4">
-              <p className="text-gray-500 text-sm">No more recent orders</p>
+              <p className="text-gray-500 text-sm">{t('vendor.noMoreOrders')}</p>
             </div>
           </div>
         </div>
 
         {/* Store Performance */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Store Performance</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('vendor.storePerformance')}</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">Active Products</span>
+              <span className="text-sm font-medium text-gray-600">{t('vendor.activeProducts')}</span>
               <span className="text-sm font-bold text-gray-900">
                 {dashboardStats?.activeProducts || 0}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full" 
-                style={{ 
-                  width: `${dashboardStats?.totalProducts ? 
-                    (dashboardStats.activeProducts / dashboardStats.totalProducts) * 100 : 0}%` 
+              <div
+                className="bg-blue-600 h-2 rounded-full"
+                style={{
+                  width: `${dashboardStats?.totalProducts ?
+                    (dashboardStats.activeProducts / dashboardStats.totalProducts) * 100 : 0}%`
                 }}
               ></div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">Pending Orders</span>
+              <span className="text-sm font-medium text-gray-600">{t('vendor.pendingOrders')}</span>
               <span className="text-sm font-bold text-gray-900">
                 {dashboardStats?.pendingOrders || 0}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-yellow-600 h-2 rounded-full" 
-                style={{ 
-                  width: `${dashboardStats?.totalOrders ? 
-                    (dashboardStats.pendingOrders / dashboardStats.totalOrders) * 100 : 0}%` 
+              <div
+                className="bg-yellow-600 h-2 rounded-full"
+                style={{
+                  width: `${dashboardStats?.totalOrders ?
+                    (dashboardStats.pendingOrders / dashboardStats.totalOrders) * 100 : 0}%`
                 }}
               ></div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">Monthly Revenue</span>
+              <span className="text-sm font-medium text-gray-600">{t('vendor.monthlyRevenue')}</span>
               <span className="text-sm font-bold text-gray-900">
                 ${dashboardStats?.monthlyRevenue?.toLocaleString() || '0'}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-green-600 h-2 rounded-full" 
-                style={{ 
-                  width: `${dashboardStats?.totalRevenue ? 
-                    (dashboardStats.monthlyRevenue / dashboardStats.totalRevenue) * 100 : 0}%` 
+              <div
+                className="bg-green-600 h-2 rounded-full"
+                style={{
+                  width: `${dashboardStats?.totalRevenue ?
+                    (dashboardStats.monthlyRevenue / dashboardStats.totalRevenue) * 100 : 0}%`
                 }}
               ></div>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">Customer Reviews</span>
+              <span className="text-sm font-medium text-gray-600">{t('vendor.customerReviews')}</span>
               <span className="text-sm font-bold text-gray-900">
-                {dashboardStats?.totalReviews || 0} reviews
+                {dashboardStats?.totalReviews || 0} {t('vendor.reviews')}
               </span>
             </div>
           </div>
@@ -265,32 +267,32 @@ const VendorDashboard: React.FC = () => {
       {/* Store Status */}
       {vendorStore && (
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Store Information</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('vendor.storeInformation')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">Store Details</h3>
+              <h3 className="font-medium text-gray-900 mb-2">{t('vendor.storeDetails')}</h3>
               <div className="space-y-2 text-sm">
-                <p><strong>Name:</strong> {vendorStore.name}</p>
-                <p><strong>Email:</strong> {vendorStore.email || 'Not set'}</p>
-                <p><strong>Phone:</strong> {vendorStore.phone || 'Not set'}</p>
-                <p><strong>Status:</strong> 
+                <p><strong>{t('vendor.name')}:</strong> {vendorStore.name}</p>
+                <p><strong>{t('vendor.email')}:</strong> {vendorStore.email || t('vendor.notSet')}</p>
+                <p><strong>{t('vendor.phone')}:</strong> {vendorStore.phone || t('vendor.notSet')}</p>
+                <p><strong>{t('vendor.status')}:</strong>
                   <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                    vendorStore.isActive 
-                      ? 'bg-green-100 text-green-800' 
+                    vendorStore.isActive
+                      ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {vendorStore.isActive ? 'Active' : 'Inactive'}
+                    {vendorStore.isActive ? t('vendor.active') : t('vendor.inactive')}
                   </span>
                 </p>
               </div>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">Store Metrics</h3>
+              <h3 className="font-medium text-gray-900 mb-2">{t('vendor.storeMetrics')}</h3>
               <div className="space-y-2 text-sm">
-                <p><strong>Subscribers:</strong> {vendorStore.subscribers?.length || 0}</p>
-                <p><strong>Social Links:</strong> {vendorStore.socialLinks?.length || 0}</p>
-                <p><strong>Features:</strong> {vendorStore.features?.length || 0}</p>
-                <p><strong>Created:</strong> {new Date(vendorStore.createdAt).toLocaleDateString()}</p>
+                <p><strong>{t('vendor.subscribers')}:</strong> {vendorStore.subscribers?.length || 0}</p>
+                <p><strong>{t('vendor.socialLinks')}:</strong> {vendorStore.socialLinks?.length || 0}</p>
+                <p><strong>{t('vendor.features')}:</strong> {vendorStore.features?.length || 0}</p>
+                <p><strong>{t('vendor.created')}:</strong> {new Date(vendorStore.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
           </div>

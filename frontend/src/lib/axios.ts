@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useUserStore } from "../stores/user.store";
+import i18n from "./i18n";
 
 export const axiosInstance = axios.create({
   // baseURL: "http://localhost:5000/api/",
@@ -9,6 +10,22 @@ export const axiosInstance = axios.create({
   },
   withCredentials: true,
 });
+
+// Request interceptor to add language header
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Get current language from i18n
+    const currentLanguage = i18n.language || "en";
+
+    // Add Accept-Language header
+    config.headers["Accept-Language"] = currentLanguage;
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Flag to prevent multiple refresh attempts
 let isRefreshing = false;

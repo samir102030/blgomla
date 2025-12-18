@@ -56,16 +56,18 @@ import {
   validateFilterProducts,
 } from "../validations/product.validate.js";
 
+import { translateResponse } from "../middleware/translation.middleware.js";
+
 const router = express.Router();
 
 // Public routes
-router.get("/", validateGetAllProducts, getAllProducts); // can search also
-router.get("/featured", getFeaturedProducts);
-router.get("/category/:categoryId", getProductsByCategory); // not tested
-router.get("/brand/:brandId", getProductsByBrand); // not tested
-router.get("/store/:storeId", getStoreProducts);
-router.get("/saleProducts", getSaleProducts);
-router.get("/filter", validateFilterProducts, filterProducts); // Filter products based on criteria [price, category, brand, etc.]
+router.get("/", translateResponse, validateGetAllProducts, getAllProducts); // can search also
+router.get("/featured", translateResponse, getFeaturedProducts);
+router.get("/category/:categoryId", translateResponse, getProductsByCategory); // not tested
+router.get("/brand/:brandId", translateResponse, getProductsByBrand); // not tested
+router.get("/store/:storeId", translateResponse, getStoreProducts);
+router.get("/saleProducts", translateResponse, getSaleProducts);
+router.get("/filter", translateResponse, validateFilterProducts, filterProducts); // Filter products based on criteria [price, category, brand, etc.]
 
 // filter products
 
@@ -181,15 +183,15 @@ router.delete(
   deleteProductAttribute
 ); // Delete product attribute
 
-router.get("/newest", getNewestProducts); // Get newest products
-router.get("/bestSellers", getBestSellers); // Get best sellers products
-router.get("/mostRated", getMostRatedProducts); // Get Most rated products
+router.get("/newest", translateResponse, getNewestProducts); // Get newest products
+router.get("/bestSellers", translateResponse, getBestSellers); // Get best sellers products
+router.get("/mostRated", translateResponse, getMostRatedProducts); // Get Most rated products
 
 // cart for user
 router.post("/cart", protectRoute, addProductToCart); // Add product to cart
-router.get("/cart", protectRoute, getCart); // Get cart
+router.get("/cart", translateResponse, protectRoute, getCart); // Get cart
 router.put("/cart/:productId", protectRoute, updateCart); // Update cart
 router.delete("/cart/:productId", protectRoute, removeFromCart); // Remove product from cart
 
-router.get("/:productId", getProductById);
+router.get("/:productId", translateResponse, getProductById);
 export default router;

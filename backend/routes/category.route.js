@@ -11,12 +11,13 @@ import {
   setCategoryToProduct,
   updateCategory,
 } from "../controllers/category.controller.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
 router.post("/", protectRoute, adminRoute, createCategory);
-router.get("/", getAllCategories);
-router.get("/:categoryId", getCategoryById);
+router.get("/", translateResponse, getAllCategories);
+router.get("/:categoryId", translateResponse, getCategoryById);
 router.put("/:categoryId", protectRoute, adminRoute, updateCategory);
 router.delete("/:categoryId", protectRoute, adminRoute, deleteCategory);
 router.put(
