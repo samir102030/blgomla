@@ -24,9 +24,9 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
       : undefined;
   const effectiveSalePrice =
     salePercentage > 0
-      ? (isFinite(salePriceValue || NaN)
-          ? salePriceValue
-          : price * (1 - salePercentage / 100))
+      ? isFinite(salePriceValue || NaN)
+        ? salePriceValue
+        : price * (1 - salePercentage / 100)
       : undefined;
   const rating = Number(product?.rating) || 0;
   const stockValue = Number(product?.stock) || 0;
@@ -38,9 +38,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   const safeAttributes = Array.isArray(product?.attributes)
     ? product.attributes
     : [];
-  const safeImages = Array.isArray(product?.images)
-    ? product.images
-    : [];
+  const safeImages = Array.isArray(product?.images) ? product.images : [];
 
   useEffect(() => {
     if (isOpen && product?.images?.length > 0) {
@@ -320,49 +318,46 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 
               {/* Reviews Summary */}
               {safeReviews.length > 0 && (
-                  <div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                      Recent Reviews
-                    </h4>
-                    <div className="space-y-3 max-h-40 overflow-y-auto">
-                      {safeReviews
-                        .slice(0, 3)
-                        .map((review: any, index: number) => (
-                          <div
-                            key={index}
-                            className="bg-gray-50 rounded-lg p-3"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center">
-                                <img
-                                  src={
-                                    review.user?.profilePicture ||
-                                    "/placeholder.png"
-                                  }
-                                  alt={review.user?.name || "User"}
-                                  className="w-8 h-8 rounded-full mr-3"
-                                />
-                                <span className="font-medium text-gray-900 text-sm">
-                                  {review.user?.name || "Anonymous"}
-                                </span>
-                              </div>
-                              <div className="flex items-center">
-                                {renderStars(review.rating)}
-                              </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    Recent Reviews
+                  </h4>
+                  <div className="space-y-3 max-h-40 overflow-y-auto">
+                    {safeReviews
+                      .slice(0, 3)
+                      .map((review: any, index: number) => (
+                        <div key={index} className="bg-gray-50 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center">
+                              <img
+                                src={
+                                  review.user?.profilePicture ||
+                                  "/placeholder.png"
+                                }
+                                alt={review.user?.name || "User"}
+                                className="w-8 h-8 rounded-full mr-3"
+                              />
+                              <span className="font-medium text-gray-900 text-sm">
+                                {review.user?.name || "Anonymous"}
+                              </span>
                             </div>
-                            <p className="text-gray-700 text-sm">
-                              {review.comment}
-                            </p>
+                            <div className="flex items-center">
+                              {renderStars(review.rating)}
+                            </div>
                           </div>
-                        ))}
-                      {safeReviews.length > 3 && (
-                        <div className="text-center text-gray-500 text-sm">
-                          And {safeReviews.length - 3} more reviews...
+                          <p className="text-gray-700 text-sm">
+                            {review.comment}
+                          </p>
                         </div>
-                      )}
-                    </div>
+                      ))}
+                    {safeReviews.length > 3 && (
+                      <div className="text-center text-gray-500 text-sm">
+                        And {safeReviews.length - 3} more reviews...
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
+              )}
             </div>
           </div>
         </div>
