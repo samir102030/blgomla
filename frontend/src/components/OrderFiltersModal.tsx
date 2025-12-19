@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { XMarkIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 
 interface FilterOptions {
   status: string[];
@@ -27,6 +28,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
   currentFilters,
 }) => {
   const [filters, setFilters] = useState<FilterOptions>(currentFilters);
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     setFilters(currentFilters);
@@ -35,18 +37,18 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
   if (!isOpen) return null;
 
   const statusOptions = [
-    { value: "pending", label: "Pending" },
-    { value: "processing", label: "Processing" },
-    { value: "shipped", label: "Shipped" },
-    { value: "delivered", label: "Delivered" },
-    { value: "cancelled", label: "Cancelled" },
+    { value: "pending", label: t("modal.editOrder.status.pending") },
+    { value: "processing", label: t("modal.editOrder.status.processing") },
+    { value: "shipped", label: t("modal.editOrder.status.shipped") },
+    { value: "delivered", label: t("modal.editOrder.status.delivered") },
+    { value: "cancelled", label: t("modal.editOrder.status.cancelled") },
   ];
 
   const paymentOptions = [
-    { value: "cod", label: "Cash On Delivery" },
-    { value: "card", label: "Credit Card" },
-    { value: "paypal", label: "PayPal" },
-    { value: "bank", label: "Bank Transfer" },
+    { value: "cod", label: t("Cash On Delivery") },
+    { value: "card", label: t("modal.orderFilters.creditCard") },
+    { value: "paypal", label: t("modal.orderFilters.paypal") },
+    { value: "bank", label: t("modal.orderFilters.bankTransfer") },
   ];
 
   const handleStatusChange = (status: string, checked: boolean) => {
@@ -111,14 +113,17 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
                 <FunnelIcon className="h-6 w-6 text-gray-600 mr-3" />
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900">
-                    Advanced Filters
+                    {t("modal.orderFilters.title")}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     {activeFiltersCount > 0
-                      ? `${activeFiltersCount} filter${
-                          activeFiltersCount > 1 ? "s" : ""
-                        } active`
-                      : "No filters applied"}
+                      ? t(
+                          activeFiltersCount > 1
+                            ? "modal.orderFilters.filtersActivePlural"
+                            : "modal.orderFilters.filtersActiveSingular",
+                          { count: activeFiltersCount }
+                        )
+                      : t("modal.orderFilters.noFilters")}
                   </p>
                 </div>
               </div>
@@ -134,7 +139,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
               {/* Status Filters */}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                  Order Status
+                  {t("modal.orderFilters.orderStatus")}
                 </h4>
                 <div className="space-y-2">
                   {statusOptions.map((status) => (
@@ -161,7 +166,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
               {/* Payment Method Filters */}
               <div>
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                  Payment Method
+                  {t("order.paymentMethod")}
                 </h4>
                 <div className="space-y-2">
                   {paymentOptions.map((payment) => (
@@ -188,12 +193,12 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
               {/* Date Range */}
               <div className="md:col-span-2">
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                  Date Range
+                  {t("admin.customRange")}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      From Date
+                      {t("admin.from")} {t("account.date").toLowerCase()}
                     </label>
                     <input
                       type="date"
@@ -212,7 +217,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      To Date
+                      {t("admin.to")} {t("account.date").toLowerCase()}
                     </label>
                     <input
                       type="date"
@@ -232,12 +237,12 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
               {/* Amount Range */}
               <div className="md:col-span-2">
                 <h4 className="text-lg font-semibold text-gray-900 mb-3">
-                  Order Amount Range
+                  {t("modal.orderFilters.amountRange")}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Minimum Amount ($)
+                      {t("modal.orderFilters.minAmount")}
                     </label>
                     <input
                       type="number"
@@ -251,12 +256,12 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="0.00"
+                      placeholder={t("modal.orderFilters.minPlaceholder")}
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Maximum Amount ($)
+                      {t("modal.orderFilters.maxAmount")}
                     </label>
                     <input
                       type="number"
@@ -270,7 +275,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="No limit"
+                      placeholder={t("modal.orderFilters.noLimit")}
                     />
                   </div>
                 </div>
@@ -281,7 +286,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
             {activeFiltersCount > 0 && (
               <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-blue-900 mb-2">
-                  Active Filters:
+                  {t("modal.orderFilters.activeFilters")}
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {filters.status.map((status) => (
@@ -289,7 +294,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
                       key={status}
                       className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                     >
-                      Status: {status}
+                      {t("order.status")}: {status}
                     </span>
                   ))}
                   {filters.paymentMethod.map((payment) => (
@@ -297,27 +302,27 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
                       key={payment}
                       className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
                     >
-                      Payment: {payment}
+                      {t("order.paymentMethod")}: {payment}
                     </span>
                   ))}
                   {filters.dateRange.start && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      From: {filters.dateRange.start}
+                      {t("admin.from")}: {filters.dateRange.start}
                     </span>
                   )}
                   {filters.dateRange.end && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      To: {filters.dateRange.end}
+                      {t("admin.to")}: {filters.dateRange.end}
                     </span>
                   )}
                   {filters.minAmount && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      Min: ${filters.minAmount}
+                      {t("modal.orderFilters.minAbbrev")}: ${filters.minAmount}
                     </span>
                   )}
                   {filters.maxAmount && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      Max: ${filters.maxAmount}
+                      {t("modal.orderFilters.maxAbbrev")}: ${filters.maxAmount}
                     </span>
                   )}
                 </div>
@@ -332,21 +337,21 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
               onClick={handleApplyFilters}
               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
             >
-              Apply Filters
+              {t("admin.applyFilters")}
             </button>
             <button
               type="button"
               onClick={handleClearFilters}
               className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
             >
-              Clear All
+              {t("admin.clearFilters")}
             </button>
             <button
               type="button"
               onClick={onClose}
               className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
             >
-              Cancel
+              {t("vendor.cancel")}
             </button>
           </div>
         </div>

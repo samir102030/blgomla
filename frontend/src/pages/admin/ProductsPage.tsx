@@ -116,6 +116,20 @@ const ProductsPage: React.FC = () => {
     return "active";
   };
 
+  // defensive defaults in case stores aren't hydrated yet
+  const safeBrands = brands ?? [];
+  const safeCategories = categories ?? [];
+
+  // Helper to display category name whether populated or id
+  const getCategoryName = (product: any) => {
+    if (!product) return "";
+    const cat = product.Category;
+    if (!cat) return "";
+    return typeof cat === "string"
+      ? safeCategories.find((c) => c._id === cat)?.name || ""
+      : cat?.name || "";
+  };
+
   const filteredProducts = products.filter((product) => {
     // Search filter (name or SKU)
     const matchesSearch =
@@ -177,20 +191,6 @@ const ProductsPage: React.FC = () => {
       matchesVendor
     );
   });
-
-  // Helper to display category name whether populated or id
-  const getCategoryName = (product: any) => {
-    if (!product) return "";
-    const cat = product.Category;
-    if (!cat) return "";
-    return typeof cat === "string"
-      ? safeCategories.find((c) => c._id === cat)?.name || ""
-      : cat?.name || "";
-  };
-
-  // defensive defaults in case stores aren't hydrated yet
-  const safeBrands = brands ?? [];
-  const safeCategories = categories ?? [];
 
   const handleViewProduct = (product: any) => {
     setSelectedProduct(product);

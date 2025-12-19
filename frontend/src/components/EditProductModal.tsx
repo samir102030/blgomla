@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { axiosInstance } from "../lib/axios";
+import { useTranslation } from "react-i18next";
 
 interface EditProductModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   categories,
 }) => {
   const [updating, setUpdating] = useState(false);
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -158,16 +160,16 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-1">
-              Edit Product
+              {t("modal.editProduct.title")}
             </h2>
             <p className="text-gray-600 text-sm">
-              Update product details and images
+              {t("modal.editProduct.subtitle")}
             </p>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
-            aria-label="Close modal"
+            aria-label={t("modal.common.close")}
           >
             ✕
           </button>
@@ -183,7 +185,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {existingImages.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Images
+                  {t("modal.editProduct.currentImages")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {existingImages.map((img, idx) => (
@@ -209,7 +211,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {/* New Image Uploader */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add New Images
+                {t("modal.editProduct.addNewImages")}
               </label>
               <div
                 onDragOver={(e) => e.preventDefault()}
@@ -220,10 +222,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 className="border-2 border-dashed border-gray-200 rounded-lg p-3 h-32 flex flex-col items-center justify-center text-center cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
               >
                 <p className="text-sm text-gray-500">
-                  Drag & drop images here or click to select
+                  {t("modal.editProduct.dragDrop")}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  Supports multiple images (jpg, png)
+                  {t("modal.editProduct.supportsMultiple")}
                 </p>
                 <input
                   id="edit-product-images-input"
@@ -240,7 +242,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {previews.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Images Preview
+                  {t("modal.editProduct.newImagesPreview")}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {previews.map((src, idx) => (
@@ -269,11 +271,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Name *
+                  {t("modal.editProduct.nameLabel")}
                 </label>
                 <input
                   required
-                  placeholder="Product name"
+                  placeholder={t("modal.editProduct.namePlaceholder")}
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
@@ -281,11 +283,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Price *
+                  {t("modal.editProduct.priceLabel")}
                 </label>
                 <input
                   required
-                  placeholder="0.00"
+                  placeholder={t("modal.editProduct.pricePlaceholder")}
                   type="number"
                   step="0.01"
                   value={form.price}
@@ -298,14 +300,14 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Brand
+                  {t("modal.editProduct.brandLabel")}
                 </label>
                 <select
                   value={form.brand}
                   onChange={(e) => setForm({ ...form, brand: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 >
-                  <option value="">Select brand</option>
+                  <option value="">{t("modal.editProduct.brandSelect")}</option>
                   {brands?.map((b: any) => (
                     <option key={b._id} value={b._id}>
                       {b.name}
@@ -315,7 +317,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Category
+                  {t("modal.editProduct.categoryLabel")}
                 </label>
                 <select
                   value={form.category}
@@ -324,7 +326,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   }
                   className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 >
-                  <option value="">Select category</option>
+                  <option value="">
+                    {t("modal.editProduct.categorySelect")}
+                  </option>
                   {categories.map((c: any) => (
                     <option key={c._id} value={c._id}>
                       {c.name}
@@ -337,10 +341,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Sale Percentage (%)
+                  {t("modal.editProduct.salePercentageLabel")}
                 </label>
                 <input
-                  placeholder="0"
+                  placeholder={t("modal.editProduct.salePercentagePlaceholder")}
                   type="number"
                   min="0"
                   max="100"
@@ -353,10 +357,10 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Stock
+                  {t("modal.editProduct.stockLabel")}
                 </label>
                 <input
-                  placeholder="0"
+                  placeholder={t("modal.editProduct.stockPlaceholder")}
                   type="number"
                   value={form.stock}
                   onChange={(e) => setForm({ ...form, stock: e.target.value })}
@@ -376,7 +380,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   className="mr-2 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Sale Active
+                  {t("modal.editProduct.saleActive")}
                 </span>
               </label>
               <label className="flex items-center">
@@ -389,7 +393,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   className="mr-2 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Is Active
+                  {t("modal.editProduct.isActive")}
                 </span>
               </label>
               <label className="flex items-center">
@@ -402,17 +406,17 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   className="mr-2 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Featured
+                  {t("modal.editProduct.featured")}
                 </span>
               </label>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Description
+                {t("modal.editProduct.descriptionLabel")}
               </label>
               <textarea
-                placeholder="Product description"
+                placeholder={t("modal.editProduct.descriptionPlaceholder")}
                 value={form.description}
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
@@ -424,12 +428,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tags
+                {t("modal.editProduct.tagsLabel")}
               </label>
               <div className="flex gap-2 mb-2">
                 <input
                   id="edit-tag-input"
-                  placeholder="Add a tag"
+                  placeholder={t("modal.editProduct.tagsAddPlaceholder")}
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 />
                 <button
@@ -448,7 +452,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   }}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Add
+                  {t("modal.editProduct.addButton")}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -478,12 +482,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {/* Features */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Features
+                {t("modal.editProduct.featuresLabel")}
               </label>
               <div className="flex gap-2 mb-2">
                 <input
                   id="edit-feature-input"
-                  placeholder="Add a feature"
+                  placeholder={t("modal.editProduct.featuresAddPlaceholder")}
                   className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 />
                 <button
@@ -502,7 +506,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   }}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Add
+                  {t("modal.editProduct.addButton")}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -532,17 +536,17 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {/* Attributes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Attributes
+                {t("modal.editProduct.attributesLabel")}
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                 <input
                   id="edit-attr-name-input"
-                  placeholder="Attribute name"
+                  placeholder={t("modal.editProduct.attrNamePlaceholder")}
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 />
                 <input
                   id="edit-attr-value-input"
-                  placeholder="Attribute value"
+                  placeholder={t("modal.editProduct.attrValuePlaceholder")}
                   className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 />
                 <button
@@ -571,7 +575,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   }}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Add
+                  {t("modal.editProduct.addButton")}
                 </button>
               </div>
               <div className="space-y-2">
@@ -611,14 +615,16 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               onClick={onClose}
               className="px-6 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t("vendor.cancel")}
             </button>
             <button
               type="submit"
               disabled={updating}
               className="px-6 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-sm font-medium hover:from-amber-600 hover:to-orange-600 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {updating ? "Updating..." : "Update Product"}
+              {updating
+                ? t("modal.editProduct.updating")
+                : t("modal.editProduct.submit")}
             </button>
           </div>
         </form>

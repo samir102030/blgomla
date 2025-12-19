@@ -16,6 +16,32 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   const [selectedImage, setSelectedImage] = useState(0);
   const brands = useBrandStore((state: any) => state.brands);
 
+  const price = Number(product?.price) || 0;
+  const salePercentage = Number(product?.salePercentage) || 0;
+  const salePriceValue =
+    product?.salePrice !== undefined && product?.salePrice !== null
+      ? Number(product.salePrice)
+      : undefined;
+  const effectiveSalePrice =
+    salePercentage > 0
+      ? (isFinite(salePriceValue || NaN)
+          ? salePriceValue
+          : price * (1 - salePercentage / 100))
+      : undefined;
+  const rating = Number(product?.rating) || 0;
+  const stockValue = Number(product?.stock) || 0;
+  const safeReviews = Array.isArray(product?.reviews)
+    ? product.reviews.filter((r: any) => r?.isVisible !== false)
+    : [];
+  const safeTags = Array.isArray(product?.tags) ? product.tags : [];
+  const safeFeatures = Array.isArray(product?.features) ? product.features : [];
+  const safeAttributes = Array.isArray(product?.attributes)
+    ? product.attributes
+    : [];
+  const safeImages = Array.isArray(product?.images)
+    ? product.images
+    : [];
+
   useEffect(() => {
     if (isOpen && product?.images?.length > 0) {
       setSelectedImage(0);
@@ -25,8 +51,10 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   if (!isOpen || !product) return null;
 
   const productImages =
-    product.images && product.images.length > 0
-      ? product.images.map((img: any) => img.url)
+    safeImages.length > 0
+      ? safeImages
+          .map((img: any) => (typeof img === "string" ? img : img?.url))
+          .filter(Boolean)
       : ["/placeholder.png"];
 
   const getBrandName = (brandId: string) => {
@@ -59,7 +87,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
     return { text: "In Stock", color: "text-green-600", bg: "bg-green-50" };
   };
 
-  const stockStatus = getStockStatus(product.stock || 0);
+  const stockStatus = getStockStatus(stockValue);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -129,45 +157,34 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 </h3>
 
                 {/* Rating */}
-                {product.rating && (
+                {rating > 0 && (
                   <div className="flex items-center mb-4">
                     <div className="flex items-center mr-3">
-                      {renderStars(Math.floor(product.rating))}
+                      {renderStars(Math.floor(rating))}
                     </div>
                     <span className="text-gray-600 text-sm">
-                      (
-                      {product.reviews?.filter(
-                        (r: any) => r.isVisible !== false
-                      ).length || 0}{" "}
-                      reviews)
+                      ({safeReviews.length || 0} reviews)
                     </span>
                   </div>
                 )}
 
                 {/* Price */}
                 <div className="mb-4">
-                  {product.saleActive &&
-                  product.salePercentage &&
-                  product.salePercentage > 0 ? (
+                  {product.saleActive && salePercentage > 0 ? (
                     <div className="flex items-center space-x-3">
                       <span className="text-4xl font-bold text-gray-900">
-                        $
-                        {product.salePrice?.toFixed(2) ||
-                          (
-                            product.price *
-                            (1 - product.salePercentage / 100)
-                          ).toFixed(2)}
+                        ${effectiveSalePrice?.toFixed(2) ?? price.toFixed(2)}
                       </span>
                       <span className="text-2xl text-gray-500 line-through">
-                        ${product.price?.toFixed(2)}
+                        ${price.toFixed(2)}
                       </span>
                       <span className="bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-full">
-                        -{product.salePercentage}% OFF
+                        -{salePercentage}% OFF
                       </span>
                     </div>
                   ) : (
                     <span className="text-4xl font-bold text-gray-900">
-                      ${product.price?.toFixed(2)}
+                      ${price.toFixed(2)}
                     </span>
                   )}
                 </div>
@@ -241,13 +258,13 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               )}
 
               {/* Tags */}
-              {product.tags && product.tags.length > 0 && (
+              {safeTags.length > 0 && (
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
                     Tags
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {product.tags.map((tag: string, index: number) => (
+                    {safeTags.map((tag: string, index: number) => (
                       <span
                         key={index}
                         className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
@@ -260,13 +277,13 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               )}
 
               {/* Features */}
-              {product.features && product.features.length > 0 && (
+              {safeFeatures.length > 0 && (
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
                     Features
                   </h4>
                   <ul className="space-y-2">
-                    {product.features.map((feature: string, index: number) => (
+                    {safeFeatures.map((feature: string, index: number) => (
                       <li
                         key={index}
                         className="flex items-center text-gray-700"
@@ -280,13 +297,13 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               )}
 
               {/* Attributes */}
-              {product.attributes && product.attributes.length > 0 && (
+              {safeAttributes.length > 0 && (
                 <div>
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
                     Specifications
                   </h4>
                   <div className="grid grid-cols-1 gap-2">
-                    {product.attributes.map((attr: any, index: number) => (
+                    {safeAttributes.map((attr: any, index: number) => (
                       <div
                         key={index}
                         className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-3"
@@ -302,16 +319,13 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               )}
 
               {/* Reviews Summary */}
-              {product.reviews &&
-                product.reviews.filter((r: any) => r.isVisible !== false)
-                  .length > 0 && (
+              {safeReviews.length > 0 && (
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3">
                       Recent Reviews
                     </h4>
                     <div className="space-y-3 max-h-40 overflow-y-auto">
-                      {product.reviews
-                        .filter((r: any) => r.isVisible !== false)
+                      {safeReviews
                         .slice(0, 3)
                         .map((review: any, index: number) => (
                           <div
@@ -341,14 +355,9 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                             </p>
                           </div>
                         ))}
-                      {product.reviews.filter((r: any) => r.isVisible !== false)
-                        .length > 3 && (
+                      {safeReviews.length > 3 && (
                         <div className="text-center text-gray-500 text-sm">
-                          And{" "}
-                          {product.reviews.filter(
-                            (r: any) => r.isVisible !== false
-                          ).length - 3}{" "}
-                          more reviews...
+                          And {safeReviews.length - 3} more reviews...
                         </div>
                       )}
                     </div>

@@ -4,6 +4,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useBrandStore } from "../stores/brand.store";
+import { useTranslation } from "react-i18next";
 
 interface DeleteProductModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
 }) => {
   const [deleting, setDeleting] = useState(false);
   const brands = useBrandStore((state: any) => state.brands);
+  const { t } = useTranslation();
 
   const getBrandName = (brandId: string) => {
     const brand = brands?.find((b: any) => b._id === brandId);
@@ -60,17 +62,17 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
             </div>
             <div className="ml-3">
               <h2 className="text-lg font-semibold text-gray-900">
-                Delete Product
+                {t("modal.deleteProduct.title")}
               </h2>
               <p className="text-sm text-gray-600">
-                This action cannot be undone
+                {t("modal.common.irreversible")}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
-            aria-label="Close modal"
+            aria-label={t("modal.common.close")}
           >
             <XMarkIcon className="h-5 w-5 text-gray-500" />
           </button>
@@ -95,19 +97,19 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
               </h3>
               <div className="space-y-1 text-sm text-gray-600">
                 <p>
-                  <span className="font-medium">SKU:</span>{" "}
+                  <span className="font-medium">{t("modal.common.sku")}</span>{" "}
                   {product._id?.slice(-8).toUpperCase()}
                 </p>
                 <p>
-                  <span className="font-medium">Price:</span> $
-                  {product.price?.toFixed(2)}
+                  <span className="font-medium">{t("modal.common.price")}</span>{" "}
+                  ${product.price?.toFixed(2)}
                 </p>
                 <p>
-                  <span className="font-medium">Brand:</span>{" "}
+                  <span className="font-medium">{t("modal.common.brand")}</span>{" "}
                   {product.brand ? getBrandName(product.brand) : "N/A"}
                 </p>
                 <p>
-                  <span className="font-medium">Stock:</span>{" "}
+                  <span className="font-medium">{t("modal.common.stock")}</span>{" "}
                   {product.stock || 0}
                 </p>
               </div>
@@ -120,12 +122,13 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
               <ExclamationTriangleIcon className="h-5 w-5 text-red-400 flex-shrink-0" />
               <div className="ml-3">
                 <h4 className="text-sm font-medium text-red-800">
-                  Are you sure you want to delete this product?
+                  {t("modal.deleteProduct.confirmTitle")}
                 </h4>
                 <div className="mt-2 text-sm text-red-700">
                   <p>
-                    This will permanently delete the product "{product.name}"
-                    and all its associated data. This action cannot be undone.
+                    {t("modal.deleteProduct.confirmBody", {
+                      name: product.name,
+                    })}
                   </p>
                 </div>
               </div>
@@ -141,9 +144,10 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-yellow-800">
-                    <strong>Warning:</strong> This product has been sold{" "}
-                    {product.soldCount} time(s). Deleting it may affect order
-                    history and analytics.
+                    <strong>{t("modal.common.warning")}</strong>{" "}
+                    {t("modal.deleteProduct.soldWarning", {
+                      count: product.soldCount,
+                    })}
                   </p>
                 </div>
               </div>
@@ -159,7 +163,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
             disabled={deleting}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t("vendor.cancel")}
           </button>
           <button
             onClick={handleDelete}
@@ -169,12 +173,12 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
             {deleting ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Deleting...
+                {t("modal.deleteProduct.deleting")}
               </>
             ) : (
               <>
                 <span>🗑️</span>
-                Delete Product
+                {t("modal.deleteProduct.deleteButton")}
               </>
             )}
           </button>

@@ -4,6 +4,7 @@ import { useCouponStore } from "../stores/coupon.store";
 import { useUserStore } from "../stores/user.store";
 import { useVendorStore } from "../stores/vendor.store";
 import { useProductStore } from "../stores/product.store";
+import { useTranslation } from "react-i18next";
 // import { useCategoryStore } from "../stores/category.store";
 
 interface EditCouponModalProps {
@@ -19,6 +20,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
   onCouponUpdated,
   coupon,
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     code: "",
     description: "",
@@ -148,7 +150,9 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Coupon</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {t("modal.editCoupon.title")}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -162,7 +166,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
             {/* Code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Coupon Code *
+                {t("modal.editCoupon.codeLabel")}
               </label>
               <input
                 type="text"
@@ -178,7 +182,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
             {/* Discount Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Discount Type *
+                {t("modal.editCoupon.discountTypeLabel")}
               </label>
               <select
                 name="discountType"
@@ -187,15 +191,19 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               >
-                <option value="percentage">Percentage</option>
-                <option value="fixed">Fixed Amount</option>
+                <option value="percentage">
+                  {t("modal.editCoupon.percentage")}
+                </option>
+                <option value="fixed">
+                  {t("modal.editCoupon.fixedAmount")}
+                </option>
               </select>
             </div>
 
             {/* Discount Value */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Discount Value *
+                {t("modal.editCoupon.discountValueLabel")}
               </label>
               <input
                 type="number"
@@ -211,14 +219,16 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.discountType === "percentage" ? "% off" : "$ off"}
+                {formData.discountType === "percentage"
+                  ? t("modal.editCoupon.percentSuffix")
+                  : t("modal.editCoupon.fixedSuffix")}
               </p>
             </div>
 
             {/* Minimum Purchase */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Purchase
+                {t("modal.editCoupon.minimumPurchaseLabel")}
               </label>
               <input
                 type="number"
@@ -235,7 +245,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
             {/* Maximum Discount */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maximum Discount
+                {t("modal.editCoupon.maximumDiscountLabel")}
               </label>
               <input
                 type="number"
@@ -252,7 +262,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
             {/* Usage Limit */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Usage Limit
+                {t("modal.editCoupon.usageLimitLabel")}
               </label>
               <input
                 type="number"
@@ -268,7 +278,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
             {/* Start Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Start Date *
+                {t("modal.editCoupon.startDateLabel")}
               </label>
               <input
                 type="datetime-local"
@@ -283,7 +293,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
             {/* End Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                End Date *
+                {t("modal.editCoupon.endDateLabel")}
               </label>
               <input
                 type="datetime-local"
@@ -299,7 +309,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
+              {t("modal.editCoupon.descriptionLabel")}
             </label>
             <textarea
               name="description"
@@ -307,14 +317,14 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
               onChange={handleInputChange}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Optional description for the coupon"
+              placeholder={t("modal.editCoupon.descriptionPlaceholder")}
             />
           </div>
 
           {/* Applicable Products */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Applicable Products
+              {t("modal.editCoupon.applicableProductsLabel")}
             </label>
             <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 space-y-2">
               {products.length > 0 ? (
@@ -381,13 +391,12 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
                 ))
               ) : (
                 <p className="text-sm text-gray-500 text-center py-4">
-                  No products available
+                  {t("modal.editCoupon.noProducts")}
                 </p>
               )}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Leave unchecked to apply to all products. Check specific products
-              to restrict the coupon.
+              {t("modal.editCoupon.applyAllHint")}
             </p>
           </div>
 
@@ -425,14 +434,16 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
             >
-              Cancel
+              {t("vendor.cancel")}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? "Updating..." : "Update Coupon"}
+              {loading
+                ? t("modal.editCoupon.updating")
+                : t("modal.editCoupon.submit")}
             </button>
           </div>
         </form>

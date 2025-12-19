@@ -4,6 +4,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface Order {
   _id: string;
@@ -41,6 +42,7 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -56,10 +58,12 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
     setLoading(true);
     try {
       await onDelete(order._id);
-      toast.success("Order deleted successfully!");
+      toast.success(t("modal.deleteOrder.success"));
       onClose();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Failed to delete order");
+      toast.error(
+        error.response?.data?.message || t("modal.deleteOrder.failed")
+      );
     } finally {
       setLoading(false);
     }
@@ -87,10 +91,12 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
                 </div>
                 <div className="ml-3">
                   <h3 className="text-lg font-medium text-gray-900">
-                    Delete Order
+                    {t("modal.deleteOrder.title")}
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Order #{order._id.slice(-8).toUpperCase()}
+                    {t("modal.deleteOrder.orderId", {
+                      id: order._id.slice(-8).toUpperCase(),
+                    })}
                   </p>
                 </div>
               </div>
@@ -106,25 +112,25 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
             <div className="bg-gray-50 rounded-lg p-4 mb-4">
               <div className="grid grid-cols-1 gap-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Customer:</span>
+                  <span className="text-gray-600">{t("order.customer")}:</span>
                   <span className="font-medium text-gray-900">
                     {order.user.name}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total:</span>
+                  <span className="text-gray-600">{t("common.total")}:</span>
                   <span className="font-medium text-gray-900">
                     ${order.totalPrice.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
+                  <span className="text-gray-600">{t("order.status")}:</span>
                   <span className="font-medium text-gray-900 capitalize">
                     {order.status}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Items:</span>
+                  <span className="text-gray-600">{t("common.items")}:</span>
                   <span className="font-medium text-gray-900">
                     {order.orderItems.length}
                   </span>
@@ -140,12 +146,12 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
                     <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
                     <div className="ml-3">
                       <h4 className="text-sm font-medium text-red-800">
-                        Cannot Delete Order
+                        {t("modal.deleteOrder.cannotDeleteTitle")}
                       </h4>
                       <p className="text-sm text-red-700 mt-1">
-                        This order cannot be deleted because it is currently{" "}
-                        <strong>{order.status}</strong>. Only cancelled or
-                        pending orders can be deleted.
+                        {t("modal.deleteOrder.cannotDeleteBody", {
+                          status: order.status,
+                        })}
                       </p>
                     </div>
                   </div>
@@ -156,11 +162,11 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
                     <ExclamationTriangleIcon className="h-5 w-5 text-yellow-400" />
                     <div className="ml-3">
                       <h4 className="text-sm font-medium text-yellow-800">
-                        Warning: This action cannot be undone
+                        <strong>{t("modal.common.warning")}</strong>{" "}
+                        {t("modal.common.irreversible")}
                       </h4>
                       <p className="text-sm text-yellow-700 mt-1">
-                        Deleting this order will permanently remove it from the
-                        system. This action cannot be reversed.
+                        {t("modal.deleteOrder.warningBody")}
                       </p>
                     </div>
                   </div>
@@ -172,14 +178,14 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
             {canDelete && (
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Type <strong>DELETE</strong> to confirm
+                  {t("modal.deleteOrder.typeToConfirm")} <strong>DELETE</strong>
                 </label>
                 <input
                   type="text"
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Type DELETE to confirm"
+                  placeholder={t("modal.deleteOrder.typeToConfirmPlaceholder")}
                 />
               </div>
             )}
@@ -195,14 +201,16 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
                   disabled={loading || confirmText !== "DELETE"}
                   className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  {loading ? "Deleting..." : "Delete Order"}
+                  {loading
+                    ? t("modal.deleteOrder.deleting")
+                    : t("modal.deleteOrder.deleteButton")}
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  Cancel
+                  {t("vendor.cancel")}
                 </button>
               </>
             ) : (
@@ -211,7 +219,7 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
                 onClick={onClose}
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
               >
-                Close
+                {t("modal.deleteOrder.close")}
               </button>
             )}
           </div>

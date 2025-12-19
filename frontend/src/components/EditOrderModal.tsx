@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 interface Order {
   _id: string;
@@ -38,6 +39,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
 }) => {
   const [status, setStatus] = useState(order?.status || "");
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   React.useEffect(() => {
     if (order) {
@@ -50,27 +52,27 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
   const statusOptions = [
     {
       value: "pending",
-      label: "Pending",
+      label: t("modal.editOrder.status.pending"),
       color: "bg-yellow-100 text-yellow-800",
     },
     {
       value: "processing",
-      label: "Processing",
+      label: t("modal.editOrder.status.processing"),
       color: "bg-blue-100 text-blue-800",
     },
     {
       value: "shipped",
-      label: "Shipped",
+      label: t("modal.editOrder.status.shipped"),
       color: "bg-purple-100 text-purple-800",
     },
     {
       value: "delivered",
-      label: "Delivered",
+      label: t("modal.editOrder.status.delivered"),
       color: "bg-green-100 text-green-800",
     },
     {
       value: "cancelled",
-      label: "Cancelled",
+      label: t("modal.editOrder.status.cancelled"),
       color: "bg-red-100 text-red-800",
     },
   ];
@@ -82,12 +84,10 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
     setLoading(true);
     try {
       await onUpdate(order._id, status);
-      toast.success("Order status updated successfully!");
+      toast.success(t("modal.editOrder.success"));
       onClose();
     } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || "Failed to update order status"
-      );
+      toast.error(error.response?.data?.message || t("modal.editOrder.failed"));
     } finally {
       setLoading(false);
     }
@@ -110,10 +110,12 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900">
-                    Edit Order Status
+                    {t("modal.editOrder.title")}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    Order #{order._id.slice(-8).toUpperCase()}
+                    {t("modal.deleteOrder.orderId", {
+                      id: order._id.slice(-8).toUpperCase(),
+                    })}
                   </p>
                 </div>
                 <button
@@ -129,25 +131,31 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
               <div className="bg-gray-50 rounded-lg p-4 mb-6">
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600">Customer:</span>
+                    <span className="text-gray-600">
+                      {t("order.customer")}:
+                    </span>
                     <p className="font-medium text-gray-900">
                       {order.user.name}
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Total:</span>
+                    <span className="text-gray-600">{t("common.total")}:</span>
                     <p className="font-medium text-gray-900">
                       ${order.totalPrice.toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Current Status:</span>
+                    <span className="text-gray-600">
+                      {t("modal.editOrder.currentStatus")}:
+                    </span>
                     <p className="font-medium text-gray-900 capitalize">
                       {order.status}
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-600">Payment:</span>
+                    <span className="text-gray-600">
+                      {t("order.paymentMethod")}:
+                    </span>
                     <p className="font-medium text-gray-900">
                       {order.paymentMethod}
                     </p>
@@ -158,7 +166,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
               {/* Status Selection */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Update Order Status
+                  {t("modal.editOrder.updateStatus")}
                 </label>
                 <div className="space-y-3">
                   {statusOptions.map((option) => (
@@ -194,20 +202,24 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
               {/* Status Change Notes */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <h4 className="text-sm font-medium text-blue-900 mb-2">
-                  Status Change Effects:
+                  {t("modal.editOrder.effectsTitle")}
                 </h4>
                 <ul className="text-xs text-blue-800 space-y-1">
                   <li>
-                    • <strong>Processing:</strong> Order is being prepared
+                    • <strong>{t("modal.editOrder.status.processing")}:</strong>{" "}
+                    {t("modal.editOrder.processingDesc")}
                   </li>
                   <li>
-                    • <strong>Shipped:</strong> Order has been dispatched
+                    • <strong>{t("modal.editOrder.status.shipped")}:</strong>{" "}
+                    {t("modal.editOrder.shippedDesc")}
                   </li>
                   <li>
-                    • <strong>Delivered:</strong> Order completed successfully
+                    • <strong>{t("modal.editOrder.status.delivered")}:</strong>{" "}
+                    {t("modal.editOrder.deliveredDesc")}
                   </li>
                   <li>
-                    • <strong>Cancelled:</strong> Order has been cancelled
+                    • <strong>{t("modal.editOrder.status.cancelled")}:</strong>{" "}
+                    {t("modal.editOrder.cancelledDesc")}
                   </li>
                 </ul>
               </div>
@@ -220,14 +232,16 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
                 disabled={loading || !status}
                 className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed sm:ml-3 sm:w-auto sm:text-sm"
               >
-                {loading ? "Updating..." : "Update Status"}
+                {loading
+                  ? t("modal.editOrder.updating")
+                  : t("modal.editOrder.submit")}
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
               >
-                Cancel
+                {t("vendor.cancel")}
               </button>
             </div>
           </form>

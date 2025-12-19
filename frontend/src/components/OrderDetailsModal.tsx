@@ -1,5 +1,6 @@
 import React from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 
 interface Order {
   _id: string;
@@ -60,6 +61,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen || !order) return null;
 
   const getStatusColor = (status: string) => {
@@ -102,10 +104,12 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Order Details
+                  {t("modal.orderDetails.title")}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  Order #{order._id.slice(-8).toUpperCase()}
+                  {t("modal.deleteOrder.orderId", {
+                    id: order._id.slice(-8).toUpperCase(),
+                  })}
                 </p>
               </div>
               <button
@@ -121,17 +125,21 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <div className="space-y-6">
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                    Order Information
+                    {t("modal.orderDetails.orderInformation")}
                   </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Order ID:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("modal.orderDetails.orderIdLabel")}
+                      </span>
                       <span className="text-sm font-medium text-gray-900">
                         #{order._id.slice(-8).toUpperCase()}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Date:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("account.date")}:
+                      </span>
                       <span className="text-sm font-medium text-gray-900">
                         {new Date(order.createdAt).toLocaleDateString("en-US", {
                           year: "numeric",
@@ -143,7 +151,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("order.status")}:
+                      </span>
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getStatusColor(
                           order.status
@@ -154,26 +164,32 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Payment:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("order.paymentMethod")}:
+                      </span>
                       <span className="text-sm font-medium text-gray-900">
                         {order.paymentMethod}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">
-                        Payment Status:
+                        {t("modal.orderDetails.paymentStatus")}:
                       </span>
                       <span
                         className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full border ${getPaymentStatusColor(
                           order.isPaid
                         )}`}
                       >
-                        {order.isPaid ? "Paid" : "Pending"}
+                        {order.isPaid
+                          ? t("modal.orderDetails.paid")
+                          : t("admin.pending")}
                       </span>
                     </div>
                     {order.store && (
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Store:</span>
+                        <span className="text-sm text-gray-600">
+                          {t("common.store")}:
+                        </span>
                         <span className="text-sm font-medium text-gray-900">
                           {order.store.name}
                         </span>
@@ -185,17 +201,21 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {/* Customer Information */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                    Customer Information
+                    {t("modal.orderDetails.customerInformation")}
                   </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Name:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("account.fullName")}:
+                      </span>
                       <span className="text-sm font-medium text-gray-900">
                         {order.user.name}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Email:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("account.emailAddress")}:
+                      </span>
                       <span className="text-sm font-medium text-gray-900">
                         {order.user.email}
                       </span>
@@ -207,38 +227,48 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {order.shippingAddress && (
                   <div className="bg-gray-50 rounded-lg p-6">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                      Shipping Address
+                      {t("modal.orderDetails.shippingAddress")}
                     </h4>
                     <div className="space-y-3">
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Name:</span>
+                        <span className="text-sm text-gray-600">
+                          {t("account.fullName")}:
+                        </span>
                         <span className="text-sm font-medium text-gray-900">
                           {order.shippingAddress.name}
                         </span>
                       </div>
                       {order.shippingAddress.phone && (
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Phone:</span>
+                          <span className="text-sm text-gray-600">
+                            {t("account.phoneNumber")}:
+                          </span>
                           <span className="text-sm font-medium text-gray-900">
                             {order.shippingAddress.phone}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Address:</span>
+                        <span className="text-sm text-gray-600">
+                          {t("Address")}:
+                        </span>
                         <span className="text-sm font-medium text-gray-900">
                           {order.shippingAddress.address}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">City:</span>
+                        <span className="text-sm text-gray-600">
+                          {t("City") || "City"}:
+                        </span>
                         <span className="text-sm font-medium text-gray-900">
                           {order.shippingAddress.city}
                         </span>
                       </div>
                       {order.shippingAddress.state && (
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">State:</span>
+                          <span className="text-sm text-gray-600">
+                            {t("State") || "State"}:
+                          </span>
                           <span className="text-sm font-medium text-gray-900">
                             {order.shippingAddress.state}
                           </span>
@@ -247,7 +277,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       {order.shippingAddress.zipCode && (
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">
-                            ZIP Code:
+                            {t("ZIP Code") || "ZIP Code"}:
                           </span>
                           <span className="text-sm font-medium text-gray-900">
                             {order.shippingAddress.zipCode}
@@ -264,7 +294,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {/* Order Items */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                    Order Items ({order.orderItems.length})
+                    {t("Order Items")} ({order.orderItems.length})
                   </h4>
                   <div className="space-y-4 max-h-64 overflow-y-auto">
                     {order.orderItems.map((item, index) => (
@@ -286,27 +316,29 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                                No Image
+                                {t("modal.common.noImage")}
                               </div>
                             )}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
                               <h5 className="text-sm font-medium text-gray-900">
-                                {item.product?.name || "Product"}
+                                {item.product?.name || t("product.product")}
                               </h5>
                               {item.salePercentage > 0 && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  Sale {item.salePercentage}%
+                                  {t("Sale")} {item.salePercentage}%
                                 </span>
                               )}
                             </div>
                             <p className="text-xs text-gray-600">
-                              Quantity: {item.quantity}
+                              {t("Quantity:")} {item.quantity}
                             </p>
                             {item.salePercentage > 0 && (
                               <p className="text-xs text-green-600 font-medium">
-                                Sale Price: ${item.price.toFixed(2)} each
+                                {t("modal.orderDetails.salePriceEach", {
+                                  price: item.price.toFixed(2),
+                                })}
                               </p>
                             )}
                           </div>
@@ -317,7 +349,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           </p>
                           {item.couponDiscount && item.couponDiscount > 0 && (
                             <p className="text-xs text-green-600">
-                              Coupon: -${item.couponDiscount.toFixed(2)}
+                              {t("modal.orderDetails.couponLine", {
+                                amount: item.couponDiscount.toFixed(2),
+                              })}
                             </p>
                           )}
                           {item.salePercentage > 0 && (
@@ -334,11 +368,13 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {/* Order Summary */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                    Order Summary
+                    {t("Order Summary")}
                   </h4>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Subtotal:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("Subtotal")}:
+                      </span>
                       <span className="text-sm font-medium text-gray-900">
                         $
                         {order.itemsPrice?.toFixed(2) ||
@@ -346,13 +382,15 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Shipping:</span>
+                      <span className="text-sm text-gray-600">
+                        {t("Shipping")}:
+                      </span>
                       <span className="text-sm font-medium text-gray-900">
                         ${order.shippingPrice?.toFixed(2) || "0.00"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Tax:</span>
+                      <span className="text-sm text-gray-600">{t("Tax")}:</span>
                       <span className="text-sm font-medium text-gray-900">
                         ${order.taxPrice?.toFixed(2) || "0.00"}
                       </span>
@@ -360,7 +398,9 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     {order.couponDiscount && order.couponDiscount > 0 && (
                       <div className="flex justify-between">
                         <span className="text-sm text-green-600">
-                          Coupon Discount ({order.couponCode}):
+                          {t("modal.orderDetails.couponDiscountWithCode", {
+                            code: order.couponCode,
+                          })}
                         </span>
                         <span className="text-sm font-medium text-green-600">
                           -${order.couponDiscount.toFixed(2)}
@@ -369,7 +409,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     )}
                     <div className="border-t pt-3 flex justify-between">
                       <span className="text-lg font-semibold text-gray-900">
-                        Total:
+                        {t("Total")}:
                       </span>
                       <span className="text-lg font-bold text-gray-900">
                         ${order.totalPrice.toFixed(2)}
@@ -388,7 +428,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               onClick={onClose}
               className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
             >
-              Close
+              {t("modal.deleteOrder.close")}
             </button>
           </div>
         </div>
