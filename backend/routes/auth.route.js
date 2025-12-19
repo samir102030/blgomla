@@ -2,6 +2,7 @@ import express from "express";
 
 import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
 import { verifyRefreshToken } from "../middleware/token.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 import {
   activateUser,
   changePassword,
@@ -61,8 +62,17 @@ router.post("/generateVerificationCode", reSendVerificationEmail);
 router.post("/forgotPassword", validateForgotPassword, forgotPassword);
 router.post("/resetPassword/:token", validateResetPassword, resetPassword);
 
-router.route("/").all(protectRoute, adminRoute).get(getAllUsers);
-router.get("/usersType", protectRoute, adminRoute, getAllUsersType);
+router
+  .route("/")
+  .all(protectRoute, adminRoute)
+  .get(translateResponse, getAllUsers);
+router.get(
+  "/usersType",
+  protectRoute,
+  adminRoute,
+  translateResponse,
+  getAllUsersType
+);
 
 router.delete(
   "/usersFinalDelete/:userId",
@@ -81,6 +91,12 @@ router.put("/changeRole/:userId", protectRoute, adminRoute, changeUserRole);
 router.put("/activateUser/:userId", protectRoute, adminRoute, activateUser);
 router.put("/deactivateUser/:userId", protectRoute, adminRoute, deActivateUser);
 router.put("/restoreUser/:userId", protectRoute, adminRoute, restoreUser);
-router.get("/deletedUsers", protectRoute, adminRoute, getDeletedUsers);
+router.get(
+  "/deletedUsers",
+  protectRoute,
+  adminRoute,
+  translateResponse,
+  getDeletedUsers
+);
 
 export default router;

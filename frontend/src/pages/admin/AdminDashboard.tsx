@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ArrowUpIcon,
   ShoppingBagIcon,
@@ -10,8 +11,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { useVendorStore } from "../../stores/vendor.store";
 import { useUserStore } from "../../stores/user.store";
+import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 
 const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useUserStore();
   const {
     dashboardStats,
@@ -62,18 +65,25 @@ const AdminDashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {user?.role === "admin" ? "Admin Dashboard" : "Store Dashboard"}
+              {user?.role === "admin"
+                ? t("admin.dashboard")
+                : t("admin.storeDashboard")}
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 mt-1">
-              Welcome back! Here's what's happening with your{" "}
-              {user?.role === "admin" ? "platform" : "store"}.
+              {t("admin.welcomeBack")} {t("admin.hereWhatsHappening")}{" "}
+              {user?.role === "admin" ? t("admin.platform") : t("admin.store")}.
             </p>
           </div>
-          <div className="bg-white px-3 sm:px-4 py-2 rounded-lg shadow-sm whitespace-nowrap">
-            <span className="text-xs sm:text-sm text-gray-500">Last updated:</span>
-            <span className="text-xs sm:text-sm font-medium ml-2">
-              {new Date().toLocaleDateString()}
-            </span>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <AdminLanguageToggle />
+            <div className="bg-white px-3 sm:px-4 py-2 rounded-lg shadow-sm whitespace-nowrap">
+              <span className="text-xs sm:text-sm text-gray-500">
+                {t("admin.lastUpdated")}
+              </span>
+              <span className="text-xs sm:text-sm font-medium ml-2">
+                {new Date().toLocaleDateString()}
+              </span>
+            </div>
           </div>
         </div>
         {/* Error Alert */}
@@ -95,7 +105,9 @@ const AdminDashboard: React.FC = () => {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-red-800 font-medium text-sm">Error loading data</p>
+                  <p className="text-red-800 font-medium text-sm">
+                    {t("admin.errorLoadingData")}
+                  </p>
                   <p className="text-red-600 text-xs">{error}</p>
                 </div>
               </div>
@@ -104,13 +116,13 @@ const AdminDashboard: React.FC = () => {
                   onClick={retry}
                   className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors whitespace-nowrap"
                 >
-                  Retry
+                  {t("admin.retry")}
                 </button>
                 <button
                   onClick={() => clearError()}
                   className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors whitespace-nowrap"
                 >
-                  Dismiss
+                  {t("admin.dismiss")}
                 </button>
               </div>
             </div>
@@ -123,7 +135,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-blue-100 text-xs sm:text-sm font-medium">
-                  Total Revenue
+                  {t("admin.totalRevenue")}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold mt-1 truncate">
                   ${dashboardStats?.totalRevenue?.toLocaleString() || "0"}
@@ -136,7 +148,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center mt-3 sm:mt-4">
               <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
               <span className="text-xs sm:text-sm text-blue-100 truncate">
-                {dashboardStats?.salesChange || "0%"} from last month
+                {dashboardStats?.salesChange || "0%"} {t("admin.fromLastMonth")}
               </span>
             </div>
           </div>
@@ -145,7 +157,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-green-100 text-xs sm:text-sm font-medium">
-                  Total Orders
+                  {t("admin.totalOrders")}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold mt-1">
                   {dashboardStats?.totalOrders || 0}
@@ -157,7 +169,9 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="flex items-center mt-3 sm:mt-4">
               <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
-              <span className="text-xs sm:text-sm text-green-100">Active orders</span>
+              <span className="text-xs sm:text-sm text-green-100">
+                {t("admin.activeOrders")}
+              </span>
             </div>
           </div>
 
@@ -165,7 +179,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-purple-100 text-xs sm:text-sm font-medium">
-                  Total Customers
+                  {t("admin.totalCustomers")}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold mt-1">
                   {dashboardStats?.totalUsers || 0}
@@ -177,7 +191,9 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="flex items-center mt-3 sm:mt-4">
               <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
-              <span className="text-xs sm:text-sm text-purple-100">New this month</span>
+              <span className="text-xs sm:text-sm text-purple-100">
+                {t("admin.newThisMonth")}
+              </span>
             </div>
           </div>
 
@@ -185,7 +201,7 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-orange-100 text-xs sm:text-sm font-medium">
-                  Total Products
+                  {t("admin.totalProducts")}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold mt-1">
                   {dashboardStats?.totalProducts || 0}
@@ -197,7 +213,9 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="flex items-center mt-3 sm:mt-4">
               <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
-              <span className="text-xs sm:text-sm text-orange-100">In stock</span>
+              <span className="text-xs sm:text-sm text-orange-100">
+                {t("admin.inStock")}
+              </span>
             </div>
           </div>
         </div>
@@ -209,13 +227,17 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Revenue Overview
+                  {t("admin.revenueOverview")}
                 </h3>
-                <p className="text-sm text-gray-500">Monthly revenue trends</p>
+                <p className="text-sm text-gray-500">
+                  {t("admin.monthlyRevenueTrends")}
+                </p>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Revenue</span>
+                <span className="text-sm text-gray-600">
+                  {t("admin.revenue")}
+                </span>
               </div>
             </div>
             <div className="h-64 flex items-end justify-between space-x-2">
@@ -244,9 +266,11 @@ const AdminDashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Top Products
+                  {t("admin.topProducts")}
                 </h3>
-                <p className="text-sm text-gray-500">Best performing items</p>
+                <p className="text-sm text-gray-500">
+                  {t("admin.bestPerformingItems")}
+                </p>
               </div>
               <ChartBarIcon className="w-5 h-5 text-gray-400" />
             </div>
@@ -287,7 +311,7 @@ const AdminDashboard: React.FC = () => {
                           {p.name}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {p.units || 0} sold
+                          {p.units || 0} {t("admin.sold")}
                         </p>
                       </div>
                     </div>
@@ -302,7 +326,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="text-center py-8">
                   <ChartBarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-sm text-gray-500">
-                    No product data available
+                    {t("admin.noProductData")}
                   </p>
                 </div>
               )}
@@ -318,9 +342,11 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Best Sellers
+                    {t("admin.bestSellers")}
                   </h3>
-                  <p className="text-sm text-gray-500">Top performing stores</p>
+                  <p className="text-sm text-gray-500">
+                    {t("admin.topPerformingStores")}
+                  </p>
                 </div>
                 <StarIcon className="w-5 h-5 text-gray-400" />
               </div>
@@ -350,7 +376,7 @@ const AdminDashboard: React.FC = () => {
                           ${s.total || s.revenue || 0}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {s.purchases || 0} sales
+                          {s.purchases || 0} {t("admin.sales")}
                         </p>
                       </div>
                     </div>
@@ -359,7 +385,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="text-center py-8">
                     <StarIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-sm text-gray-500">
-                      No seller data available
+                      {t("admin.noSellerData")}
                     </p>
                   </div>
                 )}
@@ -371,10 +397,10 @@ const AdminDashboard: React.FC = () => {
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Product Overview
+                    {t("admin.productOverview")}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Platform product statistics
+                    {t("admin.platformProductStatistics")}
                   </p>
                 </div>
                 <ShoppingBagIcon className="w-5 h-5 text-gray-400" />
@@ -398,7 +424,7 @@ const AdminDashboard: React.FC = () => {
                               {p.name}
                             </p>
                             <p className="text-xs text-gray-500">
-                              ID: {p.id || p._id}
+                              {t("admin.id")}: {p.id || p._id}
                             </p>
                           </div>
                         </div>
@@ -407,7 +433,7 @@ const AdminDashboard: React.FC = () => {
                             ${p.price || 0}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {p.quantity || 0} in stock
+                            {p.quantity || 0} {t("admin.inStock")}
                           </p>
                         </div>
                       </div>
@@ -416,7 +442,7 @@ const AdminDashboard: React.FC = () => {
                   <div className="text-center py-8">
                     <ShoppingBagIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                     <p className="text-sm text-gray-500">
-                      No product data available
+                      {t("admin.noProductData")}
                     </p>
                   </div>
                 )}

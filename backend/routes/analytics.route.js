@@ -8,6 +8,7 @@ import {
   getSalesTrend,
 } from "../controllers/analytics.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
@@ -15,21 +16,21 @@ const router = express.Router();
 router.use(protectRoute);
 
 // Get sales overview data
-router.get("/sales-overview", getSalesOverview);
+router.get("/sales-overview", translateResponse, getSalesOverview);
 
 // Get top products
-router.get("/top-products", getTopProducts);
+router.get("/top-products", translateResponse, getTopProducts);
 
 // Get recent transactions
-router.get("/recent-transactions", getRecentTransactions);
+router.get("/recent-transactions", translateResponse, getRecentTransactions);
 
 // Get performance metrics
-router.get("/performance-metrics", getPerformanceMetrics);
+router.get("/performance-metrics", translateResponse, getPerformanceMetrics);
 
 // Get revenue breakdown
-router.get("/revenue-breakdown", getRevenueBreakdown);
+router.get("/revenue-breakdown", translateResponse, getRevenueBreakdown);
 
 // Get sales trend data
-router.get("/sales-trend", getSalesTrend);
+router.get("/sales-trend", translateResponse, getSalesTrend);
 
 export default router;

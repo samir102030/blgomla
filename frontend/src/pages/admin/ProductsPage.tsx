@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -18,8 +19,10 @@ import ProductDetailsModal from "../../components/ProductDetailsModal";
 import EditProductModal from "../../components/EditProductModal";
 import DeleteProductModal from "../../components/DeleteProductModal";
 import FilterModal, { type ProductFilters } from "../../components/FilterModal";
+import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 
 const ProductsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isCreating, setIsCreating] = useState(false);
@@ -224,28 +227,34 @@ const ProductsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {loading && (
-        <div className="text-sm text-gray-500">Loading products...</div>
+        <div className="text-sm text-gray-500">
+          {t("product.loadingProducts")}
+        </div>
       )}
-      {error && <div className="text-sm text-red-500">Error: {error}</div>}
+      {error && (
+        <div className="text-sm text-red-500">
+          {t("product.loadingError")}
+          {error}
+        </div>
+      )}
       {/* Header */}
       {/* make this to be row instead of column */}
 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            Products Management
+            {t("product.productsManagement")}
           </h1>
-          <p className="text-[#9E9E9E]">
-            Manage your product inventory and catalog
-          </p>
+          <p className="text-[#9E9E9E]">{t("product.manageInventory")}</p>
         </div>
-        <div>
+        <div className="flex items-center gap-4">
+          <AdminLanguageToggle />
           <button
             onClick={() => setIsCreating(true)}
             className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
           >
             <PlusIcon className="h-4 w-4" />
-            Add Product
+            {t("product.addProduct")}
           </button>
         </div>
       </div>
@@ -305,7 +314,9 @@ const ProductsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Products</p>
+              <p className="text-sm text-gray-600">
+                {t("product.totalProducts")}
+              </p>
               <p className="text-2xl font-bold text-gray-900">
                 {paginated?.total ?? products.length}
               </p>
@@ -318,7 +329,9 @@ const ProductsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active Products</p>
+              <p className="text-sm text-gray-600">
+                {t("product.activeProducts")}
+              </p>
               <p className="text-2xl font-bold text-green-600">
                 {products.filter((p) => p.isActive).length}
               </p>
@@ -331,7 +344,7 @@ const ProductsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Low Stock</p>
+              <p className="text-sm text-gray-600">{t("product.lowStock")}</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {
                   products.filter((p) => p.stock && p.stock < 30 && p.stock > 0)
@@ -347,7 +360,7 @@ const ProductsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Out of Stock</p>
+              <p className="text-sm text-gray-600">{t("product.outOfStock")}</p>
               <p className="text-2xl font-bold text-red-600">
                 {products.filter((p) => !p.stock || p.stock === 0).length}
               </p>
@@ -367,7 +380,7 @@ const ProductsPage: React.FC = () => {
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search products by name or SKU..."
+                placeholder={t("product.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -380,7 +393,7 @@ const ProductsPage: React.FC = () => {
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
-              <option value="all">All Categories</option>
+              <option value="all">{t("product.allCategories")}</option>
               {safeCategories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.name}
@@ -392,7 +405,7 @@ const ProductsPage: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <FunnelIcon className="h-4 w-4" />
-              More Filters
+              {t("product.moreFilters")}
             </button>
           </div>
         </div>
@@ -405,28 +418,28 @@ const ProductsPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Product
+                  {t("product.product")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  SKU
+                  {t("product.sku")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
+                  {t("product.category")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Price
+                  {t("product.price")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Stock
+                  {t("product.stock")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sales
+                  {t("product.sales")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t("product.status")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t("product.actions")}
                 </th>
               </tr>
             </thead>
@@ -494,21 +507,21 @@ const ProductsPage: React.FC = () => {
                       <button
                         onClick={() => handleViewProduct(product)}
                         className="text-blue-600 hover:text-blue-900"
-                        title="View Details"
+                        title={t("product.view")}
                       >
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleEditProduct(product)}
                         className="text-green-600 hover:text-green-900"
-                        title="Edit Product"
+                        title={t("product.edit")}
                       >
                         <PencilIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product)}
                         className="text-red-600 hover:text-red-900"
-                        title="Delete Product"
+                        title={t("product.delete")}
                       >
                         <TrashIcon className="h-4 w-4" />
                       </button>

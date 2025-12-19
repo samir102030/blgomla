@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -12,6 +13,7 @@ import OrderDetailsModal from "../../components/OrderDetailsModal";
 import EditOrderModal from "../../components/EditOrderModal";
 import DeleteOrderModal from "../../components/DeleteOrderModal";
 import OrderFiltersModal from "../../components/OrderFiltersModal";
+import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 
 interface Order {
   _id: string;
@@ -62,6 +64,7 @@ interface Order {
 }
 
 const OrdersPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [orders, setOrders] = useState<Order[]>([]);
@@ -240,7 +243,7 @@ const OrdersPage: React.FC = () => {
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002B5B] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading orders...</p>
+          <p className="mt-4 text-gray-600">{t("order.loadingOrders")}</p>
         </div>
       </div>
     );
@@ -250,13 +253,15 @@ const OrdersPage: React.FC = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
-          <div className="text-red-500 text-lg mb-2">Error loading orders</div>
+          <div className="text-red-500 text-lg mb-2">
+            {t("order.errorLoadingOrders")}
+          </div>
           <p className="text-gray-600">{error}</p>
           <button
             onClick={fetchOrders}
             className="mt-4 bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors"
           >
-            Try Again
+            {t("order.tryAgain")}
           </button>
         </div>
       </div>
@@ -269,19 +274,22 @@ const OrdersPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            {user?.role === "store" ? "My Store Orders" : "Orders Management"}
+            {user?.role === "store"
+              ? t("order.myStoreOrders")
+              : t("order.ordersManagement")}
           </h1>
           <p className="text-[#9E9E9E]">
             {user?.role === "store"
-              ? "Manage orders for your store"
-              : "Manage and track all customer orders"}
+              ? t("order.manageOrdersStore")
+              : t("order.manageAllOrders")}
           </p>
         </div>
         {user?.role === "admin" && (
           <button className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors">
-            Export Orders
+            {t("order.exportOrders")}
           </button>
         )}
+        <AdminLanguageToggle />
       </div>
 
       {/* Stats Cards */}
@@ -289,7 +297,9 @@ const OrdersPage: React.FC = () => {
         <div className="bg-[#FAFAFA] p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#9E9E9E]">Total Revenue</p>
+              <p className="text-sm text-[#9E9E9E]">
+                {t("order.totalRevenue")}
+              </p>
               <p className="text-2xl font-bold text-[#333333]">
                 $
                 {filteredOrders
@@ -305,7 +315,9 @@ const OrdersPage: React.FC = () => {
         <div className="bg-[#FAFAFA] p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-[#9E9E9E]">Pending Orders</p>
+              <p className="text-sm text-[#9E9E9E]">
+                {t("order.pendingOrders")}
+              </p>
               <p className="text-2xl font-bold text-[#FFD600]">
                 {
                   filteredOrders.filter((order) => order.status === "pending")
@@ -321,7 +333,9 @@ const OrdersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Completed Orders</p>
+              <p className="text-sm text-gray-600">
+                {t("order.completedOrders")}
+              </p>
               <p className="text-2xl font-bold text-green-600">
                 {
                   filteredOrders.filter((order) => order.status === "delivered")
@@ -337,7 +351,9 @@ const OrdersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Filtered Results</p>
+              <p className="text-sm text-gray-600">
+                {t("order.filteredResults")}
+              </p>
               <p className="text-2xl font-bold text-purple-600">
                 {filteredOrders.length}
               </p>
@@ -357,13 +373,7 @@ const OrdersPage: React.FC = () => {
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder={
-                  user?.role === "admin"
-                    ? "Search orders by customer, order ID, email, or store name..."
-                    : user?.role === "store"
-                    ? "Search orders by customer, order ID, or email..."
-                    : "Search orders by order ID or email..."
-                }
+                placeholder={t("order.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -376,7 +386,7 @@ const OrdersPage: React.FC = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="all">All Status</option>
+              <option value="all">{t("order.allStatuses")}</option>
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
               <option value="shipped">Shipped</option>
@@ -388,7 +398,7 @@ const OrdersPage: React.FC = () => {
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <FunnelIcon className="h-4 w-4" />
-              More Filters
+              {t("order.advancedFilters")}
             </button>
           </div>
         </div>
@@ -401,33 +411,33 @@ const OrdersPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order ID
+                  {t("order.orderNumber")}
                 </th>
                 {user?.role === "admin" && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Store
+                    {t("common.store")}
                   </th>
                 )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Customer
+                  {t("order.customer")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
+                  {t("order.date")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t("order.status")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Items
+                  {t("common.items")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
+                  {t("common.total")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment
+                  {t("order.paymentMethod")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t("common.actions")}
                 </th>
               </tr>
             </thead>
@@ -479,14 +489,14 @@ const OrdersPage: React.FC = () => {
                       <button
                         onClick={() => handleViewOrder(order)}
                         className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
-                        title="View Order Details"
+                        title={t("order.view")}
                       >
                         <EyeIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleEditOrder(order)}
                         className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50 transition-colors"
-                        title="Edit Order Status"
+                        title={t("order.edit")}
                       >
                         <PencilIcon className="h-4 w-4" />
                       </button>
@@ -495,7 +505,7 @@ const OrdersPage: React.FC = () => {
                         <button
                           onClick={() => handleDeleteOrder(order)}
                           className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
-                          title="Delete Order"
+                          title={t("order.delete")}
                         >
                           <TrashIcon className="h-4 w-4" />
                         </button>

@@ -32,6 +32,7 @@ import {
   cancelOrder,
 } from "../controllers/order.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
@@ -39,13 +40,19 @@ const router = express.Router();
 router.post("/", protectRoute, validateCreateOrder, createOrder);
 
 // Get all orders (admin)
-router.get("/", protectRoute, validateGetAllOrders, getOrders);
+router.get(
+  "/",
+  protectRoute,
+  translateResponse,
+  validateGetAllOrders,
+  getOrders
+);
 
 // Get my orders (authenticated user)
-router.get("/my-orders", protectRoute, getMyOrders);
+router.get("/my-orders", protectRoute, translateResponse, getMyOrders);
 
 // Get a single order by ID
-router.get("/:id", protectRoute, getOrderById);
+router.get("/:id", protectRoute, translateResponse, getOrderById);
 
 // Get all orders for a user
 // router.get("/user/:userId", getUserOrders);

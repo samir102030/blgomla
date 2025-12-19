@@ -36,6 +36,7 @@ import {
   adminOrStoreRoute,
   storeRoute,
 } from "../middleware/auth.middleware.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 import {
   activateStore,
   createStore,
@@ -87,8 +88,13 @@ router.post(
   ]),
   registerVendor
 ); // Register new vendor
-router.get("/vendors", protectRoute, getAllVendors); // Get all vendors (admin only)
-router.get("/vendors/:vendorId", protectRoute, getVendorById); // Get vendor by ID
+router.get("/vendors", protectRoute, translateResponse, getAllVendors); // Get all vendors (admin only)
+router.get(
+  "/vendors/:vendorId",
+  protectRoute,
+  translateResponse,
+  getVendorById
+); // Get vendor by ID
 router.put("/vendors/:vendorId/approve", protectRoute, approveVendor); // Approve vendor
 router.put("/vendors/:vendorId/reject", protectRoute, rejectVendor); // Reject vendor
 router.put("/vendors/:vendorId/suspend", protectRoute, suspendVendor); // Suspend vendor
@@ -97,8 +103,8 @@ router.put("/vendors/:vendorId/safeDelete", protectRoute, safeDeleteVendor); // 
 router.put("/vendors/:vendorId/restore", protectRoute, restoreVendor); // Restore soft deleted vendor
 
 // Store Routes
-router.get("/", getAllStores); // Get all stores
-router.get("/:id", getStoreById); // Get store by ID
+router.get("/", translateResponse, getAllStores); // Get all stores
+router.get("/:id", translateResponse, getStoreById); // Get store by ID
 router.put("/:id", protectRoute, adminOrStoreRoute, updateStore); // Update store details
 router.delete("/:id", protectRoute, adminOrStoreRoute, deleteStore); // Delete store
 // router.put("/:storeId/restore", protectRoute, adminOrStoreRoute, restoreStore); //
@@ -117,6 +123,7 @@ router.get(
   "/:id/dashboard",
   protectRoute,
   adminOrStoreRoute,
+  translateResponse,
   getStoreDashboard
 );
 
@@ -124,15 +131,23 @@ router.get(
   "/:id/products",
   protectRoute,
   adminOrStoreRoute,
+  translateResponse,
   getAllStoreProducts
 );
 
-router.get("/:id/orders", protectRoute, adminOrStoreRoute, getAllStoreOrders);
+router.get(
+  "/:id/orders",
+  protectRoute,
+  adminOrStoreRoute,
+  translateResponse,
+  getAllStoreOrders
+);
 
 router.get(
   "/:id/comments",
   protectRoute,
   adminOrStoreRoute,
+  translateResponse,
   getAllStoreComments
 );
 

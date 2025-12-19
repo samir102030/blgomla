@@ -5,8 +5,11 @@ import {
   ArrowDownIcon,
 } from "@heroicons/react/24/outline";
 import { useAnalyticsStore } from "../../stores/analytics.store";
+import { useTranslation } from "react-i18next";
+import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 
 const SalesPage: React.FC = () => {
+  const { t } = useTranslation();
   const [dateRange, setDateRange] = useState("7days");
   const [chartPeriod, setChartPeriod] = useState("daily");
   const [showModal, setShowModal] = useState(false);
@@ -411,7 +414,7 @@ const SalesPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading...</div>
+        <div className="text-lg">{t("sales.loading")}</div>
       </div>
     );
   }
@@ -421,10 +424,10 @@ const SalesPage: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">Sales Analytics</h1>
-          <p className="text-[#9E9E9E]">
-            Track your sales performance and revenue
-          </p>
+          <h1 className="text-2xl font-bold text-[#333333]">
+            {t("sales.salesAnalytics")}
+          </h1>
+          <p className="text-[#9E9E9E]">{t("sales.trackPerformance")}</p>
         </div>
         <div className="flex items-center gap-4">
           <select
@@ -432,18 +435,19 @@ const SalesPage: React.FC = () => {
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
           >
-            <option value="7days">Last 7 Days</option>
-            <option value="30days">Last 30 Days</option>
-            <option value="90days">Last 90 Days</option>
-            <option value="1year">Last Year</option>
+            <option value="7days">{t("sales.last7Days")}</option>
+            <option value="30days">{t("sales.last30Days")}</option>
+            <option value="90days">{t("sales.last90Days")}</option>
+            <option value="1year">{t("sales.lastYear")}</option>
           </select>
           <button
             className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors flex items-center gap-2"
             onClick={exportReport}
           >
             <CalendarIcon className="h-4 w-4" />
-            Export Report
+            {t("sales.exportReport")}
           </button>
+          <AdminLanguageToggle />
         </div>
       </div>
 
@@ -489,16 +493,18 @@ const SalesPage: React.FC = () => {
         {/* Sales Chart */}
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Sales Trend</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {t("sales.salesTrend")}
+            </h3>
             <div className="flex items-center gap-2">
               <select
                 className="px-3 py-1 border border-gray-300 rounded text-sm"
                 value={chartPeriod}
                 onChange={(e) => setChartPeriod(e.target.value)}
               >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
+                <option value="daily">{t("sales.daily")}</option>
+                <option value="weekly">{t("sales.weekly")}</option>
+                <option value="monthly">{t("sales.monthly")}</option>
               </select>
               <button
                 onClick={() => {
@@ -507,7 +513,7 @@ const SalesPage: React.FC = () => {
                 }}
                 className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
               >
-                View Details
+                {t("sales.viewAll")}
               </button>
             </div>
           </div>
@@ -578,7 +584,7 @@ const SalesPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              Revenue Breakdown
+              {t("sales.revenueBreakdown")}
             </h3>
             <button
               onClick={() => {
@@ -587,14 +593,16 @@ const SalesPage: React.FC = () => {
               }}
               className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
             >
-              View Details
+              {t("sales.viewDetails")}
             </button>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                <span className="text-sm text-gray-700">Product Sales</span>
+                <span className="text-sm text-gray-700">
+                  {t("sales.productSales")}
+                </span>
               </div>
               <span className="text-sm font-medium">
                 $
@@ -623,7 +631,9 @@ const SalesPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
-                <span className="text-sm text-gray-700">Shipping</span>
+                <span className="text-sm text-gray-700">
+                  {t("sales.shipping")}
+                </span>
               </div>
               <span className="text-sm font-medium">
                 $
@@ -652,7 +662,9 @@ const SalesPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
-                <span className="text-sm text-gray-700">Taxes</span>
+                <span className="text-sm text-gray-700">
+                  {t("sales.taxes")}
+                </span>
               </div>
               <span className="text-sm font-medium">
                 ${revenueBreakdown ? revenueBreakdown.taxes.toFixed(2) : "0.00"}{" "}
@@ -678,7 +690,9 @@ const SalesPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                <span className="text-sm text-gray-700">Other</span>
+                <span className="text-sm text-gray-700">
+                  {t("sales.other")}
+                </span>
               </div>
               <span className="text-sm font-medium">
                 ${revenueBreakdown ? revenueBreakdown.other.toFixed(2) : "0.00"}{" "}
@@ -711,7 +725,7 @@ const SalesPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              Top Products
+              {t("sales.topProducts")}
             </h3>
             <div className="flex items-center gap-2">
               <button
@@ -721,7 +735,7 @@ const SalesPage: React.FC = () => {
                 }}
                 className="text-blue-600 hover:text-blue-800 text-sm"
               >
-                View All
+                {t("sales.viewAll")}
               </button>
             </div>
           </div>
@@ -734,7 +748,7 @@ const SalesPage: React.FC = () => {
                       {product.name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {product.units} units sold
+                      {product.units} {t("sales.unitsSold")}
                     </p>
                   </div>
                   <div className="text-right">
@@ -751,7 +765,7 @@ const SalesPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              Recent Transactions
+              {t("sales.recentTransactions")}
             </h3>
             <button
               onClick={() => {
@@ -760,7 +774,7 @@ const SalesPage: React.FC = () => {
               }}
               className="text-blue-600 hover:text-blue-800 text-sm"
             >
-              View All
+              {t("sales.viewAll")}
             </button>
           </div>
           <div className="space-y-4">
@@ -797,7 +811,7 @@ const SalesPage: React.FC = () => {
       <div className="bg-white p-6 rounded-lg shadow-sm border">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900">
-            Performance Metrics
+            {t("sales.performanceMetrics")}
           </h3>
           <button
             onClick={() => {
@@ -806,7 +820,7 @@ const SalesPage: React.FC = () => {
             }}
             className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
           >
-            View Details
+            {t("sales.viewAll")}
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -817,7 +831,9 @@ const SalesPage: React.FC = () => {
                 : "0.0"}
               %
             </div>
-            <div className="text-sm text-gray-600">Conversion Rate</div>
+            <div className="text-sm text-gray-600">
+              {t("sales.conversionRate")}
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
@@ -826,7 +842,9 @@ const SalesPage: React.FC = () => {
                 ? performanceMetrics.avgOrderValue.toFixed(2)
                 : "0.00"}
             </div>
-            <div className="text-sm text-gray-600">Avg Order Value</div>
+            <div className="text-sm text-gray-600">
+              {t("sales.avgOrderValue")}
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">
@@ -834,14 +852,18 @@ const SalesPage: React.FC = () => {
                 ? performanceMetrics.itemsPerOrder.toFixed(1)
                 : "0.0"}
             </div>
-            <div className="text-sm text-gray-600">Items per Order</div>
+            <div className="text-sm text-gray-600">
+              {t("sales.itemsPerOrder")}
+            </div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-orange-600">
               {performanceMetrics ? performanceMetrics.customerSatisfaction : 0}
               %
             </div>
-            <div className="text-sm text-gray-600">Customer Satisfaction</div>
+            <div className="text-sm text-gray-600">
+              {t("sales.customerSatisfaction")}
+            </div>
           </div>
         </div>
       </div>
@@ -859,19 +881,21 @@ const SalesPage: React.FC = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  {modalType === "sales" && "Sales Trend Details"}
-                  {modalType === "products" && "Top Products Details"}
+                  {modalType === "sales" && t("sales.salesTrendDetails")}
+                  {modalType === "products" && t("sales.topProductsDetails")}
                   {modalType === "transactions" &&
-                    "Recent Transactions Details"}
-                  {modalType === "revenue" && "Revenue Breakdown Details"}
-                  {modalType === "metrics" && "Performance Metrics Details"}
+                    t("sales.recentTransactionsDetails")}
+                  {modalType === "revenue" &&
+                    t("sales.revenueBreakdownDetails")}
+                  {modalType === "metrics" &&
+                    t("sales.performanceMetricsDetails")}
                 </h2>
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => exportModalData(modalType)}
                     className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors text-sm"
                   >
-                    Export Data
+                    {t("sales.exportData")}
                   </button>
                   <button
                     onClick={() => setShowModal(false)}
@@ -885,14 +909,22 @@ const SalesPage: React.FC = () => {
               <div className="space-y-4">
                 {modalType === "sales" && salesTrend && (
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Sales Data</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      {t("sales.salesData")}
+                    </h3>
                     <div className="overflow-x-auto">
                       <table className="min-w-full table-auto">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="px-4 py-2 text-left">Date</th>
-                            <th className="px-4 py-2 text-left">Sales</th>
-                            <th className="px-4 py-2 text-left">Orders</th>
+                            <th className="px-4 py-2 text-left">
+                              {t("sales.tableDate")}
+                            </th>
+                            <th className="px-4 py-2 text-left">
+                              {t("sales.tableSales")}
+                            </th>
+                            <th className="px-4 py-2 text-left">
+                              {t("sales.tableOrders")}
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -913,7 +945,9 @@ const SalesPage: React.FC = () => {
 
                 {modalType === "products" && topProducts && (
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Top Products</h3>
+                    <h3 className="text-lg font-semibold mb-4">
+                      {t("sales.topProducts")}
+                    </h3>
                     <div className="space-y-4">
                       {topProducts.map((product, index) => (
                         <div
@@ -923,7 +957,7 @@ const SalesPage: React.FC = () => {
                           <div>
                             <p className="font-medium">{product.name}</p>
                             <p className="text-sm text-gray-600">
-                              {product.units} units sold
+                              {product.units} {t("sales.unitsSold")}
                             </p>
                           </div>
                           <div className="text-right">
@@ -1014,7 +1048,7 @@ const SalesPage: React.FC = () => {
                             </td>
                           </tr>
                           <tr className="border-t">
-                            <td className="px-4 py-2">Shipping</td>
+                            <td className="px-4 py-2">{t("sales.shipping")}</td>
                             <td className="px-4 py-2">
                               ${revenueBreakdown.shipping.toFixed(2)}
                             </td>
@@ -1037,7 +1071,7 @@ const SalesPage: React.FC = () => {
                             </td>
                           </tr>
                           <tr className="border-t">
-                            <td className="px-4 py-2">Taxes</td>
+                            <td className="px-4 py-2">{t("sales.taxes")}</td>
                             <td className="px-4 py-2">
                               ${revenueBreakdown.taxes.toFixed(2)}
                             </td>
@@ -1060,7 +1094,7 @@ const SalesPage: React.FC = () => {
                             </td>
                           </tr>
                           <tr className="border-t">
-                            <td className="px-4 py-2">Other</td>
+                            <td className="px-4 py-2">{t("sales.other")}</td>
                             <td className="px-4 py-2">
                               ${revenueBreakdown.other.toFixed(2)}
                             </td>
@@ -1091,47 +1125,51 @@ const SalesPage: React.FC = () => {
                 {modalType === "metrics" && performanceMetrics && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">
-                      Performance Metrics
+                      {t("sales.performanceMetrics")}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="p-4 border rounded-lg">
-                        <h4 className="font-medium mb-2">Conversion Rate</h4>
+                        <h4 className="font-medium mb-2">
+                          {t("sales.conversionRate")}
+                        </h4>
                         <p className="text-2xl font-bold text-blue-600">
                           {performanceMetrics.conversionRate.toFixed(1)}%
                         </p>
                         <p className="text-sm text-gray-600">
-                          Percentage of visitors who make a purchase
+                          {t("sales.conversionRateDesc")}
                         </p>
                       </div>
                       <div className="p-4 border rounded-lg">
                         <h4 className="font-medium mb-2">
-                          Average Order Value
+                          {t("sales.avgOrderValue")}
                         </h4>
                         <p className="text-2xl font-bold text-green-600">
                           ${performanceMetrics.avgOrderValue.toFixed(2)}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Average amount spent per order
-                        </p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <h4 className="font-medium mb-2">Items per Order</h4>
-                        <p className="text-2xl font-bold text-purple-600">
-                          {performanceMetrics.itemsPerOrder.toFixed(1)}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Average number of items in each order
+                          {t("sales.avgOrderValueDesc")}
                         </p>
                       </div>
                       <div className="p-4 border rounded-lg">
                         <h4 className="font-medium mb-2">
-                          Customer Satisfaction
+                          {t("sales.itemsPerOrder")}
+                        </h4>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {performanceMetrics.itemsPerOrder.toFixed(1)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {t("sales.itemsPerOrderDesc")}
+                        </p>
+                      </div>
+                      <div className="p-4 border rounded-lg">
+                        <h4 className="font-medium mb-2">
+                          {t("sales.customerSatisfaction")}
                         </h4>
                         <p className="text-2xl font-bold text-orange-600">
                           {performanceMetrics.customerSatisfaction}%
                         </p>
                         <p className="text-sm text-gray-600">
-                          Overall customer satisfaction rating
+                          {t("sales.customerSatisfactionDesc")}
                         </p>
                       </div>
                     </div>
