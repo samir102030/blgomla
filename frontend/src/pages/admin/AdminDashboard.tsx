@@ -60,6 +60,20 @@ const AdminDashboard: React.FC = () => {
     fetchTopProducts(5).catch(() => {});
   }, [fetchSalesTrend, fetchTopProducts]);
 
+  const revenueTrend = useMemo(() => {
+    if (salesTrend && salesTrend.length > 0) return salesTrend;
+    const now = new Date();
+    const months = Array.from({ length: 12 }, (_, i) => {
+      const date = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+      const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+        2,
+        "0"
+      )}`;
+      return { date: label, sales: 0, orders: 0 };
+    });
+    return months;
+  }, [salesTrend]);
+
   const exportPages = useMemo(
     () => getExportPages((user?.role as any) || "admin"),
     [user?.role]
@@ -310,12 +324,11 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
             <div className="h-64">
-              {salesTrend && salesTrend.length > 0 &&
-              salesTrend.some((point) => point.sales > 0) ? (
+              {revenueTrend.length > 0 ? (
                 <div className="flex items-end justify-between space-x-2 h-full">
-                  {salesTrend.slice(-12).map((point, index) => {
+                  {revenueTrend.slice(-12).map((point, index) => {
                     const maxSales = Math.max(
-                      ...salesTrend.map((item) => item.sales)
+                      ...revenueTrend.map((item) => item.sales)
                     );
                     const height =
                       maxSales > 0 ? (point.sales / maxSales) * 100 : 0;
@@ -331,7 +344,11 @@ const AdminDashboard: React.FC = () => {
                           className="relative w-full flex items-end justify-center"
                         >
                           <div
-                            className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t w-full transition-all hover:from-blue-600 hover:to-blue-500 group"
+                            className={`rounded-t w-full transition-all group ${
+                              point.sales > 0
+                                ? "bg-gradient-to-t from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500"
+                                : "bg-gray-200 hover:bg-gray-300"
+                            }`}
                             style={{ height: `${Math.max(height, 5)}%` }}
                           >
                             <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-gray-900 text-white px-2 py-1 rounded shadow whitespace-nowrap">
@@ -347,19 +364,7 @@ const AdminDashboard: React.FC = () => {
                     );
                   })}
                 </div>
-              ) : (
-                <div className="h-full bg-gray-50 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="text-4xl mb-2">dY"^</div>
-                    <p className="text-gray-700 font-medium">
-                      No revenue data yet
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Sales will appear here once orders are completed.
-                    </p>
-                  </div>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
 

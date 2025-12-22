@@ -290,9 +290,90 @@ const fetchDashboard = async () => {
   const { data } = await axiosInstance.get("/stores/statistics");
   const rows: ExportRows = [["Metric", "Value"]];
   const stats = data.statistics || {};
-  Object.entries(stats).forEach(([key, value]) => {
-    rows.push([key, String(value ?? "")]);
-  });
+  const {
+    totalRevenue,
+    totalOrders,
+    totalUsers,
+    totalProducts,
+    monthlyRevenue,
+    salesChange,
+    topProducts = [],
+    topCountries = [],
+    bestSellers = [],
+    productOverview = [],
+    paidOrders,
+    unpaidOrders,
+  } = stats;
+
+  rows.push(["totalRevenue", totalRevenue ?? 0]);
+  rows.push(["totalOrders", totalOrders ?? 0]);
+  rows.push(["totalUsers", totalUsers ?? 0]);
+  rows.push(["totalProducts", totalProducts ?? 0]);
+  rows.push(["monthlyRevenue", monthlyRevenue ?? 0]);
+  rows.push(["salesChange", salesChange ?? "0%"]);
+  rows.push(["paidOrders", paidOrders ?? 0]);
+  rows.push(["unpaidOrders", unpaidOrders ?? 0]);
+
+  rows.push([]);
+  rows.push(["Top Products", "Name", "Sales", "Units"]);
+  if (topProducts.length === 0) {
+    rows.push(["Top Products", "No data", "", ""]);
+  } else {
+    topProducts.forEach((product: any) => {
+      rows.push([
+        "Top Products",
+        product.name || "",
+        product.sales ?? 0,
+        product.units ?? 0,
+      ]);
+    });
+  }
+
+  rows.push([]);
+  rows.push(["Top Countries", "Country", "Orders"]);
+  if (topCountries.length === 0) {
+    rows.push(["Top Countries", "No data", ""]);
+  } else {
+    topCountries.forEach((item: any) => {
+      rows.push([
+        "Top Countries",
+        item.country || item.name || "",
+        item.orders ?? item.count ?? 0,
+      ]);
+    });
+  }
+
+  rows.push([]);
+  rows.push(["Best Sellers", "Store", "Revenue", "Orders"]);
+  if (bestSellers.length === 0) {
+    rows.push(["Best Sellers", "No data", "", ""]);
+  } else {
+    bestSellers.forEach((seller: any) => {
+      rows.push([
+        "Best Sellers",
+        seller.name || "",
+        seller.revenue ?? seller.total ?? 0,
+        seller.orders ?? seller.purchases ?? 0,
+      ]);
+    });
+  }
+
+  rows.push([]);
+  rows.push(["Product Overview", "Name", "Price", "Quantity", "Status"]);
+  if (productOverview.length === 0) {
+    rows.push(["Product Overview", "No data", "", "", ""]);
+  } else {
+    productOverview.forEach((product: any) => {
+      rows.push([
+        "Product Overview",
+        product.name || "",
+        product.price ?? 0,
+        product.quantity ?? 0,
+        product.status || "",
+      ]);
+    });
+  }
+
   return { filename: "dashboard.csv", rows };
 };
 
