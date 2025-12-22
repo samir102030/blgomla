@@ -112,17 +112,17 @@ const NotificationBell: React.FC = () => {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 z-50">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-800">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {t('notification.notifications')}
             </h3>
             <div className="flex items-center space-x-2">
               {hideReadNotifications ? (
                 <button
                   onClick={handleShowAll}
-                  className="text-sm text-green-600 hover:text-green-800"
+                  className="text-sm text-green-600 hover:text-green-800 dark:text-emerald-300 dark:hover:text-emerald-200"
                   disabled={loading}
                 >
                   {t('notification.showAll')}
@@ -130,7 +130,7 @@ const NotificationBell: React.FC = () => {
               ) : (
                 <button
                   onClick={handleToggleHideRead}
-                  className="text-sm text-orange-600 hover:text-orange-800"
+                  className="text-sm text-orange-600 hover:text-orange-800 dark:text-amber-300 dark:hover:text-amber-200"
                   disabled={loading}
                 >
                   {t('notification.hideRead')}
@@ -139,7 +139,7 @@ const NotificationBell: React.FC = () => {
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800"
+                  className="text-sm text-blue-600 hover:text-blue-800 dark:text-sky-300 dark:hover:text-sky-200"
                   disabled={loading}
                 >
                   {t('notification.markAllRead')}
@@ -151,11 +151,11 @@ const NotificationBell: React.FC = () => {
           {/* Notifications List */}
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-gray-500 dark:text-slate-400">
                 {t('notification.loading')}
               </div>
             ) : displayedNotifications.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-4 text-center text-gray-500 dark:text-slate-400">
                 {hideReadNotifications
                   ? t('notification.noUnread')
                   : t('notification.noNotifications')}
@@ -164,8 +164,8 @@ const NotificationBell: React.FC = () => {
               displayedNotifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                    !notification.read ? "bg-blue-50" : ""
+                  className={`p-4 border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/60 cursor-pointer ${
+                    !notification.read ? "bg-blue-50 dark:bg-slate-800/80" : ""
                   }`}
                   onClick={() => handleMarkAsRead(notification._id)}
                 >
@@ -174,13 +174,13 @@ const NotificationBell: React.FC = () => {
                       {getNotificationIcon(notification.type)}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {notification.title}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-600 dark:text-slate-300 mt-1">
                         {notification.message}
                       </p>
-                      <p className="text-xs text-gray-400 mt-2">
+                      <p className="text-xs text-gray-400 dark:text-slate-500 mt-2">
                         {formatDate(notification.createdAt)}
                       </p>
                     </div>
@@ -194,14 +194,14 @@ const NotificationBell: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 dark:border-slate-800">
             <button
               onClick={() => {
                 // Navigate to full notifications page
                 setIsOpen(false);
                 // You can add navigation logic here
               }}
-              className="w-full text-center text-sm text-blue-600 hover:text-blue-800"
+              className="w-full text-center text-sm text-blue-600 hover:text-blue-800 dark:text-sky-300 dark:hover:text-sky-200"
             >
               {t('notification.viewAll')}
             </button>

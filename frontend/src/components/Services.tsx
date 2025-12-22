@@ -40,26 +40,26 @@ const Services: React.FC = () => {
     },
   ];
   return (
-    <section className="py-16 bg-[#FAFAFA]">
+    <section className="py-16 bg-[#FAFAFA] dark:bg-slate-950">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {services.map((service) => (
             <div
               key={service.id}
-              className="text-center group hover:bg-white hover:shadow-lg rounded-lg p-6 transition-all duration-300 border border-[#9E9E9E]/10"
+              className="text-center group hover:bg-white hover:shadow-lg rounded-lg p-6 transition-all duration-300 border border-[#9E9E9E]/10 bg-white/60 dark:bg-slate-900/70 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:shadow-2xl"
             >
               {/* Icon */}
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FFD600]/20 rounded-full mb-4 group-hover:bg-[#FFD600]/30 transition-colors duration-300">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FFD600]/20 rounded-full mb-4 group-hover:bg-[#FFD600]/30 transition-colors duration-300 dark:bg-amber-400/10 dark:group-hover:bg-amber-400/20">
                 <span className="text-2xl">{service.icon}</span>
               </div>
 
               {/* Title */}
-              <h3 className="text-lg font-semibold text-[#333333] mb-3">
+              <h3 className="text-lg font-semibold text-[#333333] dark:text-white mb-3">
                 {service.title}
               </h3>
 
               {/* Description */}
-              <p className="text-sm text-[#9E9E9E] leading-relaxed">
+              <p className="text-sm text-[#9E9E9E] dark:text-slate-400 leading-relaxed">
                 {service.description}
               </p>
             </div>

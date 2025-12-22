@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
+import ThemeToggle from "./ThemeToggle";
 
 interface NavigationItem {
   label: string;
@@ -124,11 +125,11 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FFD600] shadow-lg">
+    <header className="sticky top-0 z-50 bg-[var(--brand-surface)] shadow-lg">
       {/* Top bar - responsive */}
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 gap-2 sm:gap-4">
         <div className="flex items-center space-x-2">
-          <span className="text-[#333333] text-sm font-semibold">
+          <span className="text-[var(--brand-ink)] text-sm font-semibold">
             {t("Language")}
           </span>
           <select
@@ -143,19 +144,20 @@ const Header: React.FC = () => {
             <option value="en">{t("English")}</option>
             <option value="ar">{t("Arabic")}</option>
           </select>
+          <ThemeToggle showLabel={false} className="ml-1" />
         </div>
         <div className="hidden sm:flex items-center space-x-2">
-          <span className="text-[#333333] text-xs sm:text-sm">
+          <span className="text-[var(--brand-ink)] text-xs sm:text-sm">
             {t("Call us:")}
           </span>
-          <span className="text-[#333333] font-medium text-xs sm:text-sm">
+          <span className="text-[var(--brand-ink)] font-medium text-xs sm:text-sm">
             {t("(+20)1009353639")}
           </span>
         </div>
       </div>
 
       {/* Main header */}
-      <div className="py-2 sm:py-3 lg:py-4 bg-[#FFD600]">
+      <div className="py-2 sm:py-3 lg:py-4 bg-[var(--brand-surface)]">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
             {/* Logo */}
@@ -169,7 +171,7 @@ const Header: React.FC = () => {
                   alt="Belgomla Logo"
                   className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
                 />
-                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[#333333] hidden sm:inline">
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[var(--brand-ink)] hidden sm:inline">
                   Belgomla
                 </span>
               </Link>
@@ -445,7 +447,7 @@ const Header: React.FC = () => {
 
       {/* Navigation */}
       <nav
-        className={`bg-[#002B5B] text-white transition-all duration-300 ${
+        className={`bg-[var(--brand-nav)] text-white transition-all duration-300 ${
           isMenuOpen ? "block" : "hidden"
         } lg:block`}
       >
@@ -457,7 +459,7 @@ const Header: React.FC = () => {
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`block py-3 sm:py-4 lg:py-3 px-3 sm:px-4 hover:bg-[#FFD600]/20 hover:text-[#FFD600] transition-colors text-sm sm:text-base ${item.className}`}
+                    className={`block py-3 sm:py-4 lg:py-3 px-3 sm:px-4 hover:bg-white/10 hover:text-[var(--brand-accent)] transition-colors text-sm sm:text-base ${item.className}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}

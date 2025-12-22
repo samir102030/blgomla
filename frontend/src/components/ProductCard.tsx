@@ -89,7 +89,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <div className="bg-[#FAFAFA] rounded-lg p-3 sm:p-4 lg:p-6 relative border border-[#9E9E9E]/20 flex flex-col h-full">
+    <div className="bg-[var(--surface)] rounded-lg p-3 sm:p-4 lg:p-6 relative border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
       {/* Badges */}
       <div className="absolute top-2 sm:top-3 lg:top-4 left-2 sm:left-3 lg:left-4 flex flex-col gap-0.5 sm:gap-1 z-10">
         {isFeatured && (
@@ -113,7 +113,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <button
         onClick={toggleWishlist}
         disabled={isLoading}
-        className="absolute top-2 sm:top-3 lg:top-4 right-2 sm:right-3 lg:right-4 z-10 p-1 sm:p-2 rounded-full hover:bg-[#FFD600]/20 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="absolute top-2 sm:top-3 lg:top-4 right-2 sm:right-3 lg:right-4 z-10 p-1 sm:p-2 rounded-full hover:bg-[#FFD600]/20 dark:hover:bg-white/10 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? (
           <svg
@@ -167,13 +167,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Product Info */}
       <div className="text-center mb-2 sm:mb-4 flex-grow">
-        <h3 className="text-sm sm:text-base lg:text-xl font-semibold text-[#333333] mb-1 sm:mb-2 line-clamp-2">
+        <h3 className="text-sm sm:text-base lg:text-xl font-semibold text-[#333333] dark:text-white mb-1 sm:mb-2 line-clamp-2">
           {name}
         </h3>
         <div className="flex justify-center mb-1 sm:mb-3 gap-0.5 sm:gap-1">
           {renderStars(rating)}
         </div>
-        <p className="text-[#9E9E9E] text-xs sm:text-sm leading-relaxed mb-2 sm:mb-4 line-clamp-2 hidden sm:block">
+        <p className="text-[#9E9E9E] dark:text-slate-400 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-4 line-clamp-2 hidden sm:block">
           {description}
         </p>
       </div>
@@ -181,11 +181,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Price */}
       <div className="text-center">
         <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
-          <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[#333333]">
+          <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[#333333] dark:text-white">
             {price} {currency}
           </span>
           {originalPrice && (
-            <span className="text-sm sm:text-base lg:text-lg text-[#9E9E9E] line-through">
+            <span className="text-sm sm:text-base lg:text-lg text-[#9E9E9E] dark:text-slate-400 line-through">
               {originalPrice} {currency}
             </span>
           )}

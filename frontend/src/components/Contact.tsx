@@ -51,35 +51,35 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Information */}
           <div className="lg:col-span-1">
-            <div className="bg-gray-200 rounded-lg p-8 h-full">
+            <div className="bg-gray-200 dark:bg-slate-900 rounded-lg p-8 h-full border border-transparent dark:border-slate-800">
               {/* Address Section */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   {t("Address")}
                 </h3>
-                <div className="text-gray-700 space-y-1">
+                <div className="text-gray-700 dark:text-slate-300 space-y-1">
                   <p></p>
                   <p>{t("October, Egypt")}</p>
                 </div>
               </div>
 
-              <hr className="border-gray-300 my-6" />
+              <hr className="border-gray-300 dark:border-slate-800 my-6" />
 
               {/* Phone Section */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   {t("Phone")}
                 </h3>
-                <div className="text-gray-700 space-y-2">
+                <div className="text-gray-700 dark:text-slate-300 space-y-2">
                   <p>
                     <a
                       href="tel:+8801265897568"
-                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                      className="text-blue-600 hover:text-blue-800 dark:text-amber-300 dark:hover:text-amber-200 transition-colors"
                     >
                       {t("(+20)1009353639")}
                     </a>
@@ -87,18 +87,18 @@ const Contact: React.FC = () => {
                 </div>
               </div>
 
-              <hr className="border-gray-300 my-6" />
+              <hr className="border-gray-300 dark:border-slate-800 my-6" />
 
               {/* Web Section */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   {t("Web")}
                 </h3>
-                <div className="text-gray-700 space-y-2">
+                <div className="text-gray-700 dark:text-slate-300 space-y-2">
                   <p>
                     <a
                       href="mailto:info@example.com"
-                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                      className="text-blue-600 hover:text-blue-800 dark:text-amber-300 dark:hover:text-amber-200 transition-colors"
                     >
                       {t("Blgmla.com")}
                     </a>
@@ -108,7 +108,7 @@ const Contact: React.FC = () => {
                       href="https://www.example.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                      className="text-blue-600 hover:text-blue-800 dark:text-amber-300 dark:hover:text-amber-200 transition-colors"
                     >
                       {t("www.Blgmla.com")}
                     </a>

@@ -16,7 +16,7 @@ const HomePage: React.FC = () => {
   const user = useUserStore((state) => state.user);
   console.log("Current User:", user);
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Header />
       <main>
         <HeroSlider />
@@ -25,21 +25,21 @@ const HomePage: React.FC = () => {
         <BrandLogos />
 
         {/* Hero Banner Section */}
-        <section className="bg-gradient-to-r from-[#FFD600] to-[#e6c100] py-6 sm:py-8 lg:py-12 lg:py-16 mb-4 sm:mb-6 lg:mb-8">
+        <section className="bg-gradient-to-r from-[#FFD600] to-[#e6c100] dark:from-slate-900 dark:to-slate-800 py-6 sm:py-8 lg:py-12 lg:py-16 mb-4 sm:mb-6 lg:mb-8">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8">
               <div className="w-full lg:flex-1 mb-0 lg:mb-0 text-center lg:text-left">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#333333] mb-2 sm:mb-3 lg:mb-4">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#333333] dark:text-white mb-2 sm:mb-3 lg:mb-4">
                   {t("Back to School Offers")}
                   <br />
                   <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl">
                     {t("Up to 30% Off")}
                   </span>
                 </h2>
-                <p className="text-base sm:text-lg md:text-xl text-[#333333] mb-4 sm:mb-6">
+                <p className="text-base sm:text-lg md:text-xl text-[#333333] dark:text-slate-200 mb-4 sm:mb-6">
                   {t("Electronics")}
                 </p>
-                <button className="bg-[#002B5B] text-white px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 lg:py-3 rounded-lg hover:bg-[#001a3d] transition-colors text-sm sm:text-base">
+                <button className="bg-[#002B5B] text-white px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 lg:py-3 rounded-lg hover:bg-[#001a3d] dark:bg-white/10 dark:hover:bg-white/20 transition-colors text-sm sm:text-base">
                   {t("Shop Now")}
                 </button>
               </div>
@@ -67,16 +67,16 @@ const HomePage: React.FC = () => {
             ].map((category, index) => (
               <div
                 key={index}
-                className="bg-white rounded-full p-2 sm:p-3 lg:p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-white rounded-full p-2 sm:p-3 lg:p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer dark:bg-slate-900/80 dark:border dark:border-slate-800"
               >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto mb-1 sm:mb-2 bg-gray-100 rounded-full flex items-center justify-center">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto mb-1 sm:mb-2 bg-gray-100 rounded-full flex items-center justify-center dark:bg-slate-800">
                   <img
                     src={category.image}
                     alt={category.name}
                     className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain"
                   />
                 </div>
-                <p className="text-center text-xs sm:text-sm font-medium text-gray-700 line-clamp-2">
+                <p className="text-center text-xs sm:text-sm font-medium text-gray-700 dark:text-slate-200 line-clamp-2">
                   {category.name}
                 </p>
               </div>
@@ -85,8 +85,8 @@ const HomePage: React.FC = () => {
         </section>
 
         {/* All Products Section */}
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 lg:mb-8 text-gray-900">
+        <section className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-transparent dark:border-slate-800">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 lg:mb-8 text-gray-900 dark:text-white">
             {t("All Products")}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">

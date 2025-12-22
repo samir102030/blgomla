@@ -23,7 +23,8 @@ const HeroSlider: React.FC = () => {
       buttonText: t("BUY NOW"),
       buttonLink: "/brands",
       image: "/ban1.png",
-      bgColor: "bg-gradient-to-r from-gray-100 to-gray-200",
+      bgColor:
+        "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-950 dark:to-slate-900",
     },
     {
       id: 2,
@@ -32,7 +33,8 @@ const HeroSlider: React.FC = () => {
       buttonText: t("SHOP NOW"),
       buttonLink: "/brands",
       image: "/ban2.jpg",
-      bgColor: "bg-gradient-to-r from-blue-50 to-blue-100",
+      bgColor:
+        "bg-gradient-to-r from-blue-50 to-blue-100 dark:from-slate-950 dark:to-slate-900",
     },
     {
       id: 3,
@@ -41,7 +43,8 @@ const HeroSlider: React.FC = () => {
       buttonText: t("EXPLORE"),
       buttonLink: "/brands",
       image: "/ban3.jpg",
-      bgColor: "bg-gradient-to-r from-purple-50 to-purple-100",
+      bgColor:
+        "bg-gradient-to-r from-purple-50 to-purple-100 dark:from-slate-950 dark:to-slate-900",
     },
   ];
 
@@ -84,16 +87,16 @@ const HeroSlider: React.FC = () => {
                 {/* Content */}
                 <div className="text-left space-y-6">
                   <div>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
                       {slide.title}
                     </h1>
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white leading-tight">
                       {slide.subtitle}
                     </h2>
                   </div>
                   <a
                     href={slide.buttonLink}
-                    className="inline-block bg-black text-white px-8 py-3 rounded-full font-medium hover:bg-gray-800 transition-colors duration-300 text-sm md:text-base"
+                    className="inline-block bg-black text-white px-8 py-3 rounded-full font-medium hover:bg-gray-800 dark:bg-white/10 dark:hover:bg-white/20 transition-colors duration-300 text-sm md:text-base"
                   >
                     {slide.buttonText}
                   </a>
@@ -105,12 +108,12 @@ const HeroSlider: React.FC = () => {
                     <img
                       src={slide.image}
                       alt={slide.subtitle}
-                      className="w-80 h-64 md:w-96 md:h-80 object-cover rounded-lg shadow-lg"
+                      className="w-80 h-64 md:w-96 md:h-80 object-cover rounded-lg shadow-lg dark:shadow-2xl dark:shadow-black/40"
                     />
                     {/* Decorative elements */}
-                    <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-500 rounded-full opacity-20"></div>
-                    <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-purple-500 rounded-full opacity-20"></div>
-                    <div className="absolute top-1/2 -right-8 w-6 h-6 bg-yellow-500 rounded-full opacity-30"></div>
+                    <div className="absolute -top-4 -right-4 w-8 h-8 bg-blue-500 rounded-full opacity-20 dark:opacity-40"></div>
+                    <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-purple-500 rounded-full opacity-20 dark:opacity-35"></div>
+                    <div className="absolute top-1/2 -right-8 w-6 h-6 bg-yellow-500 rounded-full opacity-30 dark:opacity-50"></div>
                   </div>
                 </div>
               </div>
@@ -122,10 +125,10 @@ const HeroSlider: React.FC = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all duration-300 z-10"
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all duration-300 z-10 dark:bg-slate-900/80 dark:hover:bg-slate-800"
       >
         <svg
-          className="w-6 h-6 text-gray-800"
+          className="w-6 h-6 text-gray-800 dark:text-slate-200"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -141,10 +144,10 @@ const HeroSlider: React.FC = () => {
 
       <button
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full p-2 shadow-lg transition-all duration-300 z-10"
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all duration-300 z-10 dark:bg-slate-900/80 dark:hover:bg-slate-800"
       >
         <svg
-          className="w-6 h-6 text-gray-800"
+          className="w-6 h-6 text-gray-800 dark:text-slate-200"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -166,8 +169,8 @@ const HeroSlider: React.FC = () => {
             onClick={() => goToSlide(index)}
             className={`w-3 h-3 rounded-full transition-all duration-300 ${
               index === currentSlide
-                ? "bg-white scale-110"
-                : "bg-white bg-opacity-50 hover:bg-opacity-75"
+                ? "bg-white scale-110 dark:bg-slate-100"
+                : "bg-white bg-opacity-50 hover:bg-opacity-75 dark:bg-slate-100/50 dark:hover:bg-slate-100/70"
             }`}
           />
         ))}

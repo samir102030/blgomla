@@ -20,7 +20,7 @@ const Newsletter: React.FC = () => {
   };
 
   return (
-    <section className="relative py-16 bg-gradient-to-r from-[#FAFAFA] to-[#9E9E9E]/10 overflow-hidden">
+    <section className="relative py-16 bg-gradient-to-r from-[#FAFAFA] to-[#9E9E9E]/10 dark:from-slate-950 dark:to-slate-900 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 w-20 h-20 bg-[#002B5B] rounded-full"></div>
@@ -33,10 +33,10 @@ const Newsletter: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
           <div className="text-center lg:text-left">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#333333] mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#333333] dark:text-white mb-4">
               {t("SUBSCRIBE OUR NEWSLETTER")}
             </h2>
-            <p className="text-lg text-[#9E9E9E] mb-8">
+            <p className="text-lg text-[#9E9E9E] dark:text-slate-400 mb-8">
               {t("GET UPDATE FOR NEWS, OFFERS")}
             </p>
 
@@ -49,13 +49,13 @@ const Newsletter: React.FC = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t("Enter your email here")}
-                    className="w-full px-4 py-3 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent outline-none transition-all duration-300"
+                    className="w-full px-4 py-3 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent outline-none transition-all duration-300 bg-white/80 dark:bg-slate-900/80 dark:text-white dark:placeholder:text-slate-500 dark:border-slate-700"
                     required
                   />
                 </div>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-[#FFD600] text-[#333333] rounded-lg hover:bg-[#e6c100] transition-colors duration-300 font-medium flex items-center justify-center"
+                  className="px-6 py-3 bg-[#FFD600] text-[#333333] rounded-lg hover:bg-[#e6c100] dark:bg-white/10 dark:text-white dark:hover:bg-white/20 transition-colors duration-300 font-medium flex items-center justify-center"
                 >
                   <span className="mr-2">✈️</span>
                   {t("Subscribe")}
@@ -63,8 +63,8 @@ const Newsletter: React.FC = () => {
               </div>
 
               {isSubmitted && (
-                <div className="mt-4 p-3 bg-[#009688]/10 border border-[#009688]/30 rounded-lg">
-                  <p className="text-[#009688] text-sm">
+                <div className="mt-4 p-3 bg-[#009688]/10 border border-[#009688]/30 rounded-lg dark:bg-emerald-500/10 dark:border-emerald-500/30">
+                  <p className="text-[#009688] dark:text-emerald-300 text-sm">
                     ✅ {t("Thank you for subscribing to our newsletter!")}
                   </p>
                 </div>
@@ -72,7 +72,7 @@ const Newsletter: React.FC = () => {
             </form>
 
             {/* Additional Info */}
-            <p className="text-sm text-[#9E9E9E] mt-4">
+            <p className="text-sm text-[#9E9E9E] dark:text-slate-500 mt-4">
               {t("Join Belgomla family")}
             </p>
           </div>
@@ -81,8 +81,8 @@ const Newsletter: React.FC = () => {
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
               {/* Main Router Placeholder */}
-              <div className="w-80 h-64 md:w-96 md:h-80 bg-gray-800 rounded-lg shadow-2xl flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                <div className="text-center text-white">
+              <div className="w-80 h-64 md:w-96 md:h-80 bg-gray-800 rounded-lg shadow-2xl flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500 dark:bg-slate-900">
+                <div className="text-center text-white dark:text-slate-100">
                   <div className="text-6xl mb-4">📡</div>
                   <p className="text-xl font-bold">{t("TP-Link AX10")}</p>
                   <p className="text-sm opacity-75">{t("Wi-Fi 6 Router")}</p>

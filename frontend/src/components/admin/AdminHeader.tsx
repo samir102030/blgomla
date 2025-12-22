@@ -7,6 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
 import { Link } from "react-router-dom";
+import ThemeToggle from "../ThemeToggle";
 
 interface AdminHeaderProps {
   onMenuClick: () => void;
@@ -43,6 +44,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
 
         {/* Right side */}
         <div className="flex items-center space-x-4">
+          <ThemeToggle showLabel={false} />
           {/* User Profile Dropdown */}
           <div className="relative">
             <button

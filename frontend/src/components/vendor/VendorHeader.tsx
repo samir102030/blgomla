@@ -3,6 +3,7 @@ import { useUserStore } from '../../stores/user.store';
 import { useVendorStore } from '../../stores/vendor.store';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../lib/i18n';
+import ThemeToggle from '../ThemeToggle';
 
 interface VendorHeaderProps {
   onMenuClick: () => void;
@@ -96,6 +97,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
               <option value="ar">{t('Arabic')}</option>
             </select>
           </div>
+          <ThemeToggle showLabel={false} />
 
           {/* Store Status */}
           {vendorStore && (
