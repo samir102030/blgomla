@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useOrderStore } from "../stores/order.store";
+import { useReturnStore } from "../stores/return.store";
 
 const AccountOrders: React.FC = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -10,6 +11,12 @@ const AccountOrders: React.FC = () => {
 
   const fetchOrderById = useOrderStore((state) => state.fetchOrderById);
   const orders = useOrderStore((state) => state.orders);
+  const returns = useReturnStore((state) => state.returns);
+  const createReturn = useReturnStore((state) => state.createReturn);
+
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [selectedReturnOrder, setSelectedReturnOrder] = useState<any>(null);
 
   const handleViewOrderDetails = async (orderId: string) => {
     setShowOrderModal(true);
@@ -43,6 +50,31 @@ const AccountOrders: React.FC = () => {
     } finally {
       setOrderDetailsLoading(false);
     }
+  };
+
+  const handleOpenReturn = (order: any) => {
+    setSelectedReturnOrder(order);
+    setReturnReason("");
+    setShowReturnModal(true);
+  };
+
+  const handleSubmitReturn = async () => {
+    if (!selectedReturnOrder?._id) return;
+    const success = await createReturn({
+      orderId: selectedReturnOrder._id,
+      reason: returnReason.trim() || undefined,
+    });
+    if (success) {
+      setShowReturnModal(false);
+    }
+  };
+
+  const hasReturnForOrder = (orderId: string) => {
+    return returns.some((item) => {
+      const returnOrderId =
+        typeof item.order === "string" ? item.order : item.order?._id;
+      return returnOrderId === orderId;
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -104,12 +136,32 @@ const AccountOrders: React.FC = () => {
                   ${order.totalPrice}
                 </td>
                 <td className="px-6 py-4">
-                  <button
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    onClick={() => handleViewOrderDetails(order._id)}
-                  >
-                    View Details
-                  </button>
+                  <div className="flex flex-col items-start gap-2">
+                    <button
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      onClick={() => handleViewOrderDetails(order._id)}
+                    >
+                      View Details
+                    </button>
+                    {order.status === "delivered" && (
+                      <button
+                        className={`text-sm font-medium ${
+                          hasReturnForOrder(order._id)
+                            ? "text-gray-400 cursor-not-allowed"
+                            : "text-[#002B5B] hover:text-[#001a3d]"
+                        }`}
+                        onClick={() =>
+                          !hasReturnForOrder(order._id) &&
+                          handleOpenReturn(order)
+                        }
+                        disabled={hasReturnForOrder(order._id)}
+                      >
+                        {hasReturnForOrder(order._id)
+                          ? "Return Requested"
+                          : "Request Return"}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -384,6 +436,69 @@ const AccountOrders: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Return Request Modal */}
+      {showReturnModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              onClick={() => setShowReturnModal(false)}
+              aria-label="Close"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                Request Return
+              </h2>
+              <p className="text-sm text-gray-600">
+                Order #{selectedReturnOrder?._id}
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason (optional)
+                </label>
+                <textarea
+                  rows={4}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#FFD600] focus:border-transparent"
+                  placeholder="Tell us why you are returning this order"
+                  value={returnReason}
+                  onChange={(e) => setReturnReason(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <button
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  onClick={() => setShowReturnModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 text-sm rounded-lg bg-[#002B5B] text-white hover:bg-[#001a3d]"
+                  onClick={handleSubmitReturn}
+                >
+                  Submit Request
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

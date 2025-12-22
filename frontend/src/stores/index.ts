@@ -11,6 +11,7 @@ export { useCouponStore } from './coupon.store';
 export { useNotificationStore } from './notification.store';
 export { useAnalyticsStore } from './analytics.store';
 export { useSettingsStore } from './settings.store';
+export { useReturnStore } from './return.store';
 
 // Export types
 export type { User } from '../types/user.type';
@@ -25,3 +26,4 @@ export type { Coupon } from '../types/coupon.type';
 export type { Notification } from '../types/notification.type';
 export type { DashboardStats, SalesAnalytics } from '../types/analytics.type';
 export type { AppSettings, UserPreferences } from '../types/settings.type';
+export type { ReturnRequest, ReturnStatus } from '../types/return.type';

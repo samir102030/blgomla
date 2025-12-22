@@ -14,6 +14,7 @@ import notificationRoutes from "./notification.route.js";
 import couponRoutes from "./coupon.route.js";
 import brandRequestRoutes from "./brandRequest.route.js";
 import categoryRequestRoutes from "./categoryRequest.route.js";
+import returnRoutes from "./return.route.js";
 
 const router = express.Router();
 
@@ -32,5 +33,6 @@ router.use("/notifications", notificationRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/brand-requests", brandRequestRoutes);
 router.use("/category-requests", categoryRequestRoutes);
+router.use("/returns", returnRoutes);
 
 export default router;

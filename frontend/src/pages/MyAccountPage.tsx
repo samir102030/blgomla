@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AccountDashboard from "../components/AccountDashboard";
 import AccountOrders from "../components/AccountOrders";
+import AccountReturns from "../components/AccountReturns";
 import AccountAddresses from "../components/AccountAddresses";
 import AccountProfile from "../components/AccountProfile";
 import AccountPassword from "../components/AccountPassword";
@@ -12,6 +13,7 @@ import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
 import { useVendorStore } from "../stores/vendor.store";
+import { useReturnStore } from "../stores/return.store";
 import PleaseLogin from "../components/PleaseLogin";
 import { useTranslation } from "react-i18next";
 
@@ -26,6 +28,7 @@ const MyAccountPage: React.FC = () => {
   const fetchUserAddresses = useAddressStore(
     (state) => state.fetchUserAddresses
   );
+  const fetchMyReturns = useReturnStore((state) => state.fetchMyReturns);
 
   // Vendor store
   const fetchVendorStore = useVendorStore((state) => state.fetchVendorStore);
@@ -35,6 +38,7 @@ const MyAccountPage: React.FC = () => {
     if (user?._id) {
       fetchUserOrders();
       fetchUserAddresses();
+      fetchMyReturns();
       if (user.role === "store") {
         fetchVendorStore();
       }
@@ -44,12 +48,14 @@ const MyAccountPage: React.FC = () => {
     fetchUserAddresses,
     fetchUserOrders,
     fetchVendorStore,
+    fetchMyReturns,
     user?.role,
   ]);
 
   const menuItems = [
     { id: "dashboard", label: t("account.dashboard"), icon: "📊" },
     { id: "orders", label: t("account.orders"), icon: "📦" },
+    { id: "returns", label: t("account.returns"), icon: "📤" },
     { id: "addresses", label: t("account.addresses"), icon: "📍" },
     { id: "profile", label: t("account.accountDetails"), icon: "👤" },
     { id: "password", label: t("account.changePassword"), icon: "🔒" },
@@ -149,6 +155,9 @@ const MyAccountPage: React.FC = () => {
 
                 {/* Orders */}
                 {activeTab === "orders" && <AccountOrders />}
+
+                {/* Returns */}
+                {activeTab === "returns" && <AccountReturns />}
 
                 {/* Addresses */}
                 {activeTab === "addresses" && <AccountAddresses />}

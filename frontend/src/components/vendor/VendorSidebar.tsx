@@ -41,7 +41,8 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
         { title: 'All Orders', path: '/vendor/orders' },
         { title: 'Pending', path: '/vendor/orders/pending' },
         { title: 'Processing', path: '/vendor/orders/processing' },
-        { title: 'Completed', path: '/vendor/orders/completed' }
+        { title: 'Completed', path: '/vendor/orders/completed' },
+        { title: 'Returns', path: '/vendor/returns' }
       ]
     },
     {

@@ -72,6 +72,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
         { name: "Order", href: "/dashboard/order", roles: ["admin", "store"] },
       ],
     },
+    {
+      name: "Returns",
+      href: "/dashboard/returns",
+      icon: ClipboardDocumentListIcon,
+      roles: ["admin", "store"],
+    },
     { name: "User", href: "/dashboard/user", icon: UserIcon, roles: ["admin"] },
     {
       name: "Customer Reviews",

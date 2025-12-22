@@ -5,6 +5,7 @@ import VendorProductManagement from "../pages/vendor/VendorProductManagement";
 import VendorStoreManagement from "../pages/vendor/VendorStoreManagement";
 import CouponsPage from "../pages/vendor/CouponsPage";
 import OrdersPage from "../pages/admin/OrdersPage";
+import ReturnsPage from "../pages/admin/ReturnsPage";
 import VendorLayout from "../components/vendor/VendorLayout";
 
 // Placeholder component for routes not yet implemented
@@ -61,6 +62,7 @@ const VendorRoutes: React.FC = () => {
 
         {/* Order Management */}
         <Route path="orders" element={<OrdersPage />} />
+        <Route path="returns" element={<ReturnsPage />} />
         <Route
           path="orders/pending"
           element={
