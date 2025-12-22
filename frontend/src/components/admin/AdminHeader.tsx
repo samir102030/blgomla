@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   UserCircleIcon,
   Bars3Icon,
@@ -6,8 +6,9 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import ThemeToggle from "../ThemeToggle";
+import { downloadCsv, getExportPages } from "../../lib/exporters";
 
 interface AdminHeaderProps {
   onMenuClick: () => void;
@@ -15,9 +16,47 @@ interface AdminHeaderProps {
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const { user, logout } = useUserStore();
+  const location = useLocation();
+
+  const exportPages = useMemo(
+    () => getExportPages((user?.role as any) || "admin"),
+    [user?.role]
+  );
+
+  const currentExport = useMemo(() => {
+    const matches = exportPages.filter((page) =>
+      location.pathname.startsWith(page.path)
+    );
+    return matches.sort((a, b) => b.path.length - a.path.length)[0];
+  }, [exportPages, location.pathname]);
+
+  const fallbackExport = useMemo(() => {
+    if (!location.pathname.startsWith("/dashboard")) return null;
+    return {
+      fetcher: async () => ({
+        filename: "export.csv",
+        rows: [["Message"], ["No export data available"]],
+      }),
+    };
+  }, [location.pathname]);
 
   const handleLogout = async () => await logout();
+
+  const handleExport = async () => {
+    const exporter = currentExport || fallbackExport;
+    if (!exporter || exporting) return;
+    setExporting(true);
+    try {
+      const result = await exporter.fetcher();
+      downloadCsv(result.filename, result.rows);
+    } catch (error) {
+      console.error("Failed to export page data:", error);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -45,6 +84,15 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
         {/* Right side */}
         <div className="flex items-center space-x-4">
           <ThemeToggle showLabel={false} />
+          {(currentExport || fallbackExport) && (
+            <button
+              onClick={handleExport}
+              className="px-3 py-2 text-sm bg-[#002B5B] text-white rounded-lg hover:bg-[#001a3d] transition-colors"
+              disabled={exporting}
+            >
+              {exporting ? "Exporting..." : "Export CSV"}
+            </button>
+          )}
           {/* User Profile Dropdown */}
           <div className="relative">
             <button

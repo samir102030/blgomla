@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ArrowUpIcon,
@@ -12,10 +12,26 @@ import {
 import { useVendorStore } from "../../stores/vendor.store";
 import { useUserStore } from "../../stores/user.store";
 import AdminLanguageToggle from "../../components/AdminLanguageToggle";
+import { useAnalyticsStore } from "../../stores/analytics.store";
+import {
+  downloadCombinedCsv,
+  downloadCsv,
+  getExportPages,
+} from "../../lib/exporters";
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useUserStore();
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
+  const [combineFiles, setCombineFiles] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const {
+    salesTrend,
+    topProducts,
+    fetchSalesTrend,
+    fetchTopProducts,
+  } = useAnalyticsStore();
   const {
     dashboardStats,
     loading,
@@ -38,6 +54,53 @@ const AdminDashboard: React.FC = () => {
       fetchVendors({ page: 1, limit: 10 }).catch(() => { });
     }
   }, [user, fetchDashboardStats, fetchVendorStore, fetchVendors]);
+
+  useEffect(() => {
+    fetchSalesTrend("monthly", "1year").catch(() => {});
+    fetchTopProducts(5).catch(() => {});
+  }, [fetchSalesTrend, fetchTopProducts]);
+
+  const exportPages = useMemo(
+    () => getExportPages((user?.role as any) || "admin"),
+    [user?.role]
+  );
+
+  useEffect(() => {
+    setSelectedPageIds(exportPages.map((page) => page.id));
+  }, [exportPages]);
+
+  const toggleSelectedPage = (id: string) => {
+    setSelectedPageIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkExport = async () => {
+    if (selectedPageIds.length === 0 || exporting) return;
+    setExporting(true);
+    try {
+      const selectedPages = exportPages.filter((page) =>
+        selectedPageIds.includes(page.id)
+      );
+      const results = await Promise.all(
+        selectedPages.map(async (page) => {
+          const data = await page.fetcher();
+          return { label: page.label, ...data };
+        })
+      );
+
+      if (combineFiles) {
+        downloadCombinedCsv("dashboard-export.csv", results);
+      } else {
+        results.forEach((result) => downloadCsv(result.filename, result.rows));
+      }
+      setShowExportModal(false);
+    } catch (error) {
+      console.error("Failed to export dashboard data:", error);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const retry = () => {
     clearError();
@@ -76,6 +139,12 @@ const AdminDashboard: React.FC = () => {
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <AdminLanguageToggle />
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors text-xs sm:text-sm whitespace-nowrap"
+            >
+              Export Dashboard
+            </button>
             <div className="bg-white px-3 sm:px-4 py-2 rounded-lg shadow-sm whitespace-nowrap">
               <span className="text-xs sm:text-sm text-gray-500">
                 {t("admin.lastUpdated")}
@@ -240,24 +309,57 @@ const AdminDashboard: React.FC = () => {
                 </span>
               </div>
             </div>
-            <div className="h-64 flex items-end justify-between space-x-2">
-              {/* Simple bar chart placeholder */}
-              {Array.from({ length: 12 }, (_, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center">
-                  <div
-                    className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t w-full mb-2 transition-all hover:from-blue-600 hover:to-blue-500"
-                    style={{
-                      height: `${Math.random() * 200 + 50}px`,
-                      minHeight: "20px",
-                    }}
-                  ></div>
-                  <span className="text-xs text-gray-500">
-                    {new Date(0, i).toLocaleString("default", {
-                      month: "short",
-                    })}
-                  </span>
+            <div className="h-64">
+              {salesTrend && salesTrend.length > 0 &&
+              salesTrend.some((point) => point.sales > 0) ? (
+                <div className="flex items-end justify-between space-x-2 h-full">
+                  {salesTrend.slice(-12).map((point, index) => {
+                    const maxSales = Math.max(
+                      ...salesTrend.map((item) => item.sales)
+                    );
+                    const height =
+                      maxSales > 0 ? (point.sales / maxSales) * 100 : 0;
+                    const label = point.date.includes("-")
+                      ? point.date.split("-")[1]
+                      : point.date;
+                    return (
+                      <div
+                        key={`${point.date}-${index}`}
+                        className="flex-1 flex flex-col items-center justify-end h-full"
+                      >
+                        <div
+                          className="relative w-full flex items-end justify-center"
+                        >
+                          <div
+                            className="bg-gradient-to-t from-blue-500 to-blue-400 rounded-t w-full transition-all hover:from-blue-600 hover:to-blue-500 group"
+                            style={{ height: `${Math.max(height, 5)}%` }}
+                          >
+                            <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-gray-900 text-white px-2 py-1 rounded shadow whitespace-nowrap">
+                              {t("admin.revenue")}: $
+                              {point.sales.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-500 mt-2">
+                          {label}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              ) : (
+                <div className="h-full bg-gray-50 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">dY"^</div>
+                    <p className="text-gray-700 font-medium">
+                      No revenue data yet
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Sales will appear here once orders are completed.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -275,49 +377,28 @@ const AdminDashboard: React.FC = () => {
               <ChartBarIcon className="w-5 h-5 text-gray-400" />
             </div>
             <div className="space-y-4">
-              {dashboardStats?.topProducts &&
-                dashboardStats.topProducts.length > 0 ? (
-                dashboardStats.topProducts.map((p: any, i: number) => (
+              {topProducts && topProducts.length > 0 ? (
+                topProducts.map((p, i) => (
                   <div
-                    key={i}
+                    key={`${p.name}-${i}`}
                     className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
-                        {p.image ? (
-                          <img
-                            src={p.image}
-                            alt={p.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              // Hide image and show fallback icon
-                              const img = e.currentTarget as HTMLImageElement;
-                              img.style.display = "none";
-                              const fallback =
-                                img.nextElementSibling as HTMLElement;
-                              if (fallback) fallback.style.display = "flex";
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className="w-full h-full flex items-center justify-center text-blue-600"
-                          style={{ display: p.image ? "none" : "flex" }}
-                        >
-                          <ShoppingBagIcon className="w-5 h-5" />
-                        </div>
+                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <ShoppingBagIcon className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
                           {p.name}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {p.units || 0} {t("admin.sold")}
+                          {p.units} {t("admin.sold")}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-gray-900">
-                        ${p.sales || 0}
+                        ${p.sales.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -451,6 +532,85 @@ const AdminDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {showExportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl relative">
+            <button
+              onClick={() => setShowExportModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              aria-label="Close"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+
+            <div className="mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                Export Dashboard Data
+              </h2>
+              <p className="text-sm text-gray-600">
+                Select the pages you want to export.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2">
+              {exportPages.map((page) => (
+                <label
+                  key={page.id}
+                  className="flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedPageIds.includes(page.id)}
+                    onChange={() => toggleSelectedPage(page.id)}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <span className="text-sm text-gray-800">{page.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={combineFiles}
+                  onChange={(e) => setCombineFiles(e.target.checked)}
+                  className="h-4 w-4 text-blue-600"
+                />
+                Combine into single CSV
+              </label>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBulkExport}
+                  disabled={exporting || selectedPageIds.length === 0}
+                  className="px-4 py-2 rounded-lg bg-[#002B5B] text-white hover:bg-[#001a3d] disabled:opacity-50"
+                >
+                  {exporting ? "Exporting..." : "Download"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

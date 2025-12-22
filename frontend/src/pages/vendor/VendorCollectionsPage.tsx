@@ -32,6 +32,7 @@ const VendorCollectionsPage: React.FC = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState<any>(null);
+  const [expandedProductIds, setExpandedProductIds] = useState<string[]>([]);
   const [formState, setFormState] = useState({
     name: "",
     description: "",
@@ -141,6 +142,7 @@ const VendorCollectionsPage: React.FC = () => {
 
   const openViewModal = (collection: any) => {
     setSelectedCollection(collection);
+    setExpandedProductIds([]);
     setShowViewModal(true);
   };
 
@@ -157,6 +159,14 @@ const VendorCollectionsPage: React.FC = () => {
     });
     setEditItems(nextItems);
     setShowEditModal(true);
+  };
+
+  const toggleExpandedProduct = (productId: string) => {
+    setExpandedProductIds((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   const openDeleteModal = (collection: any) => {
@@ -540,30 +550,74 @@ const VendorCollectionsPage: React.FC = () => {
               {selectedCollection.items.map((item: any, index: number) => (
                 <div
                   key={`${selectedCollection._id}-${index}`}
-                  className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                  className="bg-gray-50 rounded-lg p-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-white">
-                      <img
-                        src={
-                          item.product?.images?.[0]?.url || "/placeholder.png"
-                        }
-                        alt={item.product?.name || "Product"}
-                        className="w-full h-full object-cover"
-                      />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-white">
+                        <img
+                          src={
+                            item.product?.images?.[0]?.url || "/placeholder.png"
+                          }
+                          alt={item.product?.name || "Product"}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {item.product?.name || "Product"}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Qty {item.quantity}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {item.product?.name || "Product"}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Qty {item.quantity}
-                      </p>
+                    <button
+                      onClick={() =>
+                        toggleExpandedProduct(item.product?._id)
+                      }
+                      className="text-xs text-[#002B5B] hover:text-[#001a3d] flex items-center gap-1"
+                    >
+                      {expandedProductIds.includes(item.product?._id)
+                        ? "Hide details"
+                        : "View details"}
+                        <span className="text-base">
+                          {expandedProductIds.includes(item.product?._id)
+                            ? "-"
+                            : "+"}
+                        </span>
+                    </button>
+                  </div>
+                  {expandedProductIds.includes(item.product?._id) && (
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-600">
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          Price:
+                        </span>{" "}
+                        EGP {item.product?.price?.toFixed(2)}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          Stock:
+                        </span>{" "}
+                        {item.product?.stock ?? "-"}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          Sale:
+                        </span>{" "}
+                        {item.product?.saleActive
+                          ? `${item.product?.salePercentage || 0}%`
+                          : "No"}
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          SKU:
+                        </span>{" "}
+                        {item.product?.sku || "-"}
+                      </div>
                     </div>
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    EGP {item.product?.price?.toFixed(2)}
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
