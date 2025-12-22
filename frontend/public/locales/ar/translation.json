@@ -262,7 +262,6 @@
   "City": "المدينة",
   "State": "الولاية",
   "ZIP Code": "الرمز البريدي",
-
   "vendor.welcomeBack": "مرحباً بعودتك، {{name}}!",
   "vendor.storeToday": "إليك ما يحدث في متجرك اليوم.",
   "vendor.totalProducts": "إجمالي المنتجات",
@@ -359,7 +358,6 @@
   "vendor.pendingOrdersCount": "الطلبات المعلقة",
   "vendor.lowStockItems": "عناصر منخفضة المخزون",
   "vendor.newReviews": "تقييمات جديدة",
-
   "account.dashboard": "لوحة التحكم",
   "account.orders": "الطلبات",
   "account.addresses": "العناوين",
@@ -396,7 +394,6 @@
   "account.newPassword": "كلمة المرور الجديدة",
   "account.confirmPassword": "تأكيد كلمة المرور",
   "account.updatePassword": "تحديث كلمة المرور",
-
   "notification.notifications": "الإشعارات",
   "notification.markAllRead": "تحديد الكل كمقروء",
   "notification.showAll": "عرض الكل",
@@ -405,7 +402,6 @@
   "notification.noUnread": "لا توجد إشعارات غير مقروءة",
   "notification.noNotifications": "لا توجد إشعارات بعد",
   "notification.viewAll": "عرض جميع الإشعارات",
-
   "home.shopByCategory": "تسوق حسب الفئة",
   "home.viewAllCategories": "عرض جميع الفئات",
   "home.featuredProducts": "المنتجات المميزة",
@@ -423,7 +419,6 @@
   "home.supportDesc": "دعم مخصص",
   "home.easyReturns": "إرجاع سهل",
   "home.easyReturnsDesc": "سياسة إرجاع لمدة 30 يوماً",
-
   "admin.dashboard": "لوحة الإدارة",
   "admin.storeDashboard": "لوحة المتجر",
   "admin.welcomeBack": "مرحباً بعودتك!",
@@ -567,7 +562,6 @@
   "admin.language": "اللغة",
   "admin.english": "الإنجليزية",
   "admin.arabic": "العربية",
-
   "product.productsManagement": "إدارة المنتجات",
   "product.manageInventory": "إدارة مخزون منتجاتك والكتالوج",
   "product.addProduct": "إضافة منتج",
@@ -594,7 +588,6 @@
   "product.errorLoading": "خطأ في تحميل المنتجات",
   "product.confirmedDelete": "تم حذف المنتج بنجاح",
   "product.loadingError": "خطأ: ",
-
   "order.ordersManagement": "إدارة الطلبات",
   "order.myStoreOrders": "طلبات متجري",
   "order.manageOrders": "إدارة وتتبع جميع طلبات العملاء",
@@ -621,7 +614,6 @@
   "order.errorLoadingOrders": "خطأ في تحميل الطلبات",
   "order.tryAgain": "حاول مرة أخرى",
   "order.noOrders": "لم يتم العثور على طلبات",
-
   "sales.salesAnalytics": "تحليلات المبيعات",
   "sales.trackPerformance": "تتبع أداء مبيعاتك والإيرادات",
   "sales.exportReport": "تصدير التقرير",
@@ -661,7 +653,6 @@
   "sales.manageAllOrders": "إدارة وتتبع جميع طلبات العملاء",
   "order.manageOrdersStore": "إدارة الطلبات في متجرك",
   "order.manageAllOrders": "إدارة وتتبع جميع طلبات العملاء",
-
   "common.store": "المتجر",
   "common.items": "العناصر",
   "common.total": "الإجمالي",
@@ -713,7 +704,6 @@
   "coupon.scheduled": "مجدول",
   "coupon.expired": "منتهي",
   "coupon.active": "ناشط",
-
   "modal": {
     "common": {
       "irreversible": "لا يمكن التراجع عن هذا الإجراء",
@@ -863,6 +853,152 @@
       "creditCard": "بطاقة ائتمان",
       "paypal": "باي بال",
       "bankTransfer": "تحويل بنكي"
+    }
+  },
+  "vendorRequests": {
+    "title": "طلبات البائعين",
+    "subtitle": "إدارة طلبات البائعين المعلقة",
+    "searchPlaceholder": "البحث عن البائعين...",
+    "allStatus": "جميع الحالات",
+    "columns": {
+      "business": "العمل التجاري",
+      "contact": "جهة الاتصال",
+      "status": "الحالة",
+      "appliedDate": "تاريخ الطلب",
+      "categories": "الفئات",
+      "actions": "الإجراءات"
+    },
+    "noVendors": "لم يتم العثور على بائعين",
+    "noPending": "لا توجد طلبات بائعين معلقة حالياً.",
+    "noStatus": "لا يوجد بائعين بحالة {{status}}.",
+    "modals": {
+      "rejectTitle": "رفض طلب البائع",
+      "rejectionReason": "سبب الرفض *",
+      "rejectionReasonPlaceholder": "يرجى تقديم سبب للرفض...",
+      "cancel": "إلغاء",
+      "reject": "رفض",
+      "detailsTitle": "تفاصيل طلب البائع"
+    },
+    "details": {
+      "businessInfo": "معلومات العمل",
+      "legalEntity": "الكيان القانوني",
+      "address": "العنوان",
+      "productCategories": "فئات المنتجات",
+      "businessDescription": "وصف العمل",
+      "documents": "المستندات",
+      "viewDocument": "عرض المستند",
+      "rejectApp": "رفض الطلب",
+      "approveApp": "الموافقة على الطلب",
+      "commercialRegistration": "السجل التجاري",
+      "taxCard": "البطاقة الضريبية",
+      "nationalId": "الهوية الوطنية",
+      "bankStatement": "كشف الحساب البنكي"
+    },
+    "actions": {
+      "approveConfirm": "هل أنت متأكد أنك تريد الموافقة على هذا البائع؟ سيتمكن من بدء البيع على المنصة.",
+      "approveSuccess": "تمت الموافقة على البائع بنجاح! يمكنهم الآن الوصول إلى لوحة تحكم البائع.",
+      "approveFail": "فشل في الموافقة على البائع",
+      "rejectError": "يرجى تقديم سبب الرفض",
+      "rejectSuccess": "تم رفض البائع بنجاح!",
+      "rejectFail": "فشل في رفض البائع"
+    }
+  },
+  "vendorManagement": {
+    "title": "إدارة الموردين",
+    "subtitle": "إدارة جميع الموردين وطلباتهم",
+    "tabs": {
+      "all": "جميع الموردين",
+      "requests": "الطلبات",
+      "approved": "المقبولة",
+      "rejected": "المرفوضة",
+      "deleted": "المحذوفة",
+      "analytics": "التحليلات"
+    },
+    "filters": {
+      "searchPlaceholder": "ابحث عن الموردين بالاسم أو البريد الإلكتروني أو البريد الإلكتروني لحساب المستخدم...",
+      "allStatus": "كل الحالات",
+      "pending": "قيد الانتظار",
+      "approved": "مقبول",
+      "rejected": "مرفوض",
+      "suspended": "موقوف",
+      "deleted": "محذوف"
+    },
+    "table": {
+      "vendor": "المورد",
+      "contact": "الاتصال",
+      "status": "الحالة",
+      "registrationDate": "تاريخ التسجيل",
+      "actions": "إجراءات",
+      "empty": "لا يوجد موردين مطابقين لمعاييرك",
+      "view": "عرض",
+      "approve": "قبول",
+      "reject": "رفض",
+      "restore": "استعادة",
+      "delete": "حذف",
+      "loading": "جاري تحميل الموردين..."
+    },
+    "messages": {
+      "statusUpdateSuccess": "تم تحديث حالة المورد إلى {{status}}",
+      "statusUpdateError": "فشل تحديث حالة المورد",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا المورد؟ سيتم وضع علامة محذوف ويمكن استعادته لاحقًا.",
+      "deleteSuccess": "تم حذف المورد بنجاح",
+      "deleteError": "فشل حذف المورد",
+      "restoreConfirm": "هل أنت متأكد أنك تريد استعادة هذا المورد؟ سيتم إعادة تنشيط المورد.",
+      "restoreSuccess": "تم استعادة المورد بنجاح",
+      "restoreError": "فشل استعادة المورد",
+      "approveConfirm": "هل أنت متأكد أنك تريد قبول هذا المورد؟ سيتمكن من بدء البيع على المنصة.",
+      "approveSuccess": "تم قبول المورد بنجاح! يمكنه الآن الوصول إلى لوحة تحكم المورد.",
+      "approveError": "فشل قبول المورد",
+      "rejectReasonRequired": "يرجى تقديم سبب للرفض",
+      "rejectSuccess": "تم رفض المورد بنجاح!",
+      "rejectError": "فشل رفض المورد"
+    },
+    "analytics": {
+      "timeRange": {
+        "7d": "آخر 7 أيام",
+        "30d": "آخر 30 يومًا",
+        "90d": "آخر 90 يومًا"
+      },
+      "stats": {
+        "totalVendors": "إجمالي الموردين",
+        "approved": "مقبول",
+        "pending": "قيد الانتظار",
+        "rejected": "مرفوض"
+      },
+      "charts": {
+        "statusDistribution": "توزيع حالات الموردين",
+        "recentActivity": "النشاط الأخير",
+        "newRegistrations": "تسجيلات جديدة",
+        "approvalRate": "معدل القبول",
+        "pendingReviews": "مراجعات معلقة"
+      },
+      "recentApplications": "احدث طلبات الموردين"
+    },
+    "modal": {
+      "title": "تفاصيل المورد",
+      "accountInfo": "معلومات حساب المستخدم",
+      "accountName": "اسم الحساب",
+      "accountEmail": "البريد الإلكتروني للحساب",
+      "phoneNumber": "رقم الهاتف",
+      "accountRole": "دور الحساب",
+      "accountStatus": "حالة الحساب",
+      "close": "إغلاق",
+      "verified": "مؤكد",
+      "unverified": "غير مؤكد",
+      "businessName": "اسم العمل",
+      "legalEntityType": "نوع الكيان القانوني",
+      "contactEmail": "بريد الاتصال",
+      "contactPhone": "هاتف الاتصال",
+      "businessDescription": "وصف العمل",
+      "businessAddress": "عنوان العمل"
+    }
+  },
+  "allVendors": {
+    "title": "جميع الموردين",
+    "subtitle": "إدارة جميع الموردين في النظام",
+    "searchPlaceholder": "البحث عن الموردين بالاسم أو البريد الإلكتروني...",
+    "messages": {
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا المورد؟ لا يمكن التراجع عن هذا الإجراء."
     }
   }
 }

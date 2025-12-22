@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const SalesReports: React.FC = () => {
+  const { t } = useTranslation();
   const [dateRange, setDateRange] = useState('7days');
   const [reportType, setReportType] = useState('overview');
 
@@ -28,8 +30,8 @@ const SalesReports: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sales Reports</h1>
-          <p className="text-gray-600">Comprehensive sales analytics and performance metrics</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('sales.salesAnalytics')}</h1>
+          <p className="text-gray-600">{t('sales.trackPerformance')}</p>
         </div>
         <div className="flex items-center space-x-3">
           <select
@@ -43,7 +45,7 @@ const SalesReports: React.FC = () => {
             <option value="1year">Last year</option>
           </select>
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-            📊 Export Report
+            📊 {t('sales.exportReport')}
           </button>
         </div>
       </div>
@@ -53,7 +55,7 @@ const SalesReports: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-sm font-medium text-gray-600">{t('admin.totalRevenue')}</p>
               <p className="text-2xl font-bold text-gray-900">{salesData.totalRevenue}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +12.5%</span>
@@ -69,7 +71,7 @@ const SalesReports: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Orders</p>
+              <p className="text-sm font-medium text-gray-600">{t('admin.totalOrders')}</p>
               <p className="text-2xl font-bold text-gray-900">{salesData.totalOrders.toLocaleString()}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +8.3%</span>
@@ -85,7 +87,7 @@ const SalesReports: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Avg Order Value</p>
+              <p className="text-sm font-medium text-gray-600">{t('sales.avgOrderValue')}</p>
               <p className="text-2xl font-bold text-gray-900">{salesData.averageOrderValue}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +3.8%</span>
@@ -101,7 +103,7 @@ const SalesReports: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
+              <p className="text-sm font-medium text-gray-600">{t('sales.conversionRate')}</p>
               <p className="text-2xl font-bold text-gray-900">{salesData.conversionRate}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +0.4%</span>
@@ -161,8 +163,8 @@ const SalesReports: React.FC = () => {
         {/* Top Products */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Top Products</h3>
-            <button className="text-sm text-yellow-600 hover:text-yellow-500">View All</button>
+            <h3 className="text-lg font-semibold text-gray-900">{t('sales.topProducts')}</h3>
+            <button className="text-sm text-yellow-600 hover:text-yellow-500">{t('sales.viewAll')}</button>
           </div>
           <div className="space-y-4">
             {salesData.topProducts.map((product, index) => (
@@ -188,8 +190,8 @@ const SalesReports: React.FC = () => {
         {/* Top Vendors */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Top Vendors</h3>
-            <button className="text-sm text-yellow-600 hover:text-yellow-500">View All</button>
+            <h3 className="text-lg font-semibold text-gray-900">{t('admin.topPerformingStores')}</h3>
+            <button className="text-sm text-yellow-600 hover:text-yellow-500">{t('sales.viewAll')}</button>
           </div>
           <div className="space-y-4">
             {salesData.topVendors.map((vendor, index) => (

@@ -240,7 +240,7 @@ const ProductDetailPage: React.FC = () => {
     navigate("/cart");
   };
 
-  if (loading) {
+  if (loading && !product) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <span className="text-lg text-gray-600">Loading...</span>
@@ -288,11 +288,10 @@ const ProductDetailPage: React.FC = () => {
   const specifications = [
     product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
     product.Category ? `Category: ${product.Category}` : undefined,
-    `Price: $${
-      product.saleActive && product.salePercentage && product.salePercentage > 0
-        ? product.salePrice?.toFixed(2) ||
-          (product.price * (1 - product.salePercentage / 100)).toFixed(2)
-        : product.price.toFixed(2)
+    `Price: $${product.saleActive && product.salePercentage && product.salePercentage > 0
+      ? product.salePrice?.toFixed(2) ||
+      (product.price * (1 - product.salePercentage / 100)).toFixed(2)
+      : product.price.toFixed(2)
     }`,
     product.stock > 0
       ? product.stock < 5
@@ -327,9 +326,8 @@ const ProductDetailPage: React.FC = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <span
         key={i}
-        className={`text-lg ${
-          i < rating ? "text-yellow-400" : "text-gray-300"
-        }`}
+        className={`text-lg ${i < rating ? "text-yellow-400" : "text-gray-300"
+          }`}
       >
         ★
       </span>
@@ -386,11 +384,10 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border-2 ${
-                      selectedImage === index
+                    className={`w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border-2 ${selectedImage === index
                         ? "border-blue-500"
                         : "border-transparent"
-                    }`}
+                      }`}
                   >
                     <img
                       src={image}
@@ -421,8 +418,8 @@ const ProductDetailPage: React.FC = () => {
               {/* Price */}
               <div className="mb-6">
                 {product.saleActive &&
-                product.salePercentage &&
-                product.salePercentage > 0 ? (
+                  product.salePercentage &&
+                  product.salePercentage > 0 ? (
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl font-bold text-gray-900">
                       $
@@ -485,9 +482,8 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     onClick={() => handleQuantityChange(-1)}
                     disabled={isProductInCart()}
-                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${
-                      isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                   >
                     -
                   </button>
@@ -497,9 +493,8 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     onClick={() => handleQuantityChange(1)}
                     disabled={isProductInCart()}
-                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${
-                      isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                   >
                     +
                   </button>
@@ -516,26 +511,24 @@ const ProductDetailPage: React.FC = () => {
                 <button
                   onClick={isProductInCart() ? handleGoToCart : handleAddToCart}
                   disabled={loading}
-                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${
-                    isProductInCart()
+                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${isProductInCart()
                       ? "bg-green-600 text-white hover:bg-green-700"
                       : "bg-blue-600 text-white hover:bg-blue-700"
-                  } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {loading
                     ? "Adding..."
                     : isProductInCart()
-                    ? "In Cart"
-                    : "Add to Cart"}
+                      ? "In Cart"
+                      : "Add to Cart"}
                 </button>
                 <button
                   onClick={handleLoveProduct}
                   disabled={loading}
-                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${
-                    isProductLoved()
+                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${isProductLoved()
                       ? "bg-red-600 text-white hover:bg-red-700"
                       : "border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isProductLoved()
                     ? "❤️ Remove from Wishlist"
@@ -559,21 +552,19 @@ const ProductDetailPage: React.FC = () => {
           <div className="mt-16">
             <div className="border-b border-gray-200 flex space-x-8">
               <button
-                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${
-                  tab === "description"
+                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${tab === "description"
                     ? "border-blue-600"
                     : "border-transparent text-gray-500"
-                }`}
+                  }`}
                 onClick={() => setTab("description")}
               >
                 Description
               </button>
               <button
-                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${
-                  tab === "reviews"
+                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${tab === "reviews"
                     ? "border-blue-600"
                     : "border-transparent text-gray-500"
-                }`}
+                  }`}
                 onClick={() => setTab("reviews")}
               >
                 Reviews
@@ -595,11 +586,10 @@ const ProductDetailPage: React.FC = () => {
                           <button
                             onClick={() => setShowReviewForm(true)}
                             disabled={!canReview || checkingEligibility}
-                            className={`bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 mb-2 ${
-                              !canReview || checkingEligibility
+                            className={`bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 mb-2 ${!canReview || checkingEligibility
                                 ? "opacity-60 cursor-not-allowed"
                                 : ""
-                            }`}
+                              }`}
                           >
                             {checkingEligibility
                               ? "Checking eligibility..."
@@ -648,11 +638,10 @@ const ProductDetailPage: React.FC = () => {
                                 <button
                                   key={star}
                                   onClick={() => setReviewRating(star)}
-                                  className={`text-2xl ${
-                                    star <= reviewRating
+                                  className={`text-2xl ${star <= reviewRating
                                       ? "text-yellow-400"
                                       : "text-gray-300"
-                                  }`}
+                                    }`}
                                 >
                                   ★
                                 </button>

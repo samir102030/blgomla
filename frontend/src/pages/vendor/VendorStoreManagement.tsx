@@ -4,12 +4,12 @@ import { useVendorStore } from '../../stores/vendor.store';
 // import type { VendorStore } from '../../types/vendor.type';
 
 const VendorStoreManagement: React.FC = () => {
-  const { 
-    vendorStore, 
-    loading, 
-    fetchVendorStore, 
-    createStore, 
-    updateStore 
+  const {
+    vendorStore,
+    loading,
+    fetchVendorStore,
+    createStore,
+    updateStore
   } = useVendorStore();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +51,7 @@ const VendorStoreManagement: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (vendorStore) {
         await updateStore(vendorStore._id, storeForm);
@@ -83,7 +83,7 @@ const VendorStoreManagement: React.FC = () => {
   const updateSocialLink = (index: number, field: 'platform' | 'url', value: string) => {
     setStoreForm(prev => ({
       ...prev,
-      socialLinks: prev.socialLinks.map((link, i) => 
+      socialLinks: prev.socialLinks.map((link, i) =>
         i === index ? { ...link, [field]: value } : link
       )
     }));
@@ -135,7 +135,7 @@ const VendorStoreManagement: React.FC = () => {
   //   }));
   // };
 
-  if (loading) {
+  if (loading && !vendorStore) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
@@ -388,11 +388,10 @@ const VendorStoreManagement: React.FC = () => {
                     <p className="text-gray-600">{vendorStore.location}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  vendorStore.isActive 
-                    ? 'bg-green-100 text-green-800' 
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${vendorStore.isActive
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-red-100 text-red-800'
-                }`}>
+                  }`}>
                   {vendorStore.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>

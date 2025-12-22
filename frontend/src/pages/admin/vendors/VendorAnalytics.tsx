@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useVendorStore } from '../../../stores/vendor.store';
 
 const VendorAnalytics: React.FC = () => {
-  const { 
-    vendors, 
+  const {
+    vendors,
 
-    loading, 
-    fetchVendors, 
-    fetchVendorAnalytics 
+    loading,
+    fetchVendors,
+    fetchVendorAnalytics
   } = useVendorStore();
 
   const [timeRange, setTimeRange] = useState('30d');
@@ -36,7 +36,7 @@ const VendorAnalytics: React.FC = () => {
     };
     const days = ranges[timeRange as keyof typeof ranges] || 30;
     const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    
+
     return vendors.filter(v => new Date(v.createdAt) > cutoff);
   };
 
@@ -44,7 +44,7 @@ const VendorAnalytics: React.FC = () => {
   const recentRegistrations = getRecentRegistrations();
   const totalVendors = vendors.length;
 
-  if (loading) {
+  if (loading && vendors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -192,7 +192,7 @@ const VendorAnalytics: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Approval rate</span>
               <span className="text-lg font-bold text-green-600">
-                {recentRegistrations.length > 0 
+                {recentRegistrations.length > 0
                   ? Math.round((recentRegistrations.filter(v => v.status === 'approved').length / recentRegistrations.length) * 100)
                   : 0}%
               </span>
@@ -316,12 +316,11 @@ const VendorAnalytics: React.FC = () => {
                     <div className="text-sm text-gray-500">{vendor.contactEmail}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      vendor.status === 'approved' ? 'bg-green-100 text-green-800' :
-                      vendor.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      vendor.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${vendor.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        vendor.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          vendor.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                      }`}>
                       {vendor.status}
                     </span>
                   </td>

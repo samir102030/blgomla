@@ -21,11 +21,29 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
 }) => {
   const [deleting, setDeleting] = useState(false);
   const brands = useBrandStore((state: any) => state.brands);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
-  const getBrandName = (brandId: string) => {
+  const getLocalizedText = (value: any) => {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string" || typeof value === "number") {
+      return String(value);
+    }
+    if (typeof value === "object") {
+      const lang = i18n.language;
+      if (value[lang]) return getLocalizedText(value[lang]);
+      if (value.en) return getLocalizedText(value.en);
+      if (value.ar) return getLocalizedText(value.ar);
+      if (value.name) return getLocalizedText(value.name);
+      if (value.title) return getLocalizedText(value.title);
+    }
+    return "";
+  };
+
+  const getBrandName = (brandValue: any) => {
+    const brandId =
+      typeof brandValue === "string" ? brandValue : brandValue?._id;
     const brand = brands?.find((b: any) => b._id === brandId);
-    return brand ? brand.name : brandId;
+    return getLocalizedText(brand?.name || brandValue || "N/A");
   };
 
   const handleDelete = async () => {
@@ -49,7 +67,12 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
     }
   };
 
+  const formatSku = (id: any) =>
+    typeof id === "string" ? id.slice(-8).toUpperCase() : "N/A";
+
   if (!isOpen || !product) return null;
+
+  const productName = getLocalizedText(product?.name) || "N/A";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -85,7 +108,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
             <div className="flex-shrink-0">
               <img
                 src={product.images?.[0]?.url || "/placeholder.png"}
-                alt={product.name}
+                alt={productName}
                 className="h-16 w-16 rounded-lg object-cover border border-gray-200"
               />
             </div>
@@ -93,16 +116,21 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
             {/* Product Details */}
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-medium text-gray-900 mb-1">
-                {product.name}
+                {productName}
               </h3>
               <div className="space-y-1 text-sm text-gray-600">
                 <p>
                   <span className="font-medium">{t("modal.common.sku")}</span>{" "}
-                  {product._id?.slice(-8).toUpperCase()}
+                  {formatSku(product?._id)}
                 </p>
                 <p>
                   <span className="font-medium">{t("modal.common.price")}</span>{" "}
-                  ${product.price?.toFixed(2)}
+                  {(() => {
+                    const raw = product?.price;
+                    const num =
+                      typeof raw === "number" ? raw : Number(raw ?? 0);
+                    return `$${num.toFixed(2)}`;
+                  })()}
                 </p>
                 <p>
                   <span className="font-medium">{t("modal.common.brand")}</span>{" "}
@@ -127,7 +155,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
                 <div className="mt-2 text-sm text-red-700">
                   <p>
                     {t("modal.deleteProduct.confirmBody", {
-                      name: product.name,
+                      name: productName,
                     })}
                   </p>
                 </div>

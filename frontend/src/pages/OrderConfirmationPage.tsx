@@ -67,7 +67,7 @@ const OrderConfirmationPage: React.FC = () => {
     loadOrder();
   }, [orderId, fetchOrderById, navigate]);
 
-  if (loading) {
+  if (loading && !storeOrder) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <span className="text-lg text-gray-600">{t("Loading order details...")}</span>

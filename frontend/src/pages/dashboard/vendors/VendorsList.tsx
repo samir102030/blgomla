@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const VendorsList: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
@@ -62,7 +64,7 @@ const VendorsList: React.FC = () => {
 
   const filteredVendors = vendors.filter(vendor => {
     const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.email.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || vendor.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -81,15 +83,15 @@ const VendorsList: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vendors Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('admin.vendorManagement')}</h1>
           <p className="text-gray-600">Manage and monitor all vendors in your marketplace</p>
         </div>
         <div className="flex items-center space-x-3">
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-            + Add New Vendor
+            + {t('admin.addBrand')}
           </button>
           <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-            📤 Export
+            📤 {t('admin.export')}
           </button>
         </div>
       </div>
@@ -102,7 +104,7 @@ const VendorsList: React.FC = () => {
               ✅
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Vendors</p>
+              <p className="text-sm font-medium text-gray-600">{t('vendor.storeActive')}</p>
               <p className="text-2xl font-bold text-gray-900">156</p>
             </div>
           </div>
@@ -113,7 +115,7 @@ const VendorsList: React.FC = () => {
               ⏳
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pending Approval</p>
+              <p className="text-sm font-medium text-gray-600">{t('admin.pending')}</p>
               <p className="text-2xl font-bold text-gray-900">23</p>
             </div>
           </div>
@@ -124,7 +126,7 @@ const VendorsList: React.FC = () => {
               ⛔
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Suspended</p>
+              <p className="text-sm font-medium text-gray-600">{t('admin.suspended')}</p>
               <p className="text-2xl font-bold text-gray-900">8</p>
             </div>
           </div>
@@ -135,7 +137,7 @@ const VendorsList: React.FC = () => {
               💰
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+              <p className="text-sm font-medium text-gray-600">{t('admin.totalRevenue')}</p>
               <p className="text-2xl font-bold text-gray-900">$2.4M</p>
             </div>
           </div>
@@ -149,7 +151,7 @@ const VendorsList: React.FC = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search vendors..."
+                placeholder={t('vendorRequests.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -161,10 +163,10 @@ const VendorsList: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="pending">Pending</option>
-              <option value="suspended">Suspended</option>
+              <option value="all">{t('vendorRequests.allStatus')}</option>
+              <option value="active">{t('admin.active')}</option>
+              <option value="pending">{t('admin.pending')}</option>
+              {/* <option value="suspended">{t('admin.suspended')}</option> */}
             </select>
           </div>
           <div className="flex items-center space-x-4">
@@ -191,14 +193,14 @@ const VendorsList: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sales</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor.name')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendorRequests.columns.contact')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.status')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.sales')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.products')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor.averageRating')}</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.actions')}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -257,18 +259,18 @@ const VendorsList: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">10</span> of{' '}
-            <span className="font-medium">{filteredVendors.length}</span> results
+            {t('admin.itemsPerPage')} <span className="font-medium">1</span> {t('coupon.to')} <span className="font-medium">10</span> {t('coupon.of')}{' '}
+            <span className="font-medium">{filteredVendors.length}</span> {t('coupon.results')}
           </div>
           <div className="flex items-center space-x-2">
             <button className="px-3 py-2 border border-gray-300 text-gray-500 rounded-md hover:bg-gray-50">
-              Previous
+              {t('admin.previous')}
             </button>
             <button className="px-3 py-2 bg-yellow-500 text-white rounded-md">1</button>
             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">2</button>
             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">3</button>
             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-              Next
+              {t('admin.next')}
             </button>
           </div>
         </div>

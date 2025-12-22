@@ -3,11 +3,11 @@ import { toast } from 'react-hot-toast';
 import { useVendorStore } from '../../../stores/vendor.store';
 
 const ApprovedVendors: React.FC = () => {
-  const { 
-    vendors, 
-    loading, 
-    fetchVendors, 
-    updateVendorStatus 
+  const {
+    vendors,
+    loading,
+    fetchVendors,
+    updateVendorStatus
   } = useVendorStore();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,10 +18,10 @@ const ApprovedVendors: React.FC = () => {
     fetchVendors({ status: 'approved' });
   }, [fetchVendors]);
 
-  const approvedVendors = vendors.filter(vendor => 
+  const approvedVendors = vendors.filter(vendor =>
     vendor.status === 'approved' &&
     (vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     vendor.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()))
+      vendor.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleSuspendVendor = async (vendorId: string) => {
@@ -40,7 +40,7 @@ const ApprovedVendors: React.FC = () => {
     setShowDetailsModal(true);
   };
 
-  if (loading) {
+  if (loading && vendors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
@@ -119,7 +119,7 @@ const ApprovedVendors: React.FC = () => {
                   Active
                 </span>
               </div>
-              
+
               <div className="space-y-2 mb-4">
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="font-medium">Email:</span>
@@ -146,7 +146,7 @@ const ApprovedVendors: React.FC = () => {
                   </div>
                 </div>
               )}
-              
+
               <div className="flex space-x-2">
                 <button
                   onClick={() => openDetailsModal(vendor)}
@@ -187,7 +187,7 @@ const ApprovedVendors: React.FC = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Basic Info */}
               <div className="space-y-4">
@@ -235,9 +235,8 @@ const ApprovedVendors: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Store Status</label>
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        selectedVendor.store.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedVendor.store.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
                         {selectedVendor.store.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
@@ -247,14 +246,14 @@ const ApprovedVendors: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             {selectedVendor.businessDescription && (
               <div className="mt-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Business Description</label>
                 <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">{selectedVendor.businessDescription}</p>
               </div>
             )}
-            
+
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setShowDetailsModal(false)}

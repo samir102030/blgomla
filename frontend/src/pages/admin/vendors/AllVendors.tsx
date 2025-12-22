@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useVendorStore } from '../../../stores/vendor.store';
 
 const AllVendors: React.FC = () => {
-  const { 
-    vendors, 
-    loading, 
-    fetchVendors, 
+  const { t } = useTranslation();
+  const {
+    vendors,
+    loading,
+    fetchVendors,
     updateVendorStatus,
-    deleteVendor 
+    deleteVendor
   } = useVendorStore();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,7 +24,7 @@ const AllVendors: React.FC = () => {
 
   const filteredVendors = vendors.filter(vendor => {
     const matchesSearch = vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || vendor.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -30,19 +32,19 @@ const AllVendors: React.FC = () => {
   const handleStatusChange = async (vendorId: string, newStatus: string) => {
     try {
       await updateVendorStatus(vendorId, newStatus);
-      toast.success(`Vendor status updated to ${newStatus}`);
+      toast.success(t("vendorManagement.messages.statusUpdateSuccess", { status: newStatus }));
     } catch (error) {
-      toast.error('Failed to update vendor status');
+      toast.error(t("vendorManagement.messages.statusUpdateError"));
     }
   };
 
   const handleDeleteVendor = async (vendorId: string) => {
-    if (window.confirm('Are you sure you want to delete this vendor? This action cannot be undone.')) {
+    if (window.confirm(t("allVendors.messages.deleteConfirm"))) {
       try {
         await deleteVendor(vendorId);
-        toast.success('Vendor deleted successfully');
+        toast.success(t("vendorManagement.messages.deleteSuccess"));
       } catch (error) {
-        toast.error('Failed to delete vendor');
+        toast.error(t("vendorManagement.messages.deleteError"));
       }
     }
   };
@@ -62,7 +64,7 @@ const AllVendors: React.FC = () => {
     setShowDetailsModal(true);
   };
 
-  if (loading) {
+  if (loading && (!vendors || vendors.length === 0)) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -75,8 +77,8 @@ const AllVendors: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">All Vendors</h1>
-          <p className="text-gray-600">Manage all vendors in the system</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("allVendors.title")}</h1>
+          <p className="text-gray-600">{t("allVendors.subtitle")}</p>
         </div>
         <div className="text-sm text-gray-500">
           Total: {filteredVendors.length} vendors
@@ -89,7 +91,7 @@ const AllVendors: React.FC = () => {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Search vendors by name or email..."
+              placeholder={t("allVendors.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -101,11 +103,11 @@ const AllVendors: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-              <option value="suspended">Suspended</option>
+              <option value="all">{t("vendorManagement.filters.allStatus")}</option>
+              <option value="pending">{t("vendorManagement.filters.pending")}</option>
+              <option value="approved">{t("vendorManagement.filters.approved")}</option>
+              <option value="rejected">{t("vendorManagement.filters.rejected")}</option>
+              <option value="suspended">{t("vendorManagement.filters.suspended")}</option>
             </select>
           </div>
         </div>
@@ -118,19 +120,19 @@ const AllVendors: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vendor
+                  {t("vendorManagement.table.vendor")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
+                  {t("vendorManagement.table.contact")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t("vendorManagement.table.status")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Registration Date
+                  {t("vendorManagement.table.registrationDate")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t("vendorManagement.table.actions")}
                 </th>
               </tr>
             </thead>
@@ -174,23 +176,23 @@ const AllVendors: React.FC = () => {
                         onClick={() => openDetailsModal(vendor)}
                         className="text-blue-600 hover:text-blue-900"
                       >
-                        View
+                        {t("vendorManagement.table.view")}
                       </button>
                       <select
                         value={vendor.status}
                         onChange={(e) => handleStatusChange(vendor._id, e.target.value)}
                         className="text-xs border border-gray-300 rounded px-2 py-1"
                       >
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="suspended">Suspended</option>
+                        <option value="pending">{t("vendorManagement.filters.pending")}</option>
+                        <option value="approved">{t("vendorManagement.filters.approved")}</option>
+                        <option value="rejected">{t("vendorManagement.filters.rejected")}</option>
+                        <option value="suspended">{t("vendorManagement.filters.suspended")}</option>
                       </select>
                       <button
                         onClick={() => handleDeleteVendor(vendor._id)}
                         className="text-red-600 hover:text-red-900"
                       >
-                        Delete
+                        {t("vendorManagement.table.delete")}
                       </button>
                     </div>
                   </td>
@@ -202,7 +204,7 @@ const AllVendors: React.FC = () => {
 
         {filteredVendors.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-gray-500">No vendors found matching your criteria</div>
+            <div className="text-gray-500">{t("vendorManagement.table.empty")}</div>
           </div>
         )}
       </div>
@@ -212,7 +214,7 @@ const AllVendors: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Vendor Details</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t("vendorManagement.modal.title")}</h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -220,58 +222,58 @@ const AllVendors: React.FC = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Business Name</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.modal.businessName")}</label>
                   <p className="text-sm text-gray-900">{selectedVendor.businessName}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Legal Entity Type</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.modal.legalEntityType")}</label>
                   <p className="text-sm text-gray-900">{selectedVendor.legalEntityType}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.modal.contactEmail")}</label>
                   <p className="text-sm text-gray-900">{selectedVendor.contactEmail}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.modal.contactPhone")}</label>
                   <p className="text-sm text-gray-900">{selectedVendor.contactPhone}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Status</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.table.status")}</label>
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(selectedVendor.status)}`}>
                     {selectedVendor.status}
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Registration Date</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.table.registrationDate")}</label>
                   <p className="text-sm text-gray-900">{new Date(selectedVendor.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
-              
+
               {selectedVendor.businessDescription && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Business Description</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.modal.businessDescription")}</label>
                   <p className="text-sm text-gray-900">{selectedVendor.businessDescription}</p>
                 </div>
               )}
-              
+
               {selectedVendor.businessAddress && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Business Address</label>
+                  <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.modal.businessAddress")}</label>
                   <p className="text-sm text-gray-900">{selectedVendor.businessAddress}</p>
                 </div>
               )}
             </div>
-            
+
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
               >
-                Close
+                {t("vendorManagement.modal.close")}
               </button>
             </div>
           </div>

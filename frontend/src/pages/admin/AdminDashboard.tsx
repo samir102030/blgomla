@@ -30,27 +30,27 @@ const AdminDashboard: React.FC = () => {
     // If logged in user is a store owner, fetch their store & stats.
     // If admin, fetch platform-level stats and vendors list.
     if (user?.role === "store") {
-      fetchVendorStore().catch(() => {});
-      fetchDashboardStats().catch(() => {});
+      fetchVendorStore().catch(() => { });
+      fetchDashboardStats().catch(() => { });
     } else if (user?.role === "admin") {
       // admin dashboard - backend should return platform-wide stats
-      fetchDashboardStats().catch(() => {});
-      fetchVendors({ page: 1, limit: 10 }).catch(() => {});
+      fetchDashboardStats().catch(() => { });
+      fetchVendors({ page: 1, limit: 10 }).catch(() => { });
     }
   }, [user, fetchDashboardStats, fetchVendorStore, fetchVendors]);
 
   const retry = () => {
     clearError();
     if (user?.role === "store") {
-      fetchVendorStore().catch(() => {});
-      fetchDashboardStats().catch(() => {});
+      fetchVendorStore().catch(() => { });
+      fetchDashboardStats().catch(() => { });
     } else if (user?.role === "admin") {
-      fetchDashboardStats().catch(() => {});
-      fetchVendors({ page: 1, limit: 10 }).catch(() => {});
+      fetchDashboardStats().catch(() => { });
+      fetchVendors({ page: 1, limit: 10 }).catch(() => { });
     }
   };
 
-  if (loading) {
+  if (loading && !dashboardStats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
@@ -276,7 +276,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="space-y-4">
               {dashboardStats?.topProducts &&
-              dashboardStats.topProducts.length > 0 ? (
+                dashboardStats.topProducts.length > 0 ? (
                 dashboardStats.topProducts.map((p: any, i: number) => (
                   <div
                     key={i}
@@ -352,7 +352,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="space-y-4">
                 {dashboardStats?.bestSellers &&
-                dashboardStats.bestSellers.length > 0 ? (
+                  dashboardStats.bestSellers.length > 0 ? (
                   dashboardStats.bestSellers.map((s: any, i: number) => (
                     <div
                       key={i}
@@ -407,7 +407,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="space-y-4">
                 {dashboardStats?.productOverview &&
-                dashboardStats.productOverview.length > 0 ? (
+                  dashboardStats.productOverview.length > 0 ? (
                   dashboardStats.productOverview
                     .slice(0, 5)
                     .map((p: any, i: number) => (

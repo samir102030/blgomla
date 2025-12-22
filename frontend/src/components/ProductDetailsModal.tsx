@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 import { useBrandStore } from "../stores/brand.store";
 
 interface ProductDetailsModalProps {
@@ -13,6 +14,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   onClose,
   product,
 }) => {
+  const { i18n } = useTranslation();
   const [selectedImage, setSelectedImage] = useState(0);
   const brands = useBrandStore((state: any) => state.brands);
 
@@ -55,9 +57,33 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           .filter(Boolean)
       : ["/placeholder.png"];
 
-  const getBrandName = (brandId: string) => {
+  const getLocalizedText = (value: any) => {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string" || typeof value === "number") {
+      return String(value);
+    }
+    if (typeof value === "object") {
+      const lang = i18n.language;
+      if (value[lang]) return getLocalizedText(value[lang]);
+      if (value.en) return getLocalizedText(value.en);
+      if (value.ar) return getLocalizedText(value.ar);
+      if (value.name) return getLocalizedText(value.name);
+      if (value.title) return getLocalizedText(value.title);
+    }
+    return "";
+  };
+
+  const getBrandName = (brandValue: any) => {
+    const brandId =
+      typeof brandValue === "string" ? brandValue : brandValue?._id;
     const brand = brands?.find((b: any) => b._id === brandId);
-    return brand ? brand.name : brandId;
+    return getLocalizedText(brand?.name || brandValue || "N/A");
+  };
+
+  const getCategoryName = (categoryValue: any) => {
+    if (!categoryValue) return "N/A";
+    if (typeof categoryValue === "string") return categoryValue;
+    return getLocalizedText(categoryValue?.name || categoryValue);
   };
 
   const renderStars = (rating: number) => {
@@ -86,6 +112,12 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   };
 
   const stockStatus = getStockStatus(stockValue);
+
+  const formatSku = (id: any) =>
+    typeof id === "string" ? id.slice(-8).toUpperCase() : "N/A";
+
+  const productName = getLocalizedText(product?.name) || "N/A";
+  const productDescription = getLocalizedText(product?.description);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -117,7 +149,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               <div className="aspect-square bg-gray-50 rounded-xl overflow-hidden shadow-lg">
                 <img
                   src={productImages[selectedImage]}
-                  alt={product.name}
+                  alt={productName}
                   className="w-full h-full object-contain p-4"
                 />
               </div>
@@ -137,7 +169,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     >
                       <img
                         src={image}
-                        alt={`${product.name} ${index + 1}`}
+                        alt={`${productName} ${index + 1}`}
                         className="w-full h-full object-contain p-1"
                       />
                     </button>
@@ -151,7 +183,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
               {/* Basic Info */}
               <div>
                 <h3 className="text-3xl font-bold text-gray-900 mb-2">
-                  {product.name}
+                  {productName}
                 </h3>
 
                 {/* Rating */}
@@ -201,7 +233,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="text-sm text-gray-500 mb-1">SKU</div>
                   <div className="font-semibold text-gray-900">
-                    {product._id?.slice(-8).toUpperCase()}
+                    {formatSku(product?._id)}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -213,7 +245,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="text-sm text-gray-500 mb-1">Category</div>
                   <div className="font-semibold text-gray-900">
-                    {product.Category || "N/A"}
+                    {getCategoryName(product.Category)}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -250,7 +282,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     Description
                   </h4>
                   <p className="text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-4">
-                    {product.description}
+                    {productDescription}
                   </p>
                 </div>
               )}
@@ -262,14 +294,17 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     Tags
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {safeTags.map((tag: string, index: number) => (
-                      <span
-                        key={index}
-                        className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
+                    {safeTags
+                      .map((tag: any) => getLocalizedText(tag))
+                      .filter(Boolean)
+                      .map((tag: string, index: number) => (
+                        <span
+                          key={index}
+                          className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
                   </div>
                 </div>
               )}
@@ -281,15 +316,18 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     Features
                   </h4>
                   <ul className="space-y-2">
-                    {safeFeatures.map((feature: string, index: number) => (
-                      <li
-                        key={index}
-                        className="flex items-center text-gray-700"
-                      >
-                        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></span>
-                        {feature}
-                      </li>
-                    ))}
+                    {safeFeatures
+                      .map((feature: any) => getLocalizedText(feature))
+                      .filter(Boolean)
+                      .map((feature: string, index: number) => (
+                        <li
+                          key={index}
+                          className="flex items-center text-gray-700"
+                        >
+                          <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></span>
+                          {feature}
+                        </li>
+                      ))}
                   </ul>
                 </div>
               )}
@@ -307,9 +345,11 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                         className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-3"
                       >
                         <span className="font-medium text-gray-700">
-                          {attr.name}:
+                          {getLocalizedText(attr?.name)}:
                         </span>
-                        <span className="text-gray-900">{attr.value}</span>
+                        <span className="text-gray-900">
+                          {getLocalizedText(attr?.value)}
+                        </span>
                       </div>
                     ))}
                   </div>

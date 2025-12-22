@@ -3,12 +3,12 @@ import { toast } from 'react-hot-toast';
 import { useVendorStore } from '../../../stores/vendor.store';
 
 const RejectedVendors: React.FC = () => {
-  const { 
-    vendors, 
-    loading, 
-    fetchVendors, 
+  const {
+    vendors,
+    loading,
+    fetchVendors,
     updateVendorStatus,
-    deleteVendor 
+    deleteVendor
   } = useVendorStore();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,10 +19,10 @@ const RejectedVendors: React.FC = () => {
     fetchVendors({ status: 'rejected' });
   }, [fetchVendors]);
 
-  const rejectedVendors = vendors.filter(vendor => 
+  const rejectedVendors = vendors.filter(vendor =>
     vendor.status === 'rejected' &&
     (vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     vendor.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()))
+      vendor.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleReactivateVendor = async (vendorId: string) => {
@@ -52,7 +52,7 @@ const RejectedVendors: React.FC = () => {
     setShowDetailsModal(true);
   };
 
-  if (loading) {
+  if (loading && vendors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
@@ -211,7 +211,7 @@ const RejectedVendors: React.FC = () => {
                 ✕
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -239,21 +239,21 @@ const RejectedVendors: React.FC = () => {
                   <p className="text-sm text-gray-900">{new Date(selectedVendor.updatedAt).toLocaleDateString()}</p>
                 </div>
               </div>
-              
+
               {selectedVendor.rejectionReason && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <label className="block text-sm font-medium text-red-800 mb-2">Rejection Reason</label>
                   <p className="text-sm text-red-700">{selectedVendor.rejectionReason}</p>
                 </div>
               )}
-              
+
               {selectedVendor.businessDescription && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Business Description</label>
                   <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">{selectedVendor.businessDescription}</p>
                 </div>
               )}
-              
+
               {selectedVendor.businessAddress && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Business Address</label>
@@ -261,7 +261,7 @@ const RejectedVendors: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setShowDetailsModal(false)}

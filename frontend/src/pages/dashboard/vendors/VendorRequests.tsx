@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useVendorStore } from '../../../stores/vendor.store';
 // import type { Vendor } from '../../../types/vendor.type';
 
 const VendorRequests: React.FC = () => {
-  const { 
-    vendors, 
-    loading, 
+  const { t } = useTranslation();
+  const {
+    vendors,
+    loading,
 
-    fetchVendors, 
-    approveVendor, 
+    fetchVendors,
+    approveVendor,
     rejectVendor,
     fetchVendorById,
     vendor: selectedVendor
@@ -28,36 +30,36 @@ const VendorRequests: React.FC = () => {
 
   const filteredVendors = vendors.filter(vendor => {
     const matchesSearch = vendor.businessName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         vendor.contactPersonName.toLowerCase().includes(searchTerm.toLowerCase());
+      vendor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vendor.contactPersonName.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
 
   const handleApprove = async (vendorId: string) => {
-    if (window.confirm('Are you sure you want to approve this vendor? They will be able to start selling on the platform.')) {
+    if (window.confirm(t('vendorRequests.actions.approveConfirm'))) {
       try {
         await approveVendor(vendorId);
-        toast.success('Vendor approved successfully! They can now access their vendor dashboard.');
+        toast.success(t('vendorRequests.actions.approveSuccess'));
       } catch (error) {
-        toast.error('Failed to approve vendor');
+        toast.error(t('vendorRequests.actions.approveFail'));
       }
     }
   };
 
   const handleReject = async () => {
     if (!selectedVendorId || !rejectionReason.trim()) {
-      toast.error('Please provide a rejection reason');
+      toast.error(t('vendorRequests.actions.rejectError'));
       return;
     }
 
     try {
       await rejectVendor(selectedVendorId, rejectionReason);
-      toast.success('Vendor rejected successfully!');
+      toast.success(t('vendorRequests.actions.rejectSuccess'));
       setShowRejectModal(false);
       setRejectionReason('');
       setSelectedVendorId(null);
     } catch (error) {
-      toast.error('Failed to reject vendor');
+      toast.error(t('vendorRequests.actions.rejectFail'));
     }
   };
 
@@ -86,7 +88,7 @@ const VendorRequests: React.FC = () => {
     });
   };
 
-  if (loading) {
+  if (loading && vendors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
@@ -99,8 +101,8 @@ const VendorRequests: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vendor Requests</h1>
-          <p className="text-gray-600">Manage pending vendor applications</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('vendorRequests.title')}</h1>
+          <p className="text-gray-600">{t('vendorRequests.subtitle')}</p>
         </div>
       </div>
 
@@ -110,7 +112,7 @@ const VendorRequests: React.FC = () => {
           <div className="flex-1">
             <input
               type="text"
-              placeholder="Search vendors..."
+              placeholder={t('vendorRequests.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
@@ -122,12 +124,12 @@ const VendorRequests: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-              <option value="active">Active</option>
-              <option value="suspended">Suspended</option>
-              <option value="">All Status</option>
+              <option value="pending">{t('admin.pending')}</option>
+              <option value="approved">{t('admin.approved')}</option>
+              <option value="rejected">{t('admin.rejected')}</option>
+              <option value="active">{t('admin.active')}</option>
+              {/* <option value="suspended">{t('admin.suspended')}</option> */}
+              <option value="">{t('vendorRequests.allStatus')}</option>
             </select>
           </div>
         </div>
@@ -140,22 +142,22 @@ const VendorRequests: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Business
+                  {t('vendorRequests.columns.business')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
+                  {t('vendorRequests.columns.contact')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t('vendorRequests.columns.status')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Applied Date
+                  {t('vendorRequests.columns.appliedDate')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Categories
+                  {t('vendorRequests.columns.categories')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t('vendorRequests.columns.actions')}
                 </th>
               </tr>
             </thead>
@@ -208,9 +210,12 @@ const VendorRequests: React.FC = () => {
                       <button
                         onClick={() => handleViewDetails(vendor._id)}
                         className="text-blue-600 hover:text-blue-500"
-                        title="View Details"
+                        title={t('vendorRequests.details.viewDetails')}
+                        disabled={loading && selectedVendorId === vendor._id}
                       >
-                        👁️
+                        {loading && selectedVendorId === vendor._id ? (
+                          <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block"></span>
+                        ) : '👁️'}
                       </button>
                       {vendor.status === 'pending' && (
                         <>
@@ -243,11 +248,11 @@ const VendorRequests: React.FC = () => {
 
         {filteredVendors.length === 0 && (
           <div className="text-center py-12">
-            <div className="text-gray-500 text-lg">No vendors found</div>
+            <div className="text-gray-500 text-lg">{t('vendorRequests.noVendors')}</div>
             <p className="text-gray-400 mt-2">
-              {statusFilter === 'pending' 
-                ? 'No pending vendor applications at the moment.'
-                : `No ${statusFilter} vendors found.`
+              {statusFilter === 'pending'
+                ? t('vendorRequests.noPending')
+                : t('vendorRequests.noStatus', { status: statusFilter })
               }
             </p>
           </div>
@@ -259,16 +264,16 @@ const VendorRequests: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Reject Vendor Application
+              {t('vendorRequests.modals.rejectTitle')}
             </h3>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rejection Reason *
+                {t('vendorRequests.modals.rejectionReason')}
               </label>
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Please provide a reason for rejection..."
+                placeholder={t('vendorRequests.modals.rejectionReasonPlaceholder')}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                 required
@@ -283,13 +288,13 @@ const VendorRequests: React.FC = () => {
                 }}
                 className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
               >
-                Cancel
+                {t('vendorRequests.modals.cancel')}
               </button>
               <button
                 onClick={handleReject}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
-                Reject
+                {t('vendorRequests.modals.reject')}
               </button>
             </div>
           </div>
@@ -303,7 +308,7 @@ const VendorRequests: React.FC = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  Vendor Application Details
+                  {t('vendorRequests.modals.detailsTitle')}
                 </h3>
                 <button
                   onClick={() => setShowDetailsModal(false)}
@@ -316,13 +321,13 @@ const VendorRequests: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Business Information */}
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900">Business Information</h4>
+                  <h4 className="text-lg font-semibold text-gray-900">{t('vendorRequests.details.businessInfo')}</h4>
                   <div className="space-y-2">
-                    <p><strong>Business Name:</strong> {selectedVendor.businessName}</p>
+                    <p><strong>{t('vendorRequests.columns.business')}:</strong> {selectedVendor.businessName}</p>
                     <p><strong>Business Type:</strong> {selectedVendor.businessType}</p>
-                    <p><strong>Contact Person:</strong> {selectedVendor.contactPersonName}</p>
-                    <p><strong>Email:</strong> {selectedVendor.email}</p>
-                    <p><strong>Phone:</strong> {selectedVendor.phone}</p>
+                    <p><strong>{t('vendorRequests.columns.contact')}:</strong> {selectedVendor.contactPersonName}</p>
+                    <p><strong>{t('admin.email')}:</strong> {selectedVendor.email}</p>
+                    <p><strong>{t('admin.vendorRequests.details.storePhone')}:</strong> {selectedVendor.phone}</p>
                     {selectedVendor.alternativePhone && (
                       <p><strong>Alt Phone:</strong> {selectedVendor.alternativePhone}</p>
                     )}
@@ -331,7 +336,7 @@ const VendorRequests: React.FC = () => {
 
                 {/* Legal Entity */}
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900">Legal Entity</h4>
+                  <h4 className="text-lg font-semibold text-gray-900">{t('vendorRequests.details.legalEntity')}</h4>
                   <div className="space-y-2">
                     <p><strong>Authority:</strong> {selectedVendor.legalEntityType}</p>
                     <p><strong>License Number:</strong> {selectedVendor.licenseNumber}</p>
@@ -343,10 +348,10 @@ const VendorRequests: React.FC = () => {
 
                 {/* Address */}
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900">Address</h4>
+                  <h4 className="text-lg font-semibold text-gray-900">{t('vendorRequests.details.address')}</h4>
                   <div className="space-y-2">
-                    <p><strong>Address:</strong> {selectedVendor.address}</p>
-                    <p><strong>City:</strong> {selectedVendor.city}</p>
+                    <p><strong>{t('vendorRequests.details.address')}:</strong> {selectedVendor.address}</p>
+                    <p><strong>{t('common.city')}:</strong> {selectedVendor.city}</p>
                     <p><strong>Governorate:</strong> {selectedVendor.governorate}</p>
                     {selectedVendor.postalCode && (
                       <p><strong>Postal Code:</strong> {selectedVendor.postalCode}</p>
@@ -356,7 +361,7 @@ const VendorRequests: React.FC = () => {
 
                 {/* Categories */}
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-gray-900">Product Categories</h4>
+                  <h4 className="text-lg font-semibold text-gray-900">{t('vendorRequests.details.productCategories')}</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedVendor.productCategories.map((category, index) => (
                       <span
@@ -372,7 +377,7 @@ const VendorRequests: React.FC = () => {
 
               {/* Business Description */}
               <div className="mt-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">Business Description</h4>
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">{t('vendorRequests.details.businessDescription')}</h4>
                 <p className="text-gray-700 bg-gray-50 p-4 rounded-md">
                   {selectedVendor.businessDescription}
                 </p>
@@ -380,61 +385,61 @@ const VendorRequests: React.FC = () => {
 
               {/* Documents */}
               <div className="mt-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-4">Documents</h4>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorRequests.details.documents')}</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {selectedVendor.documents.commercialRegistration && (
                     <div className="text-center">
                       <div className="text-2xl mb-2">📄</div>
-                      <p className="text-sm text-gray-600">Commercial Registration</p>
+                      <p className="text-sm text-gray-600">{t('vendorRequests.details.commercialRegistration')}</p>
                       <a
                         href={selectedVendor.documents.commercialRegistration}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline text-sm"
                       >
-                        View Document
+                        {t('vendorRequests.details.viewDocument')}
                       </a>
                     </div>
                   )}
                   {selectedVendor.documents.taxCard && (
                     <div className="text-center">
                       <div className="text-2xl mb-2">📄</div>
-                      <p className="text-sm text-gray-600">Tax Card</p>
+                      <p className="text-sm text-gray-600">{t('vendorRequests.details.taxCard')}</p>
                       <a
                         href={selectedVendor.documents.taxCard}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline text-sm"
                       >
-                        View Document
+                        {t('vendorRequests.details.viewDocument')}
                       </a>
                     </div>
                   )}
                   {selectedVendor.documents.nationalId && (
                     <div className="text-center">
                       <div className="text-2xl mb-2">🆔</div>
-                      <p className="text-sm text-gray-600">National ID</p>
+                      <p className="text-sm text-gray-600">{t('vendorRequests.details.nationalId')}</p>
                       <a
                         href={selectedVendor.documents.nationalId}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline text-sm"
                       >
-                        View Document
+                        {t('vendorRequests.details.viewDocument')}
                       </a>
                     </div>
                   )}
                   {selectedVendor.documents.bankStatement && (
                     <div className="text-center">
                       <div className="text-2xl mb-2">🏦</div>
-                      <p className="text-sm text-gray-600">Bank Statement</p>
+                      <p className="text-sm text-gray-600">{t('vendorRequests.details.bankStatement')}</p>
                       <a
                         href={selectedVendor.documents.bankStatement}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline text-sm"
                       >
-                        View Document
+                        {t('vendorRequests.details.viewDocument')}
                       </a>
                     </div>
                   )}
@@ -452,7 +457,7 @@ const VendorRequests: React.FC = () => {
                     }}
                     className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                   >
-                    Reject Application
+                    {t('vendorRequests.details.rejectApp')}
                   </button>
                   <button
                     onClick={() => {
@@ -461,7 +466,7 @@ const VendorRequests: React.FC = () => {
                     }}
                     className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                   >
-                    Approve Application
+                    {t('vendorRequests.details.approveApp')}
                   </button>
                 </div>
               )}

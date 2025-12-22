@@ -74,7 +74,7 @@ const BrandsPage: React.FC = () => {
     fetchBrands(); // Refresh the list
   };
 
-  if (loading) {
+  if (loading && (!brands || brands.length === 0)) {
     return (
       <div className="flex justify-center items-center h-64">Loading...</div>
     );
@@ -233,9 +233,8 @@ const BrandsPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleToggleStatus(brand)}
-                        className={`hover:text-gray-900 ${
-                          brand.isActive ? "text-green-600" : "text-gray-600"
-                        }`}
+                        className={`hover:text-gray-900 ${brand.isActive ? "text-green-600" : "text-gray-600"
+                          }`}
                         title={brand.isActive ? "Deactivate" : "Activate"}
                       >
                         {brand.isActive ? "✓" : "✗"}

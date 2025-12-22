@@ -21,7 +21,7 @@ const VendorDashboard: React.FC = () => {
     }
   }, [user, fetchDashboardStats, fetchVendorStore]);
 
-  if (loading) {
+  if (loading && !dashboardStats) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
@@ -276,11 +276,10 @@ const VendorDashboard: React.FC = () => {
                 <p><strong>{t('vendor.email')}:</strong> {vendorStore.email || t('vendor.notSet')}</p>
                 <p><strong>{t('vendor.phone')}:</strong> {vendorStore.phone || t('vendor.notSet')}</p>
                 <p><strong>{t('vendor.status')}:</strong>
-                  <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
-                    vendorStore.isActive
+                  <span className={`ml-2 px-2 py-1 rounded-full text-xs ${vendorStore.isActive
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
-                  }`}>
+                    }`}>
                     {vendorStore.isActive ? t('vendor.active') : t('vendor.inactive')}
                   </span>
                 </p>

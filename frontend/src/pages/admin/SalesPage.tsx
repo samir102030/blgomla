@@ -135,9 +135,8 @@ const SalesPage: React.FC = () => {
             transaction.date,
           ]);
         });
-        filename = `recent-transactions-${
-          new Date().toISOString().split("T")[0]
-        }.csv`;
+        filename = `recent-transactions-${new Date().toISOString().split("T")[0]
+          }.csv`;
       } else if (type === "revenue" && revenueBreakdown) {
         reportData.push(["Revenue Breakdown Data"]);
         reportData.push(["Category", "Amount", "Percentage"]);
@@ -174,9 +173,8 @@ const SalesPage: React.FC = () => {
             ? `${((revenueBreakdown.other / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
-        filename = `revenue-breakdown-${
-          new Date().toISOString().split("T")[0]
-        }.csv`;
+        filename = `revenue-breakdown-${new Date().toISOString().split("T")[0]
+          }.csv`;
       } else if (type === "metrics" && performanceMetrics) {
         reportData.push(["Performance Metrics Data"]);
         reportData.push(["Metric", "Value", "Description"]);
@@ -200,9 +198,8 @@ const SalesPage: React.FC = () => {
           `${performanceMetrics.customerSatisfaction}%`,
           "Overall customer satisfaction rating",
         ]);
-        filename = `performance-metrics-${
-          new Date().toISOString().split("T")[0]
-        }.csv`;
+        filename = `performance-metrics-${new Date().toISOString().split("T")[0]
+          }.csv`;
       } else {
         alert("No data available to export.");
         return;
@@ -411,7 +408,7 @@ const SalesPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !salesOverview) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-lg">{t("sales.loading")}</div>
@@ -466,18 +463,16 @@ const SalesPage: React.FC = () => {
                     <ArrowDownIcon className="h-4 w-4 text-red-500 mr-1" />
                   )}
                   <span
-                    className={`text-sm ${
-                      item.isPositive ? "text-green-600" : "text-red-600"
-                    }`}
+                    className={`text-sm ${item.isPositive ? "text-green-600" : "text-red-600"
+                      }`}
                   >
                     {item.change}
                   </span>
                 </div>
               </div>
               <div
-                className={`p-3 rounded-full ${
-                  item.isPositive ? "bg-green-100" : "bg-red-100"
-                }`}
+                className={`p-3 rounded-full ${item.isPositive ? "bg-green-100" : "bg-red-100"
+                  }`}
               >
                 <span className="text-2xl">
                   {item.isPositive ? "📈" : "📉"}
@@ -547,12 +542,12 @@ const SalesPage: React.FC = () => {
                                 ? data.date.split("-").pop()
                                 : data.date
                               : chartPeriod === "weekly"
-                              ? data.date.includes("-W")
-                                ? `W${data.date.split("-W")[1]}`
-                                : data.date
-                              : data.date.includes("-")
-                              ? data.date.split("-")[1]
-                              : data.date}
+                                ? data.date.includes("-W")
+                                  ? `W${data.date.split("-W")[1]}`
+                                  : data.date
+                                : data.date.includes("-")
+                                  ? data.date.split("-")[1]
+                                  : data.date}
                           </span>
                         </div>
                       );
@@ -564,8 +559,8 @@ const SalesPage: React.FC = () => {
                       {chartPeriod === "daily"
                         ? "days"
                         : chartPeriod === "weekly"
-                        ? "weeks"
-                        : "months"}
+                          ? "weeks"
+                          : "months"}
                     </p>
                   </div>
                 </div>
@@ -611,19 +606,19 @@ const SalesPage: React.FC = () => {
                   : "0.00"}{" "}
                 (
                 {revenueBreakdown &&
-                revenueBreakdown.productSales +
+                  revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
                   revenueBreakdown.taxes +
                   revenueBreakdown.other >
                   0
                   ? Math.round(
-                      (revenueBreakdown.productSales /
-                        (revenueBreakdown.productSales +
-                          revenueBreakdown.shipping +
-                          revenueBreakdown.taxes +
-                          revenueBreakdown.other)) *
-                        100
-                    )
+                    (revenueBreakdown.productSales /
+                      (revenueBreakdown.productSales +
+                        revenueBreakdown.shipping +
+                        revenueBreakdown.taxes +
+                        revenueBreakdown.other)) *
+                    100
+                  )
                   : 0}
                 %)
               </span>
@@ -642,19 +637,19 @@ const SalesPage: React.FC = () => {
                   : "0.00"}{" "}
                 (
                 {revenueBreakdown &&
-                revenueBreakdown.productSales +
+                  revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
                   revenueBreakdown.taxes +
                   revenueBreakdown.other >
                   0
                   ? Math.round(
-                      (revenueBreakdown.shipping /
-                        (revenueBreakdown.productSales +
-                          revenueBreakdown.shipping +
-                          revenueBreakdown.taxes +
-                          revenueBreakdown.other)) *
-                        100
-                    )
+                    (revenueBreakdown.shipping /
+                      (revenueBreakdown.productSales +
+                        revenueBreakdown.shipping +
+                        revenueBreakdown.taxes +
+                        revenueBreakdown.other)) *
+                    100
+                  )
                   : 0}
                 %)
               </span>
@@ -670,19 +665,19 @@ const SalesPage: React.FC = () => {
                 ${revenueBreakdown ? revenueBreakdown.taxes.toFixed(2) : "0.00"}{" "}
                 (
                 {revenueBreakdown &&
-                revenueBreakdown.productSales +
+                  revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
                   revenueBreakdown.taxes +
                   revenueBreakdown.other >
                   0
                   ? Math.round(
-                      (revenueBreakdown.taxes /
-                        (revenueBreakdown.productSales +
-                          revenueBreakdown.shipping +
-                          revenueBreakdown.taxes +
-                          revenueBreakdown.other)) *
-                        100
-                    )
+                    (revenueBreakdown.taxes /
+                      (revenueBreakdown.productSales +
+                        revenueBreakdown.shipping +
+                        revenueBreakdown.taxes +
+                        revenueBreakdown.other)) *
+                    100
+                  )
                   : 0}
                 %)
               </span>
@@ -698,19 +693,19 @@ const SalesPage: React.FC = () => {
                 ${revenueBreakdown ? revenueBreakdown.other.toFixed(2) : "0.00"}{" "}
                 (
                 {revenueBreakdown &&
-                revenueBreakdown.productSales +
+                  revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
                   revenueBreakdown.taxes +
                   revenueBreakdown.other >
                   0
                   ? Math.round(
-                      (revenueBreakdown.other /
-                        (revenueBreakdown.productSales +
-                          revenueBreakdown.shipping +
-                          revenueBreakdown.taxes +
-                          revenueBreakdown.other)) *
-                        100
-                    )
+                    (revenueBreakdown.other /
+                      (revenueBreakdown.productSales +
+                        revenueBreakdown.shipping +
+                        revenueBreakdown.taxes +
+                        revenueBreakdown.other)) *
+                    100
+                  )
                   : 0}
                 %)
               </span>
@@ -1034,15 +1029,15 @@ const SalesPage: React.FC = () => {
                                 revenueBreakdown.shipping +
                                 revenueBreakdown.taxes +
                                 revenueBreakdown.other >
-                              0
+                                0
                                 ? Math.round(
-                                    (revenueBreakdown.productSales /
-                                      (revenueBreakdown.productSales +
-                                        revenueBreakdown.shipping +
-                                        revenueBreakdown.taxes +
-                                        revenueBreakdown.other)) *
-                                      100
-                                  )
+                                  (revenueBreakdown.productSales /
+                                    (revenueBreakdown.productSales +
+                                      revenueBreakdown.shipping +
+                                      revenueBreakdown.taxes +
+                                      revenueBreakdown.other)) *
+                                  100
+                                )
                                 : 0}
                               %
                             </td>
@@ -1057,15 +1052,15 @@ const SalesPage: React.FC = () => {
                                 revenueBreakdown.shipping +
                                 revenueBreakdown.taxes +
                                 revenueBreakdown.other >
-                              0
+                                0
                                 ? Math.round(
-                                    (revenueBreakdown.shipping /
-                                      (revenueBreakdown.productSales +
-                                        revenueBreakdown.shipping +
-                                        revenueBreakdown.taxes +
-                                        revenueBreakdown.other)) *
-                                      100
-                                  )
+                                  (revenueBreakdown.shipping /
+                                    (revenueBreakdown.productSales +
+                                      revenueBreakdown.shipping +
+                                      revenueBreakdown.taxes +
+                                      revenueBreakdown.other)) *
+                                  100
+                                )
                                 : 0}
                               %
                             </td>
@@ -1080,15 +1075,15 @@ const SalesPage: React.FC = () => {
                                 revenueBreakdown.shipping +
                                 revenueBreakdown.taxes +
                                 revenueBreakdown.other >
-                              0
+                                0
                                 ? Math.round(
-                                    (revenueBreakdown.taxes /
-                                      (revenueBreakdown.productSales +
-                                        revenueBreakdown.shipping +
-                                        revenueBreakdown.taxes +
-                                        revenueBreakdown.other)) *
-                                      100
-                                  )
+                                  (revenueBreakdown.taxes /
+                                    (revenueBreakdown.productSales +
+                                      revenueBreakdown.shipping +
+                                      revenueBreakdown.taxes +
+                                      revenueBreakdown.other)) *
+                                  100
+                                )
                                 : 0}
                               %
                             </td>
@@ -1103,15 +1098,15 @@ const SalesPage: React.FC = () => {
                                 revenueBreakdown.shipping +
                                 revenueBreakdown.taxes +
                                 revenueBreakdown.other >
-                              0
+                                0
                                 ? Math.round(
-                                    (revenueBreakdown.other /
-                                      (revenueBreakdown.productSales +
-                                        revenueBreakdown.shipping +
-                                        revenueBreakdown.taxes +
-                                        revenueBreakdown.other)) *
-                                      100
-                                  )
+                                  (revenueBreakdown.other /
+                                    (revenueBreakdown.productSales +
+                                      revenueBreakdown.shipping +
+                                      revenueBreakdown.taxes +
+                                      revenueBreakdown.other)) *
+                                  100
+                                )
                                 : 0}
                               %
                             </td>

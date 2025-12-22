@@ -238,7 +238,7 @@ const OrdersPage: React.FC = () => {
     );
   });
 
-  if (loading) {
+  if (loading && orders.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-center">

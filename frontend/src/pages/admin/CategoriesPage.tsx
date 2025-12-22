@@ -79,7 +79,7 @@ const CategoriesPage: React.FC = () => {
     setViewingCategory(null);
   };
 
-  if (loading) {
+  if (loading && categories.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">Loading...</div>
     );
@@ -229,7 +229,7 @@ const CategoriesPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {typeof category.parentCategory === "object" &&
-                    category.parentCategory?.name
+                      category.parentCategory?.name
                       ? category.parentCategory.name
                       : "-"}
                   </td>
@@ -255,9 +255,8 @@ const CategoriesPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() => handleToggleStatus(category)}
-                        className={`hover:text-gray-900 ${
-                          category.isActive ? "text-green-600" : "text-gray-600"
-                        }`}
+                        className={`hover:text-gray-900 ${category.isActive ? "text-green-600" : "text-gray-600"
+                          }`}
                         title={category.isActive ? "Deactivate" : "Activate"}
                       >
                         {category.isActive ? "✓" : "✗"}

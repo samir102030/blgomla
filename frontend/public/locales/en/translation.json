@@ -262,7 +262,6 @@
   "City": "City",
   "State": "State",
   "ZIP Code": "ZIP Code",
-
   "vendor.welcomeBack": "Welcome back, {{name}}!",
   "vendor.storeToday": "Here's what's happening with your store today.",
   "vendor.totalProducts": "Total Products",
@@ -359,7 +358,6 @@
   "vendor.pendingOrdersCount": "Pending Orders",
   "vendor.lowStockItems": "Low Stock Items",
   "vendor.newReviews": "New Reviews",
-
   "account.dashboard": "Dashboard",
   "account.orders": "Orders",
   "account.addresses": "Addresses",
@@ -396,7 +394,6 @@
   "account.newPassword": "New Password",
   "account.confirmPassword": "Confirm Password",
   "account.updatePassword": "Update Password",
-
   "notification.notifications": "Notifications",
   "notification.markAllRead": "Mark All as Read",
   "notification.showAll": "Show All",
@@ -405,7 +402,6 @@
   "notification.noUnread": "No unread notifications",
   "notification.noNotifications": "No notifications yet",
   "notification.viewAll": "View all notifications",
-
   "home.shopByCategory": "Shop by Category",
   "home.viewAllCategories": "View All Categories",
   "home.featuredProducts": "Featured Products",
@@ -423,7 +419,6 @@
   "home.supportDesc": "Dedicated support",
   "home.easyReturns": "Easy Returns",
   "home.easyReturnsDesc": "30-day return policy",
-
   "admin.dashboard": "Admin Dashboard",
   "admin.storeDashboard": "Store Dashboard",
   "admin.welcomeBack": "Welcome back!",
@@ -567,7 +562,6 @@
   "admin.language": "Language",
   "admin.english": "English",
   "admin.arabic": "Arabic",
-
   "product.productsManagement": "Products Management",
   "product.manageInventory": "Manage your product inventory and catalog",
   "product.addProduct": "Add Product",
@@ -594,7 +588,6 @@
   "product.errorLoading": "Error loading products",
   "product.confirmedDelete": "Product deleted successfully",
   "product.loadingError": "Error: ",
-
   "order.ordersManagement": "Orders Management",
   "order.myStoreOrders": "My Store Orders",
   "order.manageOrders": "Manage and track all customer orders",
@@ -621,7 +614,6 @@
   "order.errorLoadingOrders": "Error loading orders",
   "order.tryAgain": "Try Again",
   "order.noOrders": "No orders found",
-
   "sales.salesAnalytics": "Sales Analytics",
   "sales.trackPerformance": "Track your sales performance and revenue",
   "sales.exportReport": "Export Report",
@@ -661,7 +653,6 @@
   "sales.manageAllOrders": "Manage and track all customer orders",
   "order.manageOrdersStore": "Manage orders for your store",
   "order.manageAllOrders": "Manage and track all customer orders",
-
   "common.store": "Store",
   "common.items": "Items",
   "common.total": "Total",
@@ -713,7 +704,6 @@
   "coupon.scheduled": "Scheduled",
   "coupon.expired": "Expired",
   "coupon.active": "Active",
-
   "modal": {
     "common": {
       "irreversible": "This action cannot be undone",
@@ -863,6 +853,152 @@
       "creditCard": "Credit Card",
       "paypal": "PayPal",
       "bankTransfer": "Bank Transfer"
+    }
+  },
+  "vendorRequests": {
+    "title": "Vendor Requests",
+    "subtitle": "Manage pending vendor applications",
+    "searchPlaceholder": "Search vendors...",
+    "allStatus": "All Status",
+    "columns": {
+      "business": "Business",
+      "contact": "Contact",
+      "status": "Status",
+      "appliedDate": "Applied Date",
+      "categories": "Categories",
+      "actions": "Actions"
+    },
+    "noVendors": "No vendors found",
+    "noPending": "No pending vendor applications at the moment.",
+    "noStatus": "No {{status}} vendors found.",
+    "modals": {
+      "rejectTitle": "Reject Vendor Application",
+      "rejectionReason": "Rejection Reason *",
+      "rejectionReasonPlaceholder": "Please provide a reason for rejection...",
+      "cancel": "Cancel",
+      "reject": "Reject",
+      "detailsTitle": "Vendor Application Details"
+    },
+    "details": {
+      "businessInfo": "Business Information",
+      "legalEntity": "Legal Entity",
+      "address": "Address",
+      "productCategories": "Product Categories",
+      "businessDescription": "Business Description",
+      "documents": "Documents",
+      "viewDocument": "View Document",
+      "rejectApp": "Reject Application",
+      "approveApp": "Approve Application",
+      "commercialRegistration": "Commercial Registration",
+      "taxCard": "Tax Card",
+      "nationalId": "National ID",
+      "bankStatement": "Bank Statement"
+    },
+    "actions": {
+      "approveConfirm": "Are you sure you want to approve this vendor? They will be able to start selling on the platform.",
+      "approveSuccess": "Vendor approved successfully! They can now access their vendor dashboard.",
+      "approveFail": "Failed to approve vendor",
+      "rejectError": "Please provide a rejection reason",
+      "rejectSuccess": "Vendor rejected successfully!",
+      "rejectFail": "Failed to reject vendor"
+    }
+  },
+  "vendorManagement": {
+    "title": "Vendor Management",
+    "subtitle": "Manage all vendors and their applications",
+    "tabs": {
+      "all": "All Vendors",
+      "requests": "Requests",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "deleted": "Deleted",
+      "analytics": "Analytics"
+    },
+    "filters": {
+      "searchPlaceholder": "Search vendors by name, email, or user account email...",
+      "allStatus": "All Status",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "suspended": "Suspended",
+      "deleted": "Deleted"
+    },
+    "table": {
+      "vendor": "Vendor",
+      "contact": "Contact",
+      "status": "Status",
+      "registrationDate": "Registration Date",
+      "actions": "Actions",
+      "empty": "No vendors found matching your criteria",
+      "view": "View",
+      "approve": "Approve",
+      "reject": "Reject",
+      "restore": "Restore",
+      "delete": "Delete",
+      "loading": "Loading vendors..."
+    },
+    "messages": {
+      "statusUpdateSuccess": "Vendor status updated to {{status}}",
+      "statusUpdateError": "Failed to update vendor status",
+      "deleteConfirm": "Are you sure you want to delete this vendor? The vendor will be marked as deleted and can be restored later.",
+      "deleteSuccess": "Vendor deleted successfully",
+      "deleteError": "Failed to delete vendor",
+      "restoreConfirm": "Are you sure you want to restore this vendor? The vendor will be reactivated.",
+      "restoreSuccess": "Vendor restored successfully",
+      "restoreError": "Failed to restore vendor",
+      "approveConfirm": "Are you sure you want to approve this vendor? They will be able to start selling on the platform.",
+      "approveSuccess": "Vendor approved successfully! They can now access their vendor dashboard.",
+      "approveError": "Failed to approve vendor",
+      "rejectReasonRequired": "Please provide a rejection reason",
+      "rejectSuccess": "Vendor rejected successfully!",
+      "rejectError": "Failed to reject vendor"
+    },
+    "analytics": {
+      "timeRange": {
+        "7d": "Last 7 days",
+        "30d": "Last 30 days",
+        "90d": "Last 90 days"
+      },
+      "stats": {
+        "totalVendors": "Total Vendors",
+        "approved": "Approved",
+        "pending": "Pending",
+        "rejected": "Rejected"
+      },
+      "charts": {
+        "statusDistribution": "Vendor Status Distribution",
+        "recentActivity": "Recent Activity",
+        "newRegistrations": "New registrations",
+        "approvalRate": "Approval rate",
+        "pendingReviews": "Pending reviews"
+      },
+      "recentApplications": "Recent Vendor Applications"
+    },
+    "modal": {
+      "title": "Vendor Details",
+      "accountInfo": "User Account Information",
+      "accountName": "Account Name",
+      "accountEmail": "Account Email",
+      "phoneNumber": "Phone Number",
+      "accountRole": "Account Role",
+      "accountStatus": "Account Status",
+      "close": "Close",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "businessName": "Business Name",
+      "legalEntityType": "Legal Entity Type",
+      "contactEmail": "Contact Email",
+      "contactPhone": "Contact Phone",
+      "businessDescription": "Business Description",
+      "businessAddress": "Business Address"
+    }
+  },
+  "allVendors": {
+    "title": "All Vendors",
+    "subtitle": "Manage all vendors in the system",
+    "searchPlaceholder": "Search vendors by name or email...",
+    "messages": {
+      "deleteConfirm": "Are you sure you want to delete this vendor? This action cannot be undone."
     }
   }
 }

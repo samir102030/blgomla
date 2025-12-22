@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import { useVendorStore } from "../../../stores/vendor.store";
 
 const VendorManagement: React.FC = () => {
+  const { t } = useTranslation();
   console.log("VendorManagement component rendered");
 
   const {
@@ -63,23 +65,23 @@ const VendorManagement: React.FC = () => {
   const handleStatusChange = async (vendorId: string, newStatus: string) => {
     try {
       await updateVendorStatus(vendorId, newStatus);
-      toast.success(`Vendor status updated to ${newStatus}`);
+      toast.success(t("vendorManagement.messages.statusUpdateSuccess", { status: newStatus }));
     } catch {
-      toast.error("Failed to update vendor status");
+      toast.error(t("vendorManagement.messages.statusUpdateError"));
     }
   };
 
   const handleDeleteVendor = async (vendorId: string) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this vendor? The vendor will be marked as deleted and can be restored later."
+        t("vendorManagement.messages.deleteConfirm")
       )
     ) {
       try {
         await safeDeleteVendor(vendorId);
-        toast.success("Vendor deleted successfully");
+        toast.success(t("vendorManagement.messages.deleteSuccess"));
       } catch {
-        toast.error("Failed to delete vendor");
+        toast.error(t("vendorManagement.messages.deleteError"));
       }
     }
   };
@@ -87,14 +89,14 @@ const VendorManagement: React.FC = () => {
   const handleRestoreVendor = async (vendorId: string) => {
     if (
       window.confirm(
-        "Are you sure you want to restore this vendor? The vendor will be reactivated."
+        t("vendorManagement.messages.restoreConfirm")
       )
     ) {
       try {
         await restoreVendor(vendorId);
-        toast.success("Vendor restored successfully");
+        toast.success(t("vendorManagement.messages.restoreSuccess"));
       } catch {
-        toast.error("Failed to restore vendor");
+        toast.error(t("vendorManagement.messages.restoreError"));
       }
     }
   };
@@ -102,34 +104,34 @@ const VendorManagement: React.FC = () => {
   const handleApprove = async (vendorId: string) => {
     if (
       window.confirm(
-        "Are you sure you want to approve this vendor? They will be able to start selling on the platform."
+        t("vendorManagement.messages.approveConfirm")
       )
     ) {
       try {
         await approveVendor(vendorId);
         toast.success(
-          "Vendor approved successfully! They can now access their vendor dashboard."
+          t("vendorManagement.messages.approveSuccess")
         );
       } catch {
-        toast.error("Failed to approve vendor");
+        toast.error(t("vendorManagement.messages.approveError"));
       }
     }
   };
 
   const handleReject = async () => {
     if (!selectedVendorForDetails || !rejectionReason.trim()) {
-      toast.error("Please provide a rejection reason");
+      toast.error(t("vendorManagement.messages.rejectReasonRequired"));
       return;
     }
 
     try {
       await rejectVendor(selectedVendorForDetails._id, rejectionReason);
-      toast.success("Vendor rejected successfully!");
+      toast.success(t("vendorManagement.messages.rejectSuccess"));
       setShowRejectModal(false);
       setRejectionReason("");
       setSelectedVendorForDetails(null);
     } catch {
-      toast.error("Failed to reject vendor");
+      toast.error(t("vendorManagement.messages.rejectError"));
     }
   };
 
@@ -195,19 +197,19 @@ const VendorManagement: React.FC = () => {
   const totalVendors = (vendors || []).length;
 
   const tabs = [
-    { id: "all", name: "All Vendors", count: totalVendors },
-    { id: "requests", name: "Requests", count: statusCounts.pending },
-    { id: "approved", name: "Approved", count: statusCounts.approved },
-    { id: "rejected", name: "Rejected", count: statusCounts.rejected },
-    { id: "deleted", name: "Deleted", count: statusCounts.deleted },
-    { id: "analytics", name: "Analytics", count: null },
+    { id: "all", name: t("vendorManagement.tabs.all"), count: totalVendors },
+    { id: "requests", name: t("vendorManagement.tabs.requests"), count: statusCounts.pending },
+    { id: "approved", name: t("vendorManagement.tabs.approved"), count: statusCounts.approved },
+    { id: "rejected", name: t("vendorManagement.tabs.rejected"), count: statusCounts.rejected },
+    { id: "deleted", name: t("vendorManagement.tabs.deleted"), count: statusCounts.deleted },
+    { id: "analytics", name: t("vendorManagement.tabs.analytics"), count: null },
   ];
 
-  if (loading) {
+  if (loading && (!vendors || vendors.length === 0)) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-        <p className="mt-4 text-gray-600">Loading vendors...</p>
+        <p className="mt-4 text-gray-600">{t("vendorManagement.table.loading")}</p>
       </div>
     );
   }
@@ -220,10 +222,10 @@ const VendorManagement: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Vendor Management
+              {t("vendorManagement.title")}
             </h1>
             <p className="text-gray-600">
-              Manage all vendors and their applications
+              {t("vendorManagement.subtitle")}
             </p>
           </div>
         </div>
@@ -236,20 +238,18 @@ const VendorManagement: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    }`}
                 >
                   {tab.name}
                   {tab.count !== null && (
                     <span
-                      className={`ml-2 py-0.5 px-2 rounded-full text-xs ${
-                        activeTab === tab.id
-                          ? "bg-blue-100 text-blue-600"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
+                      className={`ml-2 py-0.5 px-2 rounded-full text-xs ${activeTab === tab.id
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-gray-100 text-gray-600"
+                        }`}
                     >
                       {tab.count}
                     </span>
@@ -267,7 +267,7 @@ const VendorManagement: React.FC = () => {
                 <div className="flex-1">
                   <input
                     type="text"
-                    placeholder="Search vendors by name, email, or user account email..."
+                    placeholder={t("vendorManagement.filters.searchPlaceholder")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -279,12 +279,12 @@ const VendorManagement: React.FC = () => {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="suspended">Suspended</option>
-                    <option value="deleted">Deleted</option>
+                    <option value="all">{t("vendorManagement.filters.allStatus")}</option>
+                    <option value="pending">{t("vendorManagement.filters.pending")}</option>
+                    <option value="approved">{t("vendorManagement.filters.approved")}</option>
+                    <option value="rejected">{t("vendorManagement.filters.rejected")}</option>
+                    <option value="suspended">{t("vendorManagement.filters.suspended")}</option>
+                    <option value="deleted">{t("vendorManagement.filters.deleted")}</option>
                   </select>
                 </div>
               </div>
@@ -296,19 +296,19 @@ const VendorManagement: React.FC = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Vendor
+                          {t("vendorManagement.table.vendor")}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Contact
+                          {t("vendorManagement.table.contact")}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
+                          {t("vendorManagement.table.status")}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Registration Date
+                          {t("vendorManagement.table.registrationDate")}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
+                          {t("vendorManagement.table.actions")}
                         </th>
                       </tr>
                     </thead>
@@ -353,7 +353,7 @@ const VendorManagement: React.FC = () => {
                                 vendor.deleted
                               )}`}
                             >
-                              {vendor.deleted ? "Deleted" : vendor.status}
+                              {vendor.deleted ? t("vendorManagement.filters.deleted") : vendor.status}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -367,7 +367,7 @@ const VendorManagement: React.FC = () => {
                                 onClick={() => handleViewDetails(vendor)}
                                 className="text-blue-600 hover:text-blue-900"
                               >
-                                View
+                                {t("vendorManagement.table.view")}
                               </button>
                               {activeTab === "requests" &&
                                 vendor.status === "pending" && (
@@ -376,7 +376,7 @@ const VendorManagement: React.FC = () => {
                                       onClick={() => handleApprove(vendor._id)}
                                       className="text-green-600 hover:text-green-900"
                                     >
-                                      Approve
+                                      {t("vendorManagement.table.approve")}
                                     </button>
                                     <button
                                       onClick={() => {
@@ -385,7 +385,7 @@ const VendorManagement: React.FC = () => {
                                       }}
                                       className="text-red-600 hover:text-red-900"
                                     >
-                                      Reject
+                                      {t("vendorManagement.table.reject")}
                                     </button>
                                   </>
                                 )}
@@ -396,7 +396,7 @@ const VendorManagement: React.FC = () => {
                                   }
                                   className="text-green-600 hover:text-green-900"
                                 >
-                                  Restore
+                                  {t("vendorManagement.table.restore")}
                                 </button>
                               ) : (
                                 !vendor.deleted && (
@@ -411,11 +411,11 @@ const VendorManagement: React.FC = () => {
                                       }
                                       className="text-xs border border-gray-300 rounded px-2 py-1"
                                     >
-                                      <option value="pending">Pending</option>
-                                      <option value="approved">Approved</option>
-                                      <option value="rejected">Rejected</option>
+                                      <option value="pending">{t("vendorManagement.filters.pending")}</option>
+                                      <option value="approved">{t("vendorManagement.filters.approved")}</option>
+                                      <option value="rejected">{t("vendorManagement.filters.rejected")}</option>
                                       <option value="suspended">
-                                        Suspended
+                                        {t("vendorManagement.filters.suspended")}
                                       </option>
                                     </select>
                                     <button
@@ -424,7 +424,7 @@ const VendorManagement: React.FC = () => {
                                       }
                                       className="text-red-600 hover:text-red-900"
                                     >
-                                      Delete
+                                      {t("vendorManagement.table.delete")}
                                     </button>
                                   </>
                                 )
@@ -440,7 +440,7 @@ const VendorManagement: React.FC = () => {
                 {filteredVendors.length === 0 && (
                   <div className="text-center py-12">
                     <div className="text-gray-500">
-                      No vendors found matching your criteria
+                      {t("vendorManagement.table.empty")}
                     </div>
                   </div>
                 )}
@@ -458,9 +458,9 @@ const VendorManagement: React.FC = () => {
                   onChange={(e) => setTimeRange(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="7d">Last 7 days</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="90d">Last 90 days</option>
+                  <option value="7d">{t("vendorManagement.analytics.timeRange.7d")}</option>
+                  <option value="30d">{t("vendorManagement.analytics.timeRange.30d")}</option>
+                  <option value="90d">{t("vendorManagement.analytics.timeRange.90d")}</option>
                 </select>
               </div>
 
@@ -473,7 +473,7 @@ const VendorManagement: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Total Vendors
+                        {t("vendorManagement.analytics.stats.totalVendors")}
                       </p>
                       <p className="text-2xl font-bold text-gray-900">
                         {totalVendors}
@@ -489,7 +489,7 @@ const VendorManagement: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Approved
+                        {t("vendorManagement.analytics.stats.approved")}
                       </p>
                       <p className="text-2xl font-bold text-green-600">
                         {statusCounts.approved}
@@ -505,7 +505,7 @@ const VendorManagement: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Pending
+                        {t("vendorManagement.analytics.stats.pending")}
                       </p>
                       <p className="text-2xl font-bold text-yellow-600">
                         {statusCounts.pending}
@@ -521,7 +521,7 @@ const VendorManagement: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
-                        Rejected
+                        {t("vendorManagement.analytics.stats.rejected")}
                       </p>
                       <p className="text-2xl font-bold text-red-600">
                         {statusCounts.rejected}
@@ -536,13 +536,13 @@ const VendorManagement: React.FC = () => {
                 {/* Status Distribution */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Vendor Status Distribution
+                    {t("vendorManagement.analytics.charts.statusDistribution")}
                   </h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
-                        <span className="text-sm text-gray-600">Approved</span>
+                        <span className="text-sm text-gray-600">{t("vendorManagement.stats.approved")}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm font-medium text-gray-900 mr-2">
@@ -552,8 +552,8 @@ const VendorManagement: React.FC = () => {
                           (
                           {totalVendors > 0
                             ? Math.round(
-                                (statusCounts.approved / totalVendors) * 100
-                              )
+                              (statusCounts.approved / totalVendors) * 100
+                            )
                             : 0}
                           %)
                         </span>
@@ -562,7 +562,7 @@ const VendorManagement: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-4 h-4 bg-yellow-500 rounded mr-3"></div>
-                        <span className="text-sm text-gray-600">Pending</span>
+                        <span className="text-sm text-gray-600">{t("vendorManagement.stats.pending")}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm font-medium text-gray-900 mr-2">
@@ -572,8 +572,8 @@ const VendorManagement: React.FC = () => {
                           (
                           {totalVendors > 0
                             ? Math.round(
-                                (statusCounts.pending / totalVendors) * 100
-                              )
+                              (statusCounts.pending / totalVendors) * 100
+                            )
                             : 0}
                           %)
                         </span>
@@ -582,7 +582,7 @@ const VendorManagement: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-4 h-4 bg-red-500 rounded mr-3"></div>
-                        <span className="text-sm text-gray-600">Rejected</span>
+                        <span className="text-sm text-gray-600">{t("vendorManagement.stats.rejected")}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm font-medium text-gray-900 mr-2">
@@ -592,8 +592,8 @@ const VendorManagement: React.FC = () => {
                           (
                           {totalVendors > 0
                             ? Math.round(
-                                (statusCounts.rejected / totalVendors) * 100
-                              )
+                              (statusCounts.rejected / totalVendors) * 100
+                            )
                             : 0}
                           %)
                         </span>
@@ -602,7 +602,7 @@ const VendorManagement: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-4 h-4 bg-gray-500 rounded mr-3"></div>
-                        <span className="text-sm text-gray-600">Deleted</span>
+                        <span className="text-sm text-gray-600">{t("vendorManagement.filters.deleted")}</span>
                       </div>
                       <div className="flex items-center">
                         <span className="text-sm font-medium text-gray-900 mr-2">
@@ -612,8 +612,8 @@ const VendorManagement: React.FC = () => {
                           (
                           {totalVendors > 0
                             ? Math.round(
-                                (statusCounts.deleted / totalVendors) * 100
-                              )
+                              (statusCounts.deleted / totalVendors) * 100
+                            )
                             : 0}
                           %)
                         </span>
@@ -625,12 +625,12 @@ const VendorManagement: React.FC = () => {
                 {/* Recent Activity */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Recent Activity
+                    {t("vendorManagement.analytics.charts.recentActivity")}
                   </h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">
-                        New registrations
+                        {t("vendorManagement.analytics.charts.newRegistrations")}
                       </span>
                       <span className="text-lg font-bold text-blue-600">
                         {recentRegistrations.length}
@@ -638,24 +638,24 @@ const VendorManagement: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">
-                        Approval rate
+                        {t("vendorManagement.analytics.charts.approvalRate")}
                       </span>
                       <span className="text-lg font-bold text-green-600">
                         {recentRegistrations.length > 0
                           ? Math.round(
-                              (recentRegistrations.filter(
-                                (v) => v.status === "approved"
-                              ).length /
-                                recentRegistrations.length) *
-                                100
-                            )
+                            (recentRegistrations.filter(
+                              (v) => v.status === "approved"
+                            ).length /
+                              recentRegistrations.length) *
+                            100
+                          )
                           : 0}
                         %
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">
-                        Pending reviews
+                        {t("vendorManagement.analytics.charts.pendingReviews")}
                       </span>
                       <span className="text-lg font-bold text-yellow-600">
                         {statusCounts.pending}
@@ -669,7 +669,7 @@ const VendorManagement: React.FC = () => {
               <div className="bg-white rounded-lg shadow-sm border">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Recent Vendor Applications
+                    {t("vendorManagement.analytics.recentApplications")}
                   </h3>
                 </div>
                 <div className="overflow-x-auto">
@@ -677,13 +677,13 @@ const VendorManagement: React.FC = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Vendor
+                          {t("vendorManagement.table.vendor")}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
+                          {t("vendorManagement.table.status")}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Applied
+                          {t("vendorManagement.table.registrationDate")}
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Category
@@ -708,7 +708,7 @@ const VendorManagement: React.FC = () => {
                                 vendor.deleted
                               )}`}
                             >
-                              {vendor.deleted ? "Deleted" : vendor.status}
+                              {vendor.deleted ? t("vendorManagement.filters.deleted") : vendor.status}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -735,7 +735,7 @@ const VendorManagement: React.FC = () => {
             <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-900">
-                  Vendor Details
+                  {t("vendorManagement.modal.title")}
                 </h2>
                 <button
                   onClick={() => setShowDetailsModal(false)}
@@ -750,12 +750,12 @@ const VendorManagement: React.FC = () => {
                 {selectedVendorForDetails.owner && (
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                      User Account Information
+                      {t("vendorManagement.modal.accountInfo")}
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Account Name
+                          {t("vendorManagement.modal.accountName")}
                         </label>
                         <p className="text-sm text-gray-900">
                           {selectedVendorForDetails.owner.name || "N/A"}
@@ -763,7 +763,7 @@ const VendorManagement: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Account Email
+                          {t("vendorManagement.modal.accountEmail")}
                         </label>
                         <p className="text-sm text-gray-900">
                           {selectedVendorForDetails.owner.email || "N/A"}
@@ -771,7 +771,7 @@ const VendorManagement: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Phone Number
+                          {t("vendorManagement.modal.phoneNumber")}
                         </label>
                         <p className="text-sm text-gray-900">
                           {selectedVendorForDetails.owner.phoneNumber || "N/A"}
@@ -779,7 +779,7 @@ const VendorManagement: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Account Role
+                          {t("vendorManagement.modal.accountRole")}
                         </label>
                         <p className="text-sm text-gray-900">
                           {selectedVendorForDetails.owner.role || "N/A"}
@@ -787,18 +787,17 @@ const VendorManagement: React.FC = () => {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700">
-                          Account Status
+                          {t("vendorManagement.modal.accountStatus")}
                         </label>
                         <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            selectedVendorForDetails.owner.isVerified
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedVendorForDetails.owner.isVerified
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                            }`}
                         >
                           {selectedVendorForDetails.owner.isVerified
-                            ? "Verified"
-                            : "Unverified"}
+                            ? t("vendorManagement.modal.verified")
+                            : t("vendorManagement.modal.unverified")}
                         </span>
                       </div>
                       <div>
@@ -806,11 +805,10 @@ const VendorManagement: React.FC = () => {
                           Account Active
                         </label>
                         <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            selectedVendorForDetails.owner.active
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedVendorForDetails.owner.active
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                            }`}
                         >
                           {selectedVendorForDetails.owner.active
                             ? "Active"
