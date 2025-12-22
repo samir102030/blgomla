@@ -23,6 +23,7 @@ interface Order {
       saleActive: boolean;
       salePercentage: number;
     };
+    collectionName?: string;
     quantity: number;
     price: number;
     salePercentage: number;
@@ -325,6 +326,11 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                               <h5 className="text-sm font-medium text-gray-900">
                                 {item.product?.name || t("product.product")}
                               </h5>
+                              {item.collectionName && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#FFD600]/30 text-[#333333]">
+                                  {item.collectionName}
+                                </span>
+                              )}
                               {item.salePercentage > 0 && (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                                   {t("Sale")} {item.salePercentage}%

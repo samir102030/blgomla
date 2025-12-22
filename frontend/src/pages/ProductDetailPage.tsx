@@ -85,14 +85,22 @@ const ProductDetailPage: React.FC = () => {
   // Check if product is already in cart
   const isProductInCart = () => {
     if (!user?.cart || !productId) return false;
-    return user.cart.some((item) => item.product.toString() === productId);
+    return user.cart.some(
+      (item) =>
+        item.type !== "collection" &&
+        item.product &&
+        item.product.toString() === productId
+    );
   };
 
   // Get current quantity in cart
   const getCartQuantity = () => {
     if (!user?.cart || !productId) return 0;
     const cartItem = user.cart.find(
-      (item) => item.product.toString() === productId
+      (item) =>
+        item.type !== "collection" &&
+        item.product &&
+        item.product.toString() === productId
     );
     return cartItem ? cartItem.quantity : 0;
   };

@@ -30,7 +30,8 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
       children: [
         { title: 'All Products', path: '/vendor/products' },
         { title: 'Add Product', path: '/vendor/products/add' },
-        { title: 'Inventory', path: '/vendor/products/inventory' }
+        { title: 'Inventory', path: '/vendor/products/inventory' },
+        { title: 'Collections', path: '/vendor/collections' },
       ]
     },
     {

@@ -15,6 +15,7 @@ import couponRoutes from "./coupon.route.js";
 import brandRequestRoutes from "./brandRequest.route.js";
 import categoryRequestRoutes from "./categoryRequest.route.js";
 import returnRoutes from "./return.route.js";
+import collectionRoutes from "./collection.route.js";
 
 const router = express.Router();
 
@@ -34,5 +35,6 @@ router.use("/coupons", couponRoutes);
 router.use("/brand-requests", brandRequestRoutes);
 router.use("/category-requests", categoryRequestRoutes);
 router.use("/returns", returnRoutes);
+router.use("/collections", collectionRoutes);
 
 export default router;

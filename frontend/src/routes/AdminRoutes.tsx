@@ -14,6 +14,8 @@ import VendorManagement from "../pages/admin/vendors/VendorManagement";
 import CouponsPage from "../pages/vendor/CouponsPage";
 import RequestsPage from "../pages/admin/RequestsPage";
 import ReturnsPage from "../pages/admin/ReturnsPage";
+import VendorCollectionsPage from "../pages/vendor/VendorCollectionsPage";
+import AdminCollectionsPage from "../pages/admin/AdminCollectionsPage";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -54,9 +56,13 @@ const AdminRoutes: React.FC = () => {
         />
         <Route path="/order" element={<OrdersPage />} />
         <Route path="/returns" element={<ReturnsPage />} />
+        <Route path="/collections" element={<VendorCollectionsPage />} />
 
         {/* Products */}
         <Route path="/products" element={<ProductsPage />} />
+
+        {/* Collections */}
+        <Route path="/collections" element={<AdminCollectionsPage />} />
 
         {/* User Management */}
         <Route path="/user" element={<UsersPage />} />

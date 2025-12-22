@@ -840,7 +840,9 @@ export const addProductToCart = controllerWrapper(
 
     // Check if product already in cart
     const existingItemIndex = user.cart.findIndex(
-      (item) => item.product.toString() === productId
+      (item) =>
+        (item.type === "product" || !item.type) &&
+        item.product.toString() === productId
     );
 
     if (existingItemIndex > -1) {
@@ -849,6 +851,7 @@ export const addProductToCart = controllerWrapper(
     } else {
       // Add new item if doesn't exist
       user.cart.push({
+        type: "product",
         product: productId, // Note: using 'product' not 'productId'
         quantity,
       });
@@ -886,7 +889,9 @@ export const updateCart = controllerWrapper("updateCart", async (req, res) => {
   // Assuming you have a User model with a cart field
   console.log(user.cart[0].product.toString());
   const cartItemIndex = user.cart.findIndex(
-    (item) => item.product.toString() === productId
+    (item) =>
+      (item.type === "product" || !item.type) &&
+      item.product.toString() === productId
   );
   if (cartItemIndex === -1)
     return res.status(404).json({
@@ -911,9 +916,10 @@ export const removeFromCart = controllerWrapper(
         .json({ success: false, message: "User not found" });
     // Remove from cart logic here
     // Assuming you have a User model with a cart field
-    user.cart = user.cart.filter(
-      (item) => item.product.toString() !== productId
-    );
+    user.cart = user.cart.filter((item) => {
+      if (item.type === "collection") return true;
+      return item.product.toString() !== productId;
+    });
     await user.save();
     console.log(user.cart);
     res.status(200).json({ success: true, cart: user.cart });

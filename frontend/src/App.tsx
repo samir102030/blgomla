@@ -13,6 +13,8 @@ import CheckoutPage from "./pages/CheckoutPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import WishlistPage from "./pages/WishlistPage";
 import MyAccountPage from "./pages/MyAccountPage";
+import CollectionsPage from "./pages/CollectionsPage";
+import CollectionDetailPage from "./pages/CollectionDetailPage";
 // import AboutUsPage from "./pages/AboutUsPage";
 import VendorRegistrationPage from "./pages/VendorRegistrationPage";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
@@ -59,6 +61,11 @@ function App() {
           element={<OrderConfirmationPage />}
         />
         <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/collections" element={<CollectionsPage />} />
+        <Route
+          path="/collections/:collectionId"
+          element={<CollectionDetailPage />}
+        />
         <Route path="/account" element={<MyAccountPage />} />
         {/* <Route path="/about" element={<AboutUsPage />} /> */}
         <Route

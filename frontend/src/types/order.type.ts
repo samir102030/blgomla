@@ -1,6 +1,9 @@
 export interface OrderItem {
   product: string; // product id
+  collection?: string; // collection id (if part of bundle)
+  collectionName?: string;
   quantity: number;
+  price?: number;
 }
 
 export interface Order {

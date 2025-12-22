@@ -35,9 +35,18 @@ const userSchema = new mongoose.Schema(
     },
     cart: [
       {
+        type: {
+          type: String,
+          enum: ["product", "collection"],
+          default: "product",
+        },
         product: {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Product",
+        },
+        collection: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Collection",
         },
         quantity: {
           type: Number,

@@ -33,15 +33,45 @@ const validateUserId = validate([
 
 // Order CRUD Validations
 export const validateCreateOrder = validate([
+  body().custom((value) => {
+    const orderItems = value.orderItems || [];
+    const collectionItems = value.collectionItems || [];
+    if (
+      (!Array.isArray(orderItems) || orderItems.length === 0) &&
+      (!Array.isArray(collectionItems) || collectionItems.length === 0)
+    ) {
+      throw new Error("Order items or collection items are required");
+    }
+    return true;
+  }),
+
   body("orderItems")
+    .optional()
     .isArray({ min: 1 })
     .withMessage("At least one order item is required"),
 
   body("orderItems.*.product")
+    .optional()
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("Invalid product ID format"),
 
   body("orderItems.*.quantity")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Quantity must be at least 1"),
+
+  body("collectionItems")
+    .optional()
+    .isArray({ min: 1 })
+    .withMessage("At least one collection item is required"),
+
+  body("collectionItems.*.collection")
+    .optional()
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .withMessage("Invalid collection ID format"),
+
+  body("collectionItems.*.quantity")
+    .optional()
     .isInt({ min: 1 })
     .withMessage("Quantity must be at least 1"),
 

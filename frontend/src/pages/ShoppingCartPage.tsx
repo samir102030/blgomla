@@ -5,16 +5,20 @@ import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import { useCouponStore } from "../stores/coupon.store";
+import { useCollectionStore } from "../stores/collection.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import PleaseLogin from "../components/PleaseLogin";
 import type { Coupon } from "../types/coupon.type";
+import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 // import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
   _id?: string;
-  product: string; // Product ID
+  type?: "product" | "collection";
+  product?: string; // Product ID
+  collection?: string; // Collection ID
   quantity: number;
   productDetails?: {
     _id: string;
@@ -25,6 +29,7 @@ interface CartItemWithProduct {
     saleActive: boolean;
     images: Array<{ url: string; alt?: string }>;
   };
+  collectionDetails?: Collection;
 }
 
 const ShoppingCartPage: React.FC = () => {
@@ -37,6 +42,12 @@ const ShoppingCartPage: React.FC = () => {
   const fetchCart = useUserStore((state) => state.fetchCart);
   const updateCartItem = useProductStore((state) => state.updateCartItem);
   const removeFromCart = useProductStore((state) => state.removeFromCart);
+  const updateCollectionCart = useCollectionStore(
+    (state) => state.updateCollectionCart
+  );
+  const removeCollectionFromCart = useCollectionStore(
+    (state) => state.removeCollectionFromCart
+  );
 
   const {
     validateCoupon,
@@ -59,17 +70,34 @@ const ShoppingCartPage: React.FC = () => {
       const updateCartItems = async () => {
         const itemsWithDetails = await Promise.all(
           user.cart.map(async (item) => {
+            const isCollection =
+              item.type === "collection" || Boolean(item.collection);
             try {
+              if (isCollection) {
+                const { data } = await axiosInstance.get(
+                  `/collections/${item.collection}`
+                );
+                return {
+                  ...item,
+                  type: "collection",
+                  collectionDetails: data.collection || null,
+                };
+              }
+
               const { data } = await axiosInstance.get(
                 `/products/${item.product}`
               );
               return {
                 ...item,
+                type: "product",
                 productDetails: data.data?.[0] || null,
               };
             } catch (error) {
-              console.error("Error fetching product details:", error);
-              return item;
+              console.error("Error fetching cart item details:", error);
+              return {
+                ...item,
+                type: isCollection ? "collection" : "product",
+              };
             }
           })
         );
@@ -80,49 +108,90 @@ const ShoppingCartPage: React.FC = () => {
     }
   }, [user?.cart]);
 
-  const updateQuantity = async (productId: string, newQuantity: number) => {
+  const updateQuantity = async (
+    itemId: string,
+    newQuantity: number,
+    itemType: "product" | "collection"
+  ) => {
     if (newQuantity < 1) return;
 
-    // Find the item to check stock
-    const item = cartItems.find((item) => item.product === productId);
-    if (!item || !item.productDetails) {
-      toast.error(
-        "Product Error: Item details not available. Please refresh the page"
-      );
+    const item = cartItems.find((item) =>
+      itemType === "collection"
+        ? item.collection === itemId
+        : item.product === itemId
+    );
+    if (!item) {
+      toast.error("Product Error: Item details not available. Please refresh");
       return;
     }
 
-    // Check if trying to add more than available stock
-    if (newQuantity > item.productDetails.stock) {
-      toast.error(
-        `Stock Error: Only ${item.productDetails.stock} ${
-          item.productDetails.stock === 1 ? "item" : "items"
-        } available for ${item.productDetails.name}. Please adjust quantity`
-      );
-      return;
-    }
+    if (itemType === "collection") {
+      if (!item.collectionDetails) {
+        toast.error(
+          "Collection Error: Details not available. Please refresh the page"
+        );
+        return;
+      }
 
-    // If stock is 0, remove the item
-    if (item.productDetails.stock === 0) {
-      await removeItem(item._id || productId);
-      toast.error(
-        `Stock Error: ${item.productDetails.name} is out of stock and has been removed from your cart`
-      );
-      return;
+      const outOfStock = item.collectionDetails.items.find((bundleItem) => {
+        const requiredQty = bundleItem.quantity * newQuantity;
+        return bundleItem.product.stock < requiredQty;
+      });
+      if (outOfStock) {
+        toast.error(
+          `Stock Error: ${outOfStock.product.name} does not have enough stock for this bundle`
+        );
+        return;
+      }
+    } else {
+      if (!item.productDetails) {
+        toast.error(
+          "Product Error: Item details not available. Please refresh the page"
+        );
+        return;
+      }
+
+      if (newQuantity > item.productDetails.stock) {
+        toast.error(
+          `Stock Error: Only ${item.productDetails.stock} ${
+            item.productDetails.stock === 1 ? "item" : "items"
+          } available for ${item.productDetails.name}. Please adjust quantity`
+        );
+        return;
+      }
+
+      if (item.productDetails.stock === 0) {
+        await removeItem(itemId, "product");
+        toast.error(
+          `Stock Error: ${item.productDetails.name} is out of stock and has been removed from your cart`
+        );
+        return;
+      }
     }
 
     try {
-      setUpdatingItem(productId);
-      await updateCartItem(productId, newQuantity);
+      setUpdatingItem(itemId);
+      if (itemType === "collection") {
+        await updateCollectionCart(itemId, newQuantity);
+      } else {
+        await updateCartItem(itemId, newQuantity);
+      }
       toast.success("Cart updated successfully");
 
       // Refresh cart data and update local state
       await fetchCart();
       // Update local cart items after successful update
       setCartItems((prevItems) =>
-        prevItems.map((item) =>
-          item.product === productId ? { ...item, quantity: newQuantity } : item
-        )
+        prevItems.map((item) => {
+          if (itemType === "collection") {
+            return item.collection === itemId
+              ? { ...item, quantity: newQuantity }
+              : item;
+          }
+          return item.product === itemId
+            ? { ...item, quantity: newQuantity }
+            : item;
+        })
       );
     } catch (error: any) {
       console.error("Error updating quantity:", error);
@@ -135,9 +204,13 @@ const ShoppingCartPage: React.FC = () => {
   };
 
   const removeItem = useCallback(
-    async (cartItemId: string) => {
+    async (cartItemId: string, itemType: "product" | "collection") => {
       try {
-        await removeFromCart(cartItemId);
+        if (itemType === "collection") {
+          await removeCollectionFromCart(cartItemId);
+        } else {
+          await removeFromCart(cartItemId);
+        }
         toast.success("Item removed from cart");
 
         // Refresh cart data from user store
@@ -145,7 +218,11 @@ const ShoppingCartPage: React.FC = () => {
 
         // Update local state immediately
         setCartItems((prevItems) =>
-          prevItems.filter((item) => item.product !== cartItemId)
+          prevItems.filter((item) =>
+            itemType === "collection"
+              ? item.collection !== cartItemId
+              : item.product !== cartItemId
+          )
         );
       } catch (error: any) {
         console.error("Error removing item:", error);
@@ -154,29 +231,43 @@ const ShoppingCartPage: React.FC = () => {
         toast.error(`Remove Item Error: ${errorMessage}. Please try again`);
       }
     },
-    [removeFromCart, fetchCart]
+    [removeFromCart, removeCollectionFromCart, fetchCart]
   );
 
   // Check for out-of-stock items and remove them automatically
   useEffect(() => {
     const checkOutOfStockItems = async () => {
-      const outOfStockItems = cartItems.filter(
-        (item) => item.productDetails && item.productDetails.stock === 0
-      );
+    const outOfStockItems = cartItems.filter((item) => {
+      if (item.type === "collection" && item.collectionDetails) {
+        return item.collectionDetails.items.some(
+          (bundleItem) => bundleItem.product.stock === 0
+        );
+      }
+      return item.productDetails && item.productDetails.stock === 0;
+    });
 
-      for (const item of outOfStockItems) {
-        try {
-          await removeItem(item.product);
+    for (const item of outOfStockItems) {
+      try {
+        if (item.type === "collection") {
+          await removeItem(item.collection || "", "collection");
+          toast.error(
+            `${t("Stock Error:")} ${item.collectionDetails?.name || "Bundle"} ${t("is out of stock and has been removed from your cart")}`
+          );
+        } else {
+          await removeItem(item.product || "", "product");
           toast.error(
             `${t("Stock Error:")} ${item.productDetails?.name} ${t("is out of stock and has been removed from your cart")}`
           );
-        } catch (error) {
-          console.error("Error removing out-of-stock item:", error);
-          toast.error(
-            `${t("Stock Error:")} ${t("Failed to remove out-of-stock item")} ${item.productDetails?.name}. ${t("Please remove it manually")}`
-          );
         }
+      } catch (error) {
+        console.error("Error removing out-of-stock item:", error);
+        toast.error(
+          `${t("Stock Error:")} ${t("Failed to remove out-of-stock item")} ${
+            item.productDetails?.name || item.collectionDetails?.name
+          }. ${t("Please remove it manually")}`
+        );
       }
+    }
     };
 
     if (cartItems.length > 0) {
@@ -185,6 +276,9 @@ const ShoppingCartPage: React.FC = () => {
   }, [cartItems, removeItem]);
 
   const getItemPrice = (item: CartItemWithProduct) => {
+    if (item.type === "collection") {
+      return item.collectionDetails?.bundlePrice || 0;
+    }
     if (!item.productDetails) return 0;
     return item.productDetails.saleActive
       ? item.productDetails.price *
@@ -206,7 +300,9 @@ const ShoppingCartPage: React.FC = () => {
     }
 
     // Check if all items have valid product details
-    const invalidItems = cartItems.filter((item) => !item.productDetails);
+    const invalidItems = cartItems.filter((item) =>
+      item.type === "collection" ? !item.collectionDetails : !item.productDetails
+    );
     if (invalidItems.length > 0) {
       const invalidCount = invalidItems.length;
       toast.error(
@@ -222,9 +318,17 @@ const ShoppingCartPage: React.FC = () => {
     }
 
     // Check stock availability
-    const outOfStockItems = cartItems.filter(
-      (item) => item.productDetails && item.productDetails.stock < item.quantity
-    );
+    const outOfStockItems = cartItems.filter((item) => {
+      if (item.type === "collection" && item.collectionDetails) {
+        return item.collectionDetails.items.some((bundleItem) => {
+          const requiredQty = bundleItem.quantity * item.quantity;
+          return bundleItem.product.stock < requiredQty;
+        });
+      }
+      return (
+        item.productDetails && item.productDetails.stock < item.quantity
+      );
+    });
     if (outOfStockItems.length > 0) {
       const itemNames = outOfStockItems
         .map((item) => item.productDetails?.name || "Unknown Product")
@@ -252,10 +356,23 @@ const ShoppingCartPage: React.FC = () => {
 
     try {
       // Validate coupon with current cart
+      const couponItems = cartItems.flatMap((item) => {
+        if (item.type === "collection" && item.collectionDetails) {
+          return item.collectionDetails.items.map((bundleItem) => ({
+            product: bundleItem.product._id,
+            quantity: bundleItem.quantity * item.quantity,
+          }));
+        }
+        if (item.product) {
+          return [{ product: item.product, quantity: item.quantity }];
+        }
+        return [];
+      });
+
       const validation = await validateCoupon(
         couponCode.trim(),
         subtotal,
-        cartItems
+        couponItems
       );
 
       if (!validation?.success) {
@@ -310,6 +427,16 @@ const ShoppingCartPage: React.FC = () => {
 
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
+  };
+
+  const getCollectionOriginalTotal = (collection: Collection) => {
+    return collection.items.reduce((sum, item) => {
+      const product = item.product;
+      const unitPrice = product.saleActive
+        ? product.price * (1 - product.salePercentage / 100)
+        : product.price;
+      return sum + unitPrice * item.quantity;
+    }, 0);
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + getItemTotal(item), 0);
@@ -434,31 +561,79 @@ const ShoppingCartPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {cartItems.map((item) => (
-                    <tr key={item.product}>
+                    <tr key={`${item.type}-${item.product || item.collection}`}>
                       <td className="px-4 sm:px-6 py-4">
-                        <button
-                          onClick={() => handleProductClick(item.product)}
-                          className="cursor-pointer hover:opacity-80 transition-opacity"
-                        >
-                          <img
-                            src={
-                              item.productDetails?.images?.[0]?.url ||
-                              "/placeholder.png"
+                        {item.type === "collection" ? (
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                            <img
+                              src={
+                                item.collectionDetails?.items?.[0]?.product
+                                  ?.images?.[0]?.url || "/placeholder.png"
+                              }
+                              alt={item.collectionDetails?.name || "Bundle"}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              item.product && handleProductClick(item.product)
                             }
-                            alt={item.productDetails?.name || "Product"}
-                            className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
-                          />
-                        </button>
+                            className="cursor-pointer hover:opacity-80 transition-opacity"
+                          >
+                            <img
+                              src={
+                                item.productDetails?.images?.[0]?.url ||
+                                "/placeholder.png"
+                              }
+                              alt={item.productDetails?.name || "Product"}
+                              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
+                            />
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
-                        <div className="text-xs sm:text-sm font-medium text-gray-900">
-                          {item.productDetails?.name ||
-                            "Product Name Not Available"}
-                        </div>
+                        {item.type === "collection" ? (
+                          <div className="space-y-1">
+                            <div className="text-xs sm:text-sm font-medium text-gray-900">
+                              {item.collectionDetails?.name || "Bundle"}
+                              <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-[#FFD600]/20 text-[#333333]">
+                                Bundle
+                              </span>
+                            </div>
+                            <div className="text-[10px] sm:text-xs text-gray-500">
+                              {item.collectionDetails?.items
+                                ?.map(
+                                  (bundleItem) =>
+                                    `${bundleItem.product.name} x${bundleItem.quantity}`
+                                )
+                                .join(" + ")}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs sm:text-sm font-medium text-gray-900">
+                            {item.productDetails?.name ||
+                              "Product Name Not Available"}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
                         <div className="text-xs sm:text-sm text-gray-900">
-                          {item.productDetails?.saleActive ? (
+                          {item.type === "collection" ? (
+                            <div className="flex flex-col">
+                              <span className="line-through text-gray-500 text-xs">
+                                $
+                                {item.collectionDetails
+                                  ? getCollectionOriginalTotal(
+                                      item.collectionDetails
+                                    ).toFixed(2)
+                                  : "0.00"}
+                              </span>
+                              <span className="font-medium text-[#002B5B]">
+                                ${getItemPrice(item).toFixed(2)}
+                              </span>
+                            </div>
+                          ) : item.productDetails?.saleActive ? (
                             <div className="flex flex-col">
                               <span className="line-through text-gray-500 text-xs">
                                 ${item.productDetails.price.toFixed(2)}
@@ -470,7 +645,8 @@ const ShoppingCartPage: React.FC = () => {
                           ) : (
                             <span>${getItemPrice(item).toFixed(2)}</span>
                           )}
-                          {item.productDetails?.saleActive && (
+                          {item.type !== "collection" &&
+                            item.productDetails?.saleActive && (
                             <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
                               Sale {item.productDetails.salePercentage}%
                             </span>
@@ -481,23 +657,52 @@ const ShoppingCartPage: React.FC = () => {
                         <div className="flex items-center gap-1 sm:gap-2">
                           <button
                             onClick={() =>
-                              updateQuantity(item.product, item.quantity - 1)
+                              updateQuantity(
+                                item.type === "collection"
+                                  ? item.collection || ""
+                                  : item.product || "",
+                                item.quantity - 1,
+                                item.type === "collection"
+                                  ? "collection"
+                                  : "product"
+                              )
                             }
-                            disabled={updatingItem === item.product}
+                            disabled={
+                              updatingItem ===
+                              (item.type === "collection"
+                                ? item.collection
+                                : item.product)
+                            }
                             className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
                           >
                             -
                           </button>
                           <span className="px-3 sm:px-4 py-1 border-t border-b border-gray-300 bg-white text-xs sm:text-sm">
-                            {updatingItem === item.product
+                            {updatingItem ===
+                            (item.type === "collection"
+                              ? item.collection
+                              : item.product)
                               ? "..."
                               : item.quantity}
                           </span>
                           <button
                             onClick={() =>
-                              updateQuantity(item.product, item.quantity + 1)
+                              updateQuantity(
+                                item.type === "collection"
+                                  ? item.collection || ""
+                                  : item.product || "",
+                                item.quantity + 1,
+                                item.type === "collection"
+                                  ? "collection"
+                                  : "product"
+                              )
                             }
-                            disabled={updatingItem === item.product}
+                            disabled={
+                              updatingItem ===
+                              (item.type === "collection"
+                                ? item.collection
+                                : item.product)
+                            }
                             className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
                           >
                             +
@@ -511,8 +716,20 @@ const ShoppingCartPage: React.FC = () => {
                       </td>
                       <td className="px-4 sm:px-6 py-4">
                         <button
-                          onClick={() => removeItem(item.product)}
-                          disabled={updatingItem === item.product}
+                          onClick={() =>
+                            removeItem(
+                              item.type === "collection"
+                                ? item.collection || ""
+                                : item.product || "",
+                              item.type === "collection" ? "collection" : "product"
+                            )
+                          }
+                          disabled={
+                            updatingItem ===
+                            (item.type === "collection"
+                              ? item.collection
+                              : item.product)
+                          }
                           className="text-red-600 hover:text-red-800 disabled:opacity-50"
                         >
                           <svg
@@ -540,30 +757,61 @@ const ShoppingCartPage: React.FC = () => {
             <div className="md:hidden space-y-4 p-4">
               {cartItems.map((item) => (
                 <div
-                  key={item.product}
+                  key={`${item.type}-${item.product || item.collection}`}
                   className="border border-gray-200 rounded-lg p-4 space-y-3"
                 >
                   <div className="flex items-start gap-3">
-                    <button
-                      onClick={() => handleProductClick(item.product)}
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                    >
-                      <img
-                        src={
-                          item.productDetails?.images?.[0]?.url ||
-                          "/placeholder.png"
+                    {item.type === "collection" ? (
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img
+                          src={
+                            item.collectionDetails?.items?.[0]?.product
+                              ?.images?.[0]?.url || "/placeholder.png"
+                          }
+                          alt={item.collectionDetails?.name || "Bundle"}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          item.product && handleProductClick(item.product)
                         }
-                        alt={item.productDetails?.name || "Product"}
-                        className="w-16 h-16 object-cover rounded-lg"
-                      />
-                    </button>
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        <img
+                          src={
+                            item.productDetails?.images?.[0]?.url ||
+                            "/placeholder.png"
+                          }
+                          alt={item.productDetails?.name || "Product"}
+                          className="w-16 h-16 object-cover rounded-lg"
+                        />
+                      </button>
+                    )}
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-gray-900">
-                        {item.productDetails?.name ||
-                          "Product Name Not Available"}
+                        {item.type === "collection"
+                          ? item.collectionDetails?.name || "Bundle"
+                          : item.productDetails?.name ||
+                            "Product Name Not Available"}
                       </h3>
                       <p className="text-xs text-gray-600 mt-1">
-                        {item.productDetails?.saleActive ? (
+                        {item.type === "collection" ? (
+                          <>
+                            <span className="line-through text-gray-500">
+                              $
+                              {item.collectionDetails
+                                ? getCollectionOriginalTotal(
+                                    item.collectionDetails
+                                  ).toFixed(2)
+                                : "0.00"}
+                            </span>
+                            <span className="ml-2 font-medium text-[#002B5B]">
+                              ${getItemPrice(item).toFixed(2)}
+                            </span>
+                          </>
+                        ) : item.productDetails?.saleActive ? (
                           <>
                             <span className="line-through text-gray-500">
                               ${item.productDetails.price.toFixed(2)}
@@ -578,8 +826,20 @@ const ShoppingCartPage: React.FC = () => {
                       </p>
                     </div>
                     <button
-                      onClick={() => removeItem(item.product)}
-                      disabled={updatingItem === item.product}
+                      onClick={() =>
+                        removeItem(
+                          item.type === "collection"
+                            ? item.collection || ""
+                            : item.product || "",
+                          item.type === "collection" ? "collection" : "product"
+                        )
+                      }
+                      disabled={
+                        updatingItem ===
+                        (item.type === "collection"
+                          ? item.collection
+                          : item.product)
+                      }
                       className="text-red-600 hover:text-red-800 disabled:opacity-50"
                     >
                       <svg
@@ -602,23 +862,48 @@ const ShoppingCartPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
-                          updateQuantity(item.product, item.quantity - 1)
+                          updateQuantity(
+                            item.type === "collection"
+                              ? item.collection || ""
+                              : item.product || "",
+                            item.quantity - 1,
+                            item.type === "collection" ? "collection" : "product"
+                          )
                         }
-                        disabled={updatingItem === item.product}
+                        disabled={
+                          updatingItem ===
+                          (item.type === "collection"
+                            ? item.collection
+                            : item.product)
+                        }
                         className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 text-xs"
                       >
                         -
                       </button>
                       <span className="px-3 py-1 border-t border-b border-gray-300 bg-white text-xs">
-                        {updatingItem === item.product
+                        {updatingItem ===
+                        (item.type === "collection"
+                          ? item.collection
+                          : item.product)
                           ? "..."
                           : item.quantity}
                       </span>
                       <button
                         onClick={() =>
-                          updateQuantity(item.product, item.quantity + 1)
+                          updateQuantity(
+                            item.type === "collection"
+                              ? item.collection || ""
+                              : item.product || "",
+                            item.quantity + 1,
+                            item.type === "collection" ? "collection" : "product"
+                          )
                         }
-                        disabled={updatingItem === item.product}
+                        disabled={
+                          updatingItem ===
+                          (item.type === "collection"
+                            ? item.collection
+                            : item.product)
+                        }
                         className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 text-xs"
                       >
                         +

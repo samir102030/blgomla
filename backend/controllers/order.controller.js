@@ -6,18 +6,42 @@ import mongoose from "mongoose";
 import { controllerWrapper } from "../utils/wrappers.js";
 import Notification from "../models/notification.model.js";
 import Coupon from "../models/coupon.model.js";
+import Collection from "../models/collection.model.js";
 
 export const createOrder = controllerWrapper(
   "createOrder",
   async (req, res) => {
-    const { orderItems, shippingAddress, paymentMethod, store, couponCode } =
-      req.body;
+    const {
+      orderItems = [],
+      collectionItems = [],
+      shippingAddress,
+      paymentMethod,
+      store,
+      couponCode,
+    } = req.body;
 
     // Validate required fields
-    if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
+    if (
+      (!Array.isArray(orderItems) || orderItems.length === 0) &&
+      (!Array.isArray(collectionItems) || collectionItems.length === 0)
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Order items are required",
+        message: "Order items or collection items are required",
+      });
+    }
+
+    if (orderItems && !Array.isArray(orderItems)) {
+      return res.status(400).json({
+        success: false,
+        message: "Order items must be an array",
+      });
+    }
+
+    if (collectionItems && !Array.isArray(collectionItems)) {
+      return res.status(400).json({
+        success: false,
+        message: "Collection items must be an array",
       });
     }
 
@@ -62,6 +86,22 @@ export const createOrder = controllerWrapper(
       let couponDiscount = 0;
 
       const validatedItems = [];
+      const requiredProducts = new Map();
+
+      const getUnitPrice = (product) => {
+        return product.saleActive
+          ? product.price * (1 - product.salePercentage / 100)
+          : product.price;
+      };
+
+      const addRequiredProduct = (product, quantity) => {
+        const key = product._id.toString();
+        if (requiredProducts.has(key)) {
+          requiredProducts.get(key).quantity += quantity;
+          return;
+        }
+        requiredProducts.set(key, { product, quantity });
+      };
 
       for (const item of orderItems) {
         const product = await Product.findById(item.product).session(session);
@@ -73,19 +113,9 @@ export const createOrder = controllerWrapper(
           });
         }
 
-        if (product.stock < item.quantity) {
-          await session.abortTransaction();
-          return res.status(400).json({
-            success: false,
-            message: `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}. Please remove this item from your cart or reduce the quantity.`,
-          });
-        }
+        addRequiredProduct(product, item.quantity);
 
-        // Calculate price (considering sale if active)
-        const itemPrice = product.saleActive
-          ? product.price * (1 - product.salePercentage / 100)
-          : product.price;
-
+        const itemPrice = getUnitPrice(product);
         itemsPrice += itemPrice * item.quantity;
 
         validatedItems.push({
@@ -93,8 +123,78 @@ export const createOrder = controllerWrapper(
           quantity: item.quantity,
           price: itemPrice,
           salePercentage: product.saleActive ? product.salePercentage : 0,
-          couponDiscount: 0, // Will be updated after coupon validation
+          couponDiscount: 0,
         });
+      }
+
+      for (const bundle of collectionItems) {
+        const collection = await Collection.findById(bundle.collection)
+          .populate("items.product")
+          .session(session);
+        if (!collection || !collection.isActive) {
+          await session.abortTransaction();
+          return res.status(404).json({
+            success: false,
+            message: `Collection ${bundle.collection} not found`,
+          });
+        }
+
+        if (String(collection.store) !== String(store)) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: "Collection store does not match order store",
+          });
+        }
+
+        const collectionQty = bundle.quantity || 1;
+        const originalTotal = collection.items.reduce((sum, item) => {
+          const unitPrice = getUnitPrice(item.product);
+          return sum + unitPrice * item.quantity;
+        }, 0);
+
+        if (collection.bundlePrice <= 0 || collection.bundlePrice > originalTotal) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: `Invalid bundle price for collection ${collection.name}`,
+          });
+        }
+
+        for (const item of collection.items) {
+          const product = item.product;
+          const totalQty = item.quantity * collectionQty;
+          addRequiredProduct(product, totalQty);
+
+          const unitPrice = getUnitPrice(product);
+          const itemTotal = unitPrice * item.quantity;
+          const proportion = originalTotal === 0 ? 0 : itemTotal / originalTotal;
+          const allocatedTotal = collection.bundlePrice * proportion;
+          const allocatedUnitPrice =
+            item.quantity === 0 ? 0 : allocatedTotal / item.quantity;
+
+          itemsPrice += allocatedUnitPrice * totalQty;
+
+          validatedItems.push({
+            product: product._id,
+            collection: collection._id,
+            collectionName: collection.name,
+            quantity: totalQty,
+            price: allocatedUnitPrice,
+            salePercentage: 0,
+            couponDiscount: 0,
+          });
+        }
+      }
+
+      for (const { product, quantity } of requiredProducts.values()) {
+        if (product.stock < quantity) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${quantity}. Please remove this item from your cart or reduce the quantity.`,
+          });
+        }
       }
 
       // Step 2: Validate and apply coupon if provided
@@ -211,13 +311,23 @@ export const createOrder = controllerWrapper(
       }
 
       // Step 5: Update product stock and sold count
-      for (const item of orderItems) {
+      const stockUpdates = new Map();
+      for (const item of validatedItems) {
+        const key = item.product.toString();
+        if (stockUpdates.has(key)) {
+          stockUpdates.get(key).quantity += item.quantity;
+          continue;
+        }
+        stockUpdates.set(key, { productId: item.product, quantity: item.quantity });
+      }
+
+      for (const { productId, quantity } of stockUpdates.values()) {
         await Product.findByIdAndUpdate(
-          item.product,
+          productId,
           {
             $inc: {
-              stock: -item.quantity,
-              soldCount: item.quantity,
+              stock: -quantity,
+              soldCount: quantity,
             },
           },
           { session }

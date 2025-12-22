@@ -4,7 +4,7 @@ import { useUserStore } from "../../stores/user.store";
 import {
   HomeIcon,
   ShoppingBagIcon,
-  // TagIcon,
+  TagIcon,
   // UserGroupIcon,
   // CogIcon,
   // ClipboardDocumentListIcon,
@@ -70,12 +70,23 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
         },
         // { name: "Attributes", href: "/dashboard/attributes" },
         { name: "Order", href: "/dashboard/order", roles: ["admin", "store"] },
+        {
+          name: "Collections",
+          href: "/dashboard/collections",
+          roles: ["store"],
+        },
       ],
     },
     {
       name: "Returns",
       href: "/dashboard/returns",
       icon: ClipboardDocumentListIcon,
+      roles: ["admin", "store"],
+    },
+    {
+      name: "Collections",
+      href: "/dashboard/collections",
+      icon: TagIcon,
       roles: ["admin", "store"],
     },
     { name: "User", href: "/dashboard/user", icon: UserIcon, roles: ["admin"] },

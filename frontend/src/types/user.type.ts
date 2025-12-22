@@ -1,7 +1,9 @@
 import type { Product } from "./product.type";
 
 export interface UserCartItem {
-  product: string; // ObjectId as string
+  type?: "product" | "collection";
+  product?: string; // ObjectId as string
+  collection?: string; // ObjectId as string
   quantity: number;
 }
 

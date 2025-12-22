@@ -41,6 +41,7 @@ const AccountOrders: React.FC = () => {
             ...product,
             quantity: item.quantity,
             itemPrice: item.price || product.price,
+            collectionName: item.collectionName,
           };
         });
         setOrderProducts(products);
@@ -394,6 +395,11 @@ const AccountOrders: React.FC = () => {
                           <div className="flex-1">
                             <p className="font-medium text-gray-900">
                               {product.name}
+                              {product.collectionName && (
+                                <span className="ml-2 text-xs text-gray-500">
+                                  ({product.collectionName})
+                                </span>
+                              )}
                             </p>
                             <p className="text-sm text-gray-600">
                               Quantity: {product.quantity}

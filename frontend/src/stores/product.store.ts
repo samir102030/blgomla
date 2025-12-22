@@ -14,7 +14,9 @@ interface PaginatedResult<T> {
 }
 
 interface CartItem {
-  product: Product | string;
+  type?: "product" | "collection";
+  product?: Product | string;
+  collection?: string;
   quantity: number;
   _id?: string;
 }

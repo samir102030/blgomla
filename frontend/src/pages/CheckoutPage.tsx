@@ -9,11 +9,14 @@ import { useCouponStore } from "../stores/coupon.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import type { Coupon } from "../types/coupon.type";
+import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 
 interface CartItemWithProduct {
   _id?: string;
-  product: string;
+  type?: "product" | "collection";
+  product?: string;
+  collection?: string;
   quantity: number;
   productDetails?: {
     _id: string;
@@ -25,6 +28,7 @@ interface CartItemWithProduct {
     images: Array<{ url: string; alt?: string }>;
     store?: string; // Store ID
   };
+  collectionDetails?: Collection;
 }
 
 const CheckoutPage: React.FC = () => {
@@ -67,19 +71,33 @@ const CheckoutPage: React.FC = () => {
         try {
           const itemsWithDetails = await Promise.all(
             user.cart.map(async (item) => {
+              const isCollection =
+                item.type === "collection" || Boolean(item.collection);
               try {
+                if (isCollection) {
+                  const { data } = await axiosInstance.get(
+                    `/collections/${item.collection}`
+                  );
+                  return {
+                    ...item,
+                    type: "collection",
+                    collectionDetails: data.collection || null,
+                  };
+                }
+
                 const { data } = await axiosInstance.get(
                   `/products/${item.product}`
                 );
                 return {
                   ...item,
+                  type: "product",
                   productDetails: data.data?.[0] || null,
                 };
               } catch (error: any) {
-                console.error(`Error fetching product ${item.product}:`, error);
-                // Return item with null productDetails to show as unavailable
+                console.error("Error fetching cart item:", error);
                 return {
                   ...item,
+                  type: isCollection ? "collection" : "product",
                   productDetails: null,
                 };
               }
@@ -112,6 +130,9 @@ const CheckoutPage: React.FC = () => {
 
   // Calculate prices
   const getItemPrice = (item: CartItemWithProduct) => {
+    if (item.type === "collection") {
+      return item.collectionDetails?.bundlePrice || 0;
+    }
     if (!item.productDetails) return 0;
     return item.productDetails.saleActive
       ? item.productDetails.price *
@@ -159,10 +180,18 @@ const CheckoutPage: React.FC = () => {
     }
 
     try {
-      const cartItemsData = cartItems.map((item) => ({
-        product: item.product,
-        quantity: item.quantity,
-      }));
+      const cartItemsData = cartItems.flatMap((item) => {
+        if (item.type === "collection" && item.collectionDetails) {
+          return item.collectionDetails.items.map((bundleItem) => ({
+            product: bundleItem.product._id,
+            quantity: bundleItem.quantity * item.quantity,
+          }));
+        }
+        if (item.product) {
+          return [{ product: item.product, quantity: item.quantity }];
+        }
+        return [];
+      });
 
       const validation = await validateCoupon(
         couponCode.toUpperCase(),
@@ -236,7 +265,9 @@ const CheckoutPage: React.FC = () => {
     }
 
     // Check for invalid products
-    const invalidItems = cartItems.filter((item) => !item.productDetails);
+    const invalidItems = cartItems.filter((item) =>
+      item.type === "collection" ? !item.collectionDetails : !item.productDetails
+    );
     if (invalidItems.length > 0) {
       toast.error(
         "Product Error: Some items in your cart are no longer available. Please remove them and try again"
@@ -246,7 +277,14 @@ const CheckoutPage: React.FC = () => {
 
     // Validate all products belong to the same store
     const stores = cartItems
-      .map((item) => item.productDetails?.store)
+      .map((item) => {
+        if (item.type === "collection") {
+          return typeof item.collectionDetails?.store === "string"
+            ? item.collectionDetails?.store
+            : item.collectionDetails?.store?._id;
+        }
+        return item.productDetails?.store;
+      })
       .filter(Boolean);
     const uniqueStores = [...new Set(stores)];
     if (uniqueStores.length > 1) {
@@ -265,9 +303,15 @@ const CheckoutPage: React.FC = () => {
     }
 
     // Check stock availability
-    const outOfStockItems = cartItems.filter(
-      (item) => item.productDetails && item.productDetails.stock < item.quantity
-    );
+    const outOfStockItems = cartItems.filter((item) => {
+      if (item.type === "collection" && item.collectionDetails) {
+        return item.collectionDetails.items.some((bundleItem) => {
+          const requiredQty = bundleItem.quantity * item.quantity;
+          return bundleItem.product.stock < requiredQty;
+        });
+      }
+      return item.productDetails && item.productDetails.stock < item.quantity;
+    });
     if (outOfStockItems.length > 0) {
       const itemNames = outOfStockItems
         .map((item) => item.productDetails?.name || "Unknown Product")
@@ -370,18 +414,40 @@ const CheckoutPage: React.FC = () => {
 
       // Double-check stock before creating order
       try {
-        const stockCheckPromises = cartItems.map(async (item) => {
-          const { data } = await axiosInstance.get(`/products/${item.product}`);
-          const currentStock = data.data?.[0]?.stock || 0;
-          if (currentStock < item.quantity) {
-            throw new Error(
-              `Insufficient stock for ${
-                data.data?.[0]?.name || "product"
-              }. Available: ${currentStock}`
+        const requiredProducts = new Map<string, number>();
+        cartItems.forEach((item) => {
+          if (item.type === "collection" && item.collectionDetails) {
+            item.collectionDetails.items.forEach((bundleItem) => {
+              const productId = bundleItem.product._id;
+              const requiredQty = bundleItem.quantity * item.quantity;
+              requiredProducts.set(
+                productId,
+                (requiredProducts.get(productId) || 0) + requiredQty
+              );
+            });
+          } else if (item.product) {
+            requiredProducts.set(
+              item.product,
+              (requiredProducts.get(item.product) || 0) + item.quantity
             );
           }
-          return data.data?.[0];
         });
+
+        const stockCheckPromises = Array.from(requiredProducts.entries()).map(
+          async ([productId, quantity]) => {
+            const { data } = await axiosInstance.get(`/products/${productId}`);
+            const product = data.data?.[0];
+            const currentStock = product?.stock || 0;
+            if (currentStock < quantity) {
+              throw new Error(
+                `Insufficient stock for ${
+                  product?.name || "product"
+                }. Available: ${currentStock}`
+              );
+            }
+            return product;
+          }
+        );
 
         await Promise.all(stockCheckPromises);
       } catch (stockError: any) {
@@ -393,12 +459,22 @@ const CheckoutPage: React.FC = () => {
       }
 
       // Prepare order data
-      const orderData = {
-        user: user._id,
-        orderItems: cartItems.map((item) => ({
+      const orderItemsPayload = cartItems
+        .filter((item) => item.type !== "collection")
+        .map((item) => ({
           product: item.product,
           quantity: item.quantity,
-        })),
+        }));
+
+      const collectionItemsPayload = cartItems
+        .filter((item) => item.type === "collection")
+        .map((item) => ({
+          collection: item.collection,
+          quantity: item.quantity,
+        }));
+
+      const orderData: any = {
+        user: user._id,
         shippingAddress: shippingAddressId,
         paymentMethod,
         store: storeId,
@@ -408,6 +484,14 @@ const CheckoutPage: React.FC = () => {
         totalPrice: grandTotal,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
       };
+
+      if (orderItemsPayload.length > 0) {
+        orderData.orderItems = orderItemsPayload;
+      }
+
+      if (collectionItemsPayload.length > 0) {
+        orderData.collectionItems = collectionItemsPayload;
+      }
 
       // Create order
       const order = await createOrder(orderData);
@@ -916,12 +1000,14 @@ const CheckoutPage: React.FC = () => {
                   </div>
                   {cartItems.map((item) => (
                     <div
-                      key={item.product}
+                      key={`${item.type}-${item.product || item.collection}`}
                       className="flex justify-between text-xs sm:text-sm"
                     >
                       <span>
-                        {item.productDetails?.name || "Product"} X{" "}
-                        {item.quantity.toString().padStart(2, "0")}
+                        {item.type === "collection"
+                          ? item.collectionDetails?.name || "Bundle"
+                          : item.productDetails?.name || "Product"}{" "}
+                        X {item.quantity.toString().padStart(2, "0")}
                       </span>
                       <span>
                         ${(getItemPrice(item) * item.quantity).toFixed(2)}

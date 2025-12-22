@@ -100,6 +100,11 @@ const Header: React.FC = () => {
       path: "/products",
       className: "border-r border-[#9E9E9E]/30 md:border-r-0",
     },
+    {
+      label: t("Collections"),
+      path: "/collections",
+      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
+    },
     // {
     //   label: t("About Us"),
     //   path: "/about",
