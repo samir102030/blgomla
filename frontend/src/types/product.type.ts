@@ -20,6 +20,11 @@ export interface ProductAttribute {
   value: string;
 }
 
+export interface BulkPricingRule {
+  minQty: number;
+  unitPrice: number;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -41,6 +46,7 @@ export interface Product {
   soldCount?: number;
   features: string[];
   attributes: ProductAttribute[];
+  bulkPricing?: BulkPricingRule[];
   createdAt?: string;
   updatedAt?: string;
   salePrice?: number;

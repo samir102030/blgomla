@@ -54,6 +54,22 @@ const reviewRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const bulkPricingSchema = new mongoose.Schema(
+  {
+    minQty: {
+      type: Number,
+      required: true,
+      min: [1, "Minimum quantity must be at least 1"],
+    },
+    unitPrice: {
+      type: Number,
+      required: true,
+      min: [0.01, "Unit price must be positive"],
+    },
+  },
+  { _id: false }
+);
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -162,6 +178,10 @@ const productSchema = new mongoose.Schema(
     hasPendingRequests: {
       type: Boolean,
       default: false,
+    },
+    bulkPricing: {
+      type: [bulkPricingSchema],
+      default: [],
     },
   },
   { timestamps: true }

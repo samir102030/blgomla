@@ -12,6 +12,7 @@ import PleaseLogin from "../components/PleaseLogin";
 import type { Coupon } from "../types/coupon.type";
 import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
+import { getBaseUnitPrice, getBulkPricing } from "../lib/pricing";
 // import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
@@ -27,6 +28,7 @@ interface CartItemWithProduct {
     stock: number;
     salePercentage: number;
     saleActive: boolean;
+    bulkPricing?: Array<{ minQty: number; unitPrice: number }>;
     images: Array<{ url: string; alt?: string }>;
   };
   collectionDetails?: Collection;
@@ -280,10 +282,21 @@ const ShoppingCartPage: React.FC = () => {
       return item.collectionDetails?.bundlePrice || 0;
     }
     if (!item.productDetails) return 0;
-    return item.productDetails.saleActive
-      ? item.productDetails.price *
-          (1 - item.productDetails.salePercentage / 100)
-      : item.productDetails.price;
+    return getBulkPricing(item.productDetails, item.quantity).unitPrice;
+  };
+
+  const getProductPriceDisplay = (
+    product: NonNullable<CartItemWithProduct["productDetails"]>,
+    quantity: number
+  ) => {
+    const { unitPrice, baseUnitPrice, applicableRule } = getBulkPricing(
+      product,
+      quantity
+    );
+    const showStrike =
+      product.saleActive || (applicableRule && unitPrice < baseUnitPrice);
+    const strikePrice = product.saleActive ? product.price : baseUnitPrice;
+    return { unitPrice, showStrike, strikePrice };
   };
 
   const getItemTotal = (item: CartItemWithProduct) => {
@@ -432,9 +445,7 @@ const ShoppingCartPage: React.FC = () => {
   const getCollectionOriginalTotal = (collection: Collection) => {
     return collection.items.reduce((sum, item) => {
       const product = item.product;
-      const unitPrice = product.saleActive
-        ? product.price * (1 - product.salePercentage / 100)
-        : product.price;
+      const unitPrice = getBaseUnitPrice(product);
       return sum + unitPrice * item.quantity;
     }, 0);
   };
@@ -633,24 +644,40 @@ const ShoppingCartPage: React.FC = () => {
                                 ${getItemPrice(item).toFixed(2)}
                               </span>
                             </div>
-                          ) : item.productDetails?.saleActive ? (
-                            <div className="flex flex-col">
-                              <span className="line-through text-gray-500 text-xs">
-                                ${item.productDetails.price.toFixed(2)}
-                              </span>
-                              <span className="font-medium text-red-600">
-                                ${getItemPrice(item).toFixed(2)}
-                              </span>
-                            </div>
+                          ) : item.productDetails ? (
+                            (() => {
+                              const display = getProductPriceDisplay(
+                                item.productDetails,
+                                item.quantity
+                              );
+                              return (
+                                <div className="flex flex-col">
+                                  {display.showStrike && (
+                                    <span className="line-through text-gray-500 text-xs">
+                                      ${display.strikePrice.toFixed(2)}
+                                    </span>
+                                  )}
+                                  <span
+                                    className={`font-medium ${
+                                      display.showStrike
+                                        ? "text-red-600"
+                                        : "text-gray-900"
+                                    }`}
+                                  >
+                                    ${display.unitPrice.toFixed(2)}
+                                  </span>
+                                </div>
+                              );
+                            })()
                           ) : (
-                            <span>${getItemPrice(item).toFixed(2)}</span>
+                            <span>$0.00</span>
                           )}
                           {item.type !== "collection" &&
                             item.productDetails?.saleActive && (
-                            <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
-                              Sale {item.productDetails.salePercentage}%
-                            </span>
-                          )}
+                              <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
+                                Sale {item.productDetails.salePercentage}%
+                              </span>
+                            )}
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4">
@@ -811,17 +838,33 @@ const ShoppingCartPage: React.FC = () => {
                               ${getItemPrice(item).toFixed(2)}
                             </span>
                           </>
-                        ) : item.productDetails?.saleActive ? (
-                          <>
-                            <span className="line-through text-gray-500">
-                              ${item.productDetails.price.toFixed(2)}
-                            </span>
-                            <span className="ml-2 font-medium text-red-600">
-                              ${getItemPrice(item).toFixed(2)}
-                            </span>
-                          </>
+                        ) : item.productDetails ? (
+                          (() => {
+                            const display = getProductPriceDisplay(
+                              item.productDetails,
+                              item.quantity
+                            );
+                            return (
+                              <>
+                                {display.showStrike && (
+                                  <span className="line-through text-gray-500">
+                                    ${display.strikePrice.toFixed(2)}
+                                  </span>
+                                )}
+                                <span
+                                  className={`ml-2 font-medium ${
+                                    display.showStrike
+                                      ? "text-red-600"
+                                      : "text-gray-900"
+                                  }`}
+                                >
+                                  ${display.unitPrice.toFixed(2)}
+                                </span>
+                              </>
+                            );
+                          })()
                         ) : (
-                          <span>${getItemPrice(item).toFixed(2)}</span>
+                          <span>$0.00</span>
                         )}
                       </p>
                     </div>

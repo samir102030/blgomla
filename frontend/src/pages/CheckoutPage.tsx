@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import type { Coupon } from "../types/coupon.type";
 import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
+import { getBulkPricing } from "../lib/pricing";
 
 interface CartItemWithProduct {
   _id?: string;
@@ -27,6 +28,7 @@ interface CartItemWithProduct {
     saleActive: boolean;
     images: Array<{ url: string; alt?: string }>;
     store?: string; // Store ID
+    bulkPricing?: Array<{ minQty: number; unitPrice: number }>;
   };
   collectionDetails?: Collection;
 }
@@ -134,10 +136,7 @@ const CheckoutPage: React.FC = () => {
       return item.collectionDetails?.bundlePrice || 0;
     }
     if (!item.productDetails) return 0;
-    return item.productDetails.saleActive
-      ? item.productDetails.price *
-          (1 - item.productDetails.salePercentage / 100)
-      : item.productDetails.price;
+    return getBulkPricing(item.productDetails, item.quantity).unitPrice;
   };
 
   const subtotal = cartItems.reduce(

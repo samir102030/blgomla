@@ -88,10 +88,22 @@ export const createOrder = controllerWrapper(
       const validatedItems = [];
       const requiredProducts = new Map();
 
-      const getUnitPrice = (product) => {
+      const getBaseUnitPrice = (product) => {
         return product.saleActive
           ? product.price * (1 - product.salePercentage / 100)
           : product.price;
+      };
+
+      const getUnitPrice = (product, quantity = 1) => {
+        const basePrice = getBaseUnitPrice(product);
+        const rules = Array.isArray(product.bulkPricing)
+          ? product.bulkPricing
+          : [];
+        const applicable = rules
+          .filter((rule) => rule.minQty <= quantity)
+          .sort((a, b) => b.minQty - a.minQty)[0];
+        if (!applicable) return basePrice;
+        return Math.min(basePrice, applicable.unitPrice);
       };
 
       const addRequiredProduct = (product, quantity) => {
@@ -115,7 +127,7 @@ export const createOrder = controllerWrapper(
 
         addRequiredProduct(product, item.quantity);
 
-        const itemPrice = getUnitPrice(product);
+        const itemPrice = getUnitPrice(product, item.quantity);
         itemsPrice += itemPrice * item.quantity;
 
         validatedItems.push({
@@ -149,7 +161,7 @@ export const createOrder = controllerWrapper(
 
         const collectionQty = bundle.quantity || 1;
         const originalTotal = collection.items.reduce((sum, item) => {
-          const unitPrice = getUnitPrice(item.product);
+          const unitPrice = getBaseUnitPrice(item.product);
           return sum + unitPrice * item.quantity;
         }, 0);
 
@@ -166,7 +178,7 @@ export const createOrder = controllerWrapper(
           const totalQty = item.quantity * collectionQty;
           addRequiredProduct(product, totalQty);
 
-          const unitPrice = getUnitPrice(product);
+          const unitPrice = getBaseUnitPrice(product);
           const itemTotal = unitPrice * item.quantity;
           const proportion = originalTotal === 0 ? 0 : itemTotal / originalTotal;
           const allocatedTotal = collection.bundlePrice * proportion;

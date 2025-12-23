@@ -8,6 +8,7 @@ import { useBrandStore } from "../stores/brand.store";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { ProductReview } from "../types/product.type";
+import { getBulkPricing } from "../lib/pricing";
 
 const ProductDetailPage: React.FC = () => {
   const [tab, setTab] = useState("description");
@@ -287,6 +288,11 @@ const ProductDetailPage: React.FC = () => {
       ? product.images.map((img) => img.url)
       : ["/placeholder.png"];
 
+  const { unitPrice, baseUnitPrice, applicableRule, rules } = getBulkPricing(
+    product,
+    quantity
+  );
+
   // Generate specifications based on product data
   const getBrandName = (brandId: string) => {
     const brand = brands?.find((b) => b._id === brandId);
@@ -296,11 +302,7 @@ const ProductDetailPage: React.FC = () => {
   const specifications = [
     product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
     product.Category ? `Category: ${product.Category}` : undefined,
-    `Price: $${product.saleActive && product.salePercentage && product.salePercentage > 0
-      ? product.salePrice?.toFixed(2) ||
-      (product.price * (1 - product.salePercentage / 100)).toFixed(2)
-      : product.price.toFixed(2)
-    }`,
+    `Price: $${baseUnitPrice.toFixed(2)}`,
     product.stock > 0
       ? product.stock < 5
         ? `In Stock (${product.stock})`
@@ -425,29 +427,35 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Price */}
               <div className="mb-6">
-                {product.saleActive &&
-                  product.salePercentage &&
-                  product.salePercentage > 0 ? (
-                  <div className="flex items-center space-x-3">
-                    <span className="text-3xl font-bold text-gray-900">
-                      $
-                      {product.salePrice?.toFixed(2) ||
-                        (
-                          product.price *
-                          (1 - product.salePercentage / 100)
-                        ).toFixed(2)}
-                    </span>
-                    <span className="text-xl text-gray-500 line-through">
-                      ${product.price.toFixed(2)}
-                    </span>
-                    <span className="ml-3 bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                      Sale ({product.salePercentage}% off)
-                    </span>
-                  </div>
-                ) : (
+                <div className="flex items-center space-x-3 flex-wrap">
                   <span className="text-3xl font-bold text-gray-900">
-                    ${product.price.toFixed(2)}
+                    ${unitPrice.toFixed(2)}
                   </span>
+                  {product.saleActive &&
+                    product.salePercentage &&
+                    product.salePercentage > 0 && (
+                    <>
+                      <span className="text-xl text-gray-500 line-through">
+                        ${product.price.toFixed(2)}
+                      </span>
+                      <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
+                        Sale ({product.salePercentage}% off)
+                      </span>
+                    </>
+                  )}
+                  {!product.saleActive &&
+                    applicableRule &&
+                    unitPrice < baseUnitPrice && (
+                      <span className="text-xl text-gray-500 line-through">
+                        ${baseUnitPrice.toFixed(2)}
+                      </span>
+                    )}
+                </div>
+                {applicableRule && (
+                  <p className="mt-2 text-sm text-green-700">
+                    Bulk price applied: {applicableRule.minQty}+ units at $
+                    {applicableRule.unitPrice.toFixed(2)} each.
+                  </p>
                 )}
               </div>
 
@@ -477,6 +485,42 @@ const ProductDetailPage: React.FC = () => {
                         {tag}
                       </span>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Bulk Pricing */}
+              {rules.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold mb-4">Bulk Pricing</h3>
+                  <div className="overflow-hidden border border-gray-200 rounded-lg">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-gray-50 text-gray-700">
+                        <tr>
+                          <th className="px-4 py-2 text-left">
+                            Buy At Least
+                          </th>
+                          <th className="px-4 py-2 text-left">Unit Price</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {rules.map((rule) => (
+                          <tr
+                            key={`bulk-${rule.minQty}`}
+                            className={
+                              applicableRule?.minQty === rule.minQty
+                                ? "bg-green-50"
+                                : undefined
+                            }
+                          >
+                            <td className="px-4 py-2">{rule.minQty}</td>
+                            <td className="px-4 py-2">
+                              ${rule.unitPrice.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}

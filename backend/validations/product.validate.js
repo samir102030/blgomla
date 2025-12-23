@@ -26,6 +26,34 @@ export const validateCreateProduct = validate([
   body("images.*.url").optional().isURL(),
   body("images.*.alt").optional().trim(),
   body("salePercentage").optional().isInt({ min: 0, max: 100 }),
+  body("bulkPricing").optional().isArray(),
+  body("bulkPricing.*.minQty")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Bulk pricing minQty must be at least 1"),
+  body("bulkPricing.*.unitPrice")
+    .optional()
+    .isFloat({ gt: 0 })
+    .withMessage("Bulk pricing unitPrice must be positive"),
+  body("bulkPricing").optional().custom((value) => {
+    if (!Array.isArray(value)) return true;
+    const seen = new Set();
+    for (const rule of value) {
+      const minQty = Number(rule?.minQty);
+      const unitPrice = Number(rule?.unitPrice);
+      if (!Number.isInteger(minQty) || minQty < 1) {
+        throw new Error("Bulk pricing minQty must be a positive integer");
+      }
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        throw new Error("Bulk pricing unitPrice must be positive");
+      }
+      if (seen.has(minQty)) {
+        throw new Error("Bulk pricing minQty values must be unique");
+      }
+      seen.add(minQty);
+    }
+    return true;
+  }),
   body("features").optional().isArray(),
   body("attributes").optional().isArray(),
   body("attributes.*.name").if(body("attributes").exists()).notEmpty(),
@@ -37,6 +65,34 @@ export const validateUpdateProduct = validate([
   body("name").optional().trim().notEmpty(),
   body("description").optional().trim(),
   body("price").optional().isFloat({ gt: 0 }),
+  body("bulkPricing").optional().isArray(),
+  body("bulkPricing.*.minQty")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("Bulk pricing minQty must be at least 1"),
+  body("bulkPricing.*.unitPrice")
+    .optional()
+    .isFloat({ gt: 0 })
+    .withMessage("Bulk pricing unitPrice must be positive"),
+  body("bulkPricing").optional().custom((value) => {
+    if (!Array.isArray(value)) return true;
+    const seen = new Set();
+    for (const rule of value) {
+      const minQty = Number(rule?.minQty);
+      const unitPrice = Number(rule?.unitPrice);
+      if (!Number.isInteger(minQty) || minQty < 1) {
+        throw new Error("Bulk pricing minQty must be a positive integer");
+      }
+      if (!Number.isFinite(unitPrice) || unitPrice <= 0) {
+        throw new Error("Bulk pricing unitPrice must be positive");
+      }
+      if (seen.has(minQty)) {
+        throw new Error("Bulk pricing minQty values must be unique");
+      }
+      seen.add(minQty);
+    }
+    return true;
+  }),
   // ... include other fields as needed
 ]);
 

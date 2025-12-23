@@ -8,11 +8,39 @@ import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import mongoose from "mongoose";
 
+const normalizeBulkPricing = (bulkPricing = []) => {
+  if (!Array.isArray(bulkPricing)) return [];
+  const cleaned = bulkPricing
+    .map((rule) => ({
+      minQty: Number(rule?.minQty),
+      unitPrice: Number(rule?.unitPrice),
+    }))
+    .filter(
+      (rule) =>
+        Number.isFinite(rule.minQty) &&
+        Number.isFinite(rule.unitPrice) &&
+        rule.minQty >= 1 &&
+        rule.unitPrice > 0
+    );
+
+  const uniqueByMinQty = new Map();
+  for (const rule of cleaned) {
+    uniqueByMinQty.set(rule.minQty, rule);
+  }
+
+  return Array.from(uniqueByMinQty.values()).sort(
+    (a, b) => a.minQty - b.minQty
+  );
+};
+
 // Create Product
 export const createProduct = controllerWrapper(
   "createProduct",
   async (req, res) => {
-    const { newBrand, newCategory, ...productData } = req.body;
+    const { newBrand, newCategory, bulkPricing, ...productData } = req.body;
+    if (bulkPricing !== undefined) {
+      productData.bulkPricing = normalizeBulkPricing(bulkPricing);
+    }
     const product = new Product(productData);
 
     let hasPendingRequests = false;
@@ -182,6 +210,9 @@ export const updateProduct = controllerWrapper(
   async (req, res) => {
     const { productId } = req.params;
     const updateData = req.body;
+    if (updateData.bulkPricing !== undefined) {
+      updateData.bulkPricing = normalizeBulkPricing(updateData.bulkPricing);
+    }
     const product = await Product.findByIdAndUpdate(productId, updateData, {
       new: true,
       runValidators: true,

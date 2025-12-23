@@ -35,6 +35,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     tags: [] as string[],
     features: [] as string[],
     attributes: [] as { name: string; value: string }[],
+    bulkPricing: [] as { minQty: string; unitPrice: string }[],
   });
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -57,6 +58,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         tags: product.tags || [],
         features: product.features || [],
         attributes: product.attributes || [],
+        bulkPricing: Array.isArray(product.bulkPricing)
+          ? product.bulkPricing.map((rule: any) => ({
+              minQty: rule.minQty?.toString() || "",
+              unitPrice: rule.unitPrice?.toString() || "",
+            }))
+          : [],
       });
       setFiles([]);
       setPreviews([]);
@@ -131,6 +138,18 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         tags: form.tags,
         features: form.features,
         attributes: form.attributes,
+        bulkPricing: form.bulkPricing
+          .map((rule) => ({
+            minQty: Number(rule.minQty),
+            unitPrice: Number(rule.unitPrice),
+          }))
+          .filter(
+            (rule) =>
+              Number.isFinite(rule.minQty) &&
+              Number.isFinite(rule.unitPrice) &&
+              rule.minQty >= 1 &&
+              rule.unitPrice > 0
+          ),
       };
       if (form.brand) payload.brand = form.brand;
       if (form.category) payload.Category = form.category;
@@ -423,6 +442,90 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 }
                 className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
               />
+            </div>
+
+            {/* Bulk Pricing */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Bulk Pricing Rules
+                </label>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      bulkPricing: [
+                        ...form.bulkPricing,
+                        { minQty: "", unitPrice: "" },
+                      ],
+                    })
+                  }
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Add Rule
+                </button>
+              </div>
+              {form.bulkPricing.length === 0 ? (
+                <p className="text-xs text-gray-500">
+                  Add rules like min quantity 6 {"=>"} unit price 95.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {form.bulkPricing.map((rule, idx) => (
+                    <div
+                      key={`bulk-${idx}`}
+                      className="grid grid-cols-1 md:grid-cols-3 gap-2 items-center"
+                    >
+                      <input
+                        type="number"
+                        min="1"
+                        placeholder="Min Qty"
+                        value={rule.minQty}
+                        onChange={(e) => {
+                          const next = [...form.bulkPricing];
+                          next[idx] = {
+                            ...next[idx],
+                            minQty: e.target.value,
+                          };
+                          setForm({ ...form, bulkPricing: next });
+                        }}
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Unit Price"
+                        value={rule.unitPrice}
+                        onChange={(e) => {
+                          const next = [...form.bulkPricing];
+                          next[idx] = {
+                            ...next[idx],
+                            unitPrice: e.target.value,
+                          };
+                          setForm({ ...form, bulkPricing: next });
+                        }}
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            bulkPricing: form.bulkPricing.filter(
+                              (_, i) => i !== idx
+                            ),
+                          })
+                        }
+                        className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Tags */}
