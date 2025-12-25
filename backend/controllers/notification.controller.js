@@ -1,6 +1,12 @@
 import Notification from "../models/notification.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
+import {
+  emitNotificationCreated,
+  emitNotificationDeleted,
+  emitNotificationMarkAllRead,
+  emitNotificationUpdated,
+} from "../utils/socket.js";
 
 // Get all notifications for the current user
 export const getNotifications = controllerWrapper(
@@ -68,6 +74,8 @@ export const markAsRead = controllerWrapper("markAsRead", async (req, res) => {
     });
   }
 
+  emitNotificationUpdated(userId, notification);
+
   res.status(200).json({
     success: true,
     message: "Notification marked as read",
@@ -86,6 +94,8 @@ export const markAllAsRead = controllerWrapper(
       { read: true }
     );
 
+    emitNotificationMarkAllRead(userId);
+
     res.status(200).json({
       success: true,
       message: `${result.modifiedCount} notifications marked as read`,
@@ -100,22 +110,24 @@ export const deleteNotification = controllerWrapper(
     const { id } = req.params;
     const userId = req.user._id;
 
-    const notification = await Notification.findOneAndUpdate(
-      { _id: id, user: userId, deleted: false },
-      { deleted: true },
-      { new: true }
-    );
+  const notification = await Notification.findOneAndUpdate(
+    { _id: id, user: userId, deleted: false },
+    { deleted: true },
+    { new: true }
+  );
 
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: "Notification not found",
-      });
-    }
+  if (!notification) {
+    return res.status(404).json({
+      success: false,
+      message: "Notification not found",
+    });
+  }
 
-    res.status(200).json({
-      success: true,
-      message: "Notification deleted successfully",
+  emitNotificationDeleted(userId, notification._id);
+
+  res.status(200).json({
+    success: true,
+    message: "Notification deleted successfully",
     });
   }
 );
@@ -174,6 +186,8 @@ export const createNotification = controllerWrapper(
     });
 
     await notification.save();
+
+    emitNotificationCreated(notification.user, notification);
 
     res.status(201).json({
       success: true,

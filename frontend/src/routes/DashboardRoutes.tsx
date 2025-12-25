@@ -7,6 +7,7 @@ import VendorRequests from '../pages/dashboard/vendors/VendorRequests';
 import CustomersList from '../pages/dashboard/crm/CustomersList';
 import SupportTickets from '../pages/dashboard/crm/SupportTickets';
 import SalesReports from '../pages/dashboard/analytics/SalesReports';
+import NotificationsPage from '../pages/NotificationsPage';
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({ title, description }) => (
   <div className="flex items-center justify-center min-h-96">
@@ -64,7 +65,7 @@ const DashboardRoutes: React.FC = () => {
         {/* Messages */}
         <Route path="messages/inbox" element={<PlaceholderPage title="Inbox" description="Incoming messages and communications" />} />
         <Route path="messages/sent" element={<PlaceholderPage title="Sent Messages" description="Outgoing messages and communications" />} />
-        <Route path="messages/notifications" element={<PlaceholderPage title="Notifications" description="System notifications and alerts" />} />
+        <Route path="messages/notifications" element={<NotificationsPage />} />
         
         {/* Settings */}
         <Route path="settings/general" element={<PlaceholderPage title="General Settings" description="General system configuration" />} />

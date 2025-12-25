@@ -292,6 +292,7 @@ const ProductsContent: React.FC = () => {
                     isOnSale={product.saleActive}
                     isFeatured={product.featured}
                     salePercentage={product.salePercentage}
+                    stock={product.stock}
                   />
                 ))
               )}

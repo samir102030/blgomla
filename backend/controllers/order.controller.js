@@ -7,6 +7,7 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import Notification from "../models/notification.model.js";
 import Coupon from "../models/coupon.model.js";
 import Collection from "../models/collection.model.js";
+import { emitNotificationCreated } from "../utils/socket.js";
 
 export const createOrder = controllerWrapper(
   "createOrder",
@@ -358,12 +359,13 @@ export const createOrder = controllerWrapper(
 
       // Create notifications
       try {
-        await Notification.create({
+        const customerNotification = await Notification.create({
           user: savedOrder.user,
           title: "Order Placed",
           message: `Your order #${savedOrder._id} has been placed successfully.`,
           type: "success",
         });
+        emitNotificationCreated(customerNotification.user, customerNotification);
 
         // Notify store owner(s) about new order
         const storeDoc = await Store.findById(savedOrder.store).populate(
@@ -371,7 +373,7 @@ export const createOrder = controllerWrapper(
         );
         if (storeDoc && storeDoc.owner) {
           const customer = await User.findById(savedOrder.user);
-          await Notification.create({
+          const vendorNotification = await Notification.create({
             user: storeDoc.owner._id,
             title: "New Order Received",
             message: `You have received a new order #${savedOrder._id} from ${
@@ -379,6 +381,7 @@ export const createOrder = controllerWrapper(
             }.`,
             type: "success",
           });
+          emitNotificationCreated(vendorNotification.user, vendorNotification);
         }
       } catch (error) {
         console.error("Error creating order notifications:", error);

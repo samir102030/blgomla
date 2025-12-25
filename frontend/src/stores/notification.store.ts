@@ -26,6 +26,7 @@ interface NotificationStore {
   loading: boolean;
   error: string | undefined;
   hideReadNotifications: boolean;
+  unreadCount: number;
 
   // Notification Management
   fetchNotifications: (params?: Record<string, any>) => Promise<void>;
@@ -57,6 +58,7 @@ interface NotificationStore {
   // Stats & Analytics
   fetchStats: () => Promise<void>;
   getUnreadCount: () => number;
+  refreshUnreadCount: () => Promise<void>;
 
   // Real-time Updates
   addNotification: (notification: Notification) => void;
@@ -64,6 +66,8 @@ interface NotificationStore {
     notificationId: string,
     updates: Partial<Notification>
   ) => void;
+  removeNotification: (notificationId: string) => void;
+  markLocalAllRead: () => void;
 
   // UI Controls
   toggleHideReadNotifications: () => void;
@@ -86,6 +90,7 @@ export const useNotificationStore = create<NotificationStore>()(
       loading: false,
       error: undefined,
       hideReadNotifications: false,
+      unreadCount: 0,
 
       // Fetch Notifications
       fetchNotifications: async (params = {}) => {
@@ -104,6 +109,18 @@ export const useNotificationStore = create<NotificationStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+        }
+      },
+
+      refreshUnreadCount: async () => {
+        try {
+          const { data } = await axiosInstance.get<{
+            success: boolean;
+            unreadCount: number;
+          }>("/notifications/unread-count");
+          set({ unreadCount: data.unreadCount });
+        } catch (error: any) {
+          console.error("Failed to refresh notification count", error);
         }
       },
 
@@ -139,6 +156,7 @@ export const useNotificationStore = create<NotificationStore>()(
             ),
             loading: false,
           }));
+          await get().refreshUnreadCount();
           return true;
         } catch (error: any) {
           set({
@@ -161,6 +179,7 @@ export const useNotificationStore = create<NotificationStore>()(
             })),
             loading: false,
           }));
+          await get().refreshUnreadCount();
           return true;
         } catch (error: any) {
           set({
@@ -182,6 +201,7 @@ export const useNotificationStore = create<NotificationStore>()(
             ),
             loading: false,
           }));
+          await get().refreshUnreadCount();
           return true;
         } catch (error: any) {
           set({
@@ -221,6 +241,7 @@ export const useNotificationStore = create<NotificationStore>()(
             notifications: [newNotification, ...state.notifications],
             loading: false,
           }));
+          await get().refreshUnreadCount();
           return newNotification;
         } catch (error: any) {
           set({
@@ -304,14 +325,16 @@ export const useNotificationStore = create<NotificationStore>()(
 
       // Get Unread Count
       getUnreadCount: () => {
-        const { notifications } = get();
-        return notifications?.filter((notif) => !notif.read).length;
+        return get().unreadCount;
       },
 
       // Add Notification (Real-time)
       addNotification: (notification: Notification) => {
         set((state) => ({
           notifications: [notification, ...state.notifications],
+          unreadCount: notification.read
+            ? state.unreadCount
+            : state.unreadCount + 1,
         }));
       },
 
@@ -320,12 +343,53 @@ export const useNotificationStore = create<NotificationStore>()(
         notificationId: string,
         updates: Partial<Notification>
       ) => {
-        set((state) => ({
-          notifications: state.notifications.map((notif) =>
-            notif._id === notificationId ? { ...notif, ...updates } : notif
-          ),
-        }));
+        set((state) => {
+          const existing = state.notifications.find(
+            (notif) => notif._id === notificationId
+          );
+          const updatedNotification = existing
+            ? { ...existing, ...updates }
+            : { _id: notificationId, ...updates } as Notification;
+          const readAfterUpdate =
+            updatedNotification.read ??
+            existing?.read ??
+            false;
+          const wasUnread = existing ? !existing.read : false;
+          const isUnread = !readAfterUpdate;
+          const unreadDelta = (isUnread ? 1 : 0) - (wasUnread ? 1 : 0);
+
+          return {
+            notifications: state.notifications.map((notif) =>
+              notif._id === notificationId ? updatedNotification : notif
+            ),
+            unreadCount: Math.max(0, state.unreadCount + unreadDelta),
+          };
+        });
       },
+
+      removeNotification: (notificationId: string) => {
+        set((state) => {
+          const target = state.notifications.find(
+            (notif) => notif._id === notificationId
+          );
+          const decrement = target && !target.read ? 1 : 0;
+          return {
+            notifications: state.notifications.filter(
+              (notif) => notif._id !== notificationId
+            ),
+            unreadCount: Math.max(0, state.unreadCount - decrement),
+          };
+        });
+      },
+
+      markLocalAllRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((notif) => ({
+            ...notif,
+            read: true,
+          })),
+          unreadCount: 0,
+        })),
 
       // UI Controls
       toggleHideReadNotifications: () => {
@@ -351,6 +415,7 @@ export const useNotificationStore = create<NotificationStore>()(
           paginated: undefined,
           loading: false,
           error: undefined,
+          unreadCount: 0,
         }),
     }),
     {

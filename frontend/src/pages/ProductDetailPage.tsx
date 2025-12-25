@@ -234,6 +234,10 @@ const ProductDetailPage: React.FC = () => {
 
   const handleAddToCart = async () => {
     if (!productId) return;
+    if (isOutOfStock) {
+      toast.error("Product is currently out of stock.");
+      return;
+    }
 
     try {
       await addToCart(productId, quantity);
@@ -292,6 +296,17 @@ const ProductDetailPage: React.FC = () => {
     product,
     quantity
   );
+  const stockValue = product.stock ?? 0;
+  const hasStockAvailability = stockValue > 0;
+  const isOutOfStock = stockValue === 0;
+  const stockBadgeText = hasStockAvailability
+    ? stockValue <= 5
+      ? `Only ${stockValue} left in stock`
+      : "In Stock"
+    : "Out of Stock";
+  const stockBadgeClasses = hasStockAvailability
+    ? "text-emerald-700 bg-emerald-50 border border-emerald-100"
+    : "text-red-700 bg-red-50 border border-red-100";
 
   // Generate specifications based on product data
   const getBrandName = (brandId: string) => {
@@ -303,11 +318,6 @@ const ProductDetailPage: React.FC = () => {
     product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
     product.Category ? `Category: ${product.Category}` : undefined,
     `Price: $${baseUnitPrice.toFixed(2)}`,
-    product.stock > 0
-      ? product.stock < 5
-        ? `In Stock (${product.stock})`
-        : "In Stock"
-      : "Out of Stock",
     ...(product.features || []).map((f) => `Feature: ${f}`),
     ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),
   ].filter(Boolean);
@@ -458,6 +468,13 @@ const ProductDetailPage: React.FC = () => {
                   </p>
                 )}
               </div>
+              <div className="mb-4">
+                <span
+                  className={`inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-full ${stockBadgeClasses}`}
+                >
+                  {stockBadgeText}
+                </span>
+              </div>
 
               {/* Specifications */}
               <div className="mb-8">
@@ -562,17 +579,22 @@ const ProductDetailPage: React.FC = () => {
               <div className="flex space-x-4 mb-8">
                 <button
                   onClick={isProductInCart() ? handleGoToCart : handleAddToCart}
-                  disabled={loading}
-                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${isProductInCart()
+                  disabled={loading || (!isProductInCart() && isOutOfStock)}
+                  className={`flex-1 py-3 px-6 rounded-md transition-colors ${
+                    isProductInCart()
                       ? "bg-green-600 text-white hover:bg-green-700"
+                      : isOutOfStock
+                      ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-blue-600 text-white hover:bg-blue-700"
-                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {loading
                     ? "Adding..."
                     : isProductInCart()
-                      ? "In Cart"
-                      : "Add to Cart"}
+                    ? "In Cart"
+                    : isOutOfStock
+                    ? "Out of Stock"
+                    : "Add to Cart"}
                 </button>
                 <button
                   onClick={handleLoveProduct}

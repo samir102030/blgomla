@@ -17,6 +17,8 @@ interface ProductCardProps {
   isOnSale?: boolean;
   isFeatured?: boolean;
   salePercentage?: number;
+  stock?: number;
+  isInStock?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -32,6 +34,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isOnSale = false,
   isFeatured = false,
   salePercentage,
+  stock,
+  isInStock,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -61,6 +65,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </span>
     ));
   };
+
+  const hasStockInfo = stock !== undefined || isInStock !== undefined;
+  const hasStock = stock !== undefined ? stock > 0 : isInStock ?? false;
+  const stockLabel = hasStock
+    ? stock !== undefined
+      ? stock <= 5
+        ? `Only ${stock} left`
+        : "In Stock"
+      : "In Stock"
+    : "Out of Stock";
+  const stockBadgeClasses = hasStock
+    ? "text-emerald-700 bg-emerald-50 border border-emerald-100"
+    : "text-red-700 bg-red-50 border border-red-100";
 
   const toggleWishlist = async () => {
     if (!user) {
@@ -190,6 +207,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </span>
           )}
         </div>
+        {hasStockInfo && (
+          <div className="mt-2 flex justify-center">
+            <span
+              className={`inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-full ${stockBadgeClasses}`}
+            >
+              {stockLabel}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

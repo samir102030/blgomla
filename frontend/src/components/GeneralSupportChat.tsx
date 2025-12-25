@@ -29,6 +29,7 @@ const GeneralSupportChat: React.FC = () => {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const initializedRef = useRef(false);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchMessages = useCallback(async (conversationId: string) => {
     try {
@@ -88,6 +89,28 @@ const GeneralSupportChat: React.FC = () => {
       setError(null);
     }
   }, [isOpen]);
+
+  // Poll for new messages while the chat is open
+  useEffect(() => {
+    if (!isOpen || !conversation?._id) {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      return;
+    }
+
+    pollingIntervalRef.current = setInterval(() => {
+      fetchMessages(conversation._id);
+    }, 5000);
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [conversation?._id, fetchMessages, isOpen]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !user || !conversation || sending) return;

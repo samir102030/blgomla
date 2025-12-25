@@ -15,6 +15,7 @@ import WishlistPage from "./pages/WishlistPage";
 import MyAccountPage from "./pages/MyAccountPage";
 import CollectionsPage from "./pages/CollectionsPage";
 import CollectionDetailPage from "./pages/CollectionDetailPage";
+import NotificationsPage from "./pages/NotificationsPage";
 // import AboutUsPage from "./pages/AboutUsPage";
 import VendorRegistrationPage from "./pages/VendorRegistrationPage";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
@@ -24,9 +25,11 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AdminRoutes from "./routes/AdminRoutes";
 import VendorRoutes from "./routes/VendorRoutes";
 import GeneralSupportChat from "./components/GeneralSupportChat";
+import useNotificationSocket from "./hooks/useNotificationSocket";
 
 function App() {
   const { i18n } = useTranslation();
+  useNotificationSocket();
 
   useEffect(() => {
     const handleLanguageChange = (lng: string) => {
@@ -67,6 +70,7 @@ function App() {
           element={<CollectionDetailPage />}
         />
         <Route path="/account" element={<MyAccountPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         {/* <Route path="/about" element={<AboutUsPage />} /> */}
         <Route
           path="/vendor-registration"

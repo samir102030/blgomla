@@ -106,6 +106,7 @@ const HomePage: React.FC = () => {
                 isOnSale={product.isOnSale}
                 isFeatured={product.isFeatured}
                 salePercentage={product.salePercentage}
+                isInStock={product.inStock}
               />
             ))}
           </div>

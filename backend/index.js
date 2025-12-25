@@ -2,23 +2,25 @@ import dotenv from "dotenv";
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import http from "http";
 import connectDB from "./config/db.js";
 import { rateLimit } from "express-rate-limit";
 import systemRoutes from "./routes/system.route.js";
+import {
+  CLIENT_ORIGINS,
+  initializeSocket,
+} from "./utils/socket.js";
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+const server = http.createServer(app);
 connectDB();
 
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://*.netlify.app",
-      "https://68935717a16f60000867bbf9--belgomla.netlify.app",
-    ],
+    origin: CLIENT_ORIGINS,
     credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -40,4 +42,6 @@ app.get("/", (req, res) => {
   res.send("Welcome to Belgomla API");
 });
 
-app.listen(port, () => console.log(`Server running on port ${port}`));
+initializeSocket(server);
+
+server.listen(port, () => console.log(`Server running on port ${port}`));

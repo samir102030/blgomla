@@ -1,11 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useNotificationStore } from "../stores/notification.store";
-import type { Notification } from "../types/notification.type";
 import { useTranslation } from "react-i18next";
+import { getNotificationIcon } from "../lib/notificationIcons";
+
+type NotificationFilter = "all" | "unread" | "read";
+
+const FILTER_LABELS: Record<NotificationFilter, string> = {
+  unread: "notification.filter.unread",
+  read: "notification.filter.read",
+  all: "notification.filter.all",
+};
+
+const FILTER_MODES: NotificationFilter[] = ["unread", "read", "all"];
 
 const NotificationBell: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [filter, setFilter] = useState<NotificationFilter>("unread");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -14,21 +27,26 @@ const NotificationBell: React.FC = () => {
     fetchNotifications,
     markAsRead,
     markAllAsRead,
-    getUnreadCount,
-    hideReadNotifications,
-    toggleHideReadNotifications,
-    showAllNotifications,
+    deleteNotification,
+    refreshUnreadCount,
+    unreadCount,
   } = useNotificationStore();
 
-  const unreadCount = getUnreadCount();
+  useEffect(() => {
+    refreshUnreadCount();
+  }, [refreshUnreadCount]);
 
   useEffect(() => {
-    // Fetch notifications on component mount
-    fetchNotifications({ page: 1, limit: 10 });
-  }, [fetchNotifications]);
+    const params: Record<string, any> = { page: 1, limit: 10 };
+    if (filter === "unread") {
+      params.read = false;
+    } else if (filter === "read") {
+      params.read = true;
+    }
+    fetchNotifications(params);
+  }, [filter, fetchNotifications]);
 
   useEffect(() => {
-    // Close dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
       if (
         dropdownRef.current &&
@@ -42,26 +60,26 @@ const NotificationBell: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const handleCardClick = async (
+    notificationId: string,
+    alreadyRead: boolean
+  ) => {
+    if (alreadyRead) return;
     await markAsRead(notificationId);
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    await deleteNotification(notificationId);
   };
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
   };
 
-  const handleToggleHideRead = () => {
-    toggleHideReadNotifications();
+  const handleViewAll = () => {
+    setIsOpen(false);
+    navigate("/notifications");
   };
-
-  const handleShowAll = () => {
-    showAllNotifications();
-  };
-
-  // Filter notifications based on hideReadNotifications setting
-  const displayedNotifications = hideReadNotifications
-    ? notifications.filter((notif) => !notif.read)
-    : notifications;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -75,34 +93,25 @@ const NotificationBell: React.FC = () => {
     return date.toLocaleDateString();
   };
 
-  const getNotificationIcon = (type: Notification["type"]) => {
-    switch (type) {
-      case "success":
-        return "✅";
-      case "warning":
-        return "⚠️";
-      case "error":
-        return "❌";
-      case "order":
-        return "📦";
-      case "promotion":
-        return "🎉";
-      case "system":
-        return "🔧";
-      default:
-        return "ℹ️";
-    }
-  };
+  const emptyMessage =
+    filter === "unread"
+      ? t("notification.noUnread")
+      : filter === "read"
+      ? t("notification.noRead")
+      : t("notification.noNotifications");
+
+  const displayedNotifications = notifications;
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors relative"
       >
-        <span className="text-xl mb-1">🔔</span>
-        <span className="text-xs hidden sm:block">{t('notification.notifications')}</span>
+        <span className="text-xl mb-1">dY""</span>
+        <span className="text-xs hidden sm:block">
+          {t("notification.notifications")}
+        </span>
         {unreadCount > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {unreadCount > 99 ? "99+" : unreadCount}
@@ -110,64 +119,67 @@ const NotificationBell: React.FC = () => {
         )}
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 z-50">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-800">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {t('notification.notifications')}
-            </h3>
-            <div className="flex items-center space-x-2">
-              {hideReadNotifications ? (
+          <div className="flex items-start justify-between p-4 border-b border-gray-200 dark:border-slate-800 space-x-2">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {t("notification.notifications")}
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-slate-400">
+                {t("notification.realTime")}
+              </p>
+            </div>
+            <button
+              onClick={handleMarkAllAsRead}
+              className={`px-3 py-1 text-xs font-semibold rounded-md border transition ${
+                unreadCount === 0 || loading
+                  ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                  : "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-600 hover:text-white"
+              }`}
+              disabled={unreadCount === 0 || loading}
+            >
+              {t("notification.markAllRead")}
+            </button>
+          </div>
+
+          <div className="px-4 py-2 border-b border-gray-100 dark:border-slate-800">
+            <div className="flex flex-wrap gap-2">
+              {FILTER_MODES.map((mode) => (
                 <button
-                  onClick={handleShowAll}
-                  className="text-sm text-green-600 hover:text-green-800 dark:text-emerald-300 dark:hover:text-emerald-200"
-                  disabled={loading}
+                  key={mode}
+                  onClick={() => setFilter(mode)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full border transition ${
+                    filter === mode
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-600 border-gray-200 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700"
+                  }`}
                 >
-                  {t('notification.showAll')}
+                  {t(FILTER_LABELS[mode])}
                 </button>
-              ) : (
-                <button
-                  onClick={handleToggleHideRead}
-                  className="text-sm text-orange-600 hover:text-orange-800 dark:text-amber-300 dark:hover:text-amber-200"
-                  disabled={loading}
-                >
-                  {t('notification.hideRead')}
-                </button>
-              )}
-              {unreadCount > 0 && (
-                <button
-                  onClick={handleMarkAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800 dark:text-sky-300 dark:hover:text-sky-200"
-                  disabled={loading}
-                >
-                  {t('notification.markAllRead')}
-                </button>
-              )}
+              ))}
             </div>
           </div>
 
-          {/* Notifications List */}
           <div className="max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-gray-500 dark:text-slate-400">
-                {t('notification.loading')}
+                {t("notification.loading")}
               </div>
             ) : displayedNotifications.length === 0 ? (
               <div className="p-4 text-center text-gray-500 dark:text-slate-400">
-                {hideReadNotifications
-                  ? t('notification.noUnread')
-                  : t('notification.noNotifications')}
+                {emptyMessage}
               </div>
             ) : (
               displayedNotifications.map((notification) => (
                 <div
                   key={notification._id}
-                  className={`p-4 border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/60 cursor-pointer ${
+                  className={`relative p-4 border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/60 cursor-pointer ${
                     !notification.read ? "bg-blue-50 dark:bg-slate-800/80" : ""
                   }`}
-                  onClick={() => handleMarkAsRead(notification._id)}
+                  onClick={() =>
+                    handleCardClick(notification._id, notification.read)
+                  }
                 >
                   <div className="flex items-start space-x-3">
                     <span className="text-lg">
@@ -188,22 +200,26 @@ const NotificationBell: React.FC = () => {
                       <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
                     )}
                   </div>
+                  <button
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleDeleteNotification(notification._id);
+                    }}
+                    className="absolute top-2 right-2 text-[10px] font-semibold text-red-500 hover:text-red-700"
+                  >
+                    {t("notification.delete")}
+                  </button>
                 </div>
               ))
             )}
           </div>
 
-          {/* Footer */}
           <div className="p-4 border-t border-gray-200 dark:border-slate-800">
             <button
-              onClick={() => {
-                // Navigate to full notifications page
-                setIsOpen(false);
-                // You can add navigation logic here
-              }}
+              onClick={handleViewAll}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-800 dark:text-sky-300 dark:hover:text-sky-200"
             >
-              {t('notification.viewAll')}
+              {t("notification.viewAll")}
             </button>
           </div>
         </div>
