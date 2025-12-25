@@ -14,6 +14,7 @@
     "@chakra-ui/react": "^3.24.0",
     "@heroicons/react": "^2.2.0",
     "axios": "^1.11.0",
+    "belgomla": "file:..",
     "i18next": "^25.7.1",
     "i18next-http-backend": "^3.0.2",
     "react": "^19.1.0",
