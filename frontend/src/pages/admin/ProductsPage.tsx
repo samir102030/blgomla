@@ -20,6 +20,7 @@ import EditProductModal from "../../components/EditProductModal";
 import DeleteProductModal from "../../components/DeleteProductModal";
 import FilterModal, { type ProductFilters } from "../../components/FilterModal";
 import AdminLanguageToggle from "../../components/AdminLanguageToggle";
+import BulkProductUpload from "../../components/vendor/BulkProductUpload";
 
 const ProductsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -33,6 +34,7 @@ const ProductsPage: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<any>(null);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [vendors, setVendors] = useState<any[]>([]);
   const [advancedFilters, setAdvancedFilters] = useState<ProductFilters>({
     brand: "",
@@ -249,6 +251,15 @@ const ProductsPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           <AdminLanguageToggle />
+          {/* Show Bulk Upload button only for vendors */}
+          {user?.role === "store" && (
+            <button
+              onClick={() => setShowBulkUpload(!showBulkUpload)}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-medium"
+            >
+              📊 {t("product.bulkUpload")}
+            </button>
+          )}
           <button
             onClick={() => setIsCreating(true)}
             className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
@@ -258,6 +269,11 @@ const ProductsPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Bulk Upload Section - Only for vendors */}
+      {user?.role === "store" && showBulkUpload && (
+        <BulkProductUpload />
+      )}
 
       {isCreating && (
         <AddProductModal

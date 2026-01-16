@@ -4,6 +4,7 @@ import { useProductStore } from "../../stores/product.store";
 import { useBrandStore } from "../../stores/brand.store";
 import { useVendorStore } from "../../stores/vendor.store";
 import type { Product, ProductImage } from "../../types/product.type";
+import BulkProductUpload from "../../components/vendor/BulkProductUpload";
 
 const VendorProductManagement: React.FC = () => {
   const {
@@ -19,6 +20,7 @@ const VendorProductManagement: React.FC = () => {
   const { vendorStore, fetchVendorStore } = useVendorStore();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -156,16 +158,29 @@ const VendorProductManagement: React.FC = () => {
           </h1>
           <p className="text-gray-600">Manage your store products</p>
         </div>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowCreateModal(true);
-          }}
-          className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
-        >
-          Add New Product
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowBulkUpload(!showBulkUpload)}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center gap-2"
+          >
+            📊 Bulk Upload
+          </button>
+          <button
+            onClick={() => {
+              resetForm();
+              setShowCreateModal(true);
+            }}
+            className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
+          >
+            Add New Product
+          </button>
+        </div>
       </div>
+
+      {/* Bulk Upload Section */}
+      {showBulkUpload && (
+        <BulkProductUpload />
+      )}
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">

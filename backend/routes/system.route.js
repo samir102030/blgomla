@@ -16,6 +16,7 @@ import brandRequestRoutes from "./brandRequest.route.js";
 import categoryRequestRoutes from "./categoryRequest.route.js";
 import returnRoutes from "./return.route.js";
 import collectionRoutes from "./collection.route.js";
+import bulkProductRoutes from "./bulkProduct.route.js";
 
 const router = express.Router();
 
@@ -36,5 +37,6 @@ router.use("/brand-requests", brandRequestRoutes);
 router.use("/category-requests", categoryRequestRoutes);
 router.use("/returns", returnRoutes);
 router.use("/collections", collectionRoutes);
+router.use("/bulk-products", bulkProductRoutes);
 
 export default router;
