@@ -39,19 +39,19 @@ const CollectionsPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="relative bg-gray-100 py-12">
+      <div className="relative bg-gradient-to-r from-[#002B5B] to-[#004080] py-16">
         <div className="absolute inset-0">
           <img
-            src="net3.jpeg"
+            src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80"
             alt="Collections"
-            className="w-full h-full object-cover opacity-20"
+            className="w-full h-full object-cover opacity-30"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Collections
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 max-w-2xl">
+          <p className="text-sm sm:text-base text-gray-100 max-w-2xl">
             Bundle deals curated by vendors. Save more when you buy them
             together.
           </p>

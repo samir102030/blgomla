@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useNotificationStore } from "../stores/notification.store";
 import { useTranslation } from "react-i18next";
 import { getNotificationIcon } from "../lib/notificationIcons";
+import { BellIcon } from "@heroicons/react/24/outline";
 
 type NotificationFilter = "all" | "unread" | "read";
 
@@ -106,14 +107,14 @@ const NotificationBell: React.FC = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex flex-col items-center text-gray-800 hover:text-gray-600 transition-colors relative"
+        className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors relative"
       >
-        <span className="text-xl mb-1">dY""</span>
-        <span className="text-xs hidden sm:block">
+        <BellIcon className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+        <span className="text-xs hidden md:block">
           {t("notification.notifications")}
         </span>
         {unreadCount > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

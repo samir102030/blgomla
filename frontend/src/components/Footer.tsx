@@ -196,7 +196,7 @@ const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="border-t border-[#9E9E9E]/30 dark:border-slate-800 mt-6 sm:mt-8 lg:mt-8 pt-4 sm:pt-6">
           <div className="flex flex-col sm:flex-row justify-between items-center text-xs sm:text-sm text-[#9E9E9E] dark:text-slate-500 text-center sm:text-left">
-            <p>{t("© 2025 Garcia. Made with ❤️ By MMS Theme")}</p>
+            <p>© 2025 Belgomla Group</p>
           </div>
         </div>
       </div>
