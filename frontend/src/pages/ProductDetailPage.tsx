@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { ProductReview } from "../types/product.type";
 import { getBulkPricing } from "../lib/pricing";
+import AdvertisementBanner from "../components/AdvertisementBanner";
 
 const ProductDetailPage: React.FC = () => {
   const [tab, setTab] = useState("description");

@@ -42,8 +42,11 @@ const WishlistPage: React.FC = () => {
 
   const handleToggleLove = async (productId: string) => {
     try {
-      await toggleLoveProduct(productId);
-      setLovedProducts((prev) => prev.filter((item) => item._id !== productId));
+      const success = await toggleLoveProduct(productId);
+      if (success) {
+        // Refresh loved products from the updated user state
+        await getLovedProducts();
+      }
     } catch (error) {
       console.error("Error toggling love:", error);
     }
@@ -56,31 +59,16 @@ const WishlistPage: React.FC = () => {
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-8 sm:py-12 lg:py-16">
-        <div className="absolute inset-0">
-          <img
-            src="net3.jpeg"
-            alt="Camera"
-            className="w-full h-full object-cover opacity-20"
-          />
-        </div>
+      <div className="relative bg-gradient-to-r from-[#002B5B] to-[#004080] text-white py-8 sm:py-12 lg:py-16">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Wishlist</h1>
-          <nav className="text-xs sm:text-sm text-gray-600">
-            <Link to="/" className="hover:text-gray-900">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4">Wishlist</h1>
+          <nav className="text-xs sm:text-sm opacity-90">
+            <Link to="/" className="hover:opacity-100">
               Home
             </Link>
             <span className="mx-2">/</span>
             <span>Wishlist</span>
           </nav>
-        </div>
-        {/* Camera Image positioned on the right */}
-        <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
-          <img
-            src="net3.jpeg"
-            alt="Professional Camera"
-            className="h-full w-full object-contain"
-          />
         </div>
       </div>
 

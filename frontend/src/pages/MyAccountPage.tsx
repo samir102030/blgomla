@@ -71,31 +71,16 @@ const MyAccountPage: React.FC = () => {
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-16">
-        <div className="absolute inset-0">
-          <img
-            src="net1.jpeg"
-            alt="Camera"
-            className="w-full h-full object-cover opacity-20"
-          />
-        </div>
+      <div className="relative bg-gradient-to-r from-[#002B5B] to-[#004080] text-white py-16">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">My Account</h1>
-          <nav className="text-sm text-gray-600">
-            <Link to="/" className="hover:text-gray-900">
+          <h1 className="text-4xl font-bold mb-4">My Account</h1>
+          <nav className="text-sm opacity-90">
+            <Link to="/" className="hover:opacity-100">
               Home
             </Link>
             <span className="mx-2">/</span>
             <span>My Account</span>
           </nav>
-        </div>
-        {/* Camera Image positioned on the right */}
-        <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
-          <img
-            src="net1.jpeg"
-            alt="Professional Camera"
-            className="h-full w-full object-contain"
-          />
         </div>
       </div>
 

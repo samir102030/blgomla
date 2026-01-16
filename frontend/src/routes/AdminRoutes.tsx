@@ -16,6 +16,7 @@ import RequestsPage from "../pages/admin/RequestsPage";
 import ReturnsPage from "../pages/admin/ReturnsPage";
 import VendorCollectionsPage from "../pages/vendor/VendorCollectionsPage";
 import AdminCollectionsPage from "../pages/admin/AdminCollectionsPage";
+import AdvertisementsPage from "../pages/admin/AdvertisementsPage";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -86,6 +87,7 @@ const AdminRoutes: React.FC = () => {
         />
 
         {/* Content Management */}
+        <Route path="/advertisements" element={<AdvertisementsPage />} />
         <Route
           path="/gallery"
           element={

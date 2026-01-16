@@ -156,10 +156,13 @@ export const useUserStore = create<UserStore>()(
           set({ user: res.data.user, loading: false });
           return res.data.user;
         } catch (error: any) {
+          console.error('Login error:', error);
+          const errorMessage = error?.response?.data?.message || error.message || 'Login failed';
           set({
-            error: error?.response?.data?.message || error.message,
+            error: errorMessage,
             loading: false,
           });
+          return undefined;
         }
       },
 
@@ -381,11 +384,13 @@ export const useUserStore = create<UserStore>()(
       toggleLoveProduct: async (productId) => {
         set({ loading: true, error: undefined });
         try {
-          await axiosInstance.put<{
+          const res = await axiosInstance.put<{
             success: boolean;
             user: User;
           }>(`/users/loveProduct/${productId}`);
-          set({ loading: false });
+
+          // Update the user state with the new love array
+          set({ user: res.data.user, loading: false });
           return true;
         } catch (error: any) {
           set({

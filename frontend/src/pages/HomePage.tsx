@@ -10,6 +10,7 @@ import Footer from "../components/Footer";
 import BrandLogos from "../components/BrandLogos";
 import { useUserStore } from "../stores";
 import { useTranslation } from "react-i18next";
+import AdvertisementBanner from "../components/AdvertisementBanner";
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
@@ -21,8 +22,18 @@ const HomePage: React.FC = () => {
       <main>
         <HeroSlider />
 
+        {/* Advertisement Hero Banner */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+          <AdvertisementBanner position="hero" />
+        </div>
+
         {/* Brand Logos Section */}
         <BrandLogos />
+
+        {/* Advertisement Banner */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AdvertisementBanner position="banner" />
+        </div>
 
         {/* Hero Banner Section */}
         <section className="bg-gradient-to-r from-[#FFD600] to-[#e6c100] dark:from-slate-900 dark:to-slate-800 py-6 sm:py-8 lg:py-12 lg:py-16 mb-4 sm:mb-6 lg:mb-8">
@@ -117,6 +128,9 @@ const HomePage: React.FC = () => {
         <Services />
       </main>
       <Footer />
+
+      {/* Advertisement Popup */}
+      <AdvertisementBanner position="popup" />
     </div>
   );
 };
