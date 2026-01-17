@@ -78,7 +78,7 @@ export const reSendVerificationEmail = controllerWrapper(
     }
 
     const verificationToken = Math.floor(
-      100000 + Math.random() * 900000
+      100000 + Math.random() * 900000,
     ).toString();
 
     user.verificationToken = verificationToken;
@@ -90,7 +90,7 @@ export const reSendVerificationEmail = controllerWrapper(
       success: true,
       message: "Verification email sent successfully",
     });
-  }
+  },
 );
 
 export const verifyEmail = controllerWrapper(
@@ -139,7 +139,7 @@ export const verifyEmail = controllerWrapper(
         password: undefined,
       },
     });
-  }
+  },
 );
 
 export const login = controllerWrapper("login", async (req, res) => {
@@ -220,7 +220,7 @@ export const refreshToken = controllerWrapper(
       message: "Token refreshed successfully",
       accessToken: newAccessToken, // Optionally send in response for client-side storage if needed
     });
-  }
+  },
 );
 
 export const forgotPassword = controllerWrapper(
@@ -248,7 +248,7 @@ export const forgotPassword = controllerWrapper(
       message: "Password reset link sent to your email",
       resetToken, // !Danger! must be send via email
     });
-  }
+  },
 );
 
 export const resetPassword = controllerWrapper(
@@ -288,7 +288,7 @@ export const resetPassword = controllerWrapper(
     res
       .status(200)
       .json({ success: true, message: "Password reset successful" });
-  }
+  },
 );
 
 export const getAllUsers = controllerWrapper(
@@ -299,7 +299,7 @@ export const getAllUsers = controllerWrapper(
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);
-  }
+  },
 );
 
 export const getAllUsersType = controllerWrapper(
@@ -310,7 +310,7 @@ export const getAllUsersType = controllerWrapper(
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);
-  }
+  },
 );
 
 export const updateUser = controllerWrapper("updateUser", async (req, res) => {
@@ -364,7 +364,7 @@ export const safeDeleteUser = controllerWrapper(
     const user = await User.findByIdAndUpdate(
       userId,
       { deleted: true },
-      { new: true }
+      { new: true },
     );
 
     if (!user) {
@@ -376,7 +376,7 @@ export const safeDeleteUser = controllerWrapper(
     return res
       .status(200)
       .json({ success: true, message: "User marked as deleted" });
-  }
+  },
 );
 
 export const finalDeleteUser = controllerWrapper(
@@ -401,7 +401,7 @@ export const finalDeleteUser = controllerWrapper(
     res
       .status(200)
       .json({ success: true, message: "User permanently deleted" });
-  }
+  },
 );
 
 export const changeUserRole = controllerWrapper(
@@ -421,7 +421,7 @@ export const changeUserRole = controllerWrapper(
     await user.save();
 
     res.status(200).json({ message: "User role updated successfully" });
-  }
+  },
 );
 
 export const activateUser = controllerWrapper(
@@ -439,7 +439,7 @@ export const activateUser = controllerWrapper(
     await user.save();
 
     res.status(200).json({ message: "User activated successfully" });
-  }
+  },
 );
 
 export const deActivateUser = controllerWrapper(
@@ -457,7 +457,7 @@ export const deActivateUser = controllerWrapper(
     await user.save();
 
     res.status(200).json({ message: "User deactivated successfully" });
-  }
+  },
 );
 
 export const restoreUser = controllerWrapper(
@@ -475,7 +475,7 @@ export const restoreUser = controllerWrapper(
     await user.save();
 
     res.status(200).json({ message: "User restored successfully" });
-  }
+  },
 );
 export const getDeletedUsers = controllerWrapper(
   "getDeletedUsers",
@@ -486,7 +486,7 @@ export const getDeletedUsers = controllerWrapper(
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);
-  }
+  },
 );
 
 // make the product love by user
@@ -520,7 +520,7 @@ export const loveProduct = controllerWrapper(
         love: { $ne: productId }, // Only update if not already loved
       },
       { $addToSet: { love: productId } }, // $addToSet prevents duplicates
-      { new: true }
+      { new: true },
     );
 
     if (!user) {
@@ -533,9 +533,16 @@ export const loveProduct = controllerWrapper(
     res.status(200).json({
       success: true,
       message: "Product added to favorites",
-      love: user.love, // Return updated favorites list
+      user: {
+        ...user._doc,
+        password: undefined,
+        store:
+          user.role === "store"
+            ? await Store.findOne({ owner: user._id })
+            : undefined,
+      },
     });
-  }
+  },
 );
 export const toggleLoveProduct = controllerWrapper(
   "toggleLoveProduct",
@@ -587,9 +594,16 @@ export const toggleLoveProduct = controllerWrapper(
     return res.status(200).json({
       success: true,
       message,
-      love: user.love,
+      user: {
+        ...user._doc,
+        password: undefined,
+        store:
+          user.role === "store"
+            ? await Store.findOne({ owner: user._id })
+            : undefined,
+      },
     });
-  }
+  },
 );
 
 export const getLovedProducts = controllerWrapper(
@@ -607,7 +621,7 @@ export const getLovedProducts = controllerWrapper(
       success: true,
       love: user.love, // Return the loved products
     });
-  }
+  },
 );
 
 export const getProfile = controllerWrapper("getProfile", async (req, res) => {
@@ -693,7 +707,7 @@ export const changePassword = controllerWrapper(
       success: true,
       message: "Password changed successfully",
     });
-  }
+  },
 );
 
 export const updateProfile = controllerWrapper(
@@ -737,5 +751,5 @@ export const updateProfile = controllerWrapper(
         password: undefined,
       },
     });
-  }
+  },
 );

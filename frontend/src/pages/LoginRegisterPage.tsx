@@ -24,6 +24,7 @@ const LoginRegisterPage: React.FC = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const navigate = useNavigate();
   const login = useUserStore((s) => s.login);
@@ -34,6 +35,7 @@ const LoginRegisterPage: React.FC = () => {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
+    setLoginLoading(true);
     try {
       const user = await login({
         email: loginData.email,
@@ -46,6 +48,8 @@ const LoginRegisterPage: React.FC = () => {
       }
     } catch (err: any) {
       setLoginError(error || t("Login failed."));
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -138,9 +142,9 @@ const LoginRegisterPage: React.FC = () => {
                 <button
                   type="submit"
                   className="w-full bg-black text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 transition-colors disabled:opacity-60"
-                  disabled={loading}
+                  disabled={loginLoading}
                 >
-                  {loading ? t("Logging in...") : t("LOGIN")}
+                  {loginLoading ? t("Logging in...") : t("LOGIN")}
                 </button>
               </form>
 
