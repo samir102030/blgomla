@@ -5,6 +5,11 @@ export interface CollectionItem {
   quantity: number;
 }
 
+export interface CollectionItemInput {
+  product: string;
+  quantity: number;
+}
+
 export interface Collection {
   _id: string;
   name: string;

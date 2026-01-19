@@ -1,14 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { useAdvertisementStore } from "../../stores/advertisement.store";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
+import { useAdvertisementStore, type Advertisement } from "../../stores/advertisement.store";
 
 interface AdvertisementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  advertisement?: any;
+  advertisement?: Advertisement;
 }
+
+type AdvertisementPosition = Advertisement["position"];
+
+interface AdvertisementFormData {
+  title: string;
+  description: string;
+  image: string;
+  link: string;
+  position: AdvertisementPosition;
+  isActive: boolean;
+  startDate: string;
+  endDate: string;
+  sortOrder: number;
+}
+
+const getInitialFormState = (): AdvertisementFormData => ({
+  title: "",
+  description: "",
+  image: "",
+  link: "",
+  position: "banner",
+  isActive: true,
+  startDate: new Date().toISOString().split("T")[0],
+  endDate: "",
+  sortOrder: 0,
+});
 
 const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
   isOpen,
@@ -17,27 +43,20 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
 }) => {
   const { createAdvertisement, updateAdvertisement } = useAdvertisementStore();
   const [uploading, setUploading] = useState(false);
-
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    image: "",
-    link: "",
-    position: "banner",
-    isActive: true,
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: "",
-    sortOrder: 0,
-  });
+  const [formData, setFormData] = useState<AdvertisementFormData>(
+    getInitialFormState()
+  );
 
   useEffect(() => {
     if (advertisement) {
+      const position: AdvertisementPosition =
+        advertisement.position ?? "banner";
       setFormData({
         title: advertisement.title || "",
         description: advertisement.description || "",
         image: advertisement.image || "",
         link: advertisement.link || "",
-        position: advertisement.position || "banner",
+        position,
         isActive: advertisement.isActive ?? true,
         startDate: advertisement.startDate
           ? new Date(advertisement.startDate).toISOString().split("T")[0]
@@ -47,6 +66,8 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
           : "",
         sortOrder: advertisement.sortOrder || 0,
       });
+    } else {
+      setFormData(getInitialFormState());
     }
   }, [advertisement]);
 
@@ -191,7 +212,10 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
             <select
               value={formData.position}
               onChange={(e) =>
-                setFormData({ ...formData, position: e.target.value })
+              setFormData((prev) => ({
+                ...prev,
+                position: e.target.value as AdvertisementPosition,
+              }))
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
             >
@@ -211,7 +235,7 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
                 type="date"
                 value={formData.startDate}
                 onChange={(e) =>
-                  setFormData({ ...formData, startDate: e.target.value })
+                  setFormData((prev) => ({ ...prev, startDate: e.target.value }))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
               />
@@ -224,7 +248,7 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
                 type="date"
                 value={formData.endDate}
                 onChange={(e) =>
-                  setFormData({ ...formData, endDate: e.target.value })
+                  setFormData((prev) => ({ ...prev, endDate: e.target.value }))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
               />
@@ -241,7 +265,10 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
                 type="number"
                 value={formData.sortOrder}
                 onChange={(e) =>
-                  setFormData({ ...formData, sortOrder: parseInt(e.target.value) })
+                  setFormData((prev) => ({
+                    ...prev,
+                    sortOrder: parseInt(e.target.value, 10) || 0,
+                  }))
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
               />
@@ -252,7 +279,10 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
                   type="checkbox"
                   checked={formData.isActive}
                   onChange={(e) =>
-                    setFormData({ ...formData, isActive: e.target.checked })
+                    setFormData((prev) => ({
+                      ...prev,
+                      isActive: e.target.checked,
+                    }))
                   }
                   className="w-4 h-4 text-[#002B5B] border-gray-300 rounded focus:ring-[#002B5B]"
                 />

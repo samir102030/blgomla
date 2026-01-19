@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { User } from "../types/user.type";
+import type { User, UserCartItem } from "../types/user.type";
 import { axiosInstance } from "../lib/axios";
 
 interface PaginatedResult<T> {
@@ -403,7 +403,7 @@ export const useUserStore = create<UserStore>()(
       fetchCart: async () => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.get<{ cart: any }>(
+          const { data } = await axiosInstance.get<{ cart: UserCartItem[] }>(
             "/products/cart"
           );
           const currentUser = get().user;

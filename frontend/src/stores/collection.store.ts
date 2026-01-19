@@ -1,11 +1,9 @@
 import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
-import type { Collection } from "../types/collection.type";
-
-interface CollectionItemInput {
-  product: string;
-  quantity: number;
-}
+import type {
+  Collection,
+  CollectionItemInput,
+} from "../types/collection.type";
 
 interface CollectionStore {
   collections: Collection[];
@@ -21,7 +19,7 @@ interface CollectionStore {
   }) => Promise<Collection | null>;
   updateCollection: (
     id: string,
-    data: Partial<Collection> & { items?: CollectionItemInput[] }
+    data: Partial<Omit<Collection, "items">> & { items?: CollectionItemInput[] }
   ) => Promise<Collection | null>;
   deleteCollection: (id: string) => Promise<boolean>;
   addCollectionToCart: (collectionId: string, quantity?: number) => Promise<boolean>;

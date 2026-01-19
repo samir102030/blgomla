@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary helper scripts that can't be deleted from this environment
+temp-check-esbuild.*
+testfile.txt

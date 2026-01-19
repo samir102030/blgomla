@@ -71,8 +71,8 @@ const CheckoutPage: React.FC = () => {
     const loadData = async () => {
       if (user?.cart) {
         try {
-          const itemsWithDetails = await Promise.all(
-            user.cart.map(async (item) => {
+          const itemsWithDetails = await Promise.all<CartItemWithProduct>(
+            user.cart.map(async (item): Promise<CartItemWithProduct> => {
               const isCollection =
                 item.type === "collection" || Boolean(item.collection);
               try {
@@ -83,7 +83,7 @@ const CheckoutPage: React.FC = () => {
                   return {
                     ...item,
                     type: "collection",
-                    collectionDetails: data.collection || null,
+                    collectionDetails: data.collection ?? undefined,
                   };
                 }
 
@@ -93,14 +93,13 @@ const CheckoutPage: React.FC = () => {
                 return {
                   ...item,
                   type: "product",
-                  productDetails: data.data?.[0] || null,
+                  productDetails: data.data?.[0] ?? undefined,
                 };
               } catch (error: any) {
                 console.error("Error fetching cart item:", error);
                 return {
                   ...item,
                   type: isCollection ? "collection" : "product",
-                  productDetails: null,
                 };
               }
             })

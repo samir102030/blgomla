@@ -70,8 +70,8 @@ const ShoppingCartPage: React.FC = () => {
   useEffect(() => {
     if (user?.cart) {
       const updateCartItems = async () => {
-        const itemsWithDetails = await Promise.all(
-          user.cart.map(async (item) => {
+        const itemsWithDetails = await Promise.all<CartItemWithProduct>(
+          user.cart.map(async (item): Promise<CartItemWithProduct> => {
             const isCollection =
               item.type === "collection" || Boolean(item.collection);
             try {
@@ -82,7 +82,7 @@ const ShoppingCartPage: React.FC = () => {
                 return {
                   ...item,
                   type: "collection",
-                  collectionDetails: data.collection || null,
+                  collectionDetails: data.collection ?? undefined,
                 };
               }
 
@@ -92,7 +92,7 @@ const ShoppingCartPage: React.FC = () => {
               return {
                 ...item,
                 type: "product",
-                productDetails: data.data?.[0] || null,
+                productDetails: data.data?.[0] ?? undefined,
               };
             } catch (error) {
               console.error("Error fetching cart item details:", error);

@@ -147,12 +147,13 @@ const BulkProductUpload: React.FC = () => {
       if (response.data.results.failed.length === 0) {
         toast.success(t('vendor.bulk.uploadSuccess', { count: response.data.results.successful.length }));
       } else {
-        toast.warning(
-          t('vendor.bulk.uploadPartialSuccess', {
-            success: response.data.results.successful.length,
-            failed: response.data.results.failed.length,
-          })
-        );
+      toast(
+        t('vendor.bulk.uploadPartialSuccess', {
+          success: response.data.results.successful.length,
+          failed: response.data.results.failed.length,
+        }),
+        { icon: "⚠️" }
+      );
       }
 
       // Clear file selection

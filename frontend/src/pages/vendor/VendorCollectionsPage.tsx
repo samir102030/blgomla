@@ -3,6 +3,7 @@ import { useCollectionStore } from "../../stores/collection.store";
 import { useUserStore } from "../../stores/user.store";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
+import type { CollectionItemInput } from "../../types/collection.type";
 
 interface VendorProduct {
   _id: string;
@@ -70,7 +71,7 @@ const VendorCollectionsPage: React.FC = () => {
     loadProducts();
   }, [user?.store?._id]);
 
-  const selectedItems = useMemo(
+  const selectedItems = useMemo<CollectionItemInput[]>(
     () =>
       Object.entries(items)
         .filter(([, qty]) => qty > 0)
@@ -181,11 +182,13 @@ const VendorCollectionsPage: React.FC = () => {
       return;
     }
 
-    const selected = Object.entries(editItems)
+    const selectedItemsForUpdate: CollectionItemInput[] = Object.entries(
+      editItems
+    )
       .filter(([, qty]) => qty > 0)
       .map(([product, quantity]) => ({ product, quantity }));
 
-    if (selected.length < 2) {
+    if (selectedItemsForUpdate.length < 2) {
       toast.error("Select at least two products");
       return;
     }
@@ -196,7 +199,7 @@ const VendorCollectionsPage: React.FC = () => {
       return;
     }
 
-    const originalTotal = selected.reduce((sum, item) => {
+    const originalTotal = selectedItemsForUpdate.reduce((sum, item) => {
       const product = products.find((p) => p._id === item.product);
       if (!product) return sum;
       const unitPrice = product.saleActive
@@ -214,7 +217,7 @@ const VendorCollectionsPage: React.FC = () => {
       name: editFormState.name.trim(),
       description: editFormState.description.trim(),
       bundlePrice,
-      items: selected,
+      items: selectedItemsForUpdate,
     });
 
     if (updated) {

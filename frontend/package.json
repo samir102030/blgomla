@@ -4,11 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --config vite.config.js",
     "dev:watch": "nodemon --exec \"npm run dev\"",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build --config vite.config.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --config vite.config.js"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.24.0",
