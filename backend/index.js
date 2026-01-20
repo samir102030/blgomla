@@ -6,10 +6,7 @@ import http from "http";
 import connectDB from "./config/db.js";
 import { rateLimit } from "express-rate-limit";
 import systemRoutes from "./routes/system.route.js";
-import {
-  CLIENT_ORIGINS,
-  initializeSocket,
-} from "./utils/socket.js";
+import { CLIENT_ORIGINS, initializeSocket } from "./utils/socket.js";
 
 dotenv.config();
 
@@ -20,11 +17,12 @@ connectDB();
 
 app.use(
   cors({
-    origin: CLIENT_ORIGINS,
+    // origin:CLIENT_ORIGINS,
+    origin: true, // Allow all origins
     credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
