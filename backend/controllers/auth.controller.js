@@ -211,7 +211,7 @@ export const refreshToken = controllerWrapper(
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 5 * 60 * 60 * 1000, // five hours
     });
 
