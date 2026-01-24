@@ -63,7 +63,7 @@ const NotificationBell: React.FC = () => {
 
   const handleCardClick = async (
     notificationId: string,
-    alreadyRead: boolean
+    alreadyRead: boolean,
   ) => {
     if (alreadyRead) return;
     await markAsRead(notificationId);
@@ -86,7 +86,7 @@ const NotificationBell: React.FC = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
     );
 
     if (diffInHours < 1) return "Just now";
@@ -98,8 +98,8 @@ const NotificationBell: React.FC = () => {
     filter === "unread"
       ? t("notification.noUnread")
       : filter === "read"
-      ? t("notification.noRead")
-      : t("notification.noNotifications");
+        ? t("notification.noRead")
+        : t("notification.noNotifications");
 
   const displayedNotifications = notifications;
 
@@ -114,14 +114,14 @@ const NotificationBell: React.FC = () => {
           {t("notification.notifications")}
         </span>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+          <span className="absolute ltr:-top-1 ltr:-right-1 rtl:-top-1 rtl:-left-1 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 z-50">
+        <div className="absolute ltr:right-0 rtl:left-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-lg shadow-lg border border-gray-200 dark:border-slate-800 z-50">
           <div className="flex items-start justify-between p-4 border-b border-gray-200 dark:border-slate-800 space-x-2">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -206,7 +206,7 @@ const NotificationBell: React.FC = () => {
                       event.stopPropagation();
                       handleDeleteNotification(notification._id);
                     }}
-                    className="absolute top-2 right-2 text-[10px] font-semibold text-red-500 hover:text-red-700"
+                    className="absolute top-2 ltr:right-2 rtl:left-2 text-[10px] font-semibold text-red-500 hover:text-red-700"
                   >
                     {t("notification.delete")}
                   </button>

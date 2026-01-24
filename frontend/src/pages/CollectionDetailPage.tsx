@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { axiosInstance } from "../lib/axios";
@@ -8,13 +9,14 @@ import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
 
 const CollectionDetailPage: React.FC = () => {
+  const { t } = useTranslation();
   const { collectionId } = useParams();
   const navigate = useNavigate();
   const [collection, setCollection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const addCollectionToCart = useCollectionStore(
-    (state) => state.addCollectionToCart
+    (state) => state.addCollectionToCart,
   );
   const fetchCart = useUserStore((state) => state.fetchCart);
 
@@ -23,7 +25,9 @@ const CollectionDetailPage: React.FC = () => {
       if (!collectionId) return;
       try {
         setLoading(true);
-        const { data } = await axiosInstance.get(`/collections/${collectionId}`);
+        const { data } = await axiosInstance.get(
+          `/collections/${collectionId}`,
+        );
         setCollection(data.collection);
         setError(null);
       } catch (err: any) {
@@ -52,10 +56,10 @@ const CollectionDetailPage: React.FC = () => {
     const success = await addCollectionToCart(collectionId, 1);
     if (success) {
       await fetchCart();
-      toast.success("Collection added to cart");
+      toast.success(t("collections.addedToCart"));
       navigate("/cart");
     } else {
-      toast.error("Failed to add collection to cart");
+      toast.error(t("collections.failedToAdd"));
     }
   };
 
@@ -78,16 +82,16 @@ const CollectionDetailPage: React.FC = () => {
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Collection Not Found
+              {t("collections.notFound")}
             </h2>
             <p className="text-gray-600 mb-6">
-              {error || "The collection you're looking for doesn't exist."}
+              {error || t("collections.notFoundDesc")}
             </p>
             <Link
               to="/collections"
               className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
             >
-              Browse Collections
+              {t("collections.browseCollections")}
             </Link>
           </div>
         </div>
@@ -116,7 +120,7 @@ const CollectionDetailPage: React.FC = () => {
             {collection.name}
           </h1>
           <p className="text-sm sm:text-base text-gray-600 max-w-2xl">
-            {collection.description || "Bundle deal"}
+            {collection.description || t("collections.bundleDeal")}
           </p>
         </div>
       </div>
@@ -148,10 +152,11 @@ const CollectionDetailPage: React.FC = () => {
                         {item.product?.name || "Product"}
                       </Link>
                       <p className="text-xs text-gray-500">
-                        Quantity: {item.quantity}
+                        {t("collections.quantity")} {item.quantity}
                       </p>
                       <p className="text-xs text-gray-500">
-                        Price: EGP {item.product?.price?.toFixed(2)}
+                        {t("collections.price")} EGP{" "}
+                        {item.product?.price?.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -159,7 +164,7 @@ const CollectionDetailPage: React.FC = () => {
                     to={`/product/${item.product?._id}`}
                     className="text-xs font-medium text-[#002B5B] hover:text-[#001a3d]"
                   >
-                    View Product
+                    {t("collections.viewProduct")}
                   </Link>
                 </div>
               ))}
@@ -167,26 +172,30 @@ const CollectionDetailPage: React.FC = () => {
 
             <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-4 h-fit">
               <div>
-                <p className="text-xs uppercase text-gray-500">Bundle price</p>
+                <p className="text-xs uppercase text-gray-500">
+                  {t("collections.bundlePrice")}
+                </p>
                 <p className="text-2xl font-bold text-[#002B5B]">
                   EGP {collection.bundlePrice.toFixed(2)}
                 </p>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Original total</span>
+                <span className="text-gray-600">
+                  {t("collections.originalTotal")}
+                </span>
                 <span className="font-medium">
                   EGP {originalTotal.toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between text-sm text-green-600">
-                <span>Savings</span>
+                <span>{t("collections.savings")}</span>
                 <span className="font-medium">EGP {savings.toFixed(2)}</span>
               </div>
               <button
                 onClick={handleAddToCart}
                 className="w-full bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg font-medium hover:bg-[#e6c100]"
               >
-                Add Bundle to Cart
+                {t("collections.addBundleToCart")}
               </button>
             </div>
           </div>

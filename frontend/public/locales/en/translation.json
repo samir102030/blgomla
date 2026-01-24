@@ -1037,5 +1037,28 @@
     }
   },
   "account.returns": "Returns",
-  "Collections": "Collections"
+  "Collections": "Collections",
+  "collections": {
+    "title": "Collections",
+    "subtitle": "Bundle deals curated by vendors. Save more when you buy them together.",
+    "noCollections": "No collections available",
+    "checkBack": "Check back soon for new bundle deals.",
+    "browseProducts": "Browse Products",
+    "bundlePrice": "Bundle Price",
+    "save": "Save",
+    "qty": "Qty",
+    "originalTotal": "Original Total",
+    "viewDetails": "View Details",
+    "addBundleToCart": "Add Bundle to Cart",
+    "addedToCart": "Collection added to cart",
+    "failedToAdd": "Failed to add collection to cart",
+    "notFound": "Collection Not Found",
+    "notFoundDesc": "The collection you're looking for doesn't exist.",
+    "browseCollections": "Browse Collections",
+    "bundleDeal": "Bundle deal",
+    "quantity": "Quantity:",
+    "price": "Price:",
+    "viewProduct": "View Product",
+    "savings": "Savings"
+  }
 }

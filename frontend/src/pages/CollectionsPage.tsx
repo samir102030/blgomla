@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useCollectionStore } from "../stores/collection.store";
@@ -7,6 +8,7 @@ import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
 
 const CollectionsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { collections, loading, error, fetchCollections, addCollectionToCart } =
     useCollectionStore();
   const fetchCart = useUserStore((state) => state.fetchCart);
@@ -29,9 +31,9 @@ const CollectionsPage: React.FC = () => {
     const success = await addCollectionToCart(collectionId, 1);
     if (success) {
       await fetchCart();
-      toast.success("Collection added to cart");
+      toast.success(t("collections.addedToCart"));
     } else {
-      toast.error("Failed to add collection to cart");
+      toast.error(t("collections.failedToAdd"));
     }
   };
 
@@ -49,11 +51,10 @@ const CollectionsPage: React.FC = () => {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Collections
+            {t("collections.title")}
           </h1>
           <p className="text-sm sm:text-base text-gray-100 max-w-2xl">
-            Bundle deals curated by vendors. Save more when you buy them
-            together.
+            {t("collections.subtitle")}
           </p>
         </div>
       </div>
@@ -77,16 +78,14 @@ const CollectionsPage: React.FC = () => {
           ) : collections.length === 0 ? (
             <div className="text-center py-16">
               <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                No collections available
+                {t("collections.noCollections")}
               </h2>
-              <p className="text-gray-600 mb-6">
-                Check back soon for new bundle deals.
-              </p>
+              <p className="text-gray-600 mb-6">{t("collections.checkBack")}</p>
               <Link
                 to="/products"
                 className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
               >
-                Browse Products
+                {t("collections.browseProducts")}
               </Link>
             </div>
           ) : (
@@ -95,7 +94,7 @@ const CollectionsPage: React.FC = () => {
                 const originalTotal = getCollectionOriginalTotal(collection);
                 const savings = Math.max(
                   originalTotal - collection.bundlePrice,
-                  0
+                  0,
                 );
                 return (
                   <div
@@ -114,15 +113,15 @@ const CollectionsPage: React.FC = () => {
                             </p>
                           )}
                         </div>
-                        <div className="text-right">
+                        <div className="ltr:text-right rtl:text-left">
                           <p className="text-xs uppercase text-gray-500">
-                            Bundle Price
+                            {t("collections.bundlePrice")}
                           </p>
                           <p className="text-2xl font-bold text-[#002B5B]">
                             EGP {collection.bundlePrice.toFixed(2)}
                           </p>
                           <p className="text-xs text-green-600">
-                            Save EGP {savings.toFixed(2)}
+                            {t("collections.save")} EGP {savings.toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -149,7 +148,7 @@ const CollectionsPage: React.FC = () => {
                                   {item.product?.name || "Product"}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  Qty {item.quantity}
+                                  {t("collections.qty")} {item.quantity}
                                 </p>
                               </div>
                             </div>
@@ -162,7 +161,9 @@ const CollectionsPage: React.FC = () => {
 
                       <div className="flex items-center justify-between pt-2 border-t">
                         <div>
-                          <p className="text-xs text-gray-500">Original Total</p>
+                          <p className="text-xs text-gray-500">
+                            {t("collections.originalTotal")}
+                          </p>
                           <p className="text-sm font-medium text-gray-900">
                             EGP {originalTotal.toFixed(2)}
                           </p>
@@ -172,13 +173,13 @@ const CollectionsPage: React.FC = () => {
                             to={`/collections/${collection._id}`}
                             className="text-sm font-medium text-[#002B5B] hover:text-[#001a3d]"
                           >
-                            View Details
+                            {t("collections.viewDetails")}
                           </Link>
                           <button
                             onClick={() => handleAddToCart(collection._id)}
                             className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg font-medium hover:bg-[#e6c100]"
                           >
-                            Add Bundle to Cart
+                            {t("collections.addBundleToCart")}
                           </button>
                         </div>
                       </div>

@@ -257,8 +257,8 @@ const Header: React.FC = () => {
                             onClick={() => {
                               navigate(
                                 `/products?search=${encodeURIComponent(
-                                  searchQuery
-                                )}`
+                                  searchQuery,
+                                )}`,
                               );
                               setShowDropdown(false);
                               setSearchQuery("");
@@ -324,11 +324,11 @@ const Header: React.FC = () => {
                   aria-hidden="true"
                 />
                 <span className="text-xs hidden md:block">{t("Cart")}</span>
-                <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white  rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
+                <span className="absolute ltr:-top-1 ltr:-right-1 rtl:-top-1 rtl:-left-1 sm:ltr:-top-2 sm:ltr:-right-2 sm:rtl:-top-2 sm:rtl:-left-2 bg-red-500 text-white  rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
                   {user?.cart?.length
                     ? user.cart.reduce(
                         (acc, item) => acc + (item.quantity || 0),
-                        0
+                        0,
                       )
                     : 0}
                 </span>
@@ -427,8 +427,8 @@ const Header: React.FC = () => {
                           onClick={() => {
                             navigate(
                               `/products?search=${encodeURIComponent(
-                                searchQuery
-                              )}`
+                                searchQuery,
+                              )}`,
                             );
                             setShowDropdown(false);
                             setSearchQuery("");

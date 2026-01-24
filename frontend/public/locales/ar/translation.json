@@ -1039,5 +1039,28 @@
     }
   },
   "account.returns": "?????????",
-  "Collections": "???????"
+  "Collections": "المجموعات",
+  "collections": {
+    "title": "المجموعات",
+    "subtitle": "عروض تجميعية من البائعين. وفر المزيد عند شرائها معاً.",
+    "noCollections": "لا توجد مجموعات متاحة",
+    "checkBack": "تحقق مرة أخرى قريباً لعروض تجميعية جديدة.",
+    "browseProducts": "تصفح المنتجات",
+    "bundlePrice": "سعر التجميعة",
+    "save": "وفر",
+    "qty": "الكمية",
+    "originalTotal": "الإجمالي الأصلي",
+    "viewDetails": "عرض التفاصيل",
+    "addBundleToCart": "أضف التجميعة إلى السلة",
+    "addedToCart": "تم إضافة المجموعة إلى السلة",
+    "failedToAdd": "فشل في إضافة المجموعة إلى السلة",
+    "notFound": "المجموعة غير موجودة",
+    "notFoundDesc": "المجموعة التي تبحث عنها غير موجودة.",
+    "browseCollections": "تصفح المجموعات",
+    "bundleDeal": "عرض تجميعي",
+    "quantity": "الكمية:",
+    "price": "السعر:",
+    "viewProduct": "عرض المنتج",
+    "savings": "التوفير"
+  }
 }
