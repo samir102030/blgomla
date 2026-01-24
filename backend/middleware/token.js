@@ -25,22 +25,18 @@ export const verifyToken = (req, res, next) => {
 export const verifyRefreshToken = (req, res, next) => {
   const token = req.cookies.refreshToken;
   if (!token)
-    return res
-      .status(401)
-      .json({
-        success: false,
-        message: "Unauthorized - no refresh token provided",
-      });
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized - no refresh token provided",
+    });
   try {
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
     if (!decoded || !decoded.userId)
-      return res
-        .status(401)
-        .json({
-          success: false,
-          message: "Unauthorized - invalid refresh token",
-        });
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized - invalid refresh token",
+      });
 
     req.userId = decoded.userId;
     next();
@@ -68,7 +64,6 @@ export const generateRefreshToken = (userId) => {
 
 export const generateTokenAndSetCookie = (res, userId) => {
   const token = generateToken(userId, "5h");
-  
 
   res.cookie("accessToken", token, {
     httpOnly: true,
