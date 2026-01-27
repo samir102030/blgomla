@@ -212,7 +212,7 @@ const SupportTickets: React.FC = () => {
       </div>
 
       {/* Tickets Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -274,6 +274,59 @@ const SupportTickets: React.FC = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Tickets cards (mobile/tablet) */}
+      <div className="lg:hidden space-y-4">
+        {filteredTickets.map((ticket) => (
+          <div key={ticket.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm font-semibold text-gray-900">{ticket.id}</div>
+                <div className="text-sm text-gray-700">{ticket.title}</div>
+                <div className="text-xs text-gray-500">{ticket.customer} · {ticket.email}</div>
+              </div>
+              <div className="space-y-1 text-right">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
+                  {ticket.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </span>
+                <div>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
+                    {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">Category</div>
+                <div className="font-semibold text-gray-900">{ticket.category}</div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">Assigned</div>
+                <div className="font-semibold text-gray-900">{ticket.assignedTo}</div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2 col-span-2">
+                <div className="text-gray-500">Created</div>
+                <div className="font-semibold text-gray-900">{ticket.created}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 text-sm font-medium">
+              <button className="text-blue-600 hover:text-blue-500" title="View Details">👁️</button>
+              <button className="text-green-600 hover:text-green-500" title="Reply">💬</button>
+              <button className="text-yellow-600 hover:text-yellow-500" title="Edit">✏️</button>
+              <button className="text-purple-600 hover:text-purple-500" title="Assign">👤</button>
+            </div>
+          </div>
+        ))}
+
+        {filteredTickets.length === 0 && (
+          <div className="text-center text-gray-500 text-sm">
+            No tickets found
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}

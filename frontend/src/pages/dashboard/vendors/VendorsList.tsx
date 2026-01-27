@@ -1,80 +1,86 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const VendorsList: React.FC = () => {
   const { t } = useTranslation();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
 
   const vendors = [
     {
       id: 1,
-      name: 'Tech Store Pro',
-      email: 'contact@techstore.com',
-      phone: '+1 (555) 123-4567',
-      status: 'active',
-      joinDate: '2024-01-15',
-      totalSales: '$45,230',
+      name: "Tech Store Pro",
+      email: "contact@techstore.com",
+      phone: "+1 (555) 123-4567",
+      status: "active",
+      joinDate: "2024-01-15",
+      totalSales: "$45,230",
       products: 234,
       rating: 4.9,
-      commission: '15%',
-      avatar: 'TS'
+      commission: "15%",
+      avatar: "TS",
     },
     {
       id: 2,
-      name: 'Fashion Hub',
-      email: 'info@fashionhub.com',
-      phone: '+1 (555) 234-5678',
-      status: 'active',
-      joinDate: '2024-02-20',
-      totalSales: '$38,150',
+      name: "Fashion Hub",
+      email: "info@fashionhub.com",
+      phone: "+1 (555) 234-5678",
+      status: "active",
+      joinDate: "2024-02-20",
+      totalSales: "$38,150",
       products: 189,
       rating: 4.8,
-      commission: '12%',
-      avatar: 'FH'
+      commission: "12%",
+      avatar: "FH",
     },
     {
       id: 3,
-      name: 'Electronics Plus',
-      email: 'sales@electronicsplus.com',
-      phone: '+1 (555) 345-6789',
-      status: 'pending',
-      joinDate: '2024-03-10',
-      totalSales: '$32,890',
+      name: "Electronics Plus",
+      email: "sales@electronicsplus.com",
+      phone: "+1 (555) 345-6789",
+      status: "pending",
+      joinDate: "2024-03-10",
+      totalSales: "$32,890",
       products: 156,
       rating: 4.7,
-      commission: '18%',
-      avatar: 'EP'
+      commission: "18%",
+      avatar: "EP",
     },
     {
       id: 4,
-      name: 'Home & Garden',
-      email: 'support@homegarden.com',
-      phone: '+1 (555) 456-7890',
-      status: 'suspended',
-      joinDate: '2024-01-05',
-      totalSales: '$28,450',
+      name: "Home & Garden",
+      email: "support@homegarden.com",
+      phone: "+1 (555) 456-7890",
+      status: "suspended",
+      joinDate: "2024-01-05",
+      totalSales: "$28,450",
       products: 134,
       rating: 4.6,
-      commission: '10%',
-      avatar: 'HG'
-    }
+      commission: "10%",
+      avatar: "HG",
+    },
   ];
 
-  const filteredVendors = vendors.filter(vendor => {
-    const matchesSearch = vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredVendors = vendors.filter((vendor) => {
+    const matchesSearch =
+      vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       vendor.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || vendor.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || vendor.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'suspended': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "suspended":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -83,15 +89,19 @@ const VendorsList: React.FC = () => {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('admin.vendorManagement')}</h1>
-          <p className="text-gray-600">Manage and monitor all vendors in your marketplace</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {t("admin.vendorManagement")}
+          </h1>
+          <p className="text-gray-600">
+            Manage and monitor all vendors in your marketplace
+          </p>
         </div>
         <div className="flex items-center space-x-3">
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-            + {t('admin.addBrand')}
+            + {t("admin.addBrand")}
           </button>
           <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-            📤 {t('admin.export')}
+            📤 {t("admin.export")}
           </button>
         </div>
       </div>
@@ -104,7 +114,9 @@ const VendorsList: React.FC = () => {
               ✅
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('vendor.storeActive')}</p>
+              <p className="text-sm font-medium text-gray-600">
+                {t("vendor.storeActive")}
+              </p>
               <p className="text-2xl font-bold text-gray-900">156</p>
             </div>
           </div>
@@ -115,7 +127,9 @@ const VendorsList: React.FC = () => {
               ⏳
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('admin.pending')}</p>
+              <p className="text-sm font-medium text-gray-600">
+                {t("admin.pending")}
+              </p>
               <p className="text-2xl font-bold text-gray-900">23</p>
             </div>
           </div>
@@ -126,7 +140,9 @@ const VendorsList: React.FC = () => {
               ⛔
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('admin.suspended')}</p>
+              <p className="text-sm font-medium text-gray-600">
+                {t("admin.suspended")}
+              </p>
               <p className="text-2xl font-bold text-gray-900">8</p>
             </div>
           </div>
@@ -137,7 +153,9 @@ const VendorsList: React.FC = () => {
               💰
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">{t('admin.totalRevenue')}</p>
+              <p className="text-sm font-medium text-gray-600">
+                {t("admin.totalRevenue")}
+              </p>
               <p className="text-2xl font-bold text-gray-900">$2.4M</p>
             </div>
           </div>
@@ -151,7 +169,7 @@ const VendorsList: React.FC = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder={t('vendorRequests.searchPlaceholder')}
+                placeholder={t("vendorRequests.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -163,9 +181,9 @@ const VendorsList: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             >
-              <option value="all">{t('vendorRequests.allStatus')}</option>
-              <option value="active">{t('admin.active')}</option>
-              <option value="pending">{t('admin.pending')}</option>
+              <option value="all">{t("vendorRequests.allStatus")}</option>
+              <option value="active">{t("admin.active")}</option>
+              <option value="pending">{t("admin.pending")}</option>
               {/* <option value="suspended">{t('admin.suspended')}</option> */}
             </select>
           </div>
@@ -187,20 +205,36 @@ const VendorsList: React.FC = () => {
         </div>
       </div>
 
-      {/* Vendors Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* Vendors Table (desktop and large screens) */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 hidden lg:block">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-[120px] w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor.name')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendorRequests.columns.contact')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.status')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.sales')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.products')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('vendor.averageRating')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commission</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.actions')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("vendor.name")}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("vendorRequests.columns.contact")}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("admin.status")}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("admin.sales")}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("admin.products")}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("vendor.averageRating")}
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Commission
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t("admin.actions")}
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -212,8 +246,12 @@ const VendorsList: React.FC = () => {
                         {vendor.avatar}
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{vendor.name}</div>
-                        <div className="text-sm text-gray-500">Joined {vendor.joinDate}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {vendor.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Joined {vendor.joinDate}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -222,8 +260,11 @@ const VendorsList: React.FC = () => {
                     <div className="text-sm text-gray-500">{vendor.phone}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(vendor.status)}`}>
-                      {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(vendor.status)}`}
+                    >
+                      {vendor.status.charAt(0).toUpperCase() +
+                        vendor.status.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -235,7 +276,9 @@ const VendorsList: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <span className="text-yellow-400">⭐</span>
-                      <span className="text-sm text-gray-900 ml-1">{vendor.rating}</span>
+                      <span className="text-sm text-gray-900 ml-1">
+                        {vendor.rating}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -243,9 +286,15 @@ const VendorsList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-500">👁️</button>
-                      <button className="text-green-600 hover:text-green-500">✏️</button>
-                      <button className="text-red-600 hover:text-red-500">🗑️</button>
+                      <button className="text-blue-600 hover:text-blue-500">
+                        👁️
+                      </button>
+                      <button className="text-green-600 hover:text-green-500">
+                        ✏️
+                      </button>
+                      <button className="text-red-600 hover:text-red-500">
+                        🗑️
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -255,22 +304,106 @@ const VendorsList: React.FC = () => {
         </div>
       </div>
 
+      {/* Vendors stacked cards (mobile / tablet) */}
+      <div className="lg:hidden space-y-4">
+        {filteredVendors.map((vendor) => (
+          <div
+            key={vendor.id}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">
+                  {vendor.avatar}
+                </div>
+                <div className="ml-3">
+                  <div className="text-base font-semibold text-gray-900">
+                    {vendor.name}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    Joined {vendor.joinDate}
+                  </div>
+                </div>
+              </div>
+              <span
+                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(vendor.status)}`}
+              >
+                {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
+              </span>
+            </div>
+
+            <div className="text-sm text-gray-900">{vendor.email}</div>
+            <div className="text-sm text-gray-500">{vendor.phone}</div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">{t("admin.sales")}</div>
+                <div className="font-semibold text-gray-900">
+                  {vendor.totalSales}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">{t("admin.products")}</div>
+                <div className="font-semibold text-gray-900">
+                  {vendor.products}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">{t("vendor.averageRating")}</div>
+                <div className="font-semibold text-gray-900 flex items-center">
+                  <span className="text-yellow-400 mr-1">★</span>
+                  {vendor.rating}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">Commission</div>
+                <div className="font-semibold text-gray-900">
+                  {vendor.commission}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3">
+              <button className="text-blue-600 hover:text-blue-500 text-sm font-medium flex items-center space-x-1">
+                <span>👁️</span>
+                <span>{t("admin.actions")}</span>
+              </button>
+              <button className="text-green-600 hover:text-green-500 text-sm font-medium">
+                ✏️
+              </button>
+              <button className="text-red-600 hover:text-red-500 text-sm font-medium">
+                🗑️
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Pagination */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            {t('admin.itemsPerPage')} <span className="font-medium">1</span> {t('coupon.to')} <span className="font-medium">10</span> {t('coupon.of')}{' '}
-            <span className="font-medium">{filteredVendors.length}</span> {t('coupon.results')}
+            {t("admin.itemsPerPage")} <span className="font-medium">1</span>{" "}
+            {t("coupon.to")} <span className="font-medium">10</span>{" "}
+            {t("coupon.of")}{" "}
+            <span className="font-medium">{filteredVendors.length}</span>{" "}
+            {t("coupon.results")}
           </div>
           <div className="flex items-center space-x-2">
             <button className="px-3 py-2 border border-gray-300 text-gray-500 rounded-md hover:bg-gray-50">
-              {t('admin.previous')}
+              {t("admin.previous")}
             </button>
-            <button className="px-3 py-2 bg-yellow-500 text-white rounded-md">1</button>
-            <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">2</button>
-            <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">3</button>
+            <button className="px-3 py-2 bg-yellow-500 text-white rounded-md">
+              1
+            </button>
             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-              {t('admin.next')}
+              2
+            </button>
+            <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+              3
+            </button>
+            <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
+              {t("admin.next")}
             </button>
           </div>
         </div>

@@ -219,7 +219,7 @@ const CustomersList: React.FC = () => {
       </div>
 
       {/* Customers Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hidden lg:block">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -300,6 +300,72 @@ const CustomersList: React.FC = () => {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Customers Cards (mobile/tablet) */}
+      <div className="lg:hidden space-y-4">
+        {filteredCustomers.map((customer) => (
+          <div key={customer.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">
+                  {customer.avatar}
+                </div>
+                <div className="ml-3">
+                  <div className="text-base font-semibold text-gray-900">{customer.name}</div>
+                  <div className="text-sm text-gray-500">{customer.location}</div>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={selectedCustomers.includes(customer.id)}
+                onChange={() => handleSelectCustomer(customer.id)}
+                className="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500 mt-1"
+              />
+            </div>
+
+            <div className="text-sm text-gray-900">{customer.email}</div>
+            <div className="text-sm text-gray-500">{customer.phone}</div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">Status</div>
+                <div className="font-semibold text-gray-900">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(customer.status)}`}>
+                    {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">Segment</div>
+                <div className="font-semibold text-gray-900">
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSegmentColor(customer.segment)}`}>
+                    {customer.segment}
+                  </span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">Orders</div>
+                <div className="font-semibold text-gray-900">{customer.totalOrders}</div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2">
+                <div className="text-gray-500">Total Spent</div>
+                <div className="font-semibold text-gray-900">{customer.totalSpent}</div>
+              </div>
+              <div className="bg-gray-50 rounded-md p-2 col-span-2">
+                <div className="text-gray-500">Last Order</div>
+                <div className="font-semibold text-gray-900">{customer.lastOrder}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 text-sm font-medium">
+              <button className="text-blue-600 hover:text-blue-500" title="View Profile">👁️</button>
+              <button className="text-green-600 hover:text-green-500" title="Send Message">💬</button>
+              <button className="text-purple-600 hover:text-purple-500" title="Order History">📋</button>
+              <button className="text-yellow-600 hover:text-yellow-500" title="Edit">✏️</button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Pagination */}

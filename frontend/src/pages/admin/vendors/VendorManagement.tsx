@@ -289,8 +289,8 @@ const VendorManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* Vendors Table */}
-              <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              {/* Vendors Table - desktop */}
+              <div className="bg-white rounded-lg shadow-sm overflow-hidden hidden lg:block">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -439,6 +439,128 @@ const VendorManagement: React.FC = () => {
 
                 {filteredVendors.length === 0 && (
                   <div className="text-center py-12">
+                    <div className="text-gray-500">
+                      {t("vendorManagement.table.empty")}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Vendors Cards - mobile / tablet */}
+              <div className="lg:hidden space-y-4">
+                {filteredVendors.map((vendor) => (
+                  <div key={vendor._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                          <span className="text-white font-medium">
+                            {vendor.businessName?.charAt(0).toUpperCase() || "?"}
+                          </span>
+                        </div>
+                        <div className="ml-3">
+                          <div className="text-base font-semibold text-gray-900">
+                            {vendor.businessName || "N/A"}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {vendor.legalEntityType || vendor.businessType || "N/A"}
+                          </div>
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(
+                          vendor.status,
+                          vendor.deleted
+                        )}`}
+                      >
+                        {vendor.deleted ? t("vendorManagement.filters.deleted") : vendor.status}
+                      </span>
+                    </div>
+
+                    <div className="text-sm text-gray-900">
+                      {vendor.contactEmail || vendor.email || "N/A"}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {vendor.contactPhone || vendor.phone || "N/A"}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="bg-gray-50 rounded-md p-2">
+                        <div className="text-gray-500">{t("vendorManagement.table.registrationDate")}</div>
+                        <div className="font-semibold text-gray-900">
+                          {vendor.createdAt ? formatDate(vendor.createdAt) : "N/A"}
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 rounded-md p-2">
+                        <div className="text-gray-500">{t("vendorManagement.table.status")}</div>
+                        <div className="font-semibold text-gray-900">
+                          {vendor.deleted ? t("vendorManagement.filters.deleted") : vendor.status}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center flex-wrap gap-2">
+                      <button
+                        onClick={() => handleViewDetails(vendor)}
+                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                      >
+                        {t("vendorManagement.table.view")}
+                      </button>
+
+                      {activeTab === "requests" && vendor.status === "pending" && (
+                        <>
+                          <button
+                            onClick={() => handleApprove(vendor._id)}
+                            className="text-green-600 hover:text-green-900 text-sm font-medium"
+                          >
+                            {t("vendorManagement.table.approve")}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedVendorForDetails(vendor);
+                              setShowRejectModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-900 text-sm font-medium"
+                          >
+                            {t("vendorManagement.table.reject")}
+                          </button>
+                        </>
+                      )}
+
+                      {activeTab === "deleted" && vendor.deleted ? (
+                        <button
+                          onClick={() => handleRestoreVendor(vendor._id)}
+                          className="text-green-600 hover:text-green-900 text-sm font-medium"
+                        >
+                          {t("vendorManagement.table.restore")}
+                        </button>
+                      ) : (
+                        !vendor.deleted && (
+                          <>
+                            <select
+                              value={vendor.status}
+                              onChange={(e) => handleStatusChange(vendor._id, e.target.value)}
+                              className="text-xs border border-gray-300 rounded px-2 py-1"
+                            >
+                              <option value="pending">{t("vendorManagement.filters.pending")}</option>
+                              <option value="approved">{t("vendorManagement.filters.approved")}</option>
+                              <option value="rejected">{t("vendorManagement.filters.rejected")}</option>
+                              <option value="suspended">{t("vendorManagement.filters.suspended")}</option>
+                            </select>
+                            <button
+                              onClick={() => handleDeleteVendor(vendor._id)}
+                              className="text-red-600 hover:text-red-900 text-sm font-medium"
+                            >
+                              {t("vendorManagement.table.delete")}
+                            </button>
+                          </>
+                        )
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {filteredVendors.length === 0 && (
+                  <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
                     <div className="text-gray-500">
                       {t("vendorManagement.table.empty")}
                     </div>
@@ -672,7 +794,7 @@ const VendorManagement: React.FC = () => {
                     {t("vendorManagement.analytics.recentApplications")}
                   </h3>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="hidden lg:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -723,6 +845,45 @@ const VendorManagement: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile cards for recent applications */}
+                <div className="lg:hidden space-y-4 p-4">
+                  {recentRegistrations.slice(0, 10).map((vendor) => (
+                    <div key={vendor._id} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">
+                            {vendor.businessName || "N/A"}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {vendor.contactEmail || vendor.email || "N/A"}
+                          </div>
+                        </div>
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(
+                            vendor.status,
+                            vendor.deleted
+                          )}`}
+                        >
+                          {vendor.deleted ? t("vendorManagement.filters.deleted") : vendor.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {t("vendorManagement.table.registrationDate")}:{" "}
+                        {vendor.createdAt ? formatDate(vendor.createdAt) : "N/A"}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Category: {vendor.productCategories?.[0] || "Not specified"}
+                      </div>
+                    </div>
+                  ))}
+
+                  {recentRegistrations.slice(0, 10).length === 0 && (
+                    <div className="text-center text-gray-500 text-sm">
+                      {t("vendorManagement.table.empty")}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

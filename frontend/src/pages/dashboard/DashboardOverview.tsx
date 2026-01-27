@@ -154,7 +154,9 @@ const DashboardOverview: React.FC = () => {
             <button className="text-sm text-yellow-600 hover:text-yellow-500">{t('account.viewAllOrders')}</button>
           </div>
         </div>
-        <div className="overflow-x-auto">
+
+        {/* Desktop table */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
@@ -192,6 +194,36 @@ const DashboardOverview: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="lg:hidden p-4 space-y-4">
+          {recentOrders.map((order, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-3 space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">{order.id}</div>
+                  <div className="text-xs text-gray-500">{order.time}</div>
+                </div>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                    order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                  }`}>
+                  {order.status}
+                </span>
+              </div>
+              <div className="text-sm text-gray-900">{order.customer}</div>
+              <div className="text-xs text-gray-500">{order.vendor}</div>
+              <div className="flex items-center justify-between text-sm">
+                <div className="font-semibold text-gray-900">{order.amount}</div>
+                <div className="space-x-3 text-xs font-medium">
+                  <button className="text-yellow-600 hover:text-yellow-500">View</button>
+                  <button className="text-blue-600 hover:text-blue-500">Edit</button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
