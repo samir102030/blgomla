@@ -15,7 +15,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
   const { email, password, name, phoneNumber, role, storeDescription } =
     req.body;
 
-  if (await User.findOne({ email }))
+  if (await User.findOne({ email: new RegExp(`^${email}$`, "i") }))
     return res
       .status(400)
       .json({ success: false, message: "User already exists" });
@@ -145,7 +145,10 @@ export const verifyEmail = controllerWrapper(
 export const login = controllerWrapper("login", async (req, res) => {
   const { email, phone, password } = req.body;
   let user;
-  if (email) user = await User.findOne({ email }).populate("love");
+  if (email)
+    user = await User.findOne({
+      email: new RegExp(`^${email}$`, "i"),
+    }).populate("love");
   if (phone) user = await User.findOne({ phones: { $in: [phone] } });
   if (!user) {
     return res.status(400).json({
@@ -227,7 +230,9 @@ export const forgotPassword = controllerWrapper(
   "forgotPassword",
   async (req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
+    console.log("Forgot password request for email:", email);
+    const user = await User.findOne({ email: new RegExp(`^${email}$`, "i") });
+    console.log("User found:", user ? user.email : "null");
 
     if (!user) {
       return res

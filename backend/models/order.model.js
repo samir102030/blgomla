@@ -61,7 +61,7 @@ const orderSchema = new mongoose.Schema(
     cancelled: { type: Boolean, default: false },
     notes: { type: String },
   },
-  { timestamps: true }
+  { timestamps: true, suppressReservedKeysWarning: true },
 );
 
 const Order = mongoose.model("Order", orderSchema);

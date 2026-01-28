@@ -76,11 +76,10 @@ const couponSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes for better performance
-couponSchema.index({ code: 1 });
 couponSchema.index({ store: 1 });
 couponSchema.index({ isActive: 1, startDate: 1, endDate: 1 });
 

@@ -72,11 +72,15 @@ const userSchema = new mongoose.Schema(
     verificationToken: String,
     verificationTokenExpiresAt: Date,
   },
-  { timestamps: true }
+  { timestamps: true, suppressReservedKeysWarning: true },
 );
 
-// Pre-save hook to hash password before saving to database
+// Pre-save hook to lowercase email and hash password before saving to database
 userSchema.pre("save", async function (next) {
+  if (this.isModified("email")) {
+    this.email = this.email.toLowerCase();
+  }
+
   if (!this.isModified("password")) return next();
 
   try {
