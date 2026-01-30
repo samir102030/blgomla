@@ -11,7 +11,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { useVendorStore } from "../../stores/vendor.store";
 import { useUserStore } from "../../stores/user.store";
-import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 import { useAnalyticsStore } from "../../stores/analytics.store";
 import {
   downloadCombinedCsv,
@@ -26,12 +25,8 @@ const AdminDashboard: React.FC = () => {
   const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
   const [combineFiles, setCombineFiles] = useState(true);
   const [exporting, setExporting] = useState(false);
-  const {
-    salesTrend,
-    topProducts,
-    fetchSalesTrend,
-    fetchTopProducts,
-  } = useAnalyticsStore();
+  const { salesTrend, topProducts, fetchSalesTrend, fetchTopProducts } =
+    useAnalyticsStore();
   const {
     dashboardStats,
     loading,
@@ -46,12 +41,12 @@ const AdminDashboard: React.FC = () => {
     // If logged in user is a store owner, fetch their store & stats.
     // If admin, fetch platform-level stats and vendors list.
     if (user?.role === "store") {
-      fetchVendorStore().catch(() => { });
-      fetchDashboardStats().catch(() => { });
+      fetchVendorStore().catch(() => {});
+      fetchDashboardStats().catch(() => {});
     } else if (user?.role === "admin") {
       // admin dashboard - backend should return platform-wide stats
-      fetchDashboardStats().catch(() => { });
-      fetchVendors({ page: 1, limit: 10 }).catch(() => { });
+      fetchDashboardStats().catch(() => {});
+      fetchVendors({ page: 1, limit: 10 }).catch(() => {});
     }
   }, [user, fetchDashboardStats, fetchVendorStore, fetchVendors]);
 
@@ -65,10 +60,9 @@ const AdminDashboard: React.FC = () => {
     const now = new Date();
     const months = Array.from({ length: 12 }, (_, i) => {
       const date = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
-      const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-        2,
-        "0"
-      )}`;
+      const label = `${date.getFullYear()}-${String(
+        date.getMonth() + 1,
+      ).padStart(2, "0")}`;
       return { date: label, sales: 0, orders: 0 };
     });
     return months;
@@ -76,7 +70,7 @@ const AdminDashboard: React.FC = () => {
 
   const exportPages = useMemo(
     () => getExportPages((user?.role as any) || "admin"),
-    [user?.role]
+    [user?.role],
   );
 
   useEffect(() => {
@@ -85,7 +79,7 @@ const AdminDashboard: React.FC = () => {
 
   const toggleSelectedPage = (id: string) => {
     setSelectedPageIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -94,13 +88,13 @@ const AdminDashboard: React.FC = () => {
     setExporting(true);
     try {
       const selectedPages = exportPages.filter((page) =>
-        selectedPageIds.includes(page.id)
+        selectedPageIds.includes(page.id),
       );
       const results = await Promise.all(
         selectedPages.map(async (page) => {
           const data = await page.fetcher();
           return { label: page.label, ...data };
-        })
+        }),
       );
 
       if (combineFiles) {
@@ -119,11 +113,11 @@ const AdminDashboard: React.FC = () => {
   const retry = () => {
     clearError();
     if (user?.role === "store") {
-      fetchVendorStore().catch(() => { });
-      fetchDashboardStats().catch(() => { });
+      fetchVendorStore().catch(() => {});
+      fetchDashboardStats().catch(() => {});
     } else if (user?.role === "admin") {
-      fetchDashboardStats().catch(() => { });
-      fetchVendors({ page: 1, limit: 10 }).catch(() => { });
+      fetchDashboardStats().catch(() => {});
+      fetchVendors({ page: 1, limit: 10 }).catch(() => {});
     }
   };
 
@@ -152,7 +146,6 @@ const AdminDashboard: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
-            <AdminLanguageToggle />
             <button
               onClick={() => setShowExportModal(true)}
               className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors text-xs sm:text-sm whitespace-nowrap"
@@ -328,7 +321,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex items-end justify-between space-x-2 h-full">
                   {revenueTrend.slice(-12).map((point, index) => {
                     const maxSales = Math.max(
-                      ...revenueTrend.map((item) => item.sales)
+                      ...revenueTrend.map((item) => item.sales),
                     );
                     const height =
                       maxSales > 0 ? (point.sales / maxSales) * 100 : 0;
@@ -340,9 +333,7 @@ const AdminDashboard: React.FC = () => {
                         key={`${point.date}-${index}`}
                         className="flex-1 flex flex-col items-center justify-end h-full"
                       >
-                        <div
-                          className="relative w-full flex items-end justify-center"
-                        >
+                        <div className="relative w-full flex items-end justify-center">
                           <div
                             className={`rounded-t w-full transition-all group ${
                               point.sales > 0
@@ -352,8 +343,7 @@ const AdminDashboard: React.FC = () => {
                             style={{ height: `${Math.max(height, 5)}%` }}
                           >
                             <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-gray-900 text-white px-2 py-1 rounded shadow whitespace-nowrap">
-                              {t("admin.revenue")}: $
-                              {point.sales.toFixed(2)}
+                              {t("admin.revenue")}: ${point.sales.toFixed(2)}
                             </div>
                           </div>
                         </div>
@@ -438,7 +428,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="space-y-4">
                 {dashboardStats?.bestSellers &&
-                  dashboardStats.bestSellers.length > 0 ? (
+                dashboardStats.bestSellers.length > 0 ? (
                   dashboardStats.bestSellers.map((s: any, i: number) => (
                     <div
                       key={i}
@@ -493,7 +483,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="space-y-4">
                 {dashboardStats?.productOverview &&
-                  dashboardStats.productOverview.length > 0 ? (
+                dashboardStats.productOverview.length > 0 ? (
                   dashboardStats.productOverview
                     .slice(0, 5)
                     .map((p: any, i: number) => (

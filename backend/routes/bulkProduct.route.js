@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { protectRoute, storeRoute } from '../middleware/auth.middleware.js';
+import { protectRoute, adminOrStoreRoute } from '../middleware/auth.middleware.js';
 import { downloadTemplate, bulkUploadProducts } from '../controllers/bulkProduct.controller.js';
 
 const router = express.Router();
@@ -28,10 +28,10 @@ const upload = multer({
 });
 
 // Download template
-router.get('/template', protectRoute, storeRoute, downloadTemplate);
+router.get('/template', protectRoute, adminOrStoreRoute, downloadTemplate);
 
 // Upload and process bulk products
-router.post('/upload', protectRoute, storeRoute, upload.single('file'), bulkUploadProducts);
+router.post('/upload', protectRoute, adminOrStoreRoute, upload.single('file'), bulkUploadProducts);
 
 export default router;
 

@@ -4,7 +4,11 @@ import XLSX from 'xlsx';
  * Generate Excel template for bulk product upload
  * @returns {Buffer} Excel file buffer
  */
-export const generateProductTemplate = () => {
+export const generateProductTemplate = (variant = 'full') => {
+  if (variant === 'simple') {
+    return generateSimpleProductTemplate();
+  }
+
   // Define the template structure with headers and example data
   const templateData = [
     {
@@ -112,12 +116,52 @@ export const generateProductTemplate = () => {
   return buffer;
 };
 
+const generateSimpleProductTemplate = () => {
+  const templateData = [
+    {
+      'Product Name': 'Example Product A',
+      'Description': 'Short description (optional)',
+      'Price': 49.99,
+    },
+    {
+      'Product Name': 'Example Product B',
+      'Description': 'Another description',
+      'Price': 79.99,
+    },
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(templateData);
+  worksheet['!cols'] = [
+    { wch: 30 }, // Product Name
+    { wch: 60 }, // Description
+    { wch: 12 }, // Price
+  ];
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Products');
+
+  const instructions = [
+    { Field: 'Product Name', Required: 'YES', Format: 'Text', Example: 'Wireless Mouse' },
+    { Field: 'Description', Required: 'NO', Format: 'Text', Example: 'Optional short description' },
+    { Field: 'Price', Required: 'YES', Format: 'Number', Example: '29.99', Notes: 'Positive numbers only' },
+  ];
+  const instructionsSheet = XLSX.utils.json_to_sheet(instructions);
+  instructionsSheet['!cols'] = [
+    { wch: 20 },
+    { wch: 10 },
+    { wch: 15 },
+    { wch: 50 },
+  ];
+  XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instructions');
+
+  return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+};
+
 /**
  * Parse uploaded Excel file and extract product data
  * @param {Buffer} fileBuffer - Excel file buffer
  * @returns {Array} Array of product objects
  */
-export const parseProductExcel = (fileBuffer) => {
+export const parseProductExcel = (fileBuffer, templateType = 'full') => {
   const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
@@ -127,6 +171,19 @@ export const parseProductExcel = (fileBuffer) => {
   
   // Transform data to match product schema
   const products = rawData.map((row, index) => {
+    if (templateType === 'simple') {
+      return {
+        rowNumber: index + 2,
+        name: row['Product Name']?.toString().trim(),
+        description: row['Description']?.toString().trim() || '',
+        price: parseFloat(row['Price']),
+        stock: 0,
+        saleActive: false,
+        salePercentage: 0,
+        featured: false,
+      };
+    }
+
     const product = {
       rowNumber: index + 2, // +2 because Excel is 1-indexed and has header row
       name: row['Product Name']?.toString().trim(),

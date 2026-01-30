@@ -76,49 +76,63 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-slate-800">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-red-50 to-rose-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-800 bg-gradient-to-r from-red-50 to-rose-50 dark:from-slate-800 dark:to-slate-900">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-600 dark:text-red-300" />
             </div>
             <div className="ml-3">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
                 {t("modal.deleteProduct.title")}
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {t("modal.common.irreversible")}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 rounded-full transition-colors duration-200"
             aria-label={t("modal.common.close")}
           >
-            <XMarkIcon className="h-5 w-5 text-gray-500" />
+            <XMarkIcon className="h-5 w-5 text-gray-500 dark:text-gray-300" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="px-6 py-6">
+        <div className="px-6 py-6 bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
           <div className="flex items-start space-x-4">
             {/* Product Image */}
             <div className="flex-shrink-0">
-              <img
-                src={product.images?.[0]?.url || "/placeholder.png"}
-                alt={productName}
-                className="h-16 w-16 rounded-lg object-cover border border-gray-200"
-              />
+              {product.images?.[0]?.url ? (
+                <img
+                  src={product.images?.[0]?.url}
+                  alt={productName}
+                  className="h-16 w-16 rounded-lg object-cover border border-gray-200 dark:border-slate-700"
+                />
+              ) : (
+                <div className="h-16 w-16 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-400 dark:text-gray-500">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="h-8 w-8"
+                  >
+                    <path d="M6.75 4.5a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 17.25 4.5H6.75Zm0-1.5h10.5A3.75 3.75 0 0 1 21 6.75v10.5A3.75 3.75 0 0 1 17.25 21H6.75A3.75 3.75 0 0 1 3 17.25V6.75A3.75 3.75 0 0 1 6.75 3Z" />
+                    <path d="M8.25 9a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0ZM6.75 16.5l2.75-3.667a1.125 1.125 0 0 1 1.8-.038l1.443 1.805l1.358-1.812a1.125 1.125 0 0 1 1.836.037L17.25 16.5H6.75Z" />
+                  </svg>
+                </div>
+              )}
             </div>
 
             {/* Product Details */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-medium text-gray-900 mb-1">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-50 mb-1">
                 {productName}
               </h3>
-              <div className="space-y-1 text-sm text-gray-600">
+              <div className="space-y-1 text-sm text-gray-600 dark:text-gray-300">
                 <p>
                   <span className="font-medium">{t("modal.common.sku")}</span>{" "}
                   {formatSku(product?._id)}
@@ -145,14 +159,14 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
           </div>
 
           {/* Warning Message */}
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg">
             <div className="flex">
-              <ExclamationTriangleIcon className="h-5 w-5 text-red-400 flex-shrink-0" />
+              <ExclamationTriangleIcon className="h-5 w-5 text-red-400 dark:text-red-200 flex-shrink-0" />
               <div className="ml-3">
-                <h4 className="text-sm font-medium text-red-800">
+                <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
                   {t("modal.deleteProduct.confirmTitle")}
                 </h4>
-                <div className="mt-2 text-sm text-red-700">
+                <div className="mt-2 text-sm text-red-700 dark:text-red-200">
                   <p>
                     {t("modal.deleteProduct.confirmBody", {
                       name: productName,
@@ -165,13 +179,13 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
 
           {/* Additional Info */}
           {product.soldCount > 0 && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-amber-500/10 border border-yellow-200 dark:border-amber-500/30 rounded-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <span className="text-yellow-400">⚠️</span>
+                  <span className="text-yellow-400 dark:text-amber-200">⚠️</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-amber-200">
                     <strong>{t("modal.common.warning")}</strong>{" "}
                     {t("modal.deleteProduct.soldWarning", {
                       count: product.soldCount,
@@ -184,12 +198,12 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50">
+        <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-900">
           <button
             type="button"
             onClick={onClose}
             disabled={deleting}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-gray-300 dark:border-slate-700 text-gray-700 dark:text-gray-200 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t("vendor.cancel")}
           </button>

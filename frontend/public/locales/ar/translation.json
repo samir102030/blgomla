@@ -1075,5 +1075,157 @@
     "price": "السعر:",
     "viewProduct": "عرض المنتج",
     "savings": "التوفير"
+  },
+  "vendorRegistration": {
+    "title": "تسجيل البائع",
+    "subtitle": "انضم إلى متجرنا كبائع وبدء بيع منتجاتك",
+    "generateRandomData": "إنشاء بيانات عشوائية",
+    "step1": {
+      "title": "معلومات الكيان القانوني",
+      "legalEntityType": "ما هي الجهة المسؤولة عن السجل التجاري الخاص بك؟",
+      "licenseNumber": "رقم الترخيص",
+      "licenseNumberPlaceholder": "أدخل رقم ترخيص التجارة الخاص بك",
+      "companyName": "اسم الشركة",
+      "companyNamePlaceholder": "أدخل اسم شركتك",
+      "companyAddress": "عنوان الشركة",
+      "companyAddressPlaceholder": "أدخل عنوان شركتك",
+      "issueDate": "تاريخ الإصدار",
+      "expiryDate": "تاريخ الانتهاء",
+      "uploadCommercialRegistration": "رفع السجل التجاري",
+      "uploadDescription": "يجب أن تتطابق تفاصيل المستند مع التفاصيل التي أدخلتها. قدم جميع صفحات المستند وتأكد من أن نسخة الصورة عالية الجودة وملونة.",
+      "clickToUpload": "انقر للرفع أو اسحب وأفلت",
+      "pdfPngJpg": "PDF، PNG، JPG حتى 10 ميجابايت",
+      "fileUploaded": "✓ {{fileName}}"
+    },
+    "step2": {
+      "title": "معلومات العمل",
+      "businessType": "نوع العمل",
+      "contactPersonName": "اسم شخص الاتصال",
+      "contactPersonNamePlaceholder": "أدخل اسم شخص الاتصال",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل عنوان البريد الإلكتروني",
+      "phone": "الهاتف",
+      "phonePlaceholder": "أدخل رقم الهاتف",
+      "alternativePhone": "الهاتف البديل",
+      "alternativePhonePlaceholder": "أدخل رقم الهاتف البديل",
+      "address": "العنوان",
+      "addressPlaceholder": "أدخل العنوان الكامل",
+      "city": "المدينة",
+      "cityPlaceholder": "أدخل المدينة",
+      "governorate": "المحافظة",
+      "postalCode": "الرمز البريدي",
+      "postalCodePlaceholder": "أدخل الرمز البريدي",
+      "businessDescription": "وصف العمل",
+      "businessDescriptionPlaceholder": "صف عملك"
+    },
+    "step3": {
+      "title": "فئات المنتجات وإعداد المتجر",
+      "selectCategories": "اختر فئات المنتجات",
+      "expectedVolume": "الحجم المتوقع للمبيعات الشهرية",
+      "expectedVolumePlaceholder": "أدخل الحجم المتوقع للمبيعات الشهرية",
+      "storeName": "اسم المتجر",
+      "storeNamePlaceholder": "أدخل اسم متجرك",
+      "taxNumber": "رقم الضريبة",
+      "taxNumberPlaceholder": "أدخل رقم الضريبة",
+      "storeDescription": "وصف المتجر",
+      "storeDescriptionPlaceholder": "صف متجرك",
+      "uploadStoreLogo": "شعار المتجر (اختياري)",
+      "uploadLogoDescription": "انقر لرفع شعار المتجر",
+      "pngJpg": "PNG، JPG حتى 5 ميجابايت"
+    },
+    "step4": {
+      "title": "المستندات والمراجعة النهائية",
+      "taxCard": "مستند البطاقة الضريبية",
+      "nationalId": "البطاقة الوطنية",
+      "summary": "ملخص الطلب",
+      "summaryLabels": {
+        "contactPerson": "شخص الاتصال:",
+        "email": "البريد الإلكتروني:",
+        "phone": "الهاتف:",
+        "storeName": "اسم المتجر:",
+        "categories": "الفئات:",
+        "city": "المدينة:",
+        "governorate": "المحافظة:"
+      },
+      "terms": "الشروط والأحكام",
+      "privacy": "سياسة الخصوصية",
+      "acceptTerms": "أقبل الشروط والأحكام",
+      "acceptPrivacy": "أقبل سياسة الخصوصية"
+    },
+    "step5": {
+      "title": "إعداد الحساب",
+      "accountSection": {
+        "title": "إنشاء حساب البائع الخاص بك",
+        "description": "قم بإعداد بيانات تسجيل الدخول للوصول إلى لوحة تحكم البائع وإدارة متجرك."
+      },
+      "accountEmail": "بريد الحساب الإلكتروني",
+      "accountEmailPlaceholder": "أدخل عنوان بريد حسابك الإلكتروني",
+      "password": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "confirmPassword": "تأكيد كلمة المرور",
+      "confirmPasswordPlaceholder": "أكد كلمة المرور",
+      "passwordRequirements": "يجب أن تحتوي كلمة المرور على:",
+      "uppercase": "حرف كبير واحد على الأقل (A-Z)",
+      "lowercase": "حرف صغير واحد على الأقل (a-z)",
+      "number": "رقم واحد على الأقل (0-9)",
+      "minLength": "8 أحرف على الأقل"
+    },
+    "securityNote": {
+      "title": "ملاحظة أمنية مهمة",
+      "content": "احتفظ ببيانات تسجيل الدخول آمنة. ستستخدم هذا البريد الإلكتروني وكلمة المرور للوصول إلى لوحة تحكم البائع، إدارة المنتجات، عرض الطلبات، وتتبع أداء متجرك."
+    },
+    "buttons": {
+      "next": "التالي",
+      "previous": "السابق",
+      "submit": "إرسال الطلب",
+      "registering": "جاري التسجيل..."
+    },
+    "validation": {
+      "requiredFields": "يرجى ملء جميع الحقول المطلوبة: {{fields}}",
+      "expiryAfterIssue": "يجب أن يكون تاريخ الانتهاء بعد تاريخ الإصدار",
+      "invalidEmail": "يرجى إدخال عنوان بريد إلكتروني صحيح",
+      "invalidPhone": "يرجى إدخال رقم هاتف صحيح",
+      "selectCategory": "يرجى اختيار فئة منتج واحدة على الأقل",
+      "storeNameRequired": "اسم المتجر مطلوب",
+      "acceptTerms": "يرجى قبول الشروط والأحكام",
+      "acceptPrivacy": "يرجى قبول سياسة الخصوصية",
+      "accountEmailRequired": "بريد الحساب الإلكتروني مطلوب",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "confirmPasswordRequired": "يرجى تأكيد كلمة المرور",
+      "passwordMismatch": "كلمات المرور غير متطابقة",
+      "passwordTooShort": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+      "registrationSuccess": "تم إرسال طلب تسجيل البائع بنجاح! سنراجع طلبك.",
+      "passwordsMatch": "✓ كلمات المرور متطابقة",
+      "passwordsDoNotMatch": "✗ كلمات المرور غير متطابقة",
+      "registrationFailed": "فشل في إرسال التسجيل. يرجى المحاولة مرة أخرى.",
+      "demoDataPopulated": "تم تعبئة البيانات التجريبية {{randomId}}! البريد الإلكتروني للحساب: vendor{{randomId}}@demo{{domain}}.com"
+    },
+    "options": {
+      "businessType": {
+        "individual": "فردي",
+        "company": "شركة",
+        "partnership": "شراكة"
+      },
+      "legalEntityType": {
+        "egyptian_tax_authority": "مصلحة الضرائب المصرية - EGYPTIAN TAX AUTHORITY",
+        "ministry_supply_trade": "وزارة التموين والتجارة الداخلية - MINISTRY OF SUPPLY AND INTERNAL TRADE",
+        "other": "أخرى"
+      },
+      "selectGovernorate": "اختر المحافظة"
+    },
+    "categories": {
+      "Electronics": "الإلكترونيات",
+      "Fashion": "الأزياء",
+      "Home & Garden": "المنزل والحديقة",
+      "Sports & Outdoors": "الرياضة والهواء الطلق",
+      "Books": "الكتب",
+      "Toys & Games": "الألعاب والترفيه",
+      "Health & Beauty": "الصحة والجمال",
+      "Automotive": "السيارات",
+      "Jewelry": "المجوهرات",
+      "Food & Beverages": "الطعام والمشروبات",
+      "Office Supplies": "مستلزمات المكتب",
+      "Pet Supplies": "مستلزمات الحيوانات الأليفة"
+    }
   }
 }

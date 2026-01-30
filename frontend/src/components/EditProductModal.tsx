@@ -174,20 +174,20 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden border border-gray-100 dark:border-slate-800">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 dark:border-slate-800 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-900">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-1">
               {t("modal.editProduct.title")}
             </h2>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
               {t("modal.editProduct.subtitle")}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 rounded-full transition-colors duration-200"
             aria-label={t("modal.common.close")}
           >
             ✕
@@ -196,7 +196,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
         <form
           onSubmit={handleUpdate}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 px-8 py-6 overflow-y-auto max-h-[calc(90vh-140px)]"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 px-8 py-6 overflow-y-auto max-h-[calc(90vh-140px)] bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100"
         >
           {/* Left: image management */}
           <div className="md:col-span-1 space-y-4">

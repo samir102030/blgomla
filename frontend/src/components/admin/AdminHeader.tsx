@@ -9,6 +9,7 @@ import { useUserStore } from "../../stores/user.store";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import ThemeToggle from "../ThemeToggle";
+import AdminLanguageToggle from "../AdminLanguageToggle";
 import { downloadCsv, getExportPages } from "../../lib/exporters";
 
 interface AdminHeaderProps {
@@ -88,6 +89,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
 
         {/* Right side */}
         <div className="flex items-center space-x-4">
+          <AdminLanguageToggle />
           <ThemeToggle showLabel={false} />
           {(currentExport || fallbackExport) && (
             <button

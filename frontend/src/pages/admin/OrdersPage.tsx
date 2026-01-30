@@ -13,7 +13,6 @@ import OrderDetailsModal from "../../components/OrderDetailsModal";
 import EditOrderModal from "../../components/EditOrderModal";
 import DeleteOrderModal from "../../components/DeleteOrderModal";
 import OrderFiltersModal from "../../components/OrderFiltersModal";
-import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 
 interface Order {
   _id: string;
@@ -289,7 +288,6 @@ const OrdersPage: React.FC = () => {
             {t("order.exportOrders")}
           </button>
         )}
-        <AdminLanguageToggle />
       </div>
 
       {/* Stats Cards */}
@@ -468,7 +466,7 @@ const OrdersPage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                        order.status
+                        order.status,
                       )}`}
                     >
                       {order.status.charAt(0).toUpperCase() +

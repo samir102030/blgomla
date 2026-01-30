@@ -55,7 +55,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
       ? safeImages
           .map((img: any) => (typeof img === "string" ? img : img?.url))
           .filter(Boolean)
-      : ["/placeholder.png"];
+      : [];
 
   const getLocalizedText = (value: any) => {
     if (value === null || value === undefined) return "";
@@ -121,37 +121,52 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-100 dark:border-slate-800">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 dark:border-slate-800 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-50 mb-1">
               Product Details
             </h2>
-            <p className="text-gray-600 text-sm">
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
               View complete product information
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 rounded-full transition-colors duration-200"
             aria-label="Close modal"
           >
             <XMarkIcon className="h-6 w-6 text-gray-500" />
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div className="overflow-y-auto max-h-[calc(90vh-120px)] bg-white dark:bg-slate-900 text-gray-900 dark:text-gray-100">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
             {/* Product Images */}
             <div className="space-y-4">
               {/* Main Image */}
-              <div className="aspect-square bg-gray-50 rounded-xl overflow-hidden shadow-lg">
-                <img
-                  src={productImages[selectedImage]}
-                  alt={productName}
-                  className="w-full h-full object-contain p-4"
-                />
+              <div className="aspect-square bg-gray-50 dark:bg-slate-800 rounded-xl overflow-hidden shadow-lg border border-gray-100 dark:border-slate-800 flex items-center justify-center">
+                {productImages[selectedImage] ? (
+                  <img
+                    src={productImages[selectedImage]}
+                    alt={productName}
+                    className="w-full h-full object-contain p-4"
+                  />
+                ) : (
+                  <div className="text-gray-400 dark:text-gray-600 flex flex-col items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="h-16 w-16"
+                    >
+                      <path d="M6.75 4.5a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 17.25 4.5H6.75Zm0-1.5h10.5A3.75 3.75 0 0 1 21 6.75v10.5A3.75 3.75 0 0 1 17.25 21H6.75A3.75 3.75 0 0 1 3 17.25V6.75A3.75 3.75 0 0 1 6.75 3Z" />
+                      <path d="M8.25 9a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0ZM6.75 16.5l2.75-3.667a1.125 1.125 0 0 1 1.8-.038l1.443 1.805l1.358-1.812a1.125 1.125 0 0 1 1.836.037L17.25 16.5H6.75Z" />
+                    </svg>
+                    <span className="text-sm">No image</span>
+                  </div>
+                )}
               </div>
 
               {/* Thumbnail Images */}
@@ -202,22 +217,22 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 <div className="mb-4">
                   {product.saleActive && salePercentage > 0 ? (
                     <div className="flex items-center space-x-3">
-                      <span className="text-4xl font-bold text-gray-900">
-                        ${effectiveSalePrice?.toFixed(2) ?? price.toFixed(2)}
-                      </span>
-                      <span className="text-2xl text-gray-500 line-through">
-                        ${price.toFixed(2)}
-                      </span>
-                      <span className="bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-full">
-                        -{salePercentage}% OFF
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-4xl font-bold text-gray-900">
+                    <span className="text-4xl font-bold text-gray-900 dark:text-gray-50">
+                      ${effectiveSalePrice?.toFixed(2) ?? price.toFixed(2)}
+                    </span>
+                    <span className="text-2xl text-gray-500 dark:text-gray-400 line-through">
                       ${price.toFixed(2)}
                     </span>
-                  )}
-                </div>
+                    <span className="bg-red-100 dark:bg-red-500/15 text-red-800 dark:text-red-200 text-sm font-semibold px-3 py-1 rounded-full">
+                      -{salePercentage}% OFF
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-4xl font-bold text-gray-900 dark:text-gray-50">
+                    ${price.toFixed(2)}
+                  </span>
+                )}
+              </div>
 
                 {/* Stock Status */}
                 <div
@@ -230,27 +245,27 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
 
               {/* Product Details Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-500 mb-1">SKU</div>
-                  <div className="font-semibold text-gray-900">
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">SKU</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-50">
                     {formatSku(product?._id)}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-500 mb-1">Brand</div>
-                  <div className="font-semibold text-gray-900">
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">Brand</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-50">
                     {product.brand ? getBrandName(product.brand) : "N/A"}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-500 mb-1">Category</div>
-                  <div className="font-semibold text-gray-900">
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">Category</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-50">
                     {getCategoryName(product.Category)}
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-500 mb-1">Sold Count</div>
-                  <div className="font-semibold text-gray-900">
+                <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">Sold Count</div>
+                  <div className="font-semibold text-gray-900 dark:text-gray-50">
                     {product.soldCount || 0}
                   </div>
                 </div>
@@ -281,7 +296,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                   <h4 className="text-lg font-semibold text-gray-900 mb-3">
                     Description
                   </h4>
-                  <p className="text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-4">
+                  <p className="text-gray-700 dark:text-gray-200 leading-relaxed bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
                     {productDescription}
                   </p>
                 </div>
@@ -322,7 +337,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                       .map((feature: string, index: number) => (
                         <li
                           key={index}
-                          className="flex items-center text-gray-700"
+                          className="flex items-center text-gray-700 dark:text-gray-200"
                         >
                           <span className="w-2 h-2 bg-blue-500 rounded-full mr-3 flex-shrink-0"></span>
                           {feature}
@@ -342,12 +357,12 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     {safeAttributes.map((attr: any, index: number) => (
                       <div
                         key={index}
-                        className="flex justify-between items-center bg-gray-50 rounded-lg px-4 py-3"
+                        className="flex justify-between items-center bg-gray-50 dark:bg-slate-800 rounded-lg px-4 py-3"
                       >
-                        <span className="font-medium text-gray-700">
+                        <span className="font-medium text-gray-700 dark:text-gray-200">
                           {getLocalizedText(attr?.name)}:
                         </span>
-                        <span className="text-gray-900">
+                        <span className="text-gray-900 dark:text-gray-50">
                           {getLocalizedText(attr?.value)}
                         </span>
                       </div>
@@ -366,7 +381,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     {safeReviews
                       .slice(0, 3)
                       .map((review: any, index: number) => (
-                        <div key={index} className="bg-gray-50 rounded-lg p-3">
+                        <div key={index} className="bg-gray-50 dark:bg-slate-800 rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center">
                               <img
@@ -391,7 +406,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                         </div>
                       ))}
                     {safeReviews.length > 3 && (
-                      <div className="text-center text-gray-500 text-sm">
+                      <div className="text-center text-gray-500 dark:text-gray-400 text-sm">
                         And {safeReviews.length - 3} more reviews...
                       </div>
                     )}
@@ -403,10 +418,10 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end px-8 py-4 border-t border-gray-100 bg-gray-50">
+        <div className="flex justify-end px-8 py-4 border-t border-gray-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-900">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors duration-200 font-medium"
+            className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors duration-200 font-medium"
           >
             Close
           </button>

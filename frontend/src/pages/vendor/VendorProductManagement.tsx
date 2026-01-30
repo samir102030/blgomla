@@ -179,7 +179,11 @@ const VendorProductManagement: React.FC = () => {
 
       {/* Bulk Upload Section */}
       {showBulkUpload && (
-        <BulkProductUpload />
+        <BulkProductUpload onUploadComplete={() => {
+          if (vendorStore?._id) {
+            fetchProducts({ storeId: vendorStore._id });
+          }
+        }} />
       )}
 
       {/* Tabs */}

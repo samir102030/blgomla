@@ -15,7 +15,6 @@ import AddCouponModal from "../../components/AddCouponModal";
 import EditCouponModal from "../../components/EditCouponModal";
 import DeleteCouponModal from "../../components/DeleteCouponModal";
 import ViewCouponModal from "../../components/ViewCouponModal";
-import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 
 const CouponsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -136,7 +135,6 @@ const CouponsPage: React.FC = () => {
           <p className="text-[#9E9E9E]">{t("coupon.createManage")}</p>
         </div>
         <div className="flex items-center gap-4">
-          <AdminLanguageToggle />
           <button
             onClick={() => setIsCreating(true)}
             className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
@@ -337,7 +335,7 @@ const CouponsPage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                        coupon
+                        coupon,
                       )}`}
                     >
                       {getStatusText(coupon)}

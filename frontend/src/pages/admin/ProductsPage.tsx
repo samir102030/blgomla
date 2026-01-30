@@ -19,7 +19,6 @@ import ProductDetailsModal from "../../components/ProductDetailsModal";
 import EditProductModal from "../../components/EditProductModal";
 import DeleteProductModal from "../../components/DeleteProductModal";
 import FilterModal, { type ProductFilters } from "../../components/FilterModal";
-import AdminLanguageToggle from "../../components/AdminLanguageToggle";
 import BulkProductUpload from "../../components/vendor/BulkProductUpload";
 
 const ProductsPage: React.FC = () => {
@@ -250,9 +249,8 @@ const ProductsPage: React.FC = () => {
           <p className="text-[#9E9E9E]">{t("product.manageInventory")}</p>
         </div>
         <div className="flex items-center gap-4">
-          <AdminLanguageToggle />
-          {/* Show Bulk Upload button only for vendors */}
-          {user?.role === "store" && (
+          {/* Bulk Upload for admin and vendors */}
+          {(user?.role === "store" || user?.role === "admin") && (
             <button
               onClick={() => setShowBulkUpload(!showBulkUpload)}
               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-medium"
@@ -270,9 +268,9 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Bulk Upload Section - Only for vendors */}
-      {user?.role === "store" && showBulkUpload && (
-        <BulkProductUpload />
+      {/* Bulk Upload Section */}
+      {(user?.role === "store" || user?.role === "admin") && showBulkUpload && (
+        <BulkProductUpload onUploadComplete={refreshProducts} />
       )}
 
       {isCreating && (
@@ -464,11 +462,25 @@ const ProductsPage: React.FC = () => {
                 <tr key={product._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <img
-                        className="h-10 w-10 rounded-lg object-cover"
-                        src={product.images?.[0]?.url || "/placeholder.png"}
-                        alt={product.name}
-                      />
+                      {product.images?.[0]?.url ? (
+                        <img
+                          className="h-10 w-10 rounded-lg object-cover"
+                          src={product.images?.[0]?.url}
+                          alt={product.name}
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center border border-gray-200">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="h-6 w-6"
+                          >
+                            <path d="M6.75 4.5a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 17.25 4.5H6.75Zm0-1.5h10.5A3.75 3.75 0 0 1 21 6.75v10.5A3.75 3.75 0 0 1 17.25 21H6.75A3.75 3.75 0 0 1 3 17.25V6.75A3.75 3.75 0 0 1 6.75 3Z" />
+                            <path d="M8.25 9a1.5 1.5 0 1 1 3 0a1.5 1.5 0 0 1-3 0ZM6.75 16.5l2.75-3.667a1.125 1.125 0 0 1 1.8-.038l1.443 1.805l1.358-1.812a1.125 1.125 0 0 1 1.836.037L17.25 16.5H6.75Z" />
+                          </svg>
+                        </div>
+                      )}
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">
                           {product.name}
@@ -510,7 +522,7 @@ const ProductsPage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                        getStockStatus(product.stock)
+                        getStockStatus(product.stock),
                       )}`}
                     >
                       {getStockStatus(product.stock)

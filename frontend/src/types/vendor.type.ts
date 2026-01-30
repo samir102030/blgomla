@@ -1,6 +1,5 @@
 export interface VendorRegistrationData {
   // Business Information
-  businessName: string;
   businessType: "individual" | "company" | "partnership";
   commercialRegistrationNumber?: string;
   taxNumber?: string;

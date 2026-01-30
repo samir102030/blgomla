@@ -1073,5 +1073,157 @@
     "price": "Price:",
     "viewProduct": "View Product",
     "savings": "Savings"
+  },
+  "vendorRegistration": {
+    "title": "Vendor Registration",
+    "subtitle": "Join our marketplace as a vendor and start selling your products",
+    "generateRandomData": "Generate Random Data",
+    "step1": {
+      "title": "Legal Entity Information",
+      "legalEntityType": "What Authority is Your Commercial Registration From?",
+      "licenseNumber": "License Number",
+      "licenseNumberPlaceholder": "Enter your trade license number",
+      "companyName": "Company Name",
+      "companyNamePlaceholder": "Enter your company name",
+      "companyAddress": "Company Address",
+      "companyAddressPlaceholder": "Enter your company address",
+      "issueDate": "Issue Date",
+      "expiryDate": "Expiry Date",
+      "uploadCommercialRegistration": "Upload Commercial Registration",
+      "uploadDescription": "Details on the document should match the details you entered. Provide all the pages of the document and ensure that the image copy is high quality and colored.",
+      "clickToUpload": "Click to upload or drag and drop",
+      "pdfPngJpg": "PDF, PNG, JPG up to 10MB",
+      "fileUploaded": "✓ {{fileName}}"
+    },
+    "step2": {
+      "title": "Business Information",
+      "businessType": "Business Type",
+      "contactPersonName": "Contact Person Name",
+      "contactPersonNamePlaceholder": "Enter contact person name",
+      "email": "Email",
+      "emailPlaceholder": "Enter email address",
+      "phone": "Phone",
+      "phonePlaceholder": "Enter phone number",
+      "alternativePhone": "Alternative Phone",
+      "alternativePhonePlaceholder": "Enter alternative phone number",
+      "address": "Address",
+      "addressPlaceholder": "Enter complete address",
+      "city": "City",
+      "cityPlaceholder": "Enter city",
+      "governorate": "Governorate",
+      "postalCode": "Postal Code",
+      "postalCodePlaceholder": "Enter postal code",
+      "businessDescription": "Business Description",
+      "businessDescriptionPlaceholder": "Describe your business"
+    },
+    "step3": {
+      "title": "Product Categories & Store Setup",
+      "selectCategories": "Select Product Categories",
+      "expectedVolume": "Expected Monthly Sales Volume",
+      "expectedVolumePlaceholder": "Enter expected monthly sales volume",
+      "storeName": "Store Name",
+      "storeNamePlaceholder": "Enter your store name",
+      "taxNumber": "Tax Number",
+      "taxNumberPlaceholder": "Enter tax number",
+      "storeDescription": "Store Description",
+      "storeDescriptionPlaceholder": "Describe your store",
+      "uploadStoreLogo": "Store Logo (Optional)",
+      "uploadLogoDescription": "Click to upload store logo",
+      "pngJpg": "PNG, JPG up to 5MB"
+    },
+    "step4": {
+      "title": "Documents & Final Review",
+      "taxCard": "Tax Card Document",
+      "nationalId": "National ID",
+      "summary": "Application Summary",
+      "summaryLabels": {
+        "contactPerson": "Contact Person:",
+        "email": "Email:",
+        "phone": "Phone:",
+        "storeName": "Store Name:",
+        "categories": "Categories:",
+        "city": "City:",
+        "governorate": "Governorate:"
+      },
+      "terms": "Terms and Conditions",
+      "privacy": "Privacy Policy",
+      "acceptTerms": "I accept the Terms and Conditions",
+      "acceptPrivacy": "I accept the Privacy Policy"
+    },
+    "step5": {
+      "title": "Account Setup",
+      "accountSection": {
+        "title": "Create Your Vendor Account",
+        "description": "Set up your login credentials to access your vendor dashboard and manage your store."
+      },
+      "accountEmail": "Account Email",
+      "accountEmailPlaceholder": "Enter your account email address",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "passwordRequirements": "Password must contain:",
+      "uppercase": "At least one uppercase letter (A-Z)",
+      "lowercase": "At least one lowercase letter (a-z)",
+      "number": "At least one number (0-9)",
+      "minLength": "At least 8 characters long"
+    },
+    "securityNote": {
+      "title": "Important Security Note",
+      "content": "Keep your login credentials secure. You will use this email and password to access your vendor dashboard, manage products, view orders, and track your store performance."
+    },
+    "buttons": {
+      "next": "Next",
+      "previous": "Previous",
+      "submit": "Submit Application",
+      "registering": "Registering..."
+    },
+    "validation": {
+      "requiredFields": "Please fill in all required fields: {{fields}}",
+      "expiryAfterIssue": "Expiry date must be after issue date",
+      "invalidEmail": "Please enter a valid email address",
+      "invalidPhone": "Please enter a valid phone number",
+      "selectCategory": "Please select at least one product category",
+      "storeNameRequired": "Store name is required",
+      "acceptTerms": "Please accept the Terms and Conditions",
+      "acceptPrivacy": "Please accept the Privacy Policy",
+      "accountEmailRequired": "Account email is required",
+      "passwordRequired": "Password is required",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters long",
+      "registrationSuccess": "Vendor registration submitted successfully! We will review your application.",
+      "passwordsMatch": "✓ Passwords match",
+      "passwordsDoNotMatch": "✗ Passwords do not match",
+      "registrationFailed": "Failed to submit registration. Please try again.",
+      "demoDataPopulated": "Demo data {{randomId}} populated! Account email: vendor{{randomId}}@demo{{domain}}.com"
+    },
+    "options": {
+      "businessType": {
+        "individual": "Individual",
+        "company": "Company",
+        "partnership": "Partnership"
+      },
+      "legalEntityType": {
+        "egyptian_tax_authority": "مصلحة الضرائب المصرية - EGYPTIAN TAX AUTHORITY",
+        "ministry_supply_trade": "وزارة التموين والتجارة الداخلية - MINISTRY OF SUPPLY AND INTERNAL TRADE",
+        "other": "Other"
+      },
+      "selectGovernorate": "Select Governorate"
+    },
+    "categories": {
+      "Electronics": "Electronics",
+      "Fashion": "Fashion",
+      "Home & Garden": "Home & Garden",
+      "Sports & Outdoors": "Sports & Outdoors",
+      "Books": "Books",
+      "Toys & Games": "Toys & Games",
+      "Health & Beauty": "Health & Beauty",
+      "Automotive": "Automotive",
+      "Jewelry": "Jewelry",
+      "Food & Beverages": "Food & Beverages",
+      "Office Supplies": "Office Supplies",
+      "Pet Supplies": "Pet Supplies"
+    }
   }
 }
