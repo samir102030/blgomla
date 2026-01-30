@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useVendorStore } from "../stores/vendor.store";
 import type { VendorRegistrationData } from "../types/vendor.type";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 const VendorRegistrationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -507,7 +509,7 @@ const VendorRegistrationPage: React.FC = () => {
             className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
               step <= currentStep
                 ? "bg-yellow-500 text-white"
-                : "bg-gray-200 text-gray-600"
+                : "bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300"
             }`}
           >
             {step}
@@ -515,7 +517,7 @@ const VendorRegistrationPage: React.FC = () => {
           {step < 5 && (
             <div
               className={`w-16 h-1 mx-2 ${
-                step < currentStep ? "bg-yellow-500" : "bg-gray-200"
+                step < currentStep ? "bg-yellow-500" : "bg-gray-200 dark:bg-slate-700"
               }`}
             />
           )}
@@ -530,7 +532,7 @@ const VendorRegistrationPage: React.FC = () => {
         <button
           type="button"
           onClick={fillDummyData}
-          className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200"
+          className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200"
         >
           Generate Random Data
         </button>
@@ -1096,8 +1098,8 @@ const VendorRegistrationPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-blue-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-blue-900 mb-4">
+      <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/25 p-6 rounded-lg">
+        <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-4">
           Terms & Conditions
         </h3>
         <div className="space-y-4">
@@ -1112,7 +1114,10 @@ const VendorRegistrationPage: React.FC = () => {
             />
             <span className="text-sm text-gray-700">
               I accept the{" "}
-              <a href="#" className="text-blue-600 hover:underline">
+              <a
+                href="#"
+                className="text-blue-600 dark:text-blue-200 hover:underline"
+              >
                 Terms and Conditions
               </a>{" "}
               for becoming a vendor on Belgomla
@@ -1130,7 +1135,10 @@ const VendorRegistrationPage: React.FC = () => {
             />
             <span className="text-sm text-gray-700">
               I accept the{" "}
-              <a href="#" className="text-blue-600 hover:underline">
+              <a
+                href="#"
+                className="text-blue-600 dark:text-blue-200 hover:underline"
+              >
                 Privacy Policy
               </a>
             </span>
@@ -1138,8 +1146,8 @@ const VendorRegistrationPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-green-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-green-900 mb-4">
+      <div className="bg-green-50 dark:bg-emerald-500/10 border border-green-100 dark:border-emerald-500/25 p-6 rounded-lg">
+        <h3 className="text-lg font-medium text-green-900 dark:text-emerald-100 mb-4">
           Application Summary
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -1181,14 +1189,14 @@ const VendorRegistrationPage: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Account Setup</h2>
 
-      <div className="bg-blue-50 p-6 rounded-lg mb-6">
+      <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/25 p-6 rounded-lg mb-6">
         <div className="flex items-center mb-3">
           <div className="text-2xl mr-3">🔐</div>
-          <h3 className="text-lg font-medium text-blue-900">
+          <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100">
             Create Your Vendor Account
           </h3>
         </div>
-        <p className="text-sm text-blue-700">
+        <p className="text-sm text-blue-700 dark:text-blue-100/80">
           Set up your login credentials to access your vendor dashboard and
           manage your store.
         </p>
@@ -1316,14 +1324,14 @@ const VendorRegistrationPage: React.FC = () => {
           </ul>
         </div>
 
-        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+        <div className="bg-amber-50 dark:bg-amber-500/10 p-4 rounded-lg border border-amber-200 dark:border-amber-500/30">
           <div className="flex items-start">
-            <div className="text-amber-600 mr-2">⚠️</div>
+            <div className="text-amber-600 dark:text-amber-300 mr-2">⚠️</div>
             <div>
-              <h4 className="text-sm font-medium text-amber-800 mb-1">
+              <h4 className="text-sm font-medium text-amber-800 dark:text-amber-100 mb-1">
                 Important Security Note
               </h4>
-              <p className="text-xs text-amber-700">
+              <p className="text-xs text-amber-700 dark:text-amber-100/90">
                 Keep your login credentials secure. You will use this email and
                 password to access your vendor dashboard, manage products, view
                 orders, and track your store performance.
@@ -1336,9 +1344,11 @@ const VendorRegistrationPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-lg p-8">
+    <>
+      <Header />
+      <main className="min-h-screen bg-gray-50 dark:bg-[var(--bg)] py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <img src="/logo.png" alt="Belgomla" className="h-12 w-auto" />
@@ -1357,49 +1367,51 @@ const VendorRegistrationPage: React.FC = () => {
 
           {renderStepIndicator()}
 
-          <form onSubmit={handleSubmit}>
-            {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
-            {currentStep === 4 && renderStep4()}
-            {currentStep === 5 && renderStep5()}
+            <form onSubmit={handleSubmit}>
+              {currentStep === 1 && renderStep1()}
+              {currentStep === 2 && renderStep2()}
+              {currentStep === 3 && renderStep3()}
+              {currentStep === 4 && renderStep4()}
+              {currentStep === 5 && renderStep5()}
 
-            <div className="flex justify-between mt-8">
-              <button
-                type="button"
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className={`px-6 py-2 rounded-md ${
-                  currentStep === 1
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                }`}
-              >
-                Previous
-              </button>
-
-              {currentStep < 5 ? (
+              <div className="flex justify-between mt-8">
                 <button
                   type="button"
-                  onClick={nextStep}
-                  className="px-6 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
+                  onClick={prevStep}
+                  disabled={currentStep === 1}
+                  className={`px-6 py-2 rounded-md ${
+                    currentStep === 1
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-slate-800 dark:text-gray-500"
+                      : "bg-gray-300 text-gray-700 hover:bg-gray-400 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700"
+                  }`}
                 >
-                  Next
+                  Previous
                 </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50"
-                >
-                  {loading ? "Submitting..." : "Submit Application"}
-                </button>
-              )}
-            </div>
-          </form>
+
+                {currentStep < 5 ? (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className="px-6 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50"
+                  >
+                    {loading ? "Submitting..." : "Submit Application"}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-    </div>
+      </main>
+      <Footer />
+    </>
   );
 };
 

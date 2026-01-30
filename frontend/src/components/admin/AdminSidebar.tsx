@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useUserStore } from "../../stores/user.store";
+import { useTranslation } from "react-i18next";
 import {
   HomeIcon,
   ShoppingBagIcon,
@@ -23,6 +24,7 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
+  const { t } = useTranslation();
   const location = useLocation();
   const user = useUserStore((s) => s.user);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
@@ -40,77 +42,94 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
   };
 
   const menuItems = [
-    { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+    { name: t("admin.dashboard"), href: "/dashboard", icon: HomeIcon },
     {
-      name: "Vendors",
+      name: t("admin.vendors"),
       href: "/dashboard/vendors",
       icon: BuildingStorefrontIcon,
       roles: ["admin"],
     },
     {
-      name: "Requests",
+      name: t("admin.requests"),
       href: "/dashboard/requests",
       icon: ClipboardDocumentListIcon,
       roles: ["admin"],
     },
     {
-      name: "E-commerce",
+      name: t("admin.ecommerce"),
       icon: ShoppingBagIcon,
       children: [
-        { name: "Category", href: "/dashboard/category", roles: ["admin"] },
-        { name: "Brands", href: "/dashboard/brands", roles: ["admin"] },
         {
-          name: "Products",
+          name: t("admin.category"),
+          href: "/dashboard/category",
+          roles: ["admin"],
+        },
+        {
+          name: t("admin.brands"),
+          href: "/dashboard/brands",
+          roles: ["admin"],
+        },
+        {
+          name: t("admin.products"),
           href: "/dashboard/products",
           roles: ["admin", "store"],
         },
         {
-          name: "Coupons",
+          name: t("admin.coupons"),
           href: "/dashboard/coupons",
           roles: ["admin", "store"],
         },
         // { name: "Attributes", href: "/dashboard/attributes" },
-        { name: "Order", href: "/dashboard/order", roles: ["admin", "store"] },
         {
-          name: "Collections",
-          href: "/dashboard/collections",
+          name: t("admin.order"),
+          href: "/dashboard/order",
+          roles: ["admin", "store"],
+        },
+        {
+          name: t("admin.collections"),
+          href: "/dashboard/vendor-collections",
           roles: ["store"],
         },
       ],
     },
     {
-      name: "Returns",
+      name: t("admin.returns"),
       href: "/dashboard/returns",
       icon: ClipboardDocumentListIcon,
       roles: ["admin", "store"],
     },
     {
-      name: "Collections",
+      name: t("admin.collections"),
       href: "/dashboard/collections",
       icon: TagIcon,
       roles: ["admin", "store"],
     },
-    { name: "User", href: "/dashboard/user", icon: UserIcon, roles: ["admin"] },
     {
-      name: "Customer Reviews",
+      name: t("admin.user"),
+      href: "/dashboard/user",
+      icon: UserIcon,
+      roles: ["admin"],
+    },
+    {
+      name: t("admin.customerReviews"),
       href: "/dashboard/reviews",
       icon: ChatBubbleLeftRightIcon,
       roles: ["admin"],
     },
     {
-      name: "Customer Support",
+      name: t("admin.customerSupport"),
       href: "/dashboard/support",
       icon: ChatBubbleLeftRightIcon,
       roles: ["admin"],
     },
     {
-      name: "Sales",
+      name: t("admin.sales"),
       href: "/dashboard/sales",
       icon: ChartBarIcon,
       roles: ["admin", "store"],
     },
     {
-      name: "Advertisements",
+      name: t("admin.advertisements"),
       href: "/dashboard/advertisements",
       icon: MegaphoneIcon,
       roles: ["admin"],
@@ -154,12 +173,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
 
   return (
     <div
-      className={`bg-gradient-to-b from-[#001F3F] to-[#002B5B] shadow-2xl transition-all duration-500 ease-in-out ${
+      className={`bg-gradient-to-b from-white to-gray-50 dark:from-[#001F3F] dark:to-[#002B5B] shadow-2xl transition-all duration-500 ease-in-out ${
         collapsed ? "w-16 sm:w-20" : "w-48 sm:w-56 md:w-72"
-      } flex flex-col border-r border-[#FFD600]/20 backdrop-blur-sm`}
+      } flex flex-col border-r border-gray-200 dark:border-[#FFD600]/20 backdrop-blur-sm`}
     >
       {/* Logo */}
-      <div className="p-3 sm:p-4 md:p-6 border-b border-[#FFD600]/30 bg-gradient-to-r from-[#FFD600]/10 to-transparent">
+      <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-[#FFD600]/30 bg-gradient-to-r from-gray-50 to-white dark:from-[#FFD600]/10 dark:to-transparent">
         <div className="flex items-center">
           <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#FFD600] to-[#FFA500] rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
             <span className="text-[#333333] font-bold text-xs sm:text-sm lg:text-lg">
@@ -167,7 +186,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
             </span>
           </div>
           {!collapsed && (
-            <span className="ml-2 sm:ml-3 md:ml-4 text-lg sm:text-xl md:text-2xl font-bold text-[#FFD600] tracking-wide">
+            <span className="ml-2 sm:ml-3 md:ml-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-[#FFD600] tracking-wide">
               <Link to="/">ELGOMLA</Link>
             </span>
           )}
@@ -176,10 +195,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
 
       {/* Active Page Icon (when collapsed) */}
       {collapsed && activeItem && (
-        <div className="p-2 sm:p-3 md:p-4 border-b border-[#FFD600]/20">
+        <div className="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-[#FFD600]/20">
           <div className="flex justify-center">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#FFD600]/30 to-[#FFD600]/10 rounded-xl flex items-center justify-center shadow-lg border border-[#FFD600]/50">
-              <activeItem.icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#FFD600]" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#FFD600]/30 dark:to-[#FFD600]/10 rounded-xl flex items-center justify-center shadow-lg border border-gray-300 dark:border-[#FFD600]/50">
+              <activeItem.icon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-[#FFD600]" />
             </div>
           </div>
         </div>
@@ -217,7 +236,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
             if (item.children) {
               const accessibleChildren = item.children.filter(
                 (child) =>
-                  !child.roles || child.roles.includes(user?.role || "")
+                  !child.roles || child.roles.includes(user?.role || ""),
               );
               return accessibleChildren.length > 0;
             }
@@ -229,7 +248,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               {item.children ? (
                 <div className="group">
                   <div
-                    className="flex items-center px-3 sm:px-4 py-2 sm:py-3 text-[#E0E0E0] hover:bg-gradient-to-r hover:from-[#FFD600]/20 hover:to-[#FFD600]/10 hover:text-[#FFD600] rounded-xl cursor-pointer transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-[#FFD600]/30"
+                    className="flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-[#E0E0E0] hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-[#FFD600]/20 dark:hover:to-[#FFD600]/10 hover:text-gray-900 dark:hover:text-[#FFD600] rounded-xl cursor-pointer transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-gray-300 dark:hover:border-[#FFD600]/30"
                     onClick={() => toggleExpanded(item.name)}
                   >
                     <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -262,7 +281,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                         .filter(
                           (child) =>
                             !child.roles ||
-                            child.roles.includes(user?.role || "")
+                            child.roles.includes(user?.role || ""),
                         )
                         .map((child, childIndex) => (
                           <Link
@@ -270,8 +289,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                             to={child.href}
                             className={`block px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-1 ${
                               isActive(child.href)
-                                ? "bg-gradient-to-r from-[#FFD600]/30 to-[#FFD600]/20 text-[#FFD600] font-semibold shadow-lg border border-[#FFD600]/50"
-                                : "text-[#B0B0B0] hover:bg-gradient-to-r hover:from-[#FFD600]/15 hover:to-[#FFD600]/5 hover:text-[#FFD600] border border-transparent hover:border-[#FFD600]/20"
+                                ? "bg-gradient-to-r from-blue-100 to-blue-50 dark:from-[#FFD600]/30 dark:to-[#FFD600]/20 text-blue-900 dark:text-[#FFD600] font-semibold shadow-lg border border-blue-300 dark:border-[#FFD600]/50"
+                                : "text-gray-600 dark:text-[#B0B0B0] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-25 dark:hover:from-[#FFD600]/15 dark:hover:to-[#FFD600]/5 hover:text-gray-900 dark:hover:text-[#FFD600] border border-transparent hover:border-gray-200 dark:hover:border-[#FFD600]/20"
                             }`}
                           >
                             {child.name}
@@ -283,10 +302,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               ) : (
                 <Link
                   to={item.href}
-                  className={`flex items-center px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-[#FFD600]/30 ${
+                  className={`flex items-center px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-gray-300 dark:hover:border-[#FFD600]/30 ${
                     isActive(item.href)
-                      ? "bg-gradient-to-r from-[#FFD600]/30 to-[#FFD600]/20 text-[#FFD600] font-semibold shadow-lg border-[#FFD600]/50"
-                      : "text-[#E0E0E0] hover:bg-gradient-to-r hover:from-[#FFD600]/20 hover:to-[#FFD600]/10 hover:text-[#FFD600]"
+                      ? "bg-gradient-to-r from-blue-100 to-blue-50 dark:from-[#FFD600]/30 dark:to-[#FFD600]/20 text-blue-900 dark:text-[#FFD600] font-semibold shadow-lg border-blue-300 dark:border-[#FFD600]/50"
+                      : "text-gray-700 dark:text-[#E0E0E0] hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-[#FFD600]/20 dark:hover:to-[#FFD600]/10 hover:text-gray-900 dark:hover:text-[#FFD600]"
                   }`}
                 >
                   <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />

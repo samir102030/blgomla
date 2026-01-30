@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useCollectionStore } from "../../stores/collection.store";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
+import { useUserStore } from "../../stores/user.store";
 
 interface Product {
   _id: string;
@@ -15,6 +16,7 @@ interface Product {
 }
 
 const AdminCollectionsPage: React.FC = () => {
+  const user = useUserStore((state) => state.user);
   const {
     collections,
     loading,
@@ -34,6 +36,23 @@ const AdminCollectionsPage: React.FC = () => {
   const [items, setItems] = useState<Record<string, number>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+
+  // Check if user has admin access
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🚫</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Access Denied
+          </h1>
+          <p className="text-gray-600">
+            You are not authorized to access this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     fetchCollections();
@@ -110,13 +129,13 @@ const AdminCollectionsPage: React.FC = () => {
       toast.success(
         editingId
           ? "Collection updated successfully"
-          : "Collection created successfully"
+          : "Collection created successfully",
       );
     } else {
       toast.error(
         editingId
           ? "Failed to update collection"
-          : "Failed to create collection"
+          : "Failed to create collection",
       );
     }
   };

@@ -57,7 +57,7 @@ const AdminRoutes: React.FC = () => {
         />
         <Route path="/order" element={<OrdersPage />} />
         <Route path="/returns" element={<ReturnsPage />} />
-        <Route path="/collections" element={<VendorCollectionsPage />} />
+        <Route path="/vendor-collections" element={<VendorCollectionsPage />} />
 
         {/* Products */}
         <Route path="/products" element={<ProductsPage />} />

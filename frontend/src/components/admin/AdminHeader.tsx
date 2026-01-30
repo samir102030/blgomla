@@ -7,6 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import ThemeToggle from "../ThemeToggle";
 import { downloadCsv, getExportPages } from "../../lib/exporters";
 
@@ -15,6 +16,7 @@ interface AdminHeaderProps {
 }
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
+  const { t, i18n } = useTranslation();
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [exporting, setExporting] = useState(false);
   const { user, logout } = useUserStore();
@@ -22,12 +24,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
 
   const exportPages = useMemo(
     () => getExportPages((user?.role as any) || "admin"),
-    [user?.role]
+    [user?.role],
   );
 
   const currentExport = useMemo(() => {
     const matches = exportPages.filter((page) =>
-      location.pathname.startsWith(page.path)
+      location.pathname.startsWith(page.path),
     );
     return matches.sort((a, b) => b.path.length - a.path.length)[0];
   }, [exportPages, location.pathname]);
@@ -58,12 +60,15 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
     }
   };
 
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const currentDate = new Date().toLocaleDateString(
+    i18n.language === "ar" ? "ar-SA" : "en-US",
+    {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    },
+  );
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
@@ -90,7 +95,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               className="px-3 py-2 text-sm bg-[#002B5B] text-white rounded-lg hover:bg-[#001a3d] transition-colors"
               disabled={exporting}
             >
-              {exporting ? "Exporting..." : "Export CSV"}
+              {exporting ? t("admin.exporting") : t("admin.exportCsv")}
             </button>
           )}
           {/* User Profile Dropdown */}
@@ -116,7 +121,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                   <Link to="/account">
                     <button className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       <UserCircleIcon className="w-4 h-4" />
-                      <span>Profile</span>
+                      <span>{t("admin.profile")}</span>
                     </button>
                   </Link>
                   <div className="border-t border-gray-100"></div>
@@ -125,7 +130,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                     className="flex items-center space-x-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                   >
                     <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                    <span>Logout</span>
+                    <span>{t("account.logout")}</span>
                   </button>
                 </div>
               </div>
