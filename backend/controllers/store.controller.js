@@ -8,6 +8,9 @@ import User from "../models/user.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import { controllerWrapper } from "../utils/wrappers.js";
 
+const isAdminUser = (user) =>
+  user && ["admin", "super_admin"].includes(user.role);
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dlommecfr",
@@ -381,7 +384,7 @@ export const getAllVendors = controllerWrapper(
   "getAllVendors",
   async (req, res) => {
     // Only admin can access this
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",
@@ -444,7 +447,7 @@ export const approveVendor = controllerWrapper(
   "approveVendor",
   async (req, res) => {
     // Only admin can approve vendors
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",
@@ -484,7 +487,7 @@ export const rejectVendor = controllerWrapper(
   "rejectVendor",
   async (req, res) => {
     // Only admin can reject vendors
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",
@@ -526,7 +529,7 @@ export const suspendVendor = controllerWrapper(
   "suspendVendor",
   async (req, res) => {
     // Only admin can suspend vendors
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",
@@ -562,7 +565,7 @@ export const updateVendorStatus = controllerWrapper(
   "updateVendorStatus",
   async (req, res) => {
     // Only admin can update vendor status
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",
@@ -613,7 +616,7 @@ export const deleteVendor = controllerWrapper(
   "deleteVendor",
   async (req, res) => {
     // Only admin can delete vendors
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",
@@ -652,7 +655,7 @@ export const safeDeleteVendor = controllerWrapper(
   "safeDeleteVendor",
   async (req, res) => {
     // Only admin can soft delete vendors
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",
@@ -691,7 +694,7 @@ export const restoreVendor = controllerWrapper(
   "restoreVendor",
   async (req, res) => {
     // Only admin can restore vendors
-    if (req.user.role !== "admin") {
+    if (!isAdminUser(req.user)) {
       return res.status(403).json({
         success: false,
         message: "Access denied - Admin only",

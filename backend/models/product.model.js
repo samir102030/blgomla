@@ -115,6 +115,22 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    approvalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    approvalNotes: {
+      type: String,
+      trim: true,
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    approvedAt: {
+      type: Date,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -182,6 +198,10 @@ const productSchema = new mongoose.Schema(
     bulkPricing: {
       type: [bulkPricingSchema],
       default: [],
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   { timestamps: true }

@@ -21,6 +21,8 @@ import {
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useUserStore();
+  const isAdminLike =
+    user?.role === "admin" || user?.role === "super_admin";
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
   const [combineFiles, setCombineFiles] = useState(true);
@@ -43,7 +45,7 @@ const AdminDashboard: React.FC = () => {
     if (user?.role === "store") {
       fetchVendorStore().catch(() => {});
       fetchDashboardStats().catch(() => {});
-    } else if (user?.role === "admin") {
+    } else if (isAdminLike) {
       // admin dashboard - backend should return platform-wide stats
       fetchDashboardStats().catch(() => {});
       fetchVendors({ page: 1, limit: 10 }).catch(() => {});
@@ -115,7 +117,7 @@ const AdminDashboard: React.FC = () => {
     if (user?.role === "store") {
       fetchVendorStore().catch(() => {});
       fetchDashboardStats().catch(() => {});
-    } else if (user?.role === "admin") {
+    } else if (isAdminLike) {
       fetchDashboardStats().catch(() => {});
       fetchVendors({ page: 1, limit: 10 }).catch(() => {});
     }
@@ -136,13 +138,11 @@ const AdminDashboard: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {user?.role === "admin"
-                ? t("admin.dashboard")
-                : t("admin.storeDashboard")}
+              {isAdminLike ? t("admin.dashboard") : t("admin.storeDashboard")}
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 mt-1">
               {t("admin.welcomeBack")} {t("admin.hereWhatsHappening")}{" "}
-              {user?.role === "admin" ? t("admin.platform") : t("admin.store")}.
+              {isAdminLike ? t("admin.platform") : t("admin.store")}.
             </p>
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
@@ -411,7 +411,7 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Admin-only sections */}
-        {user?.role === "admin" && (
+        {isAdminLike && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Best Sellers for Admin */}
             <div className="bg-white rounded-xl p-6 shadow-lg">

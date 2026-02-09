@@ -11,6 +11,22 @@ import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
+
+const isSuperAdmin = (user) => user?.role === "super_admin";
+
+const guardSuperAdminMutation = async (targetUserId, actor) => {
+  const targetUser = await User.findById(targetUserId);
+  if (!targetUser) {
+    return { status: 404, body: { success: false, message: "User not found" } };
+  }
+  if (isSuperAdmin(targetUser) && !isSuperAdmin(actor)) {
+    return {
+      status: 403,
+      body: { success: false, message: "Cannot modify a super admin account" },
+    };
+  }
+  return { targetUser };
+};
 export const signup = controllerWrapper("signup", async (req, res) => {
   const { email, password, name, phoneNumber, role, storeDescription } =
     req.body;
@@ -167,18 +183,6 @@ export const login = controllerWrapper("login", async (req, res) => {
 
   user.lastLogin = new Date();
   await user.save();
-
-  // Create login notification
-  try {
-    await Notification.create({
-      user: user._id,
-      title: "Welcome Back",
-      message: "You have successfully logged in to your account.",
-      type: "info",
-    });
-  } catch (error) {
-    console.error("Error creating login notification:", error);
-  }
 
   return res.status(200).json({
     success: true,
@@ -343,6 +347,9 @@ export const updateUser = controllerWrapper("updateUser", async (req, res) => {
       .json({ success: false, message: "No valid data provided to update" });
   }
 
+  const guard = await guardSuperAdminMutation(userId, req.user);
+  if (guard.status) return res.status(guard.status).json(guard.body);
+
   const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
     new: true,
     runValidators: true,
@@ -366,17 +373,14 @@ export const safeDeleteUser = controllerWrapper(
         .json({ success: false, message: "User ID is required" });
     }
 
+    const guard = await guardSuperAdminMutation(userId, req.user);
+    if (guard.status) return res.status(guard.status).json(guard.body);
+
     const user = await User.findByIdAndUpdate(
       userId,
       { deleted: true },
       { new: true },
     );
-
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
 
     return res
       .status(200)
@@ -395,13 +399,10 @@ export const finalDeleteUser = controllerWrapper(
         .json({ success: false, message: "User ID is required" });
     }
 
-    const user = await User.findByIdAndDelete(userId);
+    const guard = await guardSuperAdminMutation(userId, req.user);
+    if (guard.status) return res.status(guard.status).json(guard.body);
 
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
+    const user = await User.findByIdAndDelete(userId);
 
     res
       .status(200)
@@ -412,18 +413,20 @@ export const finalDeleteUser = controllerWrapper(
 export const changeUserRole = controllerWrapper(
   "changeUserRole",
   async (req, res) => {
-    const { userId } = req.params;
-    const { role } = req.body;
-    if (role === "admin")
-      return res.status(400).json({ message: "Cannot change role to admin" });
-    if (!userId || !role)
+  const { userId } = req.params;
+  const { role } = req.body;
+  if (role === "admin")
+    return res.status(400).json({ message: "Cannot change role to admin" });
+  if (!userId || !role)
       return res.status(400).json({ message: "User ID and role are required" });
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+  const guard = await guardSuperAdminMutation(userId, req.user);
+  if (guard.status) return res.status(guard.status).json(guard.body);
 
-    user.role = role;
-    await user.save();
+  const user = guard.targetUser;
+
+  user.role = role;
+  await user.save();
 
     res.status(200).json({ message: "User role updated successfully" });
   },
@@ -437,8 +440,10 @@ export const activateUser = controllerWrapper(
     if (!userId)
       return res.status(400).json({ message: "User ID is required" });
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const guard = await guardSuperAdminMutation(userId, req.user);
+    if (guard.status) return res.status(guard.status).json(guard.body);
+
+    const user = guard.targetUser;
 
     user.active = true; // Assuming you have an isActive field
     await user.save();
@@ -455,8 +460,10 @@ export const deActivateUser = controllerWrapper(
     if (!userId)
       return res.status(400).json({ message: "User ID is required" });
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const guard = await guardSuperAdminMutation(userId, req.user);
+    if (guard.status) return res.status(guard.status).json(guard.body);
+
+    const user = guard.targetUser;
 
     user.active = false; // Assuming you have an isActive field
     await user.save();
@@ -473,8 +480,10 @@ export const restoreUser = controllerWrapper(
     if (!userId)
       return res.status(400).json({ message: "User ID is required" });
 
-    const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const guard = await guardSuperAdminMutation(userId, req.user);
+    if (guard.status) return res.status(guard.status).json(guard.body);
+
+    const user = guard.targetUser;
 
     user.deleted = false; // Assuming you have a deleted field
     await user.save();

@@ -15,6 +15,7 @@ import {
   ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
   MegaphoneIcon,
+  ClipboardDocumentCheckIcon,
   // StarIcon,
 } from "@heroicons/react/24/outline";
 
@@ -28,6 +29,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
   const location = useLocation();
   const user = useUserStore((s) => s.user);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const hasAccess = (roles?: string[]) => {
+    if (!roles) return true;
+    const currentRole = user?.role || "";
+    return (
+      roles.includes(currentRole) ||
+      (currentRole === "super_admin" && roles.includes("admin"))
+    );
+  };
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems((prev) => {
@@ -53,6 +63,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       name: t("admin.requests"),
       href: "/dashboard/requests",
       icon: ClipboardDocumentListIcon,
+      roles: ["admin"],
+    },
+    {
+      name: "Approvals",
+      href: "/dashboard/approvals",
+      icon: ClipboardDocumentCheckIcon,
       roles: ["admin"],
     },
     {
@@ -209,7 +225,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
         {menuItems
           .filter((item) => {
             // Check if user has access to the item itself
-            if (item.roles && !item.roles.includes(user?.role || "")) {
+            if (!hasAccess(item.roles)) {
               return false;
             }
 
@@ -235,8 +251,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
             // For items with children, check if user has access to any child
             if (item.children) {
               const accessibleChildren = item.children.filter(
-                (child) =>
-                  !child.roles || child.roles.includes(user?.role || ""),
+                (child) => hasAccess(child.roles),
               );
               return accessibleChildren.length > 0;
             }
@@ -279,9 +294,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                     <div className="ml-6 sm:ml-8 md:ml-10 mt-1 sm:mt-2 space-y-1 sm:space-y-2">
                       {item.children
                         .filter(
-                          (child) =>
-                            !child.roles ||
-                            child.roles.includes(user?.role || ""),
+                          (child) => hasAccess(child.roles),
                         )
                         .map((child, childIndex) => (
                           <Link

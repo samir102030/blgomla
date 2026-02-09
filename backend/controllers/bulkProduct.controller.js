@@ -4,6 +4,8 @@ import Brand from '../models/brand.model.js';
 import Store from '../models/store.model.js';
 import { generateProductTemplate, parseProductExcel } from '../utils/excelTemplate.js';
 
+const isAdminUser = (role) => role === 'admin' || role === 'super_admin';
+
 /**
  * Download Excel template for bulk product upload
  */
@@ -94,7 +96,7 @@ export const bulkUploadProducts = async (req, res) => {
           message: 'Store not found. Please create a store first or select a valid store.'
         });
       }
-    } else if (req.user.role === 'admin') {
+    } else if (isAdminUser(req.user.role)) {
       const storeId = req.body.storeId;
       if (storeId) {
         store = await Store.findById(storeId);
@@ -200,7 +202,11 @@ export const bulkUploadProducts = async (req, res) => {
           attributes: productData.attributes || [],
           images: productData.images || [],
           bulkPricing: productData.bulkPricing || [],
-          isActive: true,
+          isActive: req.user.role === 'store' ? false : true,
+          approvalStatus: req.user.role === 'store' ? 'pending' : 'approved',
+          approvedBy: isAdminUser(req.user.role) ? req.user._id : undefined,
+          approvedAt: isAdminUser(req.user.role) ? new Date() : undefined,
+          createdBy: req.user._id,
           deleted: false
         };
 

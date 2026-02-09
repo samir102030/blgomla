@@ -43,7 +43,13 @@ const Header: React.FC = () => {
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchQuery.trim()) {
-        fetchProducts({ search: searchQuery, limit: 5 });
+        fetchProducts({
+          search: searchQuery,
+          limit: 5,
+          isActive: true,
+          deleted: false,
+          approvalStatus: "approved",
+        });
         setShowDropdown(true);
       } else {
         setShowDropdown(false);

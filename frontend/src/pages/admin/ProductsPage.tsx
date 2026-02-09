@@ -59,6 +59,8 @@ const ProductsPage: React.FC = () => {
 
   const { user } = useUserStore();
   const { vendorStore, fetchVendorStore } = useVendorStore();
+  const isAdminLike =
+    user?.role === "admin" || user?.role === "super_admin";
 
   useEffect(() => {
     fetchBrands();
@@ -80,7 +82,7 @@ const ProductsPage: React.FC = () => {
 
   // Fetch products based on user role
   useEffect(() => {
-    if (user?.role === "admin") {
+    if (isAdminLike) {
       // Admin sees all products
       fetchProducts();
     } else if (user?.role === "store") {
@@ -218,7 +220,7 @@ const ProductsPage: React.FC = () => {
 
   // Helper function to refresh products based on user role
   const refreshProducts = () => {
-    if (user?.role === "admin") {
+    if (isAdminLike) {
       fetchProducts();
     } else if (user?.role === "store" && vendorStore?._id) {
       fetchProducts({ storeId: vendorStore._id });
@@ -250,7 +252,7 @@ const ProductsPage: React.FC = () => {
         </div>
         <div className="flex items-center gap-4">
           {/* Bulk Upload for admin and vendors */}
-          {(user?.role === "store" || user?.role === "admin") && (
+          {(user?.role === "store" || isAdminLike) && (
             <button
               onClick={() => setShowBulkUpload(!showBulkUpload)}
               className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-medium"
@@ -269,7 +271,7 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {/* Bulk Upload Section */}
-      {(user?.role === "store" || user?.role === "admin") && showBulkUpload && (
+      {(user?.role === "store" || isAdminLike) && showBulkUpload && (
         <BulkProductUpload onUploadComplete={refreshProducts} />
       )}
 
@@ -453,6 +455,9 @@ const ProductsPage: React.FC = () => {
                   {t("product.status")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Approval
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("product.actions")}
                 </th>
               </tr>
@@ -528,6 +533,29 @@ const ProductsPage: React.FC = () => {
                       {getStockStatus(product.stock)
                         .replace("_", " ")
                         .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        product.approvalStatus === "approved"
+                          ? "bg-green-100 text-green-800"
+                          : product.approvalStatus === "rejected"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                      title={
+                        product.approvalStatus === "pending"
+                          ? "Waiting for admin approval"
+                          : product.approvalStatus === "rejected"
+                          ? "Rejected by admin"
+                          : "Approved"
+                      }
+                    >
+                      {product.approvalStatus
+                        ? product.approvalStatus.charAt(0).toUpperCase() +
+                          product.approvalStatus.slice(1)
+                        : "Unknown"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

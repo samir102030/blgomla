@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import ThemeToggle from "../ThemeToggle";
 import AdminLanguageToggle from "../AdminLanguageToggle";
 import { downloadCsv, getExportPages } from "../../lib/exporters";
+import NotificationBell from "../NotificationBell";
 
 interface AdminHeaderProps {
   onMenuClick: () => void;
@@ -91,6 +92,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
         <div className="flex items-center space-x-4">
           <AdminLanguageToggle />
           <ThemeToggle showLabel={false} />
+          <NotificationBell />
           {(currentExport || fallbackExport) && (
             <button
               onClick={handleExport}

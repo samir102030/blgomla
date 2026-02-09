@@ -62,7 +62,7 @@ const userSchema = new mongoose.Schema(
     ],
     role: {
       type: String,
-      enum: ["customer", "store", "admin"],
+      enum: ["customer", "store", "admin", "super_admin"],
       default: "customer",
     },
     deleted: { type: Boolean, default: false },

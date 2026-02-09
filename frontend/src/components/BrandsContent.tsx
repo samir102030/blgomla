@@ -45,7 +45,7 @@ const BrandsContent: React.FC = () => {
   useEffect(() => {
     fetchBrands();
     fetchCategories();
-    fetchProducts();
+    fetchProducts({ isActive: true, deleted: false, approvalStatus: "approved" });
   }, [fetchBrands, fetchCategories, fetchProducts]);
 
   // Helper function to get all subcategory IDs recursively

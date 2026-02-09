@@ -38,6 +38,11 @@ export interface Product {
   saleActive: boolean;
   isActive: boolean;
   deleted: boolean;
+  approvalStatus?: "pending" | "approved" | "rejected";
+  approvalNotes?: string;
+  approvedBy?: string | User;
+  approvedAt?: string;
+  createdBy?: string | User;
   reviews: ProductReview[];
   rating: number;
   store?: string; // ObjectId as string

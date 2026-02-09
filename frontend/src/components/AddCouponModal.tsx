@@ -74,7 +74,10 @@ const AddCouponModal: React.FC<AddCouponModalProps> = ({
       usageLimit: formData.usageLimit
         ? parseInt(formData.usageLimit)
         : undefined,
-      storeId: user?.role === "admin" ? undefined : vendorStore?._id,
+      storeId:
+        user?.role === "admin" || user?.role === "super_admin"
+          ? undefined
+          : vendorStore?._id,
     };
 
     console.log("Processed coupon data:", couponData);

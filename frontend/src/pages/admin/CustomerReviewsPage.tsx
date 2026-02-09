@@ -15,6 +15,8 @@ import toast from "react-hot-toast";
 
 const CustomerReviewsPage: React.FC = () => {
   const { user } = useUserStore();
+  const isAdminLike =
+    user?.role === "admin" || user?.role === "super_admin";
   const {
     reviews,
     stats,
@@ -63,7 +65,7 @@ const CustomerReviewsPage: React.FC = () => {
   }, [fetchReviewStats]);
 
   useEffect(() => {
-    if (user?.role === "admin" && activeTab === "requests") {
+    if (isAdminLike && activeTab === "requests") {
       fetchReviewRequests(requestsPage, requestStatus);
     } else if (user?.role === "store" && activeTab === "requests") {
       fetchVendorReviewRequests(requestsPage, requestStatus);
@@ -259,7 +261,7 @@ const CustomerReviewsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Tabs for Admin */}
-      {user?.role === "admin" && (
+      {isAdminLike && (
         <div className="flex gap-4 border-b">
           <button
             onClick={() => setActiveTab("reviews")}
@@ -528,7 +530,7 @@ const CustomerReviewsPage: React.FC = () => {
                   </div>
 
                   {/* Store Filter (Admin only) */}
-                  {user?.role === "admin" && (
+                  {isAdminLike && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Store ID
@@ -640,7 +642,7 @@ const CustomerReviewsPage: React.FC = () => {
                           <div className="text-sm font-medium text-gray-900">
                             {review.productName}
                           </div>
-                          {user?.role === "admin" && (
+                          {isAdminLike && (
                             <div className="text-sm text-gray-500">
                               {review.storeName}
                             </div>
@@ -676,7 +678,7 @@ const CustomerReviewsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
-                          {user?.role === "admin" && (
+                          {isAdminLike && (
                             <>
                               <button
                                 onClick={() =>
@@ -886,7 +888,7 @@ const CustomerReviewsPage: React.FC = () => {
       )}
 
       {/* Review Requests Section */}
-      {user?.role === "admin" && activeTab === "requests" && (
+      {isAdminLike && activeTab === "requests" && (
         <>
           {/* Request Status Filter */}
           <div className="flex gap-4">

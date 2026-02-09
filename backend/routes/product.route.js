@@ -2,6 +2,7 @@ import express from "express";
 import {
   protectRoute,
   adminOrStoreRoute,
+  adminRoute,
   storeRoute,
 } from "../middleware/auth.middleware.js";
 import {
@@ -30,6 +31,9 @@ import {
   getStoreProducts,
   removeFromCart,
   restoreProduct,
+  getProductApprovals,
+  approveProduct,
+  rejectProduct,
   softDeleteProduct,
   toggleFeaturedProduct,
   toggleSaleProduct,
@@ -79,6 +83,24 @@ router.post(
   validateCreateProduct,
   createProduct
 ); // Create product
+router.get(
+  "/approvals",
+  protectRoute,
+  adminRoute,
+  getProductApprovals
+);
+router.post(
+  "/:productId/approve",
+  protectRoute,
+  adminRoute,
+  approveProduct
+);
+router.post(
+  "/:productId/reject",
+  protectRoute,
+  adminRoute,
+  rejectProduct
+);
 router.put(
   "/:productId",
   protectRoute,

@@ -540,5 +540,6 @@ export const getExportPages = (role: UserRole) => {
     },
   ];
 
-  return pages.filter((page) => page.roles.includes(role));
+  const normalizedRole = role === "super_admin" ? "admin" : role;
+  return pages.filter((page) => page.roles.includes(normalizedRole));
 };

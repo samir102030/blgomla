@@ -11,7 +11,7 @@ export interface UserLoveItem {
   product: string; // ObjectId as string
 }
 
-export type UserRole = "customer" | "store" | "admin";
+export type UserRole = "customer" | "store" | "admin" | "super_admin";
 
 export interface User {
   _id?: string;

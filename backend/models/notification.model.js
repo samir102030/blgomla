@@ -30,6 +30,7 @@ const notificationSchema = new mongoose.Schema(
         "product",
         "brand_request",
         "category_request",
+        "product_approval",
       ],
       default: "info",
     },

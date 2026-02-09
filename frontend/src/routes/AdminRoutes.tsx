@@ -17,6 +17,8 @@ import ReturnsPage from "../pages/admin/ReturnsPage";
 import VendorCollectionsPage from "../pages/vendor/VendorCollectionsPage";
 import AdminCollectionsPage from "../pages/admin/AdminCollectionsPage";
 import AdvertisementsPage from "../pages/admin/AdvertisementsPage";
+import ProductApprovalsPage from "../pages/admin/ProductApprovalsPage";
+import { useUserStore } from "../stores/user.store";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -32,6 +34,9 @@ const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
 );
 
 const AdminRoutes: React.FC = () => {
+  const user = useUserStore((s) => s.user);
+  const isVendor = user?.role === "store";
+
   return (
     <AdminLayout>
       <Routes>
@@ -41,6 +46,7 @@ const AdminRoutes: React.FC = () => {
         {/* Vendor Management */}
         <Route path="/vendors" element={<VendorManagement />} />
         <Route path="/requests" element={<RequestsPage />} />
+        <Route path="/approvals" element={<ProductApprovalsPage />} />
 
         {/* E-commerce */}
         <Route path="/category" element={<CategoriesPage />} />
@@ -63,7 +69,10 @@ const AdminRoutes: React.FC = () => {
         <Route path="/products" element={<ProductsPage />} />
 
         {/* Collections */}
-        <Route path="/collections" element={<AdminCollectionsPage />} />
+        <Route
+          path="/collections"
+          element={isVendor ? <VendorCollectionsPage /> : <AdminCollectionsPage />}
+        />
 
         {/* User Management */}
         <Route path="/user" element={<UsersPage />} />

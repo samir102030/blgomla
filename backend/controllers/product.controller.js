@@ -42,6 +42,17 @@ export const createProduct = controllerWrapper(
       productData.bulkPricing = normalizeBulkPricing(bulkPricing);
     }
     const product = new Product(productData);
+    product.createdBy = req.user._id;
+
+    if (req.user.role === "store") {
+      product.approvalStatus = "pending";
+      product.isActive = false;
+    } else {
+      product.approvalStatus = "approved";
+      product.isActive = true;
+      product.approvedBy = req.user._id;
+      product.approvedAt = new Date();
+    }
 
     let hasPendingRequests = false;
     const userId = req.user._id;
@@ -62,7 +73,9 @@ export const createProduct = controllerWrapper(
       hasPendingRequests = true;
 
       // Notify all admin users
-      const admins = await User.find({ role: "admin" });
+      const admins = await User.find({
+        role: { $in: ["admin", "super_admin"] },
+      });
       for (const admin of admins) {
         await Notification.create({
           user: admin._id,
@@ -89,7 +102,9 @@ export const createProduct = controllerWrapper(
       hasPendingRequests = true;
 
       // Notify all admin users
-      const admins = await User.find({ role: "admin" });
+      const admins = await User.find({
+        role: { $in: ["admin", "super_admin"] },
+      });
       for (const admin of admins) {
         await Notification.create({
           user: admin._id,
@@ -157,6 +172,7 @@ export const getAllProducts = controllerWrapper(
     if (filters.featured !== undefined) query.featured = filters.featured;
     if (filters.saleActive !== undefined) query.saleActive = filters.saleActive;
     if (filters.deleted !== undefined) query.deleted = filters.deleted;
+    if (filters.approvalStatus) query.approvalStatus = filters.approvalStatus;
     // Price range
     if (filters.minPrice || filters.maxPrice) {
       query.price = {};
@@ -213,14 +229,133 @@ export const updateProduct = controllerWrapper(
     if (updateData.bulkPricing !== undefined) {
       updateData.bulkPricing = normalizeBulkPricing(updateData.bulkPricing);
     }
-    const product = await Product.findByIdAndUpdate(productId, updateData, {
-      new: true,
-      runValidators: true,
-    });
+
+    const product = await Product.findById(productId);
     if (!product)
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
+
+    if (req.user.role === "store") {
+      // Vendors cannot self-approve or publish directly
+      delete updateData.isActive;
+      delete updateData.approvalStatus;
+      delete updateData.approvalNotes;
+      delete updateData.approvedBy;
+      delete updateData.approvedAt;
+
+      Object.assign(product, updateData);
+      product.approvalStatus = "pending";
+      product.isActive = false;
+      product.approvedBy = undefined;
+      product.approvedAt = undefined;
+      product.approvalNotes = undefined;
+
+      await product.save();
+      return res.status(200).json({ success: true, product });
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      updateData,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+    res.status(200).json({ success: true, product: updatedProduct });
+  }
+);
+
+export const getProductApprovals = controllerWrapper(
+  "getProductApprovals",
+  async (req, res) => {
+    const { status = "pending", page = 1, limit = 20, storeId } = req.query;
+    const query = {
+      deleted: false,
+    };
+
+    if (status !== "all") query.approvalStatus = status;
+    if (storeId) query.store = storeId;
+
+    const mongooseQuery = Product.find(query)
+      .populate("store")
+      .populate("brand")
+      .populate("Category")
+      .populate("createdBy", "name email role")
+      .sort({ createdAt: -1 });
+
+    const result = await paginateQuery(page, limit, mongooseQuery);
+    res.status(200).json(result);
+  }
+);
+
+export const approveProduct = controllerWrapper(
+  "approveProduct",
+  async (req, res) => {
+    const { productId } = req.params;
+    const { note } = req.body || {};
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+
+    product.approvalStatus = "approved";
+    product.isActive = true;
+    product.approvedBy = req.user._id;
+    product.approvedAt = new Date();
+    product.approvalNotes = note;
+
+    await product.save();
+
+    // Notify store owner
+    const store = await mongoose.model("Store").findById(product.store).populate("owner");
+    if (store?.owner) {
+      await Notification.create({
+        user: store.owner._id,
+        title: "Product Approved",
+        message: `Your product "${product.name}" has been approved and published`,
+        type: "product_approval",
+      });
+    }
+
+    res.status(200).json({ success: true, product });
+  }
+);
+
+export const rejectProduct = controllerWrapper(
+  "rejectProduct",
+  async (req, res) => {
+    const { productId } = req.params;
+    const { reason } = req.body || {};
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+
+    product.approvalStatus = "rejected";
+    product.isActive = false;
+    product.approvedBy = req.user._id;
+    product.approvedAt = new Date();
+    product.approvalNotes = reason || "No reason provided";
+
+    await product.save();
+
+    // Notify store owner
+    const store = await mongoose.model("Store").findById(product.store).populate("owner");
+    if (store?.owner) {
+      await Notification.create({
+        user: store.owner._id,
+        title: "Product Rejected",
+        message: `Your product "${product.name}" was rejected. Reason: ${product.approvalNotes}`,
+        type: "product_approval",
+      });
+    }
+
     res.status(200).json({ success: true, product });
   }
 );

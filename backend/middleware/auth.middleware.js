@@ -65,12 +65,14 @@ export const protectRoute = async (req, res, next) => {
 
 export const roleRoute = (role) => {
   return (req, res, next) => {
-    if (req.user && req.user.role === role) next();
-    else {
-      return res
-        .status(403)
-        .json({ message: "Access denied - You Are Not Authorized" });
-    }
+    const userRole = req.user?.role;
+    const isAllowed =
+      userRole === role || (role === "admin" && userRole === "super_admin");
+    if (isAllowed) return next();
+
+    return res
+      .status(403)
+      .json({ message: "Access denied - You Are Not Authorized" });
   };
 };
 export const mixRoute = (roles) => {
@@ -88,5 +90,6 @@ export const mixRoute = (roles) => {
 export const verifyToken = protectRoute;
 export const customerRoute = roleRoute("customer");
 export const storeRoute = roleRoute("store");
-export const adminRoute = roleRoute("admin");
-export const adminOrStoreRoute = mixRoute(["admin", "store"]);
+export const adminRoute = mixRoute(["admin", "super_admin"]);
+export const superAdminRoute = roleRoute("super_admin");
+export const adminOrStoreRoute = mixRoute(["admin", "super_admin", "store"]);
