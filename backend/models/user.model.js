@@ -71,6 +71,11 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpiresAt: Date,
     verificationToken: String,
     verificationTokenExpiresAt: Date,
+    adminExpiresAt: Date,
+    adminGrantedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true, suppressReservedKeysWarning: true },
 );

@@ -432,6 +432,65 @@ export const changeUserRole = controllerWrapper(
   },
 );
 
+export const setAdminTime = controllerWrapper(
+  "setAdminTime",
+  async (req, res) => {
+    const { userId } = req.params;
+    const { days = 0, hours = 0, minutes = 0 } = req.body;
+
+    if (!userId)
+      return res.status(400).json({ message: "User ID is required" });
+    if (days <= 0 && hours <= 0 && minutes <= 0)
+      return res
+        .status(400)
+        .json({ message: "Provide a positive duration in days, hours or minutes" });
+
+    const target = await User.findById(userId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+    if (target.role !== "admin")
+      return res
+        .status(400)
+        .json({ message: "Target user must be an admin" });
+
+    const now = Date.now();
+    const durationMs =
+      Number(days) * 24 * 60 * 60 * 1000 +
+      Number(hours) * 60 * 60 * 1000 +
+      Number(minutes) * 60 * 1000;
+    target.adminExpiresAt = new Date(now + durationMs);
+    target.adminGrantedBy = req.user._id;
+    await target.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Admin time window updated",
+      user: target,
+    });
+  }
+);
+
+export const endAdminTimeNow = controllerWrapper(
+  "endAdminTimeNow",
+  async (req, res) => {
+    const { userId } = req.params;
+    if (!userId)
+      return res.status(400).json({ message: "User ID is required" });
+
+    const target = await User.findById(userId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+    if (target.role !== "admin")
+      return res
+        .status(400)
+        .json({ message: "Target user must be an admin" });
+
+    target.adminExpiresAt = new Date(Date.now() - 1000);
+    target.adminGrantedBy = req.user._id;
+    await target.save();
+
+    res.status(200).json({ success: true, message: "Admin access ended now" });
+  }
+);
+
 export const activateUser = controllerWrapper(
   "activateUser",
   async (req, res) => {

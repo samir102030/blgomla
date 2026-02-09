@@ -31,6 +31,18 @@ export const protectRoute = async (req, res, next) => {
         });
       }
 
+      // Admin validity window: if admin expired, downgrade to customer and block admin access
+      if (
+        user.role === "admin" &&
+        user.adminExpiresAt &&
+        new Date(user.adminExpiresAt).getTime() < Date.now()
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Admin access expired",
+        });
+      }
+
       // If user is a store, check if store is approved
       if (user.role === "store") {
         const store = await Store.findOne({ owner: user._id });

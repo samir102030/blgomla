@@ -16,6 +16,7 @@ import {
   ClipboardDocumentListIcon,
   MegaphoneIcon,
   ClipboardDocumentCheckIcon,
+  ShieldCheckIcon,
   // StarIcon,
 } from "@heroicons/react/24/outline";
 
@@ -70,6 +71,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       href: "/dashboard/approvals",
       icon: ClipboardDocumentCheckIcon,
       roles: ["admin"],
+    },
+    {
+      name: "Admins",
+      href: "/dashboard/admins",
+      icon: ShieldCheckIcon,
+      roles: ["super_admin"],
     },
     {
       name: t("admin.ecommerce"),

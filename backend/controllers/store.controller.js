@@ -1063,7 +1063,7 @@ export const getStoreStatistics = controllerWrapper(
       storeFilter = { _id: store._id };
       productFilter = { store: store._id };
       orderFilter = { store: store._id };
-    } else if (req.user.role === "admin") {
+    } else if (req.user.role === "admin" || req.user.role === "super_admin") {
       // For admin, get stats for all stores
       // No filter needed, aggregate all
     } else {
@@ -1150,7 +1150,7 @@ export const getStoreStatistics = controllerWrapper(
 
     // Best sellers (top stores by revenue, for admin)
     let bestSellers = [];
-    if (req.user.role === "admin") {
+    if (req.user.role === "admin" || req.user.role === "super_admin") {
       bestSellers = await Order.aggregate([
         { $match: orderFilter },
         {

@@ -88,7 +88,8 @@ const Header: React.FC = () => {
 
   const role = user?.role;
   const showBecomeVendor = !role || role === "customer";
-  const showAdminDashboard = role === "admin" || role === "store";
+  const showAdminDashboard =
+    role === "admin" || role === "store" || role === "super_admin";
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

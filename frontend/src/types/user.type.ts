@@ -35,5 +35,7 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
   store?: any; // Store object if role is store
+  adminExpiresAt?: string;
+  adminGrantedBy?: string | User;
   // wishlist?: string[];
 }

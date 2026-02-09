@@ -1,6 +1,10 @@
 import express from "express";
 
-import { adminRoute, protectRoute } from "../middleware/auth.middleware.js";
+import {
+  adminRoute,
+  protectRoute,
+  superAdminRoute,
+} from "../middleware/auth.middleware.js";
 import { verifyRefreshToken } from "../middleware/token.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import {
@@ -28,6 +32,8 @@ import {
   updateProfile,
   updateUser,
   verifyEmail,
+  setAdminTime,
+  endAdminTimeNow,
 } from "../controllers/auth.controller.js";
 
 import {
@@ -88,6 +94,18 @@ router
 
 // tested
 router.put("/changeRole/:userId", protectRoute, adminRoute, changeUserRole);
+router.put(
+  "/adminTime/:userId",
+  protectRoute,
+  superAdminRoute,
+  setAdminTime
+);
+router.put(
+  "/adminTimeEnd/:userId",
+  protectRoute,
+  superAdminRoute,
+  endAdminTimeNow
+);
 router.put("/activateUser/:userId", protectRoute, adminRoute, activateUser);
 router.put("/deactivateUser/:userId", protectRoute, adminRoute, deActivateUser);
 router.put("/restoreUser/:userId", protectRoute, adminRoute, restoreUser);
