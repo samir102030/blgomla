@@ -32,7 +32,7 @@ interface BulkProductUploadProps {
 const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete }) => {
   const { t } = useTranslation();
   const { brands, fetchBrands } = useBrandStore();
-  const { vendorStore, fetchVendorStore, fetchVendors, vendors } = useVendorStore();
+  const { vendorStore, fetchVendorStore, fetchVendors } = useVendorStore();
   const user = useUserStore((s) => s.user);
   const { categories, fetchCategories } = useCategoryStore();
   const [uploading, setUploading] = useState(false);

@@ -9,10 +9,12 @@ import {
 import { axiosInstance } from "../../lib/axios";
 import type { Product } from "../../types/product.type";
 
-interface ApprovalProduct extends Product {
-  store?: { _id: string; name?: string };
-  createdBy?: { _id: string; name?: string; email?: string; role?: string };
-}
+type ApprovalProduct = Omit<Product, "createdBy" | "store"> & {
+  store?: Product["store"] | { _id: string; name?: string };
+  createdBy?:
+    | Product["createdBy"]
+    | { _id: string; name?: string; email?: string; role?: string };
+};
 
 const statusOptions = [
   { value: "pending", label: "Pending" },
@@ -232,12 +234,15 @@ const ProductApprovalsPage: React.FC = () => {
                         : product.store || "—"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
-                      {product.createdBy?.name || "Vendor"}
-                      {product.createdBy?.email && (
-                        <div className="text-xs text-gray-500">
-                          {product.createdBy.email}
-                        </div>
-                      )}
+                      {typeof product.createdBy === "string"
+                        ? "Vendor"
+                        : product.createdBy?.name || "Vendor"}
+                      {typeof product.createdBy !== "string" &&
+                        product.createdBy?.email && (
+                          <div className="text-xs text-gray-500">
+                            {product.createdBy.email}
+                          </div>
+                        )}
                     </td>
                     <td className="px-4 py-3">
                       <span
