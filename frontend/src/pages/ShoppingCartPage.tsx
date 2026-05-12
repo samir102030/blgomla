@@ -13,6 +13,7 @@ import type { Coupon } from "../types/coupon.type";
 import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 import { getBaseUnitPrice, getBulkPricing } from "../lib/pricing";
+import FeaturedProducts from "../components/FeaturedProducts";
 // import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
@@ -483,24 +484,81 @@ const ShoppingCartPage: React.FC = () => {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[var(--surface-2)]">
         <Header />
-        <div className="flex items-center justify-center py-16 sm:py-20 px-4">
-          <div className="text-center">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
-              {t("Your Cart is Empty")}
-            </h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-              {t("Add some products to your cart to get started.")}
-            </p>
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-8 text-center">
+          <div
+            className="mx-auto mb-6 flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-full"
+            style={{ background: "var(--brand-gradient)" }}
+            aria-hidden="true"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-12 w-12 sm:h-14 sm:w-14"
+            >
+              <path d="M3 4h2l2.4 12.3a2 2 0 0 0 2 1.7h8.2a2 2 0 0 0 2-1.6L21 8H6" />
+              <circle cx="9.5" cy="20" r="1.4" />
+              <circle cx="17.5" cy="20" r="1.4" />
+            </svg>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-2">
+            {t("Looks like your cart is empty")}
+          </h2>
+          <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-md mx-auto mb-6">
+            {t(
+              "Discover products our customers love — or jump straight into a category below."
+            )}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
             <Link
-              to="/brands"
-              className="bg-[#FFD600] text-[#333333] px-4 sm:px-6 py-2 sm:py-3 rounded-md hover:bg-[#e6c100] font-medium inline-block text-sm sm:text-base"
+              to="/products"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-md font-medium text-white shadow-sm hover:opacity-95 transition w-full sm:w-auto"
+              style={{ background: "var(--brand-gradient)" }}
             >
               {t("Browse Products")}
             </Link>
+            <Link
+              to="/wishlist"
+              className="inline-flex items-center justify-center px-6 py-3 rounded-md font-medium border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] transition w-full sm:w-auto"
+            >
+              {t("View Wishlist")}
+            </Link>
           </div>
-        </div>
+
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm">
+            {[
+              { label: t("Cameras"), to: "/products?category=Network+Camera" },
+              { label: t("Networking"), to: "/products?category=Switch" },
+              { label: t("Collections"), to: "/collections" },
+              { label: t("Brands"), to: "/brands" },
+            ].map((c) => (
+              <Link
+                key={c.to}
+                to={c.to}
+                className="text-[var(--brand-primary)] hover:underline"
+              >
+                {c.label}
+              </Link>
+            ))}
+          </div>
+
+          <p className="mt-6 text-xs text-[var(--text-muted)]">
+            {t("Need help choosing?")}{" "}
+            <Link to="/contact" className="underline hover:text-[var(--text)]">
+              {t("Contact us")}
+            </Link>
+          </p>
+        </section>
+
+        <FeaturedProducts />
         <Footer />
       </div>
     );
