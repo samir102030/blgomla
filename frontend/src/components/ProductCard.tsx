@@ -172,6 +172,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
             src={image}
             alt={name}
             loading="lazy"
+            decoding="async"
+            width={176}
+            height={176}
             onLoad={() => setImgLoaded(true)}
             onError={(e) => {
               setImgLoaded(true);

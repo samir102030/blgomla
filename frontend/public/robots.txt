@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /vendor
+Disallow: /dashboard
+Disallow: /checkout
+Disallow: /cart
+Disallow: /account
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://halafawystore-frontend.vercel.app/sitemap.xml

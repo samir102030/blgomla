@@ -265,6 +265,10 @@ const HomePage: React.FC = () => {
                             alt={cat.name}
                             className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain"
                             loading="lazy"
+                            decoding="async"
+                            width={48}
+                            height={48}
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                           />
                         ) : (
                           <span className="text-2xl sm:text-3xl">📦</span>
@@ -449,6 +453,11 @@ const HomePage: React.FC = () => {
                                 <img
                                   src={item.product?.images?.[0]?.url || "/placeholder.png"}
                                   alt=""
+                                  loading="lazy"
+                                  decoding="async"
+                                  width={32}
+                                  height={32}
+                                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                                   className="w-full h-full object-cover"
                                 />
                               </div>
