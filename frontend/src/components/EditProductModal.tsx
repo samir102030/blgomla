@@ -50,7 +50,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         price: product.price?.toString() || "",
         stock: product.stock?.toString() || "0",
         brand: product.brand || "",
-        category: product.Category || "",
+        category: product.category || "",
         salePercentage: product.salePercentage?.toString() || "",
         saleActive: product.saleActive || false,
         isActive: product.isActive ?? true,
@@ -152,7 +152,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
           ),
       };
       if (form.brand) payload.brand = form.brand;
-      if (form.category) payload.Category = form.category;
+      if (form.category) payload.category = form.category;
 
       // Import updateProduct from store here to avoid circular imports
       const { useProductStore } = await import("../stores/product.store");

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useVendorStore } from "../stores/vendor.store";
@@ -6,6 +6,15 @@ import type { VendorRegistrationData } from "../types/vendor.type";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useTranslation } from "react-i18next";
+
+/* ─── Step Metadata ─── */
+const STEPS = [
+  { num: 1, icon: "📋", label: "License" },
+  { num: 2, icon: "🏢", label: "Business" },
+  { num: 3, icon: "🏪", label: "Store" },
+  { num: 4, icon: "📄", label: "Documents" },
+  { num: 5, icon: "🔐", label: "Account" },
+];
 
 const egyptianGovernorates = [
   "Cairo",
@@ -519,57 +528,73 @@ const VendorRegistrationPage: React.FC = () => {
   };
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
-      {[1, 2, 3, 4, 5].map((step) => (
-        <div key={step} className="flex items-center">
-          <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-              step <= currentStep
-                ? "bg-yellow-500 text-white"
-                : "bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300"
-            }`}
-          >
-            {step}
-          </div>
-          {step < 5 && (
+    <div className="flex items-center justify-between mb-8 px-2">
+      {STEPS.map((step, i) => (
+        <React.Fragment key={step.num}>
+          <div className="flex flex-col items-center gap-1.5 relative">
             <div
-              className={`w-16 h-1 mx-2 ${
-                step < currentStep
-                  ? "bg-yellow-500"
-                  : "bg-gray-200 dark:bg-slate-700"
+              className={`w-11 h-11 rounded-xl flex items-center justify-center text-base font-bold transition-all duration-300 ${
+                step.num < currentStep
+                  ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 ring-2 ring-emerald-500/30"
+                  : step.num === currentStep
+                  ? "bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] text-white shadow-lg shadow-[var(--brand-primary)]/25"
+                  : "bg-[var(--surface-2)] text-[var(--text-subtle)] border border-[var(--border)]"
               }`}
-            />
+            >
+              {step.num < currentStep ? "✓" : step.icon}
+            </div>
+            <span
+              className={`text-[11px] font-medium transition-colors hidden sm:block ${
+                step.num === currentStep
+                  ? "text-[var(--brand-primary)] dark:text-[var(--brand-accent)]"
+                  : step.num < currentStep
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-[var(--text-subtle)]"
+              }`}
+            >
+              {t(`vendorRegistration.steps.${step.label.toLowerCase()}`, step.label)}
+            </span>
+          </div>
+          {i < STEPS.length - 1 && (
+            <div className="flex-1 mx-2 h-0.5 rounded-full overflow-hidden bg-[var(--border)]">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-[var(--brand-primary)] transition-all duration-500 rounded-full"
+                style={{ width: step.num < currentStep ? "100%" : "0%" }}
+              />
+            </div>
           )}
-        </div>
+        </React.Fragment>
       ))}
     </div>
   );
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={fillDummyData}
-          className="px-3 py-1 text-sm bg-gray-100 rounded-md hover:bg-gray-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200"
-        >
-          {t("vendorRegistration.generateRandomData")}
-        </button>
-      </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      {process.env.NODE_ENV === 'development' && (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={fillDummyData}
+            className="px-3 py-1 text-xs bg-[var(--surface-2)] rounded-lg hover:bg-[var(--border)] border border-[var(--border)] text-[var(--text-muted)] transition-colors"
+          >
+            {t("vendorRegistration.generateRandomData")}
+          </button>
+        </div>
+      )}
+      <h2 className="text-xl font-bold text-[var(--text)] mb-6">
         {t("vendorRegistration.step1.title")}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step1.legalEntityType")} *
           </label>
           <select
             name="legalEntityType"
             value={formData.legalEntityType}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           >
             <option value="egyptian_tax_authority">
@@ -589,7 +614,7 @@ const VendorRegistrationPage: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step1.licenseNumber")} *
           </label>
           <input
@@ -598,13 +623,13 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.licenseNumber}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step1.licenseNumberPlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step1.companyName")} *
           </label>
           <input
@@ -613,13 +638,13 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.companyName}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step1.companyNamePlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step1.companyAddress")} *
           </label>
           <input
@@ -630,13 +655,13 @@ const VendorRegistrationPage: React.FC = () => {
             placeholder={t(
               "vendorRegistration.step1.companyAddressPlaceholder",
             )}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step1.issueDate")} *
           </label>
           <input
@@ -644,13 +669,13 @@ const VendorRegistrationPage: React.FC = () => {
             name="issueDate"
             value={formData.issueDate}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step1.expiryDate")} *
           </label>
           <input
@@ -658,20 +683,20 @@ const VendorRegistrationPage: React.FC = () => {
             name="expiryDate"
             value={formData.expiryDate}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
       </div>
 
-      <div className="bg-gray-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <div className="bg-[var(--surface-2)] p-6 rounded-xl border border-[var(--border)]">
+        <h3 className="text-base font-semibold text-[var(--text)] mb-3">
           {t("vendorRegistration.step1.uploadCommercialRegistration")}
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-[var(--text-muted)] mb-4">
           {t("vendorRegistration.step1.uploadDescription")}
         </p>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+        <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-6 text-center hover:border-[var(--brand-primary)]/40 transition-colors bg-[var(--bg)]">
           <input
             type="file"
             name="commercialRegistration"
@@ -685,10 +710,10 @@ const VendorRegistrationPage: React.FC = () => {
             className="cursor-pointer flex flex-col items-center"
           >
             <div className="text-4xl mb-2">📄</div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step1.clickToUpload")}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-[var(--text-subtle)] mt-1">
               {t("vendorRegistration.step1.pdfPngJpg")}
             </p>
           </label>
@@ -706,20 +731,20 @@ const VendorRegistrationPage: React.FC = () => {
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      <h2 className="text-xl font-bold text-[var(--text)] mb-6">
         {t("vendorRegistration.step2.title")}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.businessType")} *
           </label>
           <select
             name="businessType"
             value={formData.businessType}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           >
             <option value="individual">
@@ -735,7 +760,7 @@ const VendorRegistrationPage: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.contactPersonName")} *
           </label>
           <input
@@ -746,13 +771,13 @@ const VendorRegistrationPage: React.FC = () => {
             placeholder={t(
               "vendorRegistration.step2.contactPersonNamePlaceholder",
             )}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.email")} *
           </label>
           <input
@@ -761,13 +786,13 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.email}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step2.emailPlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.phone")} *
           </label>
           <input
@@ -776,13 +801,13 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.phone}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step2.phonePlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.alternativePhone")}
           </label>
           <input
@@ -793,13 +818,13 @@ const VendorRegistrationPage: React.FC = () => {
             placeholder={t(
               "vendorRegistration.step2.alternativePhonePlaceholder",
             )}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
           {t("vendorRegistration.step2.businessDescription")} *
         </label>
         <textarea
@@ -810,14 +835,14 @@ const VendorRegistrationPage: React.FC = () => {
             "vendorRegistration.step2.businessDescriptionPlaceholder",
           )}
           rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
           required
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.city")} *
           </label>
           <input
@@ -826,20 +851,20 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.city}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step2.cityPlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.governorate")} *
           </label>
           <select
             name="governorate"
             value={formData.governorate}
             onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           >
             <option value="">
@@ -854,7 +879,7 @@ const VendorRegistrationPage: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step2.postalCode")}
           </label>
           <input
@@ -863,14 +888,14 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.postalCode}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step2.postalCodePlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Full Address *
+        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
+          {t("vendorRegistration.step2.fullAddress", "Full Address")} *
         </label>
         <textarea
           name="address"
@@ -878,7 +903,7 @@ const VendorRegistrationPage: React.FC = () => {
           onChange={handleInputChange}
           placeholder={t("vendorRegistration.step2.addressPlaceholder")}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
           required
         />
       </div>
@@ -887,15 +912,15 @@ const VendorRegistrationPage: React.FC = () => {
 
   const renderStep3 = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      <h2 className="text-xl font-bold text-[var(--text)] mb-6">
         {t("vendorRegistration.step3.title")}
       </h2>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
           {t("vendorRegistration.step3.selectCategories")} *
         </label>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 border border-gray-300 rounded-md max-h-60 overflow-y-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 rounded-xl border border-[var(--border)] max-h-60 overflow-y-auto">
           {[
             "Electronics",
             "Fashion",
@@ -923,9 +948,9 @@ const VendorRegistrationPage: React.FC = () => {
                       : prev.productCategories.filter((c) => c !== category),
                   }));
                 }}
-                className="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+                className="rounded-lg border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
               />
-              <span className="text-sm text-gray-700">
+              <span className="text-sm text-[var(--text-muted)]">
                 {t(`vendorRegistration.categories.${category}`)}
               </span>
             </label>
@@ -934,7 +959,7 @@ const VendorRegistrationPage: React.FC = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
           {t("vendorRegistration.step3.expectedVolume")}
         </label>
         <input
@@ -943,13 +968,13 @@ const VendorRegistrationPage: React.FC = () => {
           value={formData.expectedMonthlyVolume}
           onChange={handleInputChange}
           placeholder={t("vendorRegistration.step3.expectedVolumePlaceholder")}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step3.storeName")} *
           </label>
           <input
@@ -958,13 +983,13 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.storeName}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step3.storeNamePlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step3.taxNumber")}
           </label>
           <input
@@ -973,13 +998,13 @@ const VendorRegistrationPage: React.FC = () => {
             value={formData.taxNumber}
             onChange={handleInputChange}
             placeholder={t("vendorRegistration.step3.taxNumberPlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
           {t("vendorRegistration.step3.storeDescription")}
         </label>
         <textarea
@@ -990,15 +1015,15 @@ const VendorRegistrationPage: React.FC = () => {
             "vendorRegistration.step3.storeDescriptionPlaceholder",
           )}
           rows={4}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+          className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
         />
       </div>
 
-      <div className="bg-gray-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <div className="bg-[var(--surface-2)] p-6 rounded-xl border border-[var(--border)]">
+        <h3 className="text-base font-semibold text-[var(--text)] mb-4">
           {t("vendorRegistration.step3.uploadStoreLogo")}
         </h3>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+        <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-6 text-center">
           <input
             type="file"
             name="storeLogo"
@@ -1012,10 +1037,10 @@ const VendorRegistrationPage: React.FC = () => {
             className="cursor-pointer flex flex-col items-center"
           >
             <div className="text-4xl mb-2">🏪</div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step3.uploadLogoDescription")}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-[var(--text-subtle)] mt-1">
               {t("vendorRegistration.step3.pngJpg")}
             </p>
           </label>
@@ -1033,16 +1058,16 @@ const VendorRegistrationPage: React.FC = () => {
 
   const renderStep4 = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      <h2 className="text-xl font-bold text-[var(--text)] mb-6">
         {t("vendorRegistration.step4.title")}
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-[var(--surface-2)] p-6 rounded-xl border border-[var(--border)]">
+          <h3 className="text-base font-semibold text-[var(--text)] mb-4">
             {t("vendorRegistration.step4.taxCard")}
           </h3>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+          <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-4 text-center">
             <input
               type="file"
               name="taxCard"
@@ -1056,7 +1081,7 @@ const VendorRegistrationPage: React.FC = () => {
               className="cursor-pointer flex flex-col items-center"
             >
               <div className="text-2xl mb-2">📄</div>
-              <p className="text-sm text-gray-600">Upload Tax Card</p>
+              <p className="text-sm text-[var(--text-muted)]">{t("vendorRegistration.step4.uploadTaxCard", "Upload Tax Card")}</p>
             </label>
             {documents.taxCard && (
               <p className="text-sm text-green-600 mt-2">
@@ -1068,11 +1093,11 @@ const VendorRegistrationPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-6 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <div className="bg-[var(--surface-2)] p-6 rounded-xl border border-[var(--border)]">
+          <h3 className="text-base font-semibold text-[var(--text)] mb-4">
             {t("vendorRegistration.step4.nationalId")}
           </h3>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+          <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-4 text-center">
             <input
               type="file"
               name="nationalId"
@@ -1086,7 +1111,7 @@ const VendorRegistrationPage: React.FC = () => {
               className="cursor-pointer flex flex-col items-center"
             >
               <div className="text-2xl mb-2">🆔</div>
-              <p className="text-sm text-gray-600">Upload National ID</p>
+              <p className="text-sm text-[var(--text-muted)]">{t("vendorRegistration.step4.uploadNationalId", "Upload National ID")}</p>
             </label>
             {documents.nationalId && (
               <p className="text-sm text-green-600 mt-2">
@@ -1099,11 +1124,11 @@ const VendorRegistrationPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-gray-50 p-6 rounded-lg">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Bank Statement (Optional)
+      <div className="bg-[var(--surface-2)] p-6 rounded-xl border border-[var(--border)]">
+        <h3 className="text-base font-semibold text-[var(--text)] mb-4">
+          {t("vendorRegistration.step4.bankStatement", "Bank Statement (Optional)")}
         </h3>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+        <div className="border-2 border-dashed border-[var(--border)] rounded-xl p-4 text-center">
           <input
             type="file"
             name="bankStatement"
@@ -1117,7 +1142,7 @@ const VendorRegistrationPage: React.FC = () => {
             className="cursor-pointer flex flex-col items-center"
           >
             <div className="text-2xl mb-2">🏦</div>
-            <p className="text-sm text-gray-600">Upload Bank Statement</p>
+            <p className="text-sm text-[var(--text-muted)]">{t("vendorRegistration.step4.uploadBankStatement", "Upload Bank Statement")}</p>
           </label>
           {documents.bankStatement && (
             <p className="text-sm text-green-600 mt-2">
@@ -1129,7 +1154,7 @@ const VendorRegistrationPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/25 p-6 rounded-lg">
+      <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/25 p-6 rounded-xl">
         <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-4">
           {t("vendorRegistration.step4.terms")}
         </h3>
@@ -1140,10 +1165,10 @@ const VendorRegistrationPage: React.FC = () => {
               name="termsAccepted"
               checked={formData.termsAccepted}
               onChange={handleInputChange}
-              className="mt-1 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+              className="mt-1 rounded-lg border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
               required
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step4.acceptTerms")}
             </span>
           </label>
@@ -1154,10 +1179,10 @@ const VendorRegistrationPage: React.FC = () => {
               name="privacyPolicyAccepted"
               checked={formData.privacyPolicyAccepted}
               onChange={handleInputChange}
-              className="mt-1 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+              className="mt-1 rounded-lg border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
               required
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step4.acceptPrivacy")}
             </span>
           </label>
@@ -1224,7 +1249,7 @@ const VendorRegistrationPage: React.FC = () => {
 
   const renderStep5 = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">
+      <h2 className="text-xl font-bold text-[var(--text)] mb-6">
         {t("vendorRegistration.step5.title")}
       </h2>
 
@@ -1242,7 +1267,7 @@ const VendorRegistrationPage: React.FC = () => {
 
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
             {t("vendorRegistration.step5.accountEmail")} *
           </label>
           <input
@@ -1251,17 +1276,17 @@ const VendorRegistrationPage: React.FC = () => {
             value={accountData.accountEmail}
             onChange={handleAccountInputChange}
             placeholder={t("vendorRegistration.step5.accountEmailPlaceholder")}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
             required
           />
-          <p className="text-xs text-gray-500 mt-1">
-            This email will be used to log into your vendor dashboard
+          <p className="text-xs text-[var(--text-subtle)] mt-1">
+            {t("vendorRegistration.step5.accountEmailHint", "This email will be used to log into your vendor dashboard")}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
               {t("vendorRegistration.step5.password")} *
             </label>
             <input
@@ -1270,17 +1295,17 @@ const VendorRegistrationPage: React.FC = () => {
               value={accountData.password}
               onChange={handleAccountInputChange}
               placeholder={t("vendorRegistration.step5.passwordPlaceholder")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
               required
               minLength={8}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Must be at least 8 characters long
+            <p className="text-xs text-[var(--text-subtle)] mt-1">
+              {t("vendorRegistration.step5.passwordHint", "Must be at least 8 characters long")}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
               {t("vendorRegistration.step5.confirmPassword")} *
             </label>
             <input
@@ -1291,7 +1316,7 @@ const VendorRegistrationPage: React.FC = () => {
               placeholder={t(
                 "vendorRegistration.step5.confirmPasswordPlaceholder",
               )}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
               required
             />
             {accountData.password && accountData.confirmPassword && (
@@ -1310,17 +1335,17 @@ const VendorRegistrationPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">
+        <div className="bg-[var(--surface-2)] p-4 rounded-xl border border-[var(--border)]">
+          <h4 className="text-sm font-semibold text-[var(--text)] mb-2">
             {t("vendorRegistration.step5.passwordRequirements")}
           </h4>
-          <ul className="text-xs text-gray-600 space-y-1">
+          <ul className="text-xs text-[var(--text-muted)] space-y-1">
             <li className="flex items-center">
               <span
                 className={`mr-2 ${
                   accountData.password.length >= 8
                     ? "text-green-600"
-                    : "text-gray-400"
+                    : "text-[var(--text-subtle)]"
                 }`}
               >
                 {accountData.password.length >= 8 ? "✓" : "○"}
@@ -1332,7 +1357,7 @@ const VendorRegistrationPage: React.FC = () => {
                 className={`mr-2 ${
                   /[A-Z]/.test(accountData.password)
                     ? "text-green-600"
-                    : "text-gray-400"
+                    : "text-[var(--text-subtle)]"
                 }`}
               >
                 {/[A-Z]/.test(accountData.password) ? "✓" : "○"}
@@ -1344,7 +1369,7 @@ const VendorRegistrationPage: React.FC = () => {
                 className={`mr-2 ${
                   /[a-z]/.test(accountData.password)
                     ? "text-green-600"
-                    : "text-gray-400"
+                    : "text-[var(--text-subtle)]"
                 }`}
               >
                 {/[a-z]/.test(accountData.password) ? "✓" : "○"}
@@ -1356,7 +1381,7 @@ const VendorRegistrationPage: React.FC = () => {
                 className={`mr-2 ${
                   /[0-9]/.test(accountData.password)
                     ? "text-green-600"
-                    : "text-gray-400"
+                    : "text-[var(--text-subtle)]"
                 }`}
               >
                 {/[0-9]/.test(accountData.password) ? "✓" : "○"}
@@ -1383,71 +1408,236 @@ const VendorRegistrationPage: React.FC = () => {
     </div>
   );
 
+  /* ── Sidebar tips per step ── */
+  const sidebarTips: Record<number, { icon: string; title: string; text: string }[]> = {
+    1: [
+      { icon: "📋", title: t("vendorRegistration.tips.license1Title", "Valid License"), text: t("vendorRegistration.tips.license1", "Make sure your commercial registration is up-to-date and not expired.") },
+      { icon: "📸", title: t("vendorRegistration.tips.license2Title", "Clear Scans"), text: t("vendorRegistration.tips.license2", "Upload high-quality, color scans of all document pages.") },
+    ],
+    2: [
+      { icon: "📧", title: t("vendorRegistration.tips.business1Title", "Business Email"), text: t("vendorRegistration.tips.business1", "Use your official business email for faster verification.") },
+      { icon: "📱", title: t("vendorRegistration.tips.business2Title", "Phone Number"), text: t("vendorRegistration.tips.business2", "Provide a phone number where we can reach you during business hours.") },
+    ],
+    3: [
+      { icon: "🏷️", title: t("vendorRegistration.tips.store1Title", "Store Name"), text: t("vendorRegistration.tips.store1", "Choose a unique, memorable store name that reflects your brand.") },
+      { icon: "📦", title: t("vendorRegistration.tips.store2Title", "Categories"), text: t("vendorRegistration.tips.store2", "Select all categories that match your product range for better visibility.") },
+    ],
+    4: [
+      { icon: "✅", title: t("vendorRegistration.tips.docs1Title", "Required Docs"), text: t("vendorRegistration.tips.docs1", "Tax card and national ID are required. Bank statement is optional but speeds up verification.") },
+      { icon: "📝", title: t("vendorRegistration.tips.docs2Title", "Review Summary"), text: t("vendorRegistration.tips.docs2", "Double-check all your details in the summary section before proceeding.") },
+    ],
+    5: [
+      { icon: "🔒", title: t("vendorRegistration.tips.account1Title", "Strong Password"), text: t("vendorRegistration.tips.account1", "Use a mix of uppercase, lowercase, numbers, and symbols.") },
+      { icon: "📩", title: t("vendorRegistration.tips.account2Title", "Confirmation Email"), text: t("vendorRegistration.tips.account2", "You'll receive login credentials at the email address you provide here.") },
+    ],
+  };
+
+  const progressPercent = Math.round(((currentStep - 1) / (STEPS.length - 1)) * 100);
+
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gray-50 dark:bg-[var(--bg)] py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center mb-4">
-                <img src="/logo.png" alt="Belgomla" className="h-12 w-auto" />
-                <span className="ml-3 text-2xl font-bold text-gray-900">
-                  Belgomla
-                </span>
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {t("vendorRegistration.title")}
-              </h1>
-              <p className="text-gray-600 mt-2">
-                {t("vendorRegistration.subtitle")}
-              </p>
+      <main className="min-h-screen bg-[var(--bg)]">
+
+        {/* ═══════ HERO SECTION ═══════ */}
+        <section className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-[#1e1b4b] to-slate-900 py-14 sm:py-20">
+          {/* Ambient orbs */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 right-[20%] w-72 h-72 bg-[var(--brand-primary)] rounded-full opacity-[0.07] blur-3xl" />
+            <div className="absolute bottom-0 left-[15%] w-64 h-64 bg-purple-500 rounded-full opacity-[0.06] blur-3xl" />
+          </div>
+          {/* Grid */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
+                {t("vendorRegistration.heroBadge", "Now Accepting New Vendors")}
+              </span>
             </div>
 
-            {renderStepIndicator()}
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
+              {t("vendorRegistration.heroTitle", "Grow Your Business")}
+              <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                {t("vendorRegistration.heroTitleAccent", "with Belgomla")}
+              </span>
+            </h1>
+            <p className="text-base sm:text-lg text-white/60 max-w-xl mx-auto mb-8">
+              {t("vendorRegistration.heroSubtitle", "Join hundreds of vendors reaching thousands of IT & networking buyers across Egypt.")}
+            </p>
 
-            <form onSubmit={handleSubmit}>
-              {currentStep === 1 && renderStep1()}
-              {currentStep === 2 && renderStep2()}
-              {currentStep === 3 && renderStep3()}
-              {currentStep === 4 && renderStep4()}
-              {currentStep === 5 && renderStep5()}
+            {/* Benefit pills */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+              {[
+                { icon: "💰", text: t("vendorRegistration.heroBenefit1", "No Listing Fees") },
+                { icon: "🎯", text: t("vendorRegistration.heroBenefit2", "Dedicated Support") },
+                { icon: "⚡", text: t("vendorRegistration.heroBenefit3", "Fast Payouts") },
+              ].map((b) => (
+                <span key={b.text} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 border border-white/15 text-sm text-white/80">
+                  <span>{b.icon}</span> {b.text}
+                </span>
+              ))}
+            </div>
 
-              <div className="flex justify-between mt-8">
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  disabled={currentStep === 1}
-                  className={`px-6 py-2 rounded-md ${
-                    currentStep === 1
-                      ? "bg-gray-200 text-gray-400 cursor-not-allowed dark:bg-slate-800 dark:text-gray-500"
-                      : "bg-gray-300 text-gray-700 hover:bg-gray-400 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700"
-                  }`}
-                >
-                  {t("vendorRegistration.buttons.previous")}
-                </button>
+            {/* Trust stats */}
+            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+              {[
+                { num: "100+", label: t("vendorRegistration.heroStat1", "Active Vendors") },
+                { num: "5K+", label: t("vendorRegistration.heroStat2", "Products Listed") },
+                { num: "10K+", label: t("vendorRegistration.heroStat3", "Orders Processed") },
+              ].map((s) => (
+                <div key={s.label} className="text-center">
+                  <div className="text-xl sm:text-2xl font-black text-white">{s.num}</div>
+                  <div className="text-[11px] text-white/50 uppercase tracking-wider">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                {currentStep < 5 ? (
+        {/* ═══════ FORM AREA ═══════ */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
+
+            {/* ── LEFT: Form Card ── */}
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] shadow-sm p-6 sm:p-8">
+              {/* Progress text */}
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  {t("vendorRegistration.stepOf", { current: currentStep, total: STEPS.length, defaultValue: `Step ${currentStep} of ${STEPS.length}` })}
+                </span>
+                <span className="text-xs font-bold text-[var(--brand-primary)]">{progressPercent}%</span>
+              </div>
+              {/* Thin progress bar */}
+              <div className="h-1 rounded-full bg-[var(--surface-2)] mb-6 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+              </div>
+
+              {renderStepIndicator()}
+
+              <form onSubmit={handleSubmit}>
+                {currentStep === 1 && renderStep1()}
+                {currentStep === 2 && renderStep2()}
+                {currentStep === 3 && renderStep3()}
+                {currentStep === 4 && renderStep4()}
+                {currentStep === 5 && renderStep5()}
+
+                {/* Navigation buttons */}
+                <div className="flex items-center justify-between mt-8 pt-6 border-t border-[var(--border)]">
                   <button
                     type="button"
-                    onClick={nextStep}
-                    className="px-6 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
+                    onClick={prevStep}
+                    disabled={currentStep === 1}
+                    className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                      currentStep === 1
+                        ? "bg-[var(--surface-2)] text-[var(--text-subtle)] cursor-not-allowed"
+                        : "bg-[var(--surface-2)] text-[var(--text)] hover:bg-[var(--border)] active:scale-[0.97]"
+                    }`}
                   >
-                    {t("vendorRegistration.buttons.next")}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    {t("vendorRegistration.buttons.previous")}
                   </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-6 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50"
-                  >
-                    {loading
-                      ? t("vendorRegistration.buttons.registering")
-                      : t("vendorRegistration.buttons.submit")}
-                  </button>
-                )}
+
+                  {currentStep < 5 ? (
+                    <button
+                      type="button"
+                      onClick={nextStep}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] hover:shadow-lg hover:shadow-[var(--brand-primary)]/20 hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200"
+                    >
+                      {t("vendorRegistration.buttons.next")}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-lg hover:shadow-emerald-500/20 hover:-translate-y-0.5 active:scale-[0.97] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                          {t("vendorRegistration.buttons.registering")}
+                        </>
+                      ) : (
+                        <>
+                          {t("vendorRegistration.buttons.submit")}
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
+
+            {/* ── RIGHT: Sticky Sidebar ── */}
+            <aside className="hidden lg:block space-y-5 sticky top-24">
+              {/* Why sell on Belgomla */}
+              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+                <h3 className="text-sm font-bold text-[var(--text)] mb-4">
+                  ✨ {t("vendorRegistration.sidebar.whySell", "Why Sell on Belgomla?")}
+                </h3>
+                <ul className="space-y-3">
+                  {[
+                    { icon: "🎯", text: t("vendorRegistration.sidebar.benefit1", "Access to thousands of B2B buyers") },
+                    { icon: "📊", text: t("vendorRegistration.sidebar.benefit2", "Real-time analytics dashboard") },
+                    { icon: "💳", text: t("vendorRegistration.sidebar.benefit3", "Secure, on-time payments") },
+                    { icon: "📦", text: t("vendorRegistration.sidebar.benefit4", "Easy inventory management") },
+                    { icon: "📈", text: t("vendorRegistration.sidebar.benefit5", "Marketing tools to boost sales") },
+                  ].map((item) => (
+                    <li key={item.text} className="flex items-start gap-2.5">
+                      <span className="text-base shrink-0 mt-0.5">{item.icon}</span>
+                      <span className="text-xs text-[var(--text-muted)] leading-relaxed">{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </form>
+
+              {/* Step-contextual tips */}
+              <div className="bg-gradient-to-br from-[var(--brand-primary)]/5 to-[var(--brand-accent)]/5 rounded-2xl border border-[var(--brand-primary)]/15 p-5">
+                <h4 className="text-xs font-bold text-[var(--brand-primary)] dark:text-[var(--brand-accent)] uppercase tracking-wider mb-3">
+                  💡 {t("vendorRegistration.sidebar.tips", "Tips for this step")}
+                </h4>
+                <div className="space-y-3">
+                  {(sidebarTips[currentStep] || []).map((tip, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-sm shrink-0">{tip.icon}</span>
+                      <div>
+                        <p className="text-xs font-semibold text-[var(--text)]">{tip.title}</p>
+                        <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">{tip.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Trust badges */}
+              <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { icon: "🔒", text: t("vendorRegistration.sidebar.trust1", "SSL Secured") },
+                    { icon: "🛡️", text: t("vendorRegistration.sidebar.trust2", "Data Protected") },
+                    { icon: "✅", text: t("vendorRegistration.sidebar.trust3", "Verified Platform") },
+                    { icon: "📞", text: t("vendorRegistration.sidebar.trust4", "24/7 Support") },
+                  ].map((badge) => (
+                    <div key={badge.text} className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
+                      <span>{badge.icon}</span> {badge.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Support contact */}
+              <div className="text-center py-3">
+                <p className="text-xs text-[var(--text-subtle)]">
+                  {t("vendorRegistration.sidebar.needHelp", "Need help?")}
+                </p>
+                <a href="mailto:vendors@belgomla.com" className="text-xs font-semibold text-[var(--brand-primary)] dark:text-[var(--brand-accent)] hover:underline">
+                  vendors@belgomla.com
+                </a>
+              </div>
+            </aside>
           </div>
         </div>
       </main>

@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import ProductCard from "../components/ProductCard";
-import { products } from "../data/productsData";
 import Header from "../components/Header";
 import HeroSlider from "../components/HeroSlider";
 import FeaturedProducts from "../components/FeaturedProducts";
@@ -8,125 +7,523 @@ import Newsletter from "../components/Newsletter";
 import Services from "../components/Services";
 import Footer from "../components/Footer";
 import BrandLogos from "../components/BrandLogos";
-import { useUserStore } from "../stores";
+import CountdownTimer from "../components/CountdownTimer";
+import ScrollReveal from "../components/ScrollReveal";
+import { useCategoryStore } from "../stores";
+import { useUserStore } from "../stores/user.store";
+import { useCollectionStore } from "../stores/collection.store";
 import { useTranslation } from "react-i18next";
 import AdvertisementBanner from "../components/AdvertisementBanner";
+import { Link } from "react-router-dom";
+import { axiosInstance } from "../lib/axios";
+import type { Product } from "../types/product.type";
+import type { Category } from "../types/category.type";
+import toast from "react-hot-toast";
 
+/* ─── Skeleton Components ─── */
+const ProductCardSkeleton: React.FC = () => (
+  <div className="bg-[var(--surface)] rounded-xl p-4 lg:p-5 border border-[var(--border)] flex flex-col h-full overflow-hidden">
+    <div className="flex justify-center mb-4 rounded-lg bg-[var(--surface-2)]">
+      <div className="w-32 h-32 lg:w-40 lg:h-40 animate-shimmer rounded-lg" />
+    </div>
+    <div className="text-center mb-3 flex-grow space-y-2">
+      <div className="h-5 animate-shimmer rounded-full w-3/4 mx-auto" />
+      <div className="h-3 animate-shimmer rounded-full w-1/2 mx-auto" />
+      <div className="h-3 animate-shimmer rounded-full w-full mx-auto" />
+    </div>
+    <div className="text-center pt-2 border-t border-[var(--border)]/50">
+      <div className="h-6 animate-shimmer rounded-full w-1/3 mx-auto" />
+    </div>
+  </div>
+);
+
+const CategorySkeleton: React.FC = () => (
+  <div className="flex flex-col items-center gap-2 p-3">
+    <div className="w-16 h-16 lg:w-20 lg:h-20 animate-shimmer rounded-full" />
+    <div className="h-3 animate-shimmer rounded-full w-14" />
+  </div>
+);
+
+/* ─── Section Header ─── */
+const SectionHeader: React.FC<{
+  title: string;
+  subtitle?: string;
+  viewAllLink?: string;
+  viewAllLabel?: string;
+  extra?: React.ReactNode;
+}> = ({ title, subtitle, viewAllLink, viewAllLabel, extra }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 lg:mb-8 gap-3">
+      <div>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)]">
+          {title}
+        </h2>
+        {subtitle && (
+          <p className="text-sm sm:text-base text-[var(--text-muted)] mt-1">
+            {subtitle}
+          </p>
+        )}
+      </div>
+      <div className="flex items-center gap-4">
+        {extra}
+        {viewAllLink && (
+          <Link
+            to={viewAllLink}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-nav)] dark:text-[var(--brand-accent)] hover:gap-2.5 transition-all whitespace-nowrap group"
+          >
+            {viewAllLabel || t("View All")}
+            <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ─── Bundle Themes ─── */
+const bundleThemes = [
+  { gradient: "from-rose-500 to-orange-500", badge: "📸" },
+  { gradient: "from-blue-500 to-indigo-600", badge: "💼" },
+  { gradient: "from-purple-500 to-pink-600", badge: "🎮" },
+  { gradient: "from-teal-500 to-cyan-600", badge: "🌐" },
+];
+
+/* ═════════════════════ Main Page ═════════════════════ */
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
-  const user = useUserStore((state) => state.user);
-  console.log("Current User:", user);
+  useUserStore((s) => s.user);
+
+  const { categories, fetchCategories, loading: categoriesLoading } = useCategoryStore();
+  const { collections, fetchCollections, addCollectionToCart } = useCollectionStore();
+  const fetchCart = useUserStore((state) => state.fetchCart);
+
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [saleProducts, setSaleProducts] = useState<Product[]>([]);
+  const [newestProducts, setNewestProducts] = useState<Product[]>([]);
+  const [loadingAll, setLoadingAll] = useState(true);
+  const [loadingSale, setLoadingSale] = useState(true);
+  const [loadingNewest, setLoadingNewest] = useState(true);
+
+  // Flash deal countdown — end of today
+  const dealEndDate = useMemo(() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, []);
+
+  /* ── Data Fetching ── */
+  useEffect(() => {
+    const load = async () => {
+      setLoadingAll(true);
+      try {
+        const { data } = await axiosInstance.get("/products", {
+          params: { limit: 12, isActive: true, deleted: false, approvalStatus: "approved" },
+        });
+        setAllProducts(data.data || []);
+      } catch (err) {
+        console.error("Failed to load products:", err);
+      } finally {
+        setLoadingAll(false);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoadingSale(true);
+      try {
+        const { data } = await axiosInstance.get("/products/saleProducts");
+        setSaleProducts(data.data || []);
+      } catch (err) {
+        console.error("Failed to load sale products:", err);
+      } finally {
+        setLoadingSale(false);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoadingNewest(true);
+      try {
+        const { data } = await axiosInstance.get("/products/newest");
+        setNewestProducts(data.data || []);
+      } catch (err) {
+        console.error("Failed to load newest products:", err);
+      } finally {
+        setLoadingNewest(false);
+      }
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    fetchCollections({ activeOnly: true });
+  }, [fetchCollections]);
+
+  const handleAddBundleToCart = async (collectionId: string) => {
+    const success = await addCollectionToCart(collectionId, 1);
+    if (success) {
+      await fetchCart();
+      toast.success(t("Bundle added to cart!"));
+    } else {
+      toast.error(t("Failed to add bundle"));
+    }
+  };
+
+  /* ── Render helpers ── */
+  const renderProductGrid = (products: Product[], isLoading: boolean, count = 4) =>
+    isLoading ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        {Array.from({ length: count }).map((_, i) => (
+          <ProductCardSkeleton key={i} />
+        ))}
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 stagger-children">
+        {(products || []).slice(0, count).map((product) => (
+          <ProductCard
+            key={product._id}
+            id={product._id}
+            name={product.name}
+            price={product.saleActive && product.salePrice ? product.salePrice : product.price}
+            currency="EGP"
+            originalPrice={product.saleActive ? product.price : undefined}
+            image={product.images?.[0]?.url || "/placeholder.png"}
+            rating={product.rating}
+            description={product.description}
+            isNew={
+              product.createdAt
+                ? Date.now() - new Date(product.createdAt).getTime() < 7 * 24 * 60 * 60 * 1000
+                : false
+            }
+            isOnSale={product.saleActive}
+            isFeatured={product.featured}
+            salePercentage={product.salePercentage}
+            isInStock={product.stock > 0}
+            stock={product.stock}
+          />
+        ))}
+      </div>
+    );
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <Header />
+
       <main>
+        {/* ════════════════════════════════════════════
+            § 1.  HERO CAROUSEL  — First impression
+            ════════════════════════════════════════════ */}
         <HeroSlider />
 
-        {/* Advertisement Hero Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+        {/* ════════════════════════════════════════════
+            § 2.  TRUST BAR  — Instant credibility
+            Place right below the hero so users see
+            guarantees before they scroll into products
+            ════════════════════════════════════════════ */}
+        <ScrollReveal>
+          <Services />
+        </ScrollReveal>
+
+        {/* ════════════════════════════════════════════
+            § 3.  SHOP BY CATEGORY  — Navigation shortcut
+            Lets users self-filter immediately
+            ════════════════════════════════════════════ */}
+        <ScrollReveal>
+          <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10">
+            <SectionHeader
+              title={`📁 ${t("Shop by Category")}`}
+              viewAllLink="/categories"
+              viewAllLabel={t("All Categories")}
+            />
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 stagger-children">
+              {categoriesLoading
+                ? Array.from({ length: 6 }).map((_, i) => <CategorySkeleton key={i} />)
+                : (categories || []).slice(0, 12).map((cat: Category) => (
+                    <Link
+                      to={`/products?category=${cat._id}`}
+                      key={cat._id}
+                      className="group flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-accent)] hover:shadow-md transition-all duration-300"
+                    >
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-[var(--surface-2)] flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                        {cat.image ? (
+                          <img
+                            src={cat.image}
+                            alt={cat.name}
+                            className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="text-2xl sm:text-3xl">📦</span>
+                        )}
+                      </div>
+                      <span className="text-xs sm:text-sm font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] text-center line-clamp-2 transition-colors">
+                        {cat.name}
+                      </span>
+                    </Link>
+                  ))}
+            </div>
+          </section>
+        </ScrollReveal>
+
+        {/* ════════════════════════════════════════════
+            § 4.  FLASH DEALS  — Urgency + scarcity
+            Countdown timer creates FOMO
+            ════════════════════════════════════════════ */}
+        {(loadingSale || saleProducts.length > 0) && (
+          <ScrollReveal>
+            <section className="relative overflow-hidden py-8 sm:py-10 lg:py-14">
+              {/* Background gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)]/8 via-transparent to-[var(--brand-accent)]/5" />
+              <div className="absolute inset-0 bg-[var(--surface)]/60 dark:bg-[var(--bg)]/70 backdrop-blur-sm" />
+
+              <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+                <SectionHeader
+                  title={`🔥 ${t("Flash Deals")}`}
+                  subtitle={t("Limited time offers — grab them before they're gone!")}
+                  viewAllLink="/products?sale=true"
+                  extra={
+                    <CountdownTimer
+                      targetDate={dealEndDate}
+                      label={t("Ends in")}
+                    />
+                  }
+                />
+                {renderProductGrid(saleProducts, loadingSale, 4)}
+              </div>
+            </section>
+          </ScrollReveal>
+        )}
+
+        {/* ════════════════════════════════════════════
+            § 5.  PROMOTIONAL BANNER (Hero Position)
+            Visual break between product sections.
+            Full-width promo creates rhythm.
+            ════════════════════════════════════════════ */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AdvertisementBanner position="hero" />
         </div>
 
-        {/* Brand Logos Section */}
+        {/* ════════════════════════════════════════════
+            § 6.  FEATURED / EDITOR'S PICKS
+            Hand-curated products build trust and
+            guide undecided users toward best sellers
+            ════════════════════════════════════════════ */}
+        <ScrollReveal>
+          <FeaturedProducts />
+        </ScrollReveal>
+
+        {/* ════════════════════════════════════════════
+            § 7.  TRUSTED BRANDS  — Social proof
+            Authority logos between product sections
+            reinforces that the store carries genuine gear
+            ════════════════════════════════════════════ */}
         <BrandLogos />
 
-        {/* Advertisement Banner */}
+        {/* ════════════════════════════════════════════
+            § 8.  NEWEST ARRIVALS  — Freshness signal
+            Shows the catalog is alive and updated
+            ════════════════════════════════════════════ */}
+        <ScrollReveal>
+          <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10">
+            <SectionHeader
+              title={`✨ ${t("Just Arrived")}`}
+              subtitle={t("The latest additions to our catalog")}
+              viewAllLink="/products?sort=newest"
+            />
+            {loadingNewest ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : newestProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 stagger-children">
+                {(newestProducts || []).slice(0, 4).map((product) => (
+                  <ProductCard
+                    key={product._id}
+                    id={product._id}
+                    name={product.name}
+                    price={product.saleActive && product.salePrice ? product.salePrice : product.price}
+                    currency="EGP"
+                    originalPrice={product.saleActive ? product.price : undefined}
+                    image={product.images?.[0]?.url || "/placeholder.png"}
+                    rating={product.rating}
+                    description={product.description}
+                    isNew
+                    isOnSale={product.saleActive}
+                    salePercentage={product.salePercentage}
+                    isInStock={product.stock > 0}
+                    stock={product.stock}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </section>
+        </ScrollReveal>
+
+        {/* ════════════════════════════════════════════
+            § 9.  BANNER AD (Secondary Position)
+            Wholesale/bulk CTA  — second visual break
+            ════════════════════════════════════════════ */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AdvertisementBanner position="banner" />
         </div>
 
-        {/* Hero Banner Section */}
-        <section className="bg-gradient-to-r from-[#FFD600] to-[#e6c100] dark:from-slate-900 dark:to-slate-800 py-6 sm:py-8 lg:py-12 lg:py-16 mb-4 sm:mb-6 lg:mb-8">
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 lg:gap-8">
-              <div className="w-full lg:flex-1 mb-0 lg:mb-0 text-center lg:text-left">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#333333] dark:text-white mb-2 sm:mb-3 lg:mb-4">
-                  {t("Back to School Offers")}
-                  <br />
-                  <span className="text-xl sm:text-2xl md:text-3xl lg:text-4xl">
-                    {t("Up to 30% Off")}
-                  </span>
-                </h2>
-                <p className="text-base sm:text-lg md:text-xl text-[#333333] dark:text-slate-200 mb-4 sm:mb-6">
-                  {t("Electronics")}
-                </p>
-                <button className="bg-[#002B5B] text-white px-4 sm:px-6 md:px-8 py-2 sm:py-2.5 lg:py-3 rounded-lg hover:bg-[#001a3d] dark:bg-white/10 dark:hover:bg-white/20 transition-colors text-sm sm:text-base">
-                  {t("Shop Now")}
-                </button>
-              </div>
-              <div className="w-full lg:flex-1 flex justify-center lg:justify-end">
-                <img
-                  src="p1.jpeg"
-                  alt="Electronics Sale"
-                  className="max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg h-40 sm:h-48 md:h-56 lg:h-64 object-contain"
+        {/* ════════════════════════════════════════════
+            § 10. BUNDLE DEALS CTA  — Upsell opportunity
+            Promote curated bundles to increase AOV.
+            Mini-cards with one-click add-to-cart.
+            ════════════════════════════════════════════ */}
+        {(collections || []).length > 0 && (
+          <ScrollReveal>
+            <section className="py-10 sm:py-14">
+              <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+                <SectionHeader
+                  title={`📦 ${t("Save with Bundles")}`}
+                  subtitle={t("Curated tech bundles at exclusive prices — save up to 25%")}
+                  viewAllLink="/collections"
+                  viewAllLabel={t("View All Bundles")}
                 />
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Product Categories Section */}
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 lg:py-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-8 lg:mb-8">
-            {[
-              { name: t("Chromecast"), image: "p1.jpeg" },
-              { name: t("Set Top Box"), image: "p2.jpeg" },
-              { name: t("Gaming Console"), image: "p3.jpeg" },
-              { name: t("Sound System"), image: "p4.jpeg" },
-              { name: t("Apple TV"), image: "p5.jpeg" },
-              { name: t("Smart TV"), image: "p1.jpeg" },
-            ].map((category, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-full p-2 sm:p-3 lg:p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer dark:bg-slate-900/80 dark:border dark:border-slate-800"
-              >
-                <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto mb-1 sm:mb-2 bg-gray-100 rounded-full flex items-center justify-center dark:bg-slate-800">
-                  <img
-                    src={category.image}
-                    alt={category.name}
-                    className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+                  {(collections || []).slice(0, 4).map((collection, index) => {
+                    const theme = bundleThemes[index % bundleThemes.length];
+                    const originalTotal = (collection.items || []).reduce((sum: number, item: any) => {
+                      const product = item.product;
+                      const unitPrice = product?.saleActive
+                        ? product.price * (1 - product.salePercentage / 100)
+                        : product?.price || 0;
+                      return sum + unitPrice * item.quantity;
+                    }, 0);
+                    const savings = Math.max(originalTotal - collection.bundlePrice, 0);
+                    const savingsPercent = originalTotal > 0 ? Math.round((savings / originalTotal) * 100) : 0;
+
+                    return (
+                      <div
+                        key={collection._id}
+                        className="group relative bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden hover:shadow-lg hover:border-[var(--brand-primary)]/30 transition-all duration-300"
+                      >
+                        {/* Top gradient accent */}
+                        <div className={`h-1 bg-gradient-to-r ${theme.gradient}`} />
+
+                        <div className="p-4 sm:p-5">
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <div>
+                              <span className="text-lg">{theme.badge}</span>
+                              <h3 className="text-sm font-bold text-[var(--text)] leading-snug mt-0.5 line-clamp-1">
+                                {collection.name}
+                              </h3>
+                            </div>
+                            {savingsPercent > 0 && (
+                              <span className={`shrink-0 text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-gradient-to-r ${theme.gradient}`}>
+                                {savingsPercent}% OFF
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-[11px] text-[var(--text-muted)] line-clamp-2 mb-3 leading-relaxed">
+                            {collection.description}
+                          </p>
+
+                          {/* Mini product avatars */}
+                          <div className="flex items-center gap-1.5 mb-3">
+                            {(collection.items || []).slice(0, 3).map((item: any, i: number) => (
+                              <div
+                                key={i}
+                                className="w-8 h-8 rounded-lg bg-[var(--bg)] border border-[var(--border)] overflow-hidden"
+                              >
+                                <img
+                                  src={item.product?.images?.[0]?.url || "/placeholder.png"}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            ))}
+                            {(collection.items?.length || 0) > 3 && (
+                              <span className="text-[10px] text-[var(--text-muted)] font-medium">
+                                +{(collection.items?.length || 0) - 3}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Price + CTA */}
+                          <div className="flex items-end justify-between gap-2 pt-3 border-t border-[var(--border)]">
+                            <div>
+                              <span className="text-base font-black text-[var(--text)]">
+                                EGP {collection.bundlePrice.toLocaleString()}
+                              </span>
+                              {savings > 0 && (
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                  💰 {t("Save")} {savings.toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => handleAddBundleToCart(collection._id)}
+                              className={`text-xs font-semibold text-white px-3 py-1.5 rounded-lg bg-gradient-to-r ${theme.gradient} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
+                            >
+                              🛒 {t("Add")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                <p className="text-center text-xs sm:text-sm font-medium text-gray-700 dark:text-slate-200 line-clamp-2">
-                  {category.name}
+              </div>
+            </section>
+          </ScrollReveal>
+        )}
+
+        {/* ════════════════════════════════════════════
+            § 11. ALL PRODUCTS  — Full catalog browse
+            Positioned lower so users who scrolled
+            this far are engaged enough to explore more
+            ════════════════════════════════════════════ */}
+        <ScrollReveal>
+          <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10 lg:py-14">
+            <SectionHeader
+              title={t("All Products")}
+              viewAllLink="/products"
+            />
+            {renderProductGrid(allProducts, loadingAll, 8)}
+
+            {/* Empty state */}
+            {!loadingAll && allProducts.length === 0 && (
+              <div className="text-center py-16 animate-fadeIn">
+                <p className="text-5xl mb-4 animate-float">🛍️</p>
+                <h3 className="text-xl font-bold text-[var(--text)] mb-2">
+                  {t("No products yet")}
+                </h3>
+                <p className="text-[var(--text-muted)] max-w-md mx-auto">
+                  {t("Check back soon — new products are being added!")}
                 </p>
               </div>
-            ))}
-          </div>
-        </section>
+            )}
+          </section>
+        </ScrollReveal>
 
-        {/* All Products Section */}
-        <section className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 rounded-3xl bg-white/60 dark:bg-slate-900/60 border border-transparent dark:border-slate-800">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 lg:mb-8 text-gray-900 dark:text-white">
-            {t("All Products")}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-            {/* Products grid: all products, images cycle from /p1.jpeg to /p5.jpeg */}
-            {products.map((product, idx) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                name={product.name}
-                price={product.price}
-                currency={product.currency}
-                originalPrice={undefined}
-                image={`/p${(idx % 5) + 1}.jpeg`}
-                rating={product.rating}
-                description={product.description}
-                isNew={product.isNew}
-                isOnSale={product.isOnSale}
-                isFeatured={product.isFeatured}
-                salePercentage={product.salePercentage}
-                isInStock={product.inStock}
-              />
-            ))}
-          </div>
-        </section>
-
-        <FeaturedProducts />
-        <Newsletter />
-        <Services />
+        {/* ════════════════════════════════════════════
+            § 12. NEWSLETTER  — Capture engagement
+            Last call-to-action before the footer.
+            Users at the bottom are highly engaged.
+            ════════════════════════════════════════════ */}
+        <ScrollReveal>
+          <Newsletter />
+        </ScrollReveal>
       </main>
+
       <Footer />
 
       {/* Advertisement Popup */}

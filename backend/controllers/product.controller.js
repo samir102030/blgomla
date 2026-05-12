@@ -165,7 +165,7 @@ export const getAllProducts = controllerWrapper(
       ];
     }
     // Add filters (category, brand, etc.)
-    if (filters.categoryId) query.Category = filters.categoryId;
+    if (filters.categoryId) query.category = filters.categoryId;
     if (filters.brandId) query.brand = filters.brandId;
     if (filters.storeId) query.store = filters.storeId;
     if (filters.isActive !== undefined) query.isActive = filters.isActive;
@@ -179,7 +179,11 @@ export const getAllProducts = controllerWrapper(
       if (filters.minPrice) query.price.$gte = Number(filters.minPrice);
       if (filters.maxPrice) query.price.$lte = Number(filters.maxPrice);
     }
-    const mongooseQuery = Product.find(query).sort({ createdAt: -1 });
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo")
+      .sort({ createdAt: -1 });
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -195,7 +199,10 @@ export const getSaleProducts = controllerWrapper(
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query);
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -206,17 +213,154 @@ export const getProductById = controllerWrapper(
   "getProductById",
   async (req, res) => {
     const { productId } = req.params;
-    const { page = 1, limit = 20 } = req.query;
-    // For a single product, pagination is not typical, but for consistency:
-    const mongooseQuery = Product.find({ _id: productId }).populate(
-      "reviews.user"
-    );
-    const result = await paginateQuery(page, limit, mongooseQuery);
-    if (!result.data || result.data.length === 0)
+    const product = await Product.findById(productId)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo")
+      .populate("reviews.user", "name");
+    if (!product)
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
-    res.status(200).json(result);
+    res.status(200).json({ success: true, data: product });
+  }
+);
+
+// Get Product By Slug (SEO-friendly)
+export const getProductBySlug = controllerWrapper(
+  "getProductBySlug",
+  async (req, res) => {
+    const { slug } = req.params;
+    const product = await Product.findOne({ slug, deleted: { $ne: true } })
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo")
+      .populate("reviews.user", "name");
+    if (!product)
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    res.status(200).json({ success: true, data: product });
+  }
+);
+
+// Bulk Update Products (admin)
+export const bulkUpdateProducts = controllerWrapper(
+  "bulkUpdateProducts",
+  async (req, res) => {
+    const { ids, updateData } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "ids array is required" });
+    }
+    if (!updateData || Object.keys(updateData).length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "updateData is required" });
+    }
+
+    // Whitelist allowed bulk-update fields
+    const allowed = [
+      "price", "stock", "isActive", "featured", "saleActive",
+      "salePercentage", "category", "brand", "minOrderQty",
+    ];
+    const sanitized = {};
+    for (const key of allowed) {
+      if (updateData[key] !== undefined) sanitized[key] = updateData[key];
+    }
+
+    const result = await Product.updateMany(
+      { _id: { $in: ids } },
+      { $set: sanitized }
+    );
+
+    res.status(200).json({
+      success: true,
+      modifiedCount: result.modifiedCount,
+      matchedCount: result.matchedCount,
+    });
+  }
+);
+
+// Storefront Products (optimized public endpoint with facets)
+export const getStorefrontProducts = controllerWrapper(
+  "getStorefrontProducts",
+  async (req, res) => {
+    const {
+      page = 1, limit = 20, search, category, brand,
+      minPrice, maxPrice, rating, sortBy, inStock,
+    } = req.query;
+
+    const query = {
+      isActive: true,
+      deleted: false,
+      approvalStatus: "approved",
+    };
+
+    if (search) {
+      const regex = new RegExp(
+        search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"
+      );
+      query.$or = [
+        { name: { $regex: regex } },
+        { description: { $regex: regex } },
+        { tags: { $in: [regex] } },
+      ];
+    }
+    if (category) query.category = category;
+    if (brand) query.brand = brand;
+    if (inStock === "true") query.stock = { $gt: 0 };
+    if (rating) query.rating = { $gte: Number(rating) };
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
+    // Sort options
+    let sortOption = { createdAt: -1 };
+    switch (sortBy) {
+      case "price_asc": sortOption = { price: 1 }; break;
+      case "price_desc": sortOption = { price: -1 }; break;
+      case "newest": sortOption = { createdAt: -1 }; break;
+      case "best_selling": sortOption = { soldCount: -1 }; break;
+      case "top_rated": sortOption = { rating: -1 }; break;
+      case "name_asc": sortOption = { name: 1 }; break;
+      case "name_desc": sortOption = { name: -1 }; break;
+    }
+
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .sort(sortOption);
+
+    const result = await paginateQuery(page, limit, mongooseQuery);
+
+    // Get facets (available filters) in parallel
+    const [brandFacets, categoryFacets, priceRange] = await Promise.all([
+      Product.aggregate([
+        { $match: { ...query, brand: { $exists: true, $ne: null } } },
+        { $group: { _id: "$brand", count: { $sum: 1 } } },
+      ]),
+      Product.aggregate([
+        { $match: { ...query, category: { $exists: true, $ne: null } } },
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+      ]),
+      Product.aggregate([
+        { $match: query },
+        { $group: { _id: null, min: { $min: "$price" }, max: { $max: "$price" } } },
+      ]),
+    ]);
+
+    res.status(200).json({
+      ...result,
+      facets: {
+        brands: brandFacets,
+        categories: categoryFacets,
+        priceRange: priceRange[0] || { min: 0, max: 0 },
+      },
+    });
   }
 );
 
@@ -281,7 +425,7 @@ export const getProductApprovals = controllerWrapper(
     const mongooseQuery = Product.find(query)
       .populate("store")
       .populate("brand")
-      .populate("Category")
+      .populate("category")
       .populate("createdBy", "name email role")
       .sort({ createdAt: -1 });
 
@@ -481,7 +625,7 @@ export const filterProducts = controllerWrapper(
       limit = 20,
     } = req.query;
     let query = {};
-    if (category) query.Category = category;
+    if (category) query.category = category;
     if (brand) query.brand = brand;
     if (store) query.store = store;
     if (featured !== undefined) query.featured = featured;
@@ -503,7 +647,10 @@ export const filterProducts = controllerWrapper(
         }
       } catch {}
     }
-    const mongooseQuery = Product.find(query);
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -519,7 +666,10 @@ export const getFeaturedProducts = controllerWrapper(
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query);
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -532,11 +682,14 @@ export const getProductsByCategory = controllerWrapper(
     const { categoryId } = req.params;
     const { page = 1, limit = 20 } = req.query;
     const query = {
-      Category: categoryId,
+      category: categoryId,
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query);
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -553,7 +706,10 @@ export const getProductsByBrand = controllerWrapper(
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query);
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -570,7 +726,10 @@ export const getStoreProducts = controllerWrapper(
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query);
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -945,7 +1104,11 @@ export const getBestSellers = controllerWrapper(
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query).sort({ soldCount: -1 });
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo")
+      .sort({ soldCount: -1 });
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -960,7 +1123,11 @@ export const getNewestProducts = controllerWrapper(
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query).sort({ createdAt: -1 });
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo")
+      .sort({ createdAt: -1 });
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -973,7 +1140,11 @@ export const getMostRatedProducts = controllerWrapper(
       isActive: true,
       deleted: false,
     };
-    const mongooseQuery = Product.find(query).sort({ rating: -1 });
+    const mongooseQuery = Product.find(query)
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .populate("store", "storeName logo")
+      .sort({ rating: -1 });
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
   }
@@ -1087,7 +1258,152 @@ export const removeFromCart = controllerWrapper(
       return item.product.toString() !== productId;
     });
     await user.save();
-    console.log(user.cart);
     res.status(200).json({ success: true, cart: user.cart });
+  }
+);
+
+// ── Price Suggestion ──
+export const suggestPrice = controllerWrapper(
+  "suggestPrice",
+  async (req, res) => {
+    const { productId } = req.params;
+    const { suggestedPrice, reason, guestName } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    product.suggestedPrices.push({
+      user: req.user?._id || undefined,
+      guestName: guestName || undefined,
+      suggestedPrice,
+      reason,
+    });
+    await product.save();
+
+    res.status(201).json({ success: true, message: "Price suggestion submitted" });
+  }
+);
+
+export const getPriceSuggestions = controllerWrapper(
+  "getPriceSuggestions",
+  async (req, res) => {
+    const { productId } = req.params;
+    const product = await Product.findById(productId, "suggestedPrices name price")
+      .populate("suggestedPrices.user", "name email");
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    res.status(200).json({ success: true, data: product.suggestedPrices, currentPrice: product.price });
+  }
+);
+
+export const reviewPriceSuggestion = controllerWrapper(
+  "reviewPriceSuggestion",
+  async (req, res) => {
+    const { productId, suggestionId } = req.params;
+    const { status, adminNote } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    const suggestion = product.suggestedPrices.id(suggestionId);
+    if (!suggestion)
+      return res.status(404).json({ success: false, message: "Suggestion not found" });
+
+    suggestion.status = status;
+    suggestion.adminNote = adminNote;
+
+    // If accepted, update product price
+    if (status === "accepted") {
+      product.price = suggestion.suggestedPrice;
+    }
+
+    await product.save();
+    res.status(200).json({ success: true, suggestion });
+  }
+);
+
+// ── Competitor Prices ──
+export const addCompetitorPrice = controllerWrapper(
+  "addCompetitorPrice",
+  async (req, res) => {
+    const { productId } = req.params;
+    const { competitorName, competitorUrl, price, currency } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    product.competitorPrices.push({
+      competitorName,
+      competitorUrl,
+      price,
+      currency: currency || "EGP",
+      addedBy: req.user._id,
+    });
+    await product.save();
+
+    res.status(201).json({ success: true, data: product.competitorPrices });
+  }
+);
+
+export const getCompetitorPrices = controllerWrapper(
+  "getCompetitorPrices",
+  async (req, res) => {
+    const { productId } = req.params;
+    const product = await Product.findById(productId, "competitorPrices name price")
+      .populate("competitorPrices.addedBy", "name");
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    res.status(200).json({
+      success: true,
+      currentPrice: product.price,
+      competitors: product.competitorPrices,
+    });
+  }
+);
+
+export const updateCompetitorPrice = controllerWrapper(
+  "updateCompetitorPrice",
+  async (req, res) => {
+    const { productId, competitorId } = req.params;
+    const { competitorName, competitorUrl, price, currency } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    const competitor = product.competitorPrices.id(competitorId);
+    if (!competitor)
+      return res.status(404).json({ success: false, message: "Competitor entry not found" });
+
+    if (competitorName) competitor.competitorName = competitorName;
+    if (competitorUrl !== undefined) competitor.competitorUrl = competitorUrl;
+    if (price) competitor.price = price;
+    if (currency) competitor.currency = currency;
+    competitor.lastChecked = new Date();
+
+    await product.save();
+    res.status(200).json({ success: true, data: product.competitorPrices });
+  }
+);
+
+export const deleteCompetitorPrice = controllerWrapper(
+  "deleteCompetitorPrice",
+  async (req, res) => {
+    const { productId, competitorId } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    product.competitorPrices = product.competitorPrices.filter(
+      (c) => c._id.toString() !== competitorId
+    );
+    await product.save();
+    res.status(200).json({ success: true, message: "Competitor price removed" });
   }
 );

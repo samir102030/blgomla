@@ -18,6 +18,8 @@ import returnRoutes from "./return.route.js";
 import collectionRoutes from "./collection.route.js";
 import bulkProductRoutes from "./bulkProduct.route.js";
 import advertisementRoutes from "./advertisement.route.js";
+import paymentRoutes from "./payment.route.js";
+import quotationRoutes from "./quotation.route.js";
 
 const router = express.Router();
 
@@ -40,5 +42,7 @@ router.use("/returns", returnRoutes);
 router.use("/collections", collectionRoutes);
 router.use("/bulk-products", bulkProductRoutes);
 router.use("/advertisements", advertisementRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/quotations", quotationRoutes);
 
 export default router;

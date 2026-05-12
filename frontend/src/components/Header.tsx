@@ -29,6 +29,7 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [language, setLanguage] = useState(i18n.language);
+  const [scrolled, setScrolled] = useState(false);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -38,6 +39,13 @@ const Header: React.FC = () => {
     setShowDropdown(false);
     setSearchQuery("");
   };
+
+  // Scroll effect
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Debounced search effect
   useEffect(() => {
@@ -97,381 +105,250 @@ const Header: React.FC = () => {
 
   // Navigation configuration
   const navigationItems: NavigationItem[] = [
-    {
-      label: t("Home"),
-      path: "/",
-      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
-    },
-    {
-      label: t("All Products"),
-      path: "/products",
-      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
-    },
-    {
-      label: t("Collections"),
-      path: "/collections",
-      className: "border-r border-[#9E9E9E]/30 md:border-r-0",
-    },
-    // {
-    //   label: t("About Us"),
-    //   path: "/about",
-    //   className: "border-r border-[#9E9E9E]/30 md:border-r-0",
-    // },
-    {
-      label: t("Contact"),
-      path: "/contact",
-      className: "",
-    },
+    { label: t("Home"), path: "/" },
+    { label: t("All Products"), path: "/products" },
+    { label: t("Collections"), path: "/collections" },
+    { label: t("Contact"), path: "/contact" },
     {
       label: t("Become a Vendor"),
       path: "/vendor-registration",
       condition: showBecomeVendor,
-      className: "",
     },
     {
       label: t("Admin Dashboard"),
       path: "/dashboard",
       condition: showAdminDashboard,
-      className: "bg-[#673AB7]",
+      className: "!text-[var(--brand-accent)]",
     },
   ];
 
-  return (
-    <header className="sticky top-0 z-50 bg-[var(--brand-surface)] shadow-lg">
-      {/* Top bar - responsive */}
-      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2 gap-2 sm:gap-4">
-        <div className="flex items-center space-x-2">
-          <span className="text-[var(--brand-ink)] text-sm font-semibold">
-            {t("Language")}
-          </span>
-          <select
-            aria-label={t("Language")}
-            value={language}
-            onChange={(e) => {
-              i18n.changeLanguage(e.target.value);
-              setLanguage(e.target.value);
-            }}
-            className="bg-white border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm text-[#333333] focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
-          >
-            <option value="en">{t("English")}</option>
-            <option value="ar">{t("Arabic")}</option>
-          </select>
-          <ThemeToggle showLabel={false} className="ml-1" />
-        </div>
-        <div className="hidden sm:flex items-center space-x-2">
-          <span className="text-[var(--brand-ink)] text-xs sm:text-sm">
-            {t("Call us:")}
-          </span>
-          <span className="text-[var(--brand-ink)] font-medium text-xs sm:text-sm">
-            {t("(+20)1009353639")}
-          </span>
-        </div>
-      </div>
-
-      {/* Main header */}
-      <div className="py-2 sm:py-3 lg:py-4 bg-[var(--brand-surface)]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Link
-                to="/"
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+  /* ── Search Dropdown ── */
+  const SearchDropdown = () =>
+    showDropdown ? (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto animate-fadeInDown">
+        {loading ? (
+          <div className="p-5 text-center text-[var(--text-subtle)]">
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent mx-auto" />
+            <p className="mt-2 text-sm">{t("Searching...")}</p>
+          </div>
+        ) : products.length > 0 ? (
+          <div className="py-2">
+            {products.map((product) => (
+              <button
+                key={product._id}
+                type="button"
+                className="w-full text-left flex items-center px-4 py-3 hover:bg-[var(--surface-2)] transition-colors border-b border-[var(--border)]/50 last:border-b-0 gap-3"
+                onClick={() => goToProduct(product._id)}
               >
                 <img
-                  src="/logo.png"
-                  alt="Belgomla Logo"
-                  className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                  src={product.images[0]?.url || "/placeholder.png"}
+                  alt={product.name}
+                  className="w-12 h-12 object-cover rounded-lg bg-[var(--surface-2)]"
                 />
-                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[var(--brand-ink)] hidden sm:inline">
-                  Belgomla
-                </span>
-              </Link>
-            </div>
-
-            {/* Search bar - hide on mobile, show on md and up */}
-            <div
-              className="flex-1 max-w-2xl mx-2 sm:mx-4 hidden md:block"
-              ref={desktopSearchRef}
-            >
-              <div className="relative">
-                <div className="relative flex">
-                  <input
-                    type="text"
-                    placeholder={t("Search...")}
-                    className="flex-1 px-3 sm:px-4 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-xs sm:text-sm bg-white"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => searchQuery.trim() && setShowDropdown(true)}
-                  />
-                  <button
-                    className="px-3 sm:px-6 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors"
-                    aria-label={t("Search...")}
-                  >
-                    <MagnifyingGlassIcon
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-
-                {/* Search Dropdown */}
-                {showDropdown && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
-                    {loading ? (
-                      <div className="p-4 text-center text-gray-500">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-800 mx-auto"></div>
-                        <p className="mt-2 text-sm">{t("Searching...")}</p>
-                      </div>
-                    ) : products.length > 0 ? (
-                      <div className="py-2">
-                        {products.map((product) => (
-                          <button
-                            key={product._id}
-                            type="button"
-                            className="w-full text-left flex items-center px-3 sm:px-4 py-2 sm:py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                            onClick={() => goToProduct(product._id)}
-                          >
-                            <img
-                              src={product.images[0]?.url || "/placeholder.png"}
-                              alt={product.name}
-                              className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md mr-2 sm:mr-3"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-xs sm:text-sm font-medium text-gray-900 truncate">
-                                {product.name}
-                              </h4>
-                              <p className="text-xs text-gray-500 truncate hidden sm:block">
-                                {product.description}
-                              </p>
-                              <div className="flex items-center mt-0 sm:mt-1">
-                                <span className="text-xs sm:text-sm font-semibold text-green-600">
-                                  ${product.price}
-                                </span>
-                                {product.saleActive && (
-                                  <span className="ml-1 sm:ml-2 text-xs text-red-500 line-through">
-                                    ${product.salePrice}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                        <div className="px-3 sm:px-4 py-2 border-t border-gray-100">
-                          <button
-                            type="button"
-                            className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium"
-                            onClick={() => {
-                              navigate(
-                                `/products?search=${encodeURIComponent(
-                                  searchQuery,
-                                )}`,
-                              );
-                              setShowDropdown(false);
-                              setSearchQuery("");
-                            }}
-                          >
-                            {t("View all results for")} "{searchQuery}"
-                          </button>
-                        </div>
-                      </div>
-                    ) : searchQuery.trim() ? (
-                      <div className="p-4 text-center text-gray-500">
-                        <p className="text-sm">
-                          {t("No products found for")} "{searchQuery}"
-                        </p>
-                      </div>
-                    ) : null}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-medium text-[var(--text)] truncate">
+                    {product.name}
+                  </h4>
+                  <div className="flex items-center mt-0.5 gap-2">
+                    <span className="text-sm font-semibold text-[var(--brand-primary)]">
+                      {product.price.toLocaleString()} EGP
+                    </span>
+                    {product.saleActive && (
+                      <span className="text-xs text-[var(--danger)] line-through">
+                        {product.salePrice?.toLocaleString()}
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              </button>
+            ))}
+            <div className="px-4 py-2.5 border-t border-[var(--border)]">
+              <button
+                type="button"
+                className="text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] font-medium transition-colors"
+                onClick={() => {
+                  navigate(
+                    `/products?search=${encodeURIComponent(searchQuery)}`
+                  );
+                  setShowDropdown(false);
+                  setSearchQuery("");
+                }}
+              >
+                {t("View all results for")} &ldquo;{searchQuery}&rdquo;
+              </button>
             </div>
-
-            {/* Header actions */}
-            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-              {!user && (
-                <Link
-                  to="/login"
-                  className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
-                >
-                  <ArrowRightOnRectangleIcon
-                    className="w-5 h-5 sm:w-6 sm:h-6"
-                    aria-hidden="true"
-                  />
-                  <span className="text-xs hidden md:block">{t("Login")}</span>
-                </Link>
-              )}
-              <Link
-                to="/account"
-                className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
-              >
-                <UserCircleIcon
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  aria-hidden="true"
-                />
-                <span className="text-xs hidden md:block">{t("Account")}</span>
-              </Link>
-              {user && <NotificationBell />}
-              <Link
-                to="/wishlist"
-                className="flex flex-col items-center gap-1 text-gray-800 hover:text-gray-600 transition-colors"
-              >
-                <HeartIcon
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  aria-hidden="true"
-                />
-                <span className="text-xs hidden md:block">{t("Wishlist")}</span>
-              </Link>
-              <Link
-                to="/cart"
-                className="flex flex-col items-center gap-0.5 text-gray-800 hover:text-gray-600 transition-colors relative"
-              >
-                <ShoppingCartIcon
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                  aria-hidden="true"
-                />
-                <span className="text-xs hidden md:block">{t("Cart")}</span>
-                <span className="absolute ltr:-top-1 ltr:-right-1 rtl:-top-1 rtl:-left-1 sm:ltr:-top-2 sm:ltr:-right-2 sm:rtl:-top-2 sm:rtl:-left-2 bg-red-500 text-white  rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs">
-                  {user?.cart?.length
-                    ? user.cart.reduce(
-                        (acc, item) => acc + (item.quantity || 0),
-                        0,
-                      )
-                    : 0}
-                </span>
-              </Link>
-            </div>
-
-            {/* Mobile menu toggle */}
-            <button
-              className="lg:hidden flex flex-col space-y-1 p-1 ml-2"
-              onClick={toggleMenu}
-            >
-              <span
-                className={`w-5 h-0.5 bg-gray-800 transition-all duration-300 ${
-                  isMenuOpen ? "rotate-45 translate-y-1.5" : ""
-                }`}
-              ></span>
-              <span
-                className={`w-5 h-0.5 bg-gray-800 transition-all duration-300 ${
-                  isMenuOpen ? "opacity-0" : ""
-                }`}
-              ></span>
-              <span
-                className={`w-5 h-0.5 bg-gray-800 transition-all duration-300 ${
-                  isMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
-                }`}
-              ></span>
-            </button>
           </div>
+        ) : searchQuery.trim() ? (
+          <div className="p-5 text-center text-[var(--text-subtle)]">
+            <p className="text-sm">
+              {t("No products found for")} &ldquo;{searchQuery}&rdquo;
+            </p>
+          </div>
+        ) : null}
+      </div>
+    ) : null;
 
-          {/* Mobile search bar */}
-          <div className="mt-2 md:hidden" ref={mobileSearchRef}>
+  return (
+    <header
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-[var(--surface)]/95 backdrop-blur-xl shadow-lg border-b border-[var(--border)]/50"
+          : "bg-[var(--surface)] border-b border-[var(--border)]"
+      }`}
+    >
+      {/* Main header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-18 gap-4">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0"
+          >
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center text-white font-bold text-lg shadow-md">
+              B
+            </div>
+            <span className="text-lg sm:text-xl font-bold text-[var(--text)] hidden sm:inline tracking-tight">
+              Belgomla
+            </span>
+          </Link>
+
+          {/* Search bar - desktop */}
+          <div
+            className="flex-1 max-w-xl mx-4 hidden md:block"
+            ref={desktopSearchRef}
+          >
             <div className="relative">
-              <div className="relative flex">
+              <div className="relative flex items-center">
+                <MagnifyingGlassIcon className="absolute left-3.5 w-4 h-4 text-[var(--text-subtle)] pointer-events-none" />
                 <input
                   type="text"
-                  placeholder={t("Search...")}
-                  className="flex-1 px-3 py-2 border-2 border-gray-300 rounded-l-md focus:border-gray-500 focus:outline-none text-xs sm:text-sm bg-white"
+                  placeholder={t("Search products, brands, categories...")}
+                  className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                 />
-                <button
-                  className="px-3 sm:px-4 py-2 bg-gray-800 text-white rounded-r-md hover:bg-gray-700 transition-colors"
-                  aria-label={t("Search...")}
-                >
-                  <MagnifyingGlassIcon
-                    className="w-4 h-4 sm:w-5 sm:h-5"
-                    aria-hidden="true"
-                  />
-                </button>
               </div>
-
-              {/* Mobile Search Dropdown */}
-              {showDropdown && (
-                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-80 overflow-y-auto">
-                  {loading ? (
-                    <div className="p-3 text-center text-gray-500">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-800 mx-auto"></div>
-                      <p className="mt-1 text-xs">{t("Searching...")}</p>
-                    </div>
-                  ) : products.length > 0 ? (
-                    <div className="py-1">
-                      {products.map((product) => (
-                        <button
-                          key={product._id}
-                          type="button"
-                          className="w-full text-left flex items-center px-2 sm:px-3 py-2 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                          onClick={() => goToProduct(product._id)}
-                        >
-                          <img
-                            src={product.images[0]?.url || "/placeholder.png"}
-                            alt={product.name}
-                            className="w-8 h-8 sm:w-10 sm:h-10 object-cover rounded-md mr-2"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-xs font-medium text-gray-900 truncate">
-                              {product.name}
-                            </h4>
-                            <div className="flex items-center mt-0.5">
-                              <span className="text-xs font-semibold text-green-600">
-                                ${product.price}
-                              </span>
-                              {product.saleActive && (
-                                <span className="ml-1 text-xs text-red-500 line-through">
-                                  ${product.salePrice}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                      <div className="px-2 sm:px-3 py-2 border-t border-gray-100">
-                        <button
-                          type="button"
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                          onClick={() => {
-                            navigate(
-                              `/products?search=${encodeURIComponent(
-                                searchQuery,
-                              )}`,
-                            );
-                            setShowDropdown(false);
-                            setSearchQuery("");
-                          }}
-                        >
-                          {t("View all results")}
-                        </button>
-                      </div>
-                    </div>
-                  ) : searchQuery.trim() ? (
-                    <div className="p-3 text-center text-gray-500">
-                      <p className="text-xs">{t("No products found")}</p>
-                    </div>
-                  ) : null}
-                </div>
-              )}
+              <SearchDropdown />
             </div>
+          </div>
+
+          {/* Header actions */}
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Language */}
+            <select
+              aria-label={t("Language")}
+              value={language}
+              onChange={(e) => {
+                i18n.changeLanguage(e.target.value);
+                setLanguage(e.target.value);
+              }}
+              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-xs text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-colors cursor-pointer"
+            >
+              <option value="en">EN</option>
+              <option value="ar">AR</option>
+            </select>
+
+            <ThemeToggle showLabel={false} className="ml-0.5" />
+
+            <div className="w-px h-6 bg-[var(--border)] mx-1 hidden sm:block" />
+
+            {!user && (
+              <Link
+                to="/login"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all text-sm"
+              >
+                <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                <span className="hidden lg:block font-medium">{t("Login")}</span>
+              </Link>
+            )}
+            <Link
+              to="/account"
+              className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
+            >
+              <UserCircleIcon className="w-5 h-5" />
+            </Link>
+            {user && <NotificationBell />}
+            <Link
+              to="/wishlist"
+              className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
+            >
+              <HeartIcon className="w-5 h-5" />
+            </Link>
+            <Link
+              to="/cart"
+              className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all relative"
+            >
+              <ShoppingCartIcon className="w-5 h-5" />
+              <span className="absolute ltr:-top-0.5 ltr:-right-0.5 rtl:-top-0.5 rtl:-left-0.5 bg-[var(--brand-primary)] text-white rounded-full flex items-center justify-center font-bold" style={{ width: '18px', height: '18px', fontSize: '10px' }}>
+                {user?.cart?.length
+                  ? user.cart.reduce(
+                      (acc, item) => acc + (item.quantity || 0),
+                      0
+                    )
+                  : 0}
+              </span>
+            </Link>
+
+            {/* Mobile menu toggle */}
+            <button
+              className="lg:hidden flex flex-col justify-center items-center w-9 h-9 rounded-lg hover:bg-[var(--surface-2)] transition-colors ml-1"
+              onClick={toggleMenu}
+              aria-label="Toggle menu"
+            >
+              <span
+                className={`w-5 h-0.5 bg-[var(--text)] transition-all duration-300 ${
+                  isMenuOpen ? "rotate-45 translate-y-1" : ""
+                }`}
+              />
+              <span
+                className={`w-5 h-0.5 bg-[var(--text)] transition-all duration-300 mt-1 ${
+                  isMenuOpen ? "opacity-0" : ""
+                }`}
+              />
+              <span
+                className={`w-5 h-0.5 bg-[var(--text)] transition-all duration-300 mt-1 ${
+                  isMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile search bar */}
+        <div className="pb-3 md:hidden" ref={mobileSearchRef}>
+          <div className="relative">
+            <div className="relative flex items-center">
+              <MagnifyingGlassIcon className="absolute left-3.5 w-4 h-4 text-[var(--text-subtle)] pointer-events-none" />
+              <input
+                type="text"
+                placeholder={t("Search...")}
+                className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+              />
+            </div>
+            <SearchDropdown />
           </div>
         </div>
       </div>
 
       {/* Navigation */}
       <nav
-        className={`bg-[var(--brand-nav)] text-white transition-all duration-300 ${
+        className={`border-t border-[var(--border)] bg-[var(--brand-nav)] transition-all duration-300 ${
           isMenuOpen ? "block" : "hidden"
         } lg:block`}
       >
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <ul className="flex flex-col lg:flex-row lg:space-x-4 xl:space-x-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <ul className="flex flex-col lg:flex-row lg:items-center lg:gap-1">
             {navigationItems
               .filter((item) => item.condition === undefined || item.condition)
               .map((item) => (
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`block py-3 sm:py-4 lg:py-3 px-3 sm:px-4 hover:bg-white/10 hover:text-[var(--brand-accent)] transition-colors text-sm sm:text-base ${item.className}`}
+                    className={`block py-3 px-4 text-sm font-medium text-[var(--brand-nav-text)] opacity-70 hover:opacity-100 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all ${item.className || ""}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}

@@ -4,8 +4,11 @@ import User from "../models/user.model.js";
 
 export const CLIENT_ORIGINS = [
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
   "https://*.netlify.app",
   "https://68935717a16f60000867bbf9--belgomla.netlify.app",
+  "https://*.ngrok-free.app",
 ];
 
 let io;

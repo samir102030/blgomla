@@ -1,145 +1,86 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { useBrandStore } from "../stores/brand.store";
 
 const BrandLogos: React.FC = () => {
   const { t } = useTranslation();
-  const brands = [
-    {
-      name: "Infinix",
-      logo: "https://logos-world.net/wp-content/uploads/2021/02/Infinix-Logo.png",
-    },
-    {
-      name: "Honor",
-      logo: "https://logos-world.net/wp-content/uploads/2020/05/Honor-Logo.png",
-    },
-    {
-      name: "HP",
-      logo: "https://logos-world.net/wp-content/uploads/2020/09/HP-Logo.png",
-    },
-    {
-      name: "Dell",
-      logo: "https://logos-world.net/wp-content/uploads/2020/09/Dell-Logo.png",
-    },
-    {
-      name: "Canon",
-      logo: "https://logos-world.net/wp-content/uploads/2020/04/Canon-Logo.png",
-    },
-    {
-      name: "Huawei",
-      logo: "https://logos-world.net/wp-content/uploads/2020/07/Huawei-Logo.png",
-    },
-    {
-      name: "Oppo",
-      logo: "https://logos-world.net/wp-content/uploads/2020/05/Oppo-Logo.png",
-    },
-    {
-      name: "Lenovo",
-      logo: "https://logos-world.net/wp-content/uploads/2020/09/Lenovo-Logo.png",
-    },
-    {
-      name: "Xiaomi",
-      logo: "https://logos-world.net/wp-content/uploads/2020/05/Xiaomi-Logo.png",
-    },
-    {
-      name: "Samsung",
-      logo: "https://logos-world.net/wp-content/uploads/2020/04/Samsung-Logo.png",
-    },
-    {
-      name: "Apple",
-      logo: "https://logos-world.net/wp-content/uploads/2020/04/Apple-Logo.png",
-    },
-  ];
+  const fetchBrands = useBrandStore((state) => state.fetchBrands);
+  const brands = useBrandStore((state) => state.brands);
 
-  const duplicatedBrands = [...brands, ...brands];
+  useEffect(() => {
+    fetchBrands();
+  }, [fetchBrands]);
 
-  const scrollStyle = `
-    @keyframes scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-    .animate-scroll {
-      animation: scroll 5s linear infinite alternate;
-    }
-    .animate-scroll:hover {
-      animation-play-state: paused;
-    }
-  `;
+  // Fallback brand data with logos
+  const brandLogos: Record<string, string> = {
+    Apple: "https://cdn.simpleicons.org/apple/000000",
+    Dell: "https://cdn.simpleicons.org/dell/007DB8",
+    HP: "https://cdn.simpleicons.org/hp/0096D6",
+    Lenovo: "https://cdn.simpleicons.org/lenovo/E2231A",
+    ASUS: "https://cdn.simpleicons.org/asus/000000",
+    Canon: "https://cdn.simpleicons.org/canon/BC0024",
+    Sony: "https://cdn.simpleicons.org/sony/000000",
+    Nikon: "https://cdn.simpleicons.org/nikon/FFE100",
+    Samsung: "https://cdn.simpleicons.org/samsung/1428A0",
+    MSI: "https://cdn.simpleicons.org/msi/FF0000",
+    Logitech: "https://cdn.simpleicons.org/logitech/00B8FC",
+    "TP-Link": "https://cdn.simpleicons.org/tplink/4ACBD6",
+    NVIDIA: "https://cdn.simpleicons.org/nvidia/76B900",
+    AMD: "https://cdn.simpleicons.org/amd/ED1C24",
+    Corsair: "https://cdn.simpleicons.org/corsair/000000",
+  };
+
+  const brandItems = brands.length > 0
+    ? brands.map((b) => ({ name: b.name, logo: b.logo || brandLogos[b.name] || "" }))
+    : Object.entries(brandLogos).map(([name, logo]) => ({ name, logo }));
 
   return (
-    <section className="bg-gray-50 py-12">
-      <style>{scrollStyle}</style>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {t("Shop by Brand")}
+    <section className="py-10 sm:py-14 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="text-center">
+          <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)] mb-2">
+            {t("Trusted Brands")}
           </h2>
-          <p className="text-gray-600">
-            {t("Discover products from top technology brands")}
+          <p className="text-sm text-[var(--text-muted)]">
+            {t("Partnered with leading technology brands worldwide")}
           </p>
         </div>
+      </div>
 
-        <div className="relative overflow-hidden md:overflow-visible">
-          <div className="flex gap-4 animate-scroll md:hidden pb-4">
-            {duplicatedBrands?.map((brand, index) => (
-              <div
-                key={`${brand.name}-${index}`}
-                className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group flex-shrink-0 w-24"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 mb-2 flex items-center justify-center">
-                    <img
-                      src={brand.logo}
-                      alt={brand.name}
-                      className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                      onError={(e) => {
-                        // Fallback to a simple text logo if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `<div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-xs font-bold text-gray-600">${brand.name}</div>`;
-                        }
-                      }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium text-gray-700 text-center">
-                    {brand.name}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Infinite marquee */}
+      <div className="relative">
+        {/* Fade edges */}
+        <div className="absolute inset-y-0 left-0 w-24 sm:w-40 bg-gradient-to-r from-[var(--bg)] to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-24 sm:w-40 bg-gradient-to-l from-[var(--bg)] to-transparent z-10 pointer-events-none" />
 
-          <div className="hidden md:grid md:grid-cols-6 lg:grid-cols-11 gap-4">
-            {brands?.map((brand, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer group"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 mb-2 flex items-center justify-center">
-                    <img
-                      src={brand.logo}
-                      alt={brand.name}
-                      className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300"
-                      onError={(e) => {
-                        // Fallback to a simple text logo if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `<div class="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center text-xs font-bold text-gray-600">${brand.name}</div>`;
-                        }
-                      }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium text-gray-700 text-center">
-                    {brand.name}
-                  </span>
-                </div>
+        <div className="flex animate-marquee w-max gap-6 sm:gap-10">
+          {[...brandItems, ...brandItems].map((brand, index) => (
+            <div
+              key={`${brand.name}-${index}`}
+              className="flex-shrink-0 group cursor-pointer"
+            >
+              <div className="flex flex-col items-center justify-center gap-2 w-44 h-24 sm:w-52 sm:h-28 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-5 hover:border-[var(--brand-primary)]/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                {brand.logo ? (
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="h-8 sm:h-10 w-auto object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      const fallback = target.parentElement?.querySelector('.brand-fallback') as HTMLElement;
+                      if (fallback) fallback.style.display = "block";
+                    }}
+                  />
+                ) : null}
+                <span
+                  className={`text-xs font-semibold text-[var(--text-subtle)] group-hover:text-[var(--brand-primary)] transition-colors duration-300 tracking-wide uppercase ${brand.logo ? "" : "brand-fallback text-base"}`}
+                >
+                  {brand.name}
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

@@ -30,8 +30,8 @@ export interface Product {
   name: string;
   description?: string;
   price: number;
-  Category?: string; // ObjectId as string
-  brand?: string; // ObjectId as string
+  category?: string | { _id: string; name: string; slug?: string }; // ObjectId or populated
+  brand?: string | { _id: string; name: string; slug?: string; logo?: string }; // ObjectId or populated
   stock: number;
   images: ProductImage[];
   salePercentage: number;
@@ -45,7 +45,7 @@ export interface Product {
   createdBy?: string | User;
   reviews: ProductReview[];
   rating: number;
-  store?: string; // ObjectId as string
+  store?: string | { _id: string; storeName: string; logo?: string }; // ObjectId or populated
   featured: boolean;
   tags?: string[];
   soldCount?: number;

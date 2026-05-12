@@ -8,6 +8,7 @@ import Notification from "../models/notification.model.js";
 import Coupon from "../models/coupon.model.js";
 import Collection from "../models/collection.model.js";
 import { emitNotificationCreated } from "../utils/socket.js";
+import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
 
 export const createOrder = controllerWrapper(
   "createOrder",
@@ -67,11 +68,12 @@ export const createOrder = controllerWrapper(
       });
     }
 
-    // Only allow Cash On Delivery
-    if (paymentMethod.toLowerCase() !== "cod") {
+    // Validate payment method
+    const validPaymentMethods = ["cod", "stripe", "paymob"];
+    if (!validPaymentMethods.includes(paymentMethod.toLowerCase())) {
       return res.status(400).json({
         success: false,
-        message: "Only Cash On Delivery payment method is accepted",
+        message: `Invalid payment method. Accepted: ${validPaymentMethods.join(", ")}`,
       });
     }
 
@@ -257,7 +259,7 @@ export const createOrder = controllerWrapper(
         for (let i = 0; i < validatedItems.length; i++) {
           const item = validatedItems[i];
           const product = await Product.findById(item.product).session(session);
-          if (coupon.canApplyToProduct(product._id, product.Category)) {
+          if (coupon.canApplyToProduct(product._id, product.category)) {
             applicableSubtotal += item.price * item.quantity;
           }
         }
@@ -279,7 +281,7 @@ export const createOrder = controllerWrapper(
         for (let i = 0; i < validatedItems.length; i++) {
           const item = validatedItems[i];
           const product = await Product.findById(item.product).session(session);
-          if (coupon.canApplyToProduct(product._id, product.Category)) {
+          if (coupon.canApplyToProduct(product._id, product.category)) {
             const itemTotal = item.price * item.quantity;
             const proportion = itemTotal / applicableSubtotal;
             const itemDiscount = Math.min(
@@ -392,6 +394,15 @@ export const createOrder = controllerWrapper(
         order: savedOrder,
         message: "Order created successfully",
       });
+
+      // Send order confirmation email (non-blocking, after response)
+      const customer = await User.findById(savedOrder.user);
+      if (customer) {
+        const populatedOrder = await Order.findById(savedOrder._id).populate("orderItems.product");
+        sendOrderConfirmationEmail(customer, populatedOrder).catch((err) =>
+          console.error("Failed to send order confirmation email:", err)
+        );
+      }
     } catch (error) {
       // Abort transaction on any error
       await session.abortTransaction();
@@ -509,6 +520,7 @@ export const updateOrderStatus = controllerWrapper(
       confirmed: "confirmed",
       processing: "is being processed",
       shipped: "has been shipped",
+      out_for_delivery: "is out for delivery",
       delivered: "has been delivered",
       cancelled: "has been cancelled",
     };
@@ -522,6 +534,14 @@ export const updateOrderStatus = controllerWrapper(
         message: `Your order #${order._id} ${message}.`,
         type: status === "cancelled" ? "warning" : "info",
       });
+
+      // Send status update email (non-blocking)
+      const customer = await User.findById(order.user);
+      if (customer) {
+        sendOrderStatusEmail(customer, order, status).catch((err) =>
+          console.error("Failed to send order status email:", err)
+        );
+      }
     } catch (error) {
       console.error("Error creating order status notification:", error);
     }

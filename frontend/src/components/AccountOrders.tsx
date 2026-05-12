@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { useOrderStore } from "../stores/order.store";
 import { useReturnStore } from "../stores/return.store";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 const AccountOrders: React.FC = () => {
+  const { t } = useTranslation();
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderDetailsLoading, setOrderDetailsLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -23,418 +26,173 @@ const AccountOrders: React.FC = () => {
     setOrderDetailsLoading(true);
     setOrderAddress(null);
     setOrderProducts([]);
-
     try {
-      // Fetch order details (now includes populated address and products)
       await fetchOrderById(orderId);
       const order = useOrderStore.getState().order;
       setSelectedOrder(order);
-
       if (order) {
-        // Set address (now populated)
         setOrderAddress(order.shippingAddress);
-
-        // Set products (now populated with full product details)
         const products = (order.orderItems || []).map((item: any) => {
           const product = item.product;
-          return {
-            ...product,
-            quantity: item.quantity,
-            itemPrice: item.price || product.price,
-            collectionName: item.collectionName,
-          };
+          return { ...product, quantity: item.quantity, itemPrice: item.price || product.price, collectionName: item.collectionName };
         });
         setOrderProducts(products);
       }
-    } catch (error) {
-      console.error("Error fetching order details:", error);
-    } finally {
-      setOrderDetailsLoading(false);
-    }
+    } catch (error) { console.error("Error fetching order details:", error); }
+    finally { setOrderDetailsLoading(false); }
   };
 
-  const handleOpenReturn = (order: any) => {
-    setSelectedReturnOrder(order);
-    setReturnReason("");
-    setShowReturnModal(true);
-  };
-
+  const handleOpenReturn = (order: any) => { setSelectedReturnOrder(order); setReturnReason(""); setShowReturnModal(true); };
   const handleSubmitReturn = async () => {
     if (!selectedReturnOrder?._id) return;
-    const success = await createReturn({
-      orderId: selectedReturnOrder._id,
-      reason: returnReason.trim() || undefined,
-    });
-    if (success) {
-      setShowReturnModal(false);
-    }
+    const success = await createReturn({ orderId: selectedReturnOrder._id, reason: returnReason.trim() || undefined });
+    if (success) setShowReturnModal(false);
   };
-
-  const hasReturnForOrder = (orderId: string) => {
-    return returns.some((item) => {
-      const returnOrderId =
-        typeof item.order === "string" ? item.order : item.order?._id;
-      return returnOrderId === orderId;
-    });
-  };
+  const hasReturnForOrder = (orderId: string) => returns.some((item) => { const rid = typeof item.order === "string" ? item.order : item.order?._id; return rid === orderId; });
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "delivered":
-        return "text-[#009688] bg-[#009688]/10";
-      case "processing":
-        return "text-[#333333] bg-[#FFD600]/10";
-      case "shipped":
-        return "text-[#002B5B] bg-[#002B5B]/10";
-      default:
-        return "text-[#9E9E9E] bg-[#9E9E9E]/10";
+      case "delivered": return "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400";
+      case "processing": return "text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400";
+      case "shipped": return "text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400";
+      case "cancelled": return "text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400";
+      default: return "text-[var(--text-muted)] bg-[var(--surface-2)]";
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "delivered": return "✅"; case "processing": return "⏳"; case "shipped": return "🚚"; case "cancelled": return "❌"; default: return "📋";
+    }
+  };
+
+  const inputClass = "w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all";
+
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Order History</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">
-                Order ID
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">
-                Date
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">
-                Total
-              </th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {orders.map((order) => (
-              <tr key={order._id}>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {order._id}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
-                  {order.createdAt?.slice(0, 10)}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                      order.status
-                    )}`}
-                  >
-                    {order.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  ${order.totalPrice}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col items-start gap-2">
-                    <button
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      onClick={() => handleViewOrderDetails(order._id)}
-                    >
-                      View Details
-                    </button>
-                    {order.status === "delivered" && (
-                      <button
-                        className={`text-sm font-medium ${
-                          hasReturnForOrder(order._id)
-                            ? "text-gray-400 cursor-not-allowed"
-                            : "text-[#002B5B] hover:text-[#001a3d]"
-                        }`}
-                        onClick={() =>
-                          !hasReturnForOrder(order._id) &&
-                          handleOpenReturn(order)
-                        }
-                        disabled={hasReturnForOrder(order._id)}
-                      >
-                        {hasReturnForOrder(order._id)
-                          ? "Return Requested"
-                          : "Request Return"}
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-[var(--text)]">{t("account.orderHistory", "Order History")}</h2>
+        <p className="text-sm text-[var(--text-muted)] mt-1">{t("account.orderHistorySubtitle", "View and manage all your past and active orders.")}</p>
       </div>
+
+      {(!orders || orders.length === 0) ? (
+        <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-10 text-center">
+          <span className="text-4xl">📭</span>
+          <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noOrders", "No orders yet.")}</p>
+          <Link to="/products" className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-[var(--brand-primary)] hover:underline">{t("account.startShopping", "Start Shopping")} →</Link>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {orders.map((order) => (
+            <div key={order._id} className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4 hover:border-[var(--brand-primary)]/30 transition-all">
+              <div className="flex items-center gap-4">
+                <div className="text-2xl shrink-0">{getStatusIcon(order.status)}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-[var(--text)]">#{order._id.slice(-8).toUpperCase()}</p>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.status)}`}>{order.status}</span>
+                  </div>
+                  <p className="text-xs text-[var(--text-subtle)] mt-0.5">{order.createdAt?.slice(0, 10)} • {order.orderItems?.length || 0} {t("account.items", "items")}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-bold text-[var(--text)]">{order.totalPrice?.toLocaleString()} <span className="text-[10px] font-normal text-[var(--text-muted)]">EGP</span></p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--border)]">
+                <button onClick={() => handleViewOrderDetails(order._id)} className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">{t("account.viewDetails", "View Details")}</button>
+                {order.status === "delivered" && (
+                  <button
+                    className={`text-xs font-semibold ${hasReturnForOrder(order._id) ? "text-[var(--text-subtle)] cursor-not-allowed" : "text-amber-600 hover:underline"}`}
+                    onClick={() => !hasReturnForOrder(order._id) && handleOpenReturn(order)}
+                    disabled={hasReturnForOrder(order._id)}
+                  >
+                    {hasReturnForOrder(order._id) ? t("account.returnRequested", "Return Requested") : t("account.requestReturn", "Request Return")}
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Order Details Modal */}
       {showOrderModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={() => setShowOrderModal(false)}
-              aria-label="Close"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowOrderModal(false)} aria-label="Close">✕</button>
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Order Details
-              </h2>
-              <div className="h-1 w-20 bg-[#FFD600] rounded-full"></div>
+              <h2 className="text-xl font-bold text-[var(--text)]">{t("account.orderDetails", "Order Details")}</h2>
+              <div className="h-1 w-16 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-full mt-2"></div>
             </div>
             {orderDetailsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FFD600]"></div>
+              <div className="flex items-center justify-center py-16">
+                <div className="animate-spin rounded-full h-10 w-10 border-2 border-[var(--brand-primary)] border-t-transparent"></div>
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
-                      <svg
-                        className="w-5 h-5 mr-2 text-[#002B5B]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Order Information
-                    </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4">
+                    <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">📋 {t("account.orderInfo", "Order Information")}</h3>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Order ID:</span>
-                        <span className="font-medium text-gray-900">
-                          {selectedOrder?._id}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Status:</span>
-                        <span
-                          className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                            selectedOrder?.status || ""
-                          )}`}
-                        >
-                          {selectedOrder?.status}
-                        </span>
-                      </div>
+                      <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.orderId", "Order ID")}:</span><span className="font-medium text-[var(--text)]">#{selectedOrder?._id?.slice(-8)?.toUpperCase()}</span></div>
+                      <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.status", "Status")}:</span><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(selectedOrder?.status || "")}`}>{selectedOrder?.status}</span></div>
                       {selectedOrder?.couponCode ? (
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-medium text-gray-900">
-                              $
-                              {(
-                                selectedOrder?.itemsPrice +
-                                (selectedOrder?.shippingPrice || 0)
-                              ).toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-green-600">
-                            <span>Coupon ({selectedOrder.couponCode}):</span>
-                            <span className="font-medium">
-                              -$
-                              {(
-                                selectedOrder?.itemsPrice +
-                                (selectedOrder?.shippingPrice || 0) -
-                                selectedOrder?.totalPrice
-                              ).toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex justify-between border-t pt-2">
-                            <span className="text-gray-600 font-medium">
-                              Total:
-                            </span>
-                            <span className="font-bold text-gray-900">
-                              ${selectedOrder?.totalPrice}
-                            </span>
-                          </div>
-                        </div>
+                        <>
+                          <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.subtotal", "Subtotal")}:</span><span className="font-medium text-[var(--text)]">{(selectedOrder?.itemsPrice + (selectedOrder?.shippingPrice || 0)).toFixed(2)} EGP</span></div>
+                          <div className="flex justify-between text-emerald-600 dark:text-emerald-400"><span>{t("account.coupon", "Coupon")} ({selectedOrder.couponCode}):</span><span className="font-medium">-{(selectedOrder?.itemsPrice + (selectedOrder?.shippingPrice || 0) - selectedOrder?.totalPrice).toFixed(2)} EGP</span></div>
+                          <div className="flex justify-between border-t border-[var(--border)] pt-2"><span className="font-medium text-[var(--text-muted)]">{t("account.total", "Total")}:</span><span className="font-bold text-[var(--text)]">{selectedOrder?.totalPrice} EGP</span></div>
+                        </>
                       ) : (
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Total:</span>
-                          <span className="font-medium text-gray-900">
-                            ${selectedOrder?.totalPrice}
-                          </span>
-                        </div>
+                        <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.total", "Total")}:</span><span className="font-medium text-[var(--text)]">{selectedOrder?.totalPrice} EGP</span></div>
                       )}
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Date:</span>
-                        <span className="font-medium text-gray-900">
-                          {selectedOrder?.createdAt?.slice(0, 10)}
-                        </span>
-                      </div>
+                      <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.date", "Date")}:</span><span className="font-medium text-[var(--text)]">{selectedOrder?.createdAt?.slice(0, 10)}</span></div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
-                      <svg
-                        className="w-5 h-5 mr-2 text-[#002B5B]"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      Shipping & Payment
-                    </h3>
+                  <div className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4">
+                    <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">📍 {t("account.shippingPayment", "Shipping & Payment")}</h3>
                     <div className="space-y-2 text-sm">
                       <div>
-                        <span className="text-gray-600">Address:</span>
+                        <span className="text-[var(--text-muted)]">{t("account.address", "Address")}:</span>
                         {orderAddress ? (
-                          <div className="font-medium text-gray-900 mt-1">
-                            <p>{orderAddress.name}</p>
-                            <p>{orderAddress.address}</p>
-                            <p>
-                              {orderAddress.city}
-                              {orderAddress.state
-                                ? `, ${orderAddress.state}`
-                                : ""}{" "}
-                              {orderAddress.zipCode}
-                            </p>
+                          <div className="font-medium text-[var(--text)] mt-1 space-y-0.5">
+                            <p>{orderAddress.name}</p><p>{orderAddress.address}</p>
+                            <p>{orderAddress.city}{orderAddress.state ? `, ${orderAddress.state}` : ""} {orderAddress.zipCode}</p>
                             <p>{orderAddress.country}</p>
-                            {orderAddress.phone && (
-                              <p>Phone: {orderAddress.phone}</p>
-                            )}
+                            {orderAddress.phone && <p className="text-xs text-[var(--text-subtle)]">📞 {orderAddress.phone}</p>}
                           </div>
-                        ) : (
-                          <p className="font-medium text-gray-900 mt-1">
-                            {selectedOrder?.shippingAddress}
-                          </p>
-                        )}
+                        ) : <p className="font-medium text-[var(--text)] mt-1">{selectedOrder?.shippingAddress}</p>}
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Payment:</span>
-                        <span className="font-medium text-gray-900">
-                          {selectedOrder?.paymentMethod}
-                        </span>
-                      </div>
+                      <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.payment", "Payment")}:</span><span className="font-medium text-[var(--text)]">{selectedOrder?.paymentMethod}</span></div>
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <svg
-                      className="w-5 h-5 mr-2 text-[#002B5B]"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                      />
-                    </svg>
-                    Order Items
-                  </h3>
+                <div className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4">
+                  <h3 className="text-sm font-semibold text-[var(--text)] mb-4 flex items-center gap-2">🛍️ {t("account.orderItems", "Order Items")}</h3>
                   <div className="space-y-3">
-                    {orderProducts.map((product, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between bg-white rounded-lg p-3 border"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                    {orderProducts.map((product, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-[var(--surface)] rounded-xl p-3 border border-[var(--border)]">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                             {product.images && product.images.length > 0 ? (
-                              <img
-                                src={product.images[0].url}
-                                alt={product.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <svg
-                                className="w-6 h-6 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                />
-                              </svg>
-                            )}
+                              <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
+                            ) : <span className="text-lg text-[var(--text-subtle)]">📦</span>}
                           </div>
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-[var(--text)] truncate">
                               {product.name}
-                              {product.collectionName && (
-                                <span className="ml-2 text-xs text-gray-500">
-                                  ({product.collectionName})
-                                </span>
-                              )}
+                              {product.collectionName && <span className="ml-1.5 text-[10px] text-[var(--text-subtle)]">({product.collectionName})</span>}
                             </p>
-                            <p className="text-sm text-gray-600">
-                              Quantity: {product.quantity}
-                            </p>
-                            {product.description && (
-                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                                {product.description}
-                              </p>
-                            )}
+                            <p className="text-xs text-[var(--text-subtle)]">{t("account.qty", "Qty")}: {product.quantity}</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                           {product.saleActive && product.salePercentage > 0 ? (
-                            <div>
-                              <p className="text-sm text-gray-500 line-through">
-                                ${product.price.toFixed(2)}
-                              </p>
-                              <p className="font-medium text-red-600">
-                                $
-                                {(
-                                  product.itemPrice ||
-                                  product.salePrice ||
-                                  product.price *
-                                    (1 - product.salePercentage / 100)
-                                ).toFixed(2)}
-                              </p>
-                              <p className="text-xs text-red-500">
-                                {product.salePercentage}% off
-                              </p>
-                            </div>
-                          ) : (
-                            <p className="font-medium text-gray-900">
-                              ${(product.itemPrice || product.price).toFixed(2)}
-                            </p>
-                          )}
+                            <>
+                              <p className="text-xs text-[var(--text-subtle)] line-through">{product.price.toFixed(2)} EGP</p>
+                              <p className="text-sm font-medium text-red-500">{(product.itemPrice || product.salePrice || product.price * (1 - product.salePercentage / 100)).toFixed(2)} EGP</p>
+                              <p className="text-[10px] text-red-400">-{product.salePercentage}%</p>
+                            </>
+                          ) : <p className="text-sm font-medium text-[var(--text)]">{(product.itemPrice || product.price).toFixed(2)} EGP</p>}
                         </div>
                       </div>
                     ))}
@@ -448,61 +206,21 @@ const AccountOrders: React.FC = () => {
 
       {/* Return Request Modal */}
       {showReturnModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-              onClick={() => setShowReturnModal(false)}
-              aria-label="Close"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                Request Return
-              </h2>
-              <p className="text-sm text-gray-600">
-                Order #{selectedReturnOrder?._id}
-              </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowReturnModal(false)} aria-label="Close">✕</button>
+            <div className="mb-5">
+              <h2 className="text-xl font-bold text-[var(--text)]">{t("account.requestReturn", "Request Return")}</h2>
+              <p className="text-xs text-[var(--text-muted)] mt-1">{t("account.returnOrderId", "Order")} #{selectedReturnOrder?._id?.slice(-8)?.toUpperCase()}</p>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason (optional)
-                </label>
-                <textarea
-                  rows={4}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#FFD600] focus:border-transparent"
-                  placeholder="Tell us why you are returning this order"
-                  value={returnReason}
-                  onChange={(e) => setReturnReason(e.target.value)}
-                />
+                <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">{t("account.returnReason", "Reason (optional)")}</label>
+                <textarea rows={4} className={inputClass + " resize-none"} placeholder={t("account.returnReasonPlaceholder", "Tell us why you are returning this order")} value={returnReason} onChange={(e) => setReturnReason(e.target.value)} />
               </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-                  onClick={() => setShowReturnModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 text-sm rounded-lg bg-[#002B5B] text-white hover:bg-[#001a3d]"
-                  onClick={handleSubmitReturn}
-                >
-                  Submit Request
-                </button>
+              <div className="flex gap-3">
+                <button className="flex-1 py-3 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition-all" onClick={() => setShowReturnModal(false)}>{t("common.cancel", "Cancel")}</button>
+                <button className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] hover:shadow-lg transition-all" onClick={handleSubmitReturn}>{t("account.submitRequest", "Submit Request")}</button>
               </div>
             </div>
           </div>

@@ -1,202 +1,137 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
+
+  const footerLinks = {
+    shop: [
+      { label: t("All Products"), path: "/products" },
+      { label: t("Collections"), path: "/collections" },
+      { label: t("Become a Vendor"), path: "/vendor-registration" },
+    ],
+    support: [
+      { label: t("Contact"), path: "/contact" },
+      { label: t("Delivery Information"), path: "/delivery" },
+      { label: t("Return Policy"), path: "/returns" },
+      { label: t("Terms & Conditions"), path: "/terms" },
+    ],
+    account: [
+      { label: t("My Account"), path: "/account" },
+      { label: t("Cart"), path: "/cart" },
+      { label: t("Wishlist"), path: "/wishlist" },
+      { label: t("Checkout"), path: "/checkout" },
+    ],
+  };
+
   return (
-    <footer className="bg-[#002B5B] dark:bg-slate-950 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {/* About Us */}
+    <footer className="bg-[#0f172a] text-white relative overflow-hidden">
+      {/* Top gradient line */}
+      <div className="h-1 w-full bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-accent)] to-[var(--brand-secondary)]" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
+          {/* Brand */}
           <div>
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#FFD600] dark:text-amber-300">
-              {t("About us")}
-            </h3>
-            <p className="text-[#9E9E9E] dark:text-slate-400 text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
-              {t("Belgomla, Your Trusted Partner for Networking Solutions")}
+            <Link to="/" className="flex items-center gap-2.5 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center text-white font-bold text-lg shadow-md">
+                B
+              </div>
+              <span className="text-lg font-bold tracking-tight">
+                Belgomla
+              </span>
+            </Link>
+            <p className="text-sm text-white/70 leading-relaxed mb-5">
+              {t("Your trusted partner for IT equipment, cameras, and networking solutions. Wholesale and retail.")}
             </p>
-            <div>
-              <h4 className="text-xs sm:text-sm font-medium mb-2 sm:mb-3">{t("Follow us")}</h4>
-              <div className="flex space-x-2 sm:space-x-3">
+            <div className="flex gap-2.5">
+              {["f", "𝕏", "in", "📧"].map((icon, i) => (
                 <a
+                  key={i}
                   href="#"
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-[#9E9E9E]/20 dark:bg-white/10 rounded-full flex items-center justify-center hover:bg-[#FFD600] hover:text-[#333333] dark:hover:bg-amber-300 dark:hover:text-slate-900 transition-colors text-xs sm:text-sm"
+                  className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-[var(--brand-primary)] hover:border-transparent transition-all duration-300 text-xs font-medium"
                 >
-                  <span>f</span>
+                  {icon}
                 </a>
-                <a
-                  href="#"
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 dark:bg-white/10 rounded-full flex items-center justify-center hover:bg-blue-400 transition-colors text-xs sm:text-sm"
-                >
-                  <span>t</span>
-                </a>
-                <a
-                  href="#"
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 dark:bg-white/10 rounded-full flex items-center justify-center hover:bg-orange-500 transition-colors text-xs sm:text-sm"
-                >
-                  <span>📧</span>
-                </a>
-                <a
-                  href="#"
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 dark:bg-white/10 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors text-xs sm:text-sm"
-                >
-                  <span>g+</span>
-                </a>
-                <a
-                  href="#"
-                  className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-700 dark:bg-white/10 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors text-xs sm:text-sm"
-                >
-                  <span>in</span>
-                </a>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Information */}
+          {/* Shop */}
           <div>
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#FFD600] dark:text-amber-300">
-              {t("Information")}
+            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 text-white/80">
+              {t("Shop")}
             </h3>
-            <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-              <li>
-                <a
-                  href="/about"
-                  className="text-[#9E9E9E] dark:text-slate-400 hover:text-[#FFD600] dark:hover:text-amber-300 transition-colors"
-                >
-                  {t("About Us")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/services"
-                  className="text-[#9E9E9E] dark:text-slate-400 hover:text-[#FFD600] dark:hover:text-amber-300 transition-colors"
-                >
-                  {t("Services")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/delivery"
-                  className="text-[#9E9E9E] dark:text-slate-400 hover:text-[#FFD600] dark:hover:text-amber-300 transition-colors"
-                >
-                  {t("Delivery Information")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/privacy"
-                  className="text-[#9E9E9E] dark:text-slate-400 hover:text-[#FFD600] dark:hover:text-amber-300 transition-colors"
-                >
-                  {t("Privacy Policy")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/terms"
-                  className="text-[#9E9E9E] dark:text-slate-400 hover:text-[#FFD600] dark:hover:text-amber-300 transition-colors"
-                >
-                  {t("Terms & Conditions")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/returns"
-                  className="text-[#9E9E9E] dark:text-slate-400 hover:text-[#FFD600] dark:hover:text-amber-300 transition-colors"
-                >
-                  {t("Return Policy")}
-                </a>
-              </li>
+            <ul className="space-y-2.5">
+              {footerLinks.shop.map((link) => (
+                <li key={link.path}>
+                  <Link
+                    to={link.path}
+                    className="text-sm text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* My Account */}
+          {/* Support */}
           <div>
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-white">{t("My Account")}</h3>
-            <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm">
-              <li>
-                <a
-                  href="/account"
-                  className="text-gray-300 dark:text-slate-400 hover:text-white transition-colors"
-                >
-                  {t("My Account")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/cart"
-                  className="text-gray-300 dark:text-slate-400 hover:text-white transition-colors"
-                >
-                  {t("Cart")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/checkout"
-                  className="text-gray-300 dark:text-slate-400 hover:text-white transition-colors"
-                >
-                  {t("Checkout")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/contact"
-                  className="text-gray-300 dark:text-slate-400 hover:text-white transition-colors"
-                >
-                  {t("Contact")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/validation"
-                  className="text-gray-300 dark:text-slate-400 hover:text-white transition-colors"
-                >
-                  {t("Validation")}
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/wishlist"
-                  className="text-gray-300 dark:text-slate-400 hover:text-white transition-colors"
-                >
-                  {t("Wishlist")}
-                </a>
-              </li>
+            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 text-white/80">
+              {t("Support")}
+            </h3>
+            <ul className="space-y-2.5">
+              {footerLinks.support.map((link) => (
+                <li key={link.path}>
+                  <Link
+                    to={link.path}
+                    className="text-sm text-white/60 hover:text-white transition-colors duration-200"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Get In Touch */}
+          {/* Contact */}
           <div>
-            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-white">{t("Get In Touch")}</h3>
-            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-              <div className="flex items-start">
-                <span className="text-gray-400 dark:text-slate-500 mr-2">📍</span>
-                <span className="text-gray-300 dark:text-slate-400">6 October.</span>
+            <h3 className="text-sm font-semibold uppercase tracking-wider mb-4 text-white/80">
+              {t("Get In Touch")}
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-start gap-2.5">
+                <span className="text-white/50 mt-0.5">📍</span>
+                <span className="text-white/70">6 October, Cairo, Egypt</span>
               </div>
-              <div className="flex items-center">
-                <span className="text-gray-400 dark:text-slate-500 mr-2">📞</span>
-                <span className="text-gray-300 dark:text-slate-400">(+20) 1009353639</span>
+              <div className="flex items-center gap-2.5">
+                <span className="text-white/50">📞</span>
+                <span className="text-white/70">(+20) 1009353639</span>
               </div>
-              <div className="flex items-center">
-                <span className="text-gray-400 dark:text-slate-500 mr-2">✉️</span>
-                <span className="text-gray-300 dark:text-slate-400 break-all">Halafawy@gmail.com</span>
-              </div>
-            </div>
-
-            {/* Payment Methods */}
-            <div className="mt-4 sm:mt-6">
-              <div className="flex space-x-2">
-                <div className="w-10 h-6 sm:w-12 sm:h-7 bg-[#002B5B] dark:bg-slate-900 rounded text-xs flex items-center justify-center text-[#FFD600] dark:text-amber-300 font-bold border border-[#FFD600] dark:border-amber-400">
-                  VISA
-                </div>
+              <div className="flex items-center gap-2.5">
+                <span className="text-white/50">✉️</span>
+                <span className="text-white/70 break-all">info@belgomla.com</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-[#9E9E9E]/30 dark:border-slate-800 mt-6 sm:mt-8 lg:mt-8 pt-4 sm:pt-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center text-xs sm:text-sm text-[#9E9E9E] dark:text-slate-500 text-center sm:text-left">
-            <p>© 2025 Belgomla Group</p>
+        {/* Bottom */}
+        <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="text-xs text-white/30">
+            © {new Date().getFullYear()} Belgomla Tech. {t("All rights reserved.")}
+          </p>
+          <div className="flex gap-3">
+            {["VISA", "MC"].map((method) => (
+              <div
+                key={method}
+                className="px-3 py-1.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-white/40 tracking-wider"
+              >
+                {method}
+              </div>
+            ))}
           </div>
         </div>
       </div>

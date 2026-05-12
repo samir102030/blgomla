@@ -128,6 +128,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       roles: ["admin", "store"],
     },
     {
+      name: t("Quotations"),
+      href: "/dashboard/quotations",
+      icon: ClipboardDocumentListIcon,
+      roles: ["admin"],
+    },
+    {
       name: t("admin.user"),
       href: "/dashboard/user",
       icon: UserIcon,
@@ -147,9 +153,34 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
     },
     {
       name: t("admin.sales"),
-      href: "/dashboard/sales",
       icon: ChartBarIcon,
-      roles: ["admin", "store"],
+      children: [
+        {
+          name: "Sales Overview",
+          href: "/dashboard/sales",
+          roles: ["admin", "store"],
+        },
+        {
+          name: "Payments",
+          href: "/dashboard/payments",
+          roles: ["admin"],
+        },
+        {
+          name: "Inventory Alerts",
+          href: "/dashboard/inventory",
+          roles: ["admin", "store"],
+        },
+        {
+          name: "Customers",
+          href: "/dashboard/customers",
+          roles: ["admin"],
+        },
+        {
+          name: "Visitors",
+          href: "/dashboard/visitors",
+          roles: ["admin"],
+        },
+      ],
     },
     {
       name: t("admin.advertisements"),

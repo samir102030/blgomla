@@ -17,6 +17,7 @@ interface FilterState {
   search: string;
   featured: boolean;
   onSale: boolean;
+  inStock: boolean;
 }
 
 const ProductsContent: React.FC = () => {
@@ -31,8 +32,10 @@ const ProductsContent: React.FC = () => {
     search: "",
     featured: false,
     onSale: false,
+    inStock: false,
   });
-  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortBy, setSortBy] = useState<string>("newest");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const products = useProductStore((state) => state.products);
@@ -46,20 +49,32 @@ const ProductsContent: React.FC = () => {
   const categories = useCategoryStore((state) => state.categories);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize] = useState(12);
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
     fetchBrands();
     fetchCategories();
-    fetchProducts({ isActive: true, deleted: false });
+    fetchProducts({ isActive: true, deleted: false, approvalStatus: "approved", limit: 1000 });
   }, [fetchBrands, fetchCategories, fetchProducts]);
 
-  // Set search from URL params
+  // Set search/category from URL params
   useEffect(() => {
     const searchQuery = searchParams.get("search");
+    const categoryId = searchParams.get("category");
+    const sale = searchParams.get("sale");
+    const sort = searchParams.get("sort");
     if (searchQuery) {
       setFilters((prev) => ({ ...prev, search: searchQuery }));
+    }
+    if (categoryId) {
+      setFilters((prev) => ({ ...prev, categories: [categoryId] }));
+    }
+    if (sale === "true") {
+      setFilters((prev) => ({ ...prev, onSale: true }));
+    }
+    if (sort) {
+      setSortBy(sort);
     }
   }, [searchParams]);
 
@@ -80,63 +95,44 @@ const ProductsContent: React.FC = () => {
 
   // Apply filters
   const filteredProducts = products?.filter((product) => {
-    // Category filter (including subcategories)
     if (filters.categories.length > 0) {
       const selectedCategoryIds = filters.categories.flatMap((catId) =>
         getAllSubcategoryIds(catId, categories)
       );
-      if (!selectedCategoryIds.includes(product.Category || "")) {
+      const productCategoryId = typeof product.category === 'object' && product.category
+        ? (product.category as any)._id
+        : product.category;
+      if (!selectedCategoryIds.includes(productCategoryId || "")) {
         return false;
       }
     }
 
-    // Subcategory filter (if categories have subcategories, but for now simple)
-    // TODO: Implement subcategory filtering based on hierarchy
-
-    // Brand filter
-    if (
-      filters.brands.length > 0 &&
-      !filters.brands.includes(product.brand || "")
-    ) {
-      return false;
+    if (filters.brands.length > 0) {
+      const productBrandId = typeof product.brand === 'object' && product.brand
+        ? (product.brand as any)._id
+        : product.brand;
+      if (!filters.brands.includes(productBrandId || "")) {
+        return false;
+      }
     }
 
-    // Price filter
     const price =
       product.saleActive && product.salePrice
         ? product.salePrice
         : product.price;
-    if (filters.minPrice && price < parseFloat(filters.minPrice)) {
-      return false;
-    }
-    if (filters.maxPrice && price > parseFloat(filters.maxPrice)) {
-      return false;
-    }
+    if (filters.minPrice && price < parseFloat(filters.minPrice)) return false;
+    if (filters.maxPrice && price > parseFloat(filters.maxPrice)) return false;
+    if (filters.rating && product.rating < parseFloat(filters.rating)) return false;
+    if (filters.featured && !product.featured) return false;
+    if (filters.onSale && !product.saleActive) return false;
+    if (filters.inStock && product.stock <= 0) return false;
 
-    // Rating filter
-    if (filters.rating && product.rating < parseFloat(filters.rating)) {
-      return false;
-    }
-
-    // Featured filter
-    if (filters.featured && !product.featured) {
-      return false;
-    }
-
-    // On Sale filter
-    if (filters.onSale && !product.saleActive) {
-      return false;
-    }
-
-    // Search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase();
       const matchesName = product.name.toLowerCase().includes(searchTerm);
       const matchesDescription =
         product.description?.toLowerCase().includes(searchTerm) || false;
-      if (!matchesName && !matchesDescription) {
-        return false;
-      }
+      if (!matchesName && !matchesDescription) return false;
     }
 
     return true;
@@ -177,83 +173,102 @@ const ProductsContent: React.FC = () => {
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
+    setCurrentPage(1); // Reset to page 1 on filter change
   };
 
   const handleSearchChange = (search: string) => {
     setFilters((prev) => ({ ...prev, search }));
+    setCurrentPage(1);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6 sm:py-8 lg:py-8">
+    <div className="min-h-screen bg-[var(--bg)] py-6 sm:py-8">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
-          {!filters.search && (
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
-              {filters.search
-                ? `${t("Search results for")} "${filters.search}"`
-                : t("All Products")}
-            </h1>
-          )}
-          {!filters.search && (
-            <p className="text-xs sm:text-sm text-gray-600">
-              {filters.search
-                ? `${t("Showing products matching")} "${filters.search}"`
-                : t("Discover all products from our marketplace")}
-            </p>
-          )}
+          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-1">
+            {filters.search
+              ? `${t("Search results for")} "${filters.search}"`
+              : t("All Products")}
+          </h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            {filters.search
+              ? `${totalProducts} ${t("products found")}`
+              : t("Discover all products from our marketplace")}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-          {/* Sidebar - collapsible on mobile */}
+          {/* Sidebar */}
           <div className="md:col-span-1 order-2 md:order-1">
-            <ProductFilterSidebar
-              filters={filters}
-              categories={categories}
-              brands={brands}
-              onFilterChange={handleFilterChange}
-              onSearchChange={handleSearchChange}
-            />
+            <div className="sticky top-24">
+              <ProductFilterSidebar
+                filters={filters}
+                categories={categories}
+                brands={brands}
+                onFilterChange={handleFilterChange}
+                onSearchChange={handleSearchChange}
+              />
+            </div>
           </div>
 
           {/* Main Content */}
           <div className="md:col-span-3 order-1 md:order-2">
-            {/* Search and Sort Bar */}
-            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4 sm:mb-6">
-              <div className="flex flex-col gap-3 sm:gap-4">
-                <div className="flex-1">
+            {/* Search + Sort + View Mode Bar */}
+            <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm">
+              <div className="flex flex-col gap-3">
+                {/* Search */}
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
                   <input
                     type="text"
                     placeholder={t("Search products...")}
                     value={filters.search}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+                    className="w-full pl-10 pr-4 py-2.5 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)]/50 focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] text-sm transition-all"
                   />
                 </div>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    {t("Showing")} {startIndex + 1}-
-                    {Math.min(endIndex, totalProducts)} {t("of products")}
+
+                {/* Sort + View Mode + Count */}
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <span className="text-xs text-[var(--text-muted)]">
+                    {t("Showing")} <span className="font-semibold text-[var(--text)]">{Math.min(startIndex + 1, totalProducts)}–{Math.min(endIndex, totalProducts)}</span> {t("of")} <span className="font-semibold text-[var(--text)]">{totalProducts}</span> {t("products")}
                   </span>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <label htmlFor="sort" className="text-xs sm:text-sm text-gray-600">
-                      {t("Sort:")}
-                    </label>
+
+                  <div className="flex items-center gap-2">
+                    {/* View Mode Toggle */}
+                    <div className="hidden sm:flex items-center bg-[var(--surface-2)] rounded-lg border border-[var(--border)] p-0.5">
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-[var(--brand-primary)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-[var(--brand-primary)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Sort */}
                     <select
-                      id="sort"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="border border-gray-300 rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all"
                     >
-                      <option value="name">{t("Name")}</option>
-                      <option value="price-low">
-                        {t("Price: Low to High")}
-                      </option>
-                      <option value="price-high">
-                        {t("Price: High to Low")}
-                      </option>
-                      <option value="rating">{t("Rating")}</option>
-                      <option value="newest">{t("Newest")}</option>
+                      <option value="newest">{t("Newest First")}</option>
+                      <option value="name">{t("Name A-Z")}</option>
+                      <option value="price-low">{t("Price: Low → High")}</option>
+                      <option value="price-high">{t("Price: High → Low")}</option>
+                      <option value="rating">{t("Top Rated")}</option>
                     </select>
                   </div>
                 </div>
@@ -261,14 +276,24 @@ const ProductsContent: React.FC = () => {
             </div>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+            <div className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5"
+                : "flex flex-col gap-3"
+            }>
               {loading ? (
-                <div className="col-span-full text-center py-12 text-gray-500 text-sm sm:text-base">
-                  {t("Loading...")}
-                </div>
+                Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 animate-pulse">
+                    <div className="aspect-square bg-[var(--surface-2)] rounded-xl mb-3" />
+                    <div className="h-4 bg-[var(--surface-2)] rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-[var(--surface-2)] rounded w-1/2 mb-3" />
+                    <div className="h-5 bg-[var(--surface-2)] rounded w-1/3" />
+                  </div>
+                ))
               ) : error ? (
-                <div className="col-span-full text-center py-12 text-red-500 text-sm sm:text-base">
-                  {error}
+                <div className="col-span-full text-center py-12">
+                  <p className="text-4xl mb-3">⚠️</p>
+                  <p className="text-[var(--text-muted)]">{error}</p>
                 </div>
               ) : (
                 currentProducts.map((product) => (
@@ -293,6 +318,7 @@ const ProductsContent: React.FC = () => {
                     isFeatured={product.featured}
                     salePercentage={product.salePercentage}
                     stock={product.stock}
+                    isInStock={product.stock > 0}
                   />
                 ))
               )}
@@ -300,35 +326,33 @@ const ProductsContent: React.FC = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-6 sm:mt-8">
-                <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+              <div className="flex justify-center mt-8">
+                <div className="flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl p-1.5 shadow-sm">
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(prev - 1, 1))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
-                    {t("Previous")}
+                    ←
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter(
                       (page) =>
                         page === 1 ||
                         page === totalPages ||
-                        Math.abs(page - currentPage) <= 2
+                        Math.abs(page - currentPage) <= 1
                     )
                     .map((page, index, arr) => (
                       <React.Fragment key={page}>
                         {index > 0 && arr[index - 1] !== page - 1 && (
-                          <span className="px-1 sm:px-2 text-xs sm:text-sm">...</span>
+                          <span className="px-1 text-xs text-[var(--text-muted)]">…</span>
                         )}
                         <button
                           onClick={() => setCurrentPage(page)}
-                          className={`px-2 sm:px-3 py-1 sm:py-2 border rounded-md text-xs sm:text-sm ${
+                          className={`min-w-[36px] py-2 rounded-lg text-sm font-medium transition-all ${
                             currentPage === page
-                              ? "bg-blue-600 text-white border-blue-600"
-                              : "border-gray-300 hover:bg-gray-50"
+                              ? "bg-[var(--brand-primary)] text-white shadow-sm"
+                              : "text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
                           }`}
                         >
                           {page}
@@ -336,28 +360,36 @@ const ProductsContent: React.FC = () => {
                       </React.Fragment>
                     ))}
                   <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                    }
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-2 sm:px-3 py-1 sm:py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+                    className="px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
-                    {t("Next")}
+                    →
                   </button>
                 </div>
               </div>
             )}
 
-            {/* No Products Message */}
+            {/* No Products */}
             {totalProducts === 0 && !loading && (
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-4xl sm:text-6xl mb-3 sm:mb-4">📦</div>
-                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-lg font-bold text-[var(--text)] mb-2">
                   {t("No products found")}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600">
+                <p className="text-sm text-[var(--text-muted)] mb-4">
                   {t("Try adjusting your filters or search terms.")}
                 </p>
+                <button
+                  onClick={() => handleFilterChange({
+                    categories: [], subcategories: [], brands: [],
+                    minPrice: "", maxPrice: "", rating: "", search: "",
+                    featured: false, onSale: false, inStock: false,
+                  })}
+                  className="px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  {t("Clear All Filters")}
+                </button>
               </div>
             )}
           </div>

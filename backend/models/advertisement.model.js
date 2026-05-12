@@ -7,7 +7,27 @@ const advertisementSchema = new mongoose.Schema(
       required: [true, "Advertisement title is required"],
       trim: true,
     },
+    titleAr: {
+      type: String,
+      trim: true,
+    },
+    subtitle: {
+      type: String,
+      trim: true,
+    },
+    subtitleAr: {
+      type: String,
+      trim: true,
+    },
     description: {
+      type: String,
+      trim: true,
+    },
+    backgroundColor: {
+      type: String,
+      trim: true,
+    },
+    textColor: {
       type: String,
       trim: true,
     },

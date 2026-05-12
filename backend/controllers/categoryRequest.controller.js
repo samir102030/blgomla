@@ -88,7 +88,7 @@ export const approveCategoryRequest = controllerWrapper(
     // Update product with the new category
     const product = await Product.findById(categoryRequest.product);
     if (product) {
-      product.Category = newCategory._id;
+      product.category = newCategory._id;
       product.pendingCategoryRequest = null;
 
       // Check if product has any other pending requests

@@ -22,141 +22,157 @@ const MyAccountPage: React.FC = () => {
   const logout = useUserStore((state) => state.logout);
   const user = useUserStore((state) => state.user);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Orders and addresses from stores
   const fetchUserOrders = useOrderStore((state) => state.fetchUserOrders);
-  const fetchUserAddresses = useAddressStore(
-    (state) => state.fetchUserAddresses
-  );
+  const fetchUserAddresses = useAddressStore((state) => state.fetchUserAddresses);
   const fetchMyReturns = useReturnStore((state) => state.fetchMyReturns);
-
-  // Vendor store
   const fetchVendorStore = useVendorStore((state) => state.fetchVendorStore);
 
-  // Fetch user orders and addresses on mount or when user changes
   useEffect(() => {
     if (user?._id) {
       fetchUserOrders();
       fetchUserAddresses();
       fetchMyReturns();
-      if (user.role === "store") {
-        fetchVendorStore();
-      }
+      if (user.role === "store") fetchVendorStore();
     }
-  }, [
-    user?._id,
-    fetchUserAddresses,
-    fetchUserOrders,
-    fetchVendorStore,
-    fetchMyReturns,
-    user?.role,
-  ]);
+  }, [user?._id, fetchUserAddresses, fetchUserOrders, fetchVendorStore, fetchMyReturns, user?.role]);
 
   const menuItems = [
-    { id: "dashboard", label: t("account.dashboard"), icon: "📊" },
-    { id: "orders", label: t("account.orders"), icon: "📦" },
-    { id: "returns", label: t("account.returns"), icon: "📤" },
-    { id: "addresses", label: t("account.addresses"), icon: "📍" },
-    { id: "profile", label: t("account.accountDetails"), icon: "👤" },
-    { id: "password", label: t("account.changePassword"), icon: "🔒" },
-    ...(user?.role === "store"
-      ? [{ id: "store", label: t("account.myStore"), icon: "🏪" }]
-      : []),
-    { id: "logout", label: t("account.logout"), icon: "🚪" },
+    { id: "dashboard", label: t("account.dashboard", "Dashboard"), icon: "📊", desc: t("account.dashboardDesc", "Overview & stats") },
+    { id: "orders", label: t("account.orders", "Orders"), icon: "📦", desc: t("account.ordersDesc", "Track & manage") },
+    { id: "returns", label: t("account.returns", "Returns"), icon: "📤", desc: t("account.returnsDesc", "Return requests") },
+    { id: "addresses", label: t("account.addresses", "Addresses"), icon: "📍", desc: t("account.addressesDesc", "Shipping info") },
+    { id: "profile", label: t("account.accountDetails", "Profile"), icon: "👤", desc: t("account.profileDesc", "Personal info") },
+    { id: "password", label: t("account.changePassword", "Password"), icon: "🔒", desc: t("account.passwordDesc", "Security settings") },
+    ...(user?.role === "store" ? [{ id: "store", label: t("account.myStore", "My Store"), icon: "🏪", desc: t("account.storeDesc", "Vendor panel") }] : []),
   ];
 
-  if (!user) return <PleaseLogin />;
+  const handleMenuClick = (id: string) => {
+    setActiveTab(id);
+    setSidebarOpen(false);
+  };
+
+  if (!user) return <><Header /><PleaseLogin /><Footer /></>;
+
+  const memberSince = user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
+
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-[#002B5B] to-[#004080] text-white py-16">
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold mb-4">My Account</h1>
-          <nav className="text-sm opacity-90">
-            <Link to="/" className="hover:opacity-100">
-              Home
-            </Link>
-            <span className="mx-2">/</span>
-            <span>My Account</span>
-          </nav>
-        </div>
-      </div>
-
-      <main className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            {/* Sidebar Menu */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden">
-                    {user?.profilePicture ? (
-                      <img
-                        src={user.profilePicture}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xl">👤</span>
-                    )}
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="font-medium text-gray-900">{user?.name}</h3>
-                    <p className="text-sm text-gray-600">{user?.email}</p>
-                  </div>
-                </div>
-
-                <nav className="space-y-2">
-                  {menuItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        if (item.id === "logout") {
-                          if (confirm("Are you sure you want to logout?"))
-                            logout();
-                        } else setActiveTab(item.id);
-                      }}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
-                        activeTab === item.id
-                          ? "bg-blue-50 text-blue-600 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
-                      }`}
-                    >
-                      <span className="mr-3">{item.icon}</span>
-                      {item.label}
-                    </button>
-                  ))}
-                </nav>
+      {/* ===== PROFILE HERO ===== */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)] via-[var(--brand-accent)] to-indigo-600"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA1Ij48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-60"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+          <div className="flex flex-col sm:flex-row items-center gap-5">
+            {/* Avatar */}
+            <div className="relative group">
+              <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden shadow-xl">
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-4xl">{user?.name?.[0]?.toUpperCase() || "👤"}</span>
+                )}
+              </div>
+              <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform">✏️</button>
+            </div>
+            {/* Info */}
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl lg:text-3xl font-extrabold text-white">{user?.name}</h1>
+              <p className="text-white/70 text-sm mt-0.5">{user?.email}</p>
+              <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
+                {memberSince && <span className="text-[10px] bg-white/15 text-white/80 px-2.5 py-1 rounded-full border border-white/10">{t("account.memberSince", "Member since")} {memberSince}</span>}
+                {user.role === "store" && <span className="text-[10px] bg-amber-400/20 text-amber-200 px-2.5 py-1 rounded-full border border-amber-400/20">🏪 {t("account.vendor", "Vendor")}</span>}
               </div>
             </div>
+            {/* Quick Actions */}
+            <div className="sm:ml-auto flex gap-2">
+              <Link to="/wishlist" className="bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-4 py-2 rounded-xl hover:bg-white/25 transition-all flex items-center gap-1.5">❤️ {t("account.wishlist", "Wishlist")}</Link>
+              <Link to="/cart" className="bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-4 py-2 rounded-xl hover:bg-white/25 transition-all flex items-center gap-1.5">🛒 {t("account.cart", "Cart")}</Link>
+            </div>
+          </div>
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-xs text-white/50 mt-5">
+            <Link to="/" className="hover:text-white transition-colors">{t("common.home", "Home")}</Link>
+            <span>/</span>
+            <span className="text-white/80">{t("account.myAccount", "My Account")}</span>
+          </nav>
+        </div>
+      </section>
 
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              <div className="bg-white rounded-lg shadow-sm p-8">
-                {/* Dashboard */}
+      {/* ===== MOBILE TAB BAR ===== */}
+      <div className="lg:hidden sticky top-0 z-30 bg-[var(--surface)] border-b border-[var(--border)] shadow-sm">
+        <div className="flex items-center justify-between px-4 py-2">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="flex items-center gap-2 text-sm font-medium text-[var(--text)]">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+            {menuItems.find(m => m.id === activeTab)?.icon} {menuItems.find(m => m.id === activeTab)?.label}
+          </button>
+        </div>
+        {sidebarOpen && (
+          <div className="border-t border-[var(--border)] bg-[var(--surface)] px-2 py-2 space-y-1 max-h-[60vh] overflow-y-auto">
+            {menuItems.map((item) => (
+              <button key={item.id} onClick={() => handleMenuClick(item.id)} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 transition-all ${activeTab === item.id ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-semibold" : "text-[var(--text-muted)] hover:bg-[var(--surface-2)]"}`}>
+                <span className="text-base">{item.icon}</span>{item.label}
+              </button>
+            ))}
+            <hr className="border-[var(--border)] my-1" />
+            <button onClick={() => { if (confirm(t("account.logoutConfirm", "Are you sure you want to logout?"))) logout(); }} className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
+              <span className="text-base">🚪</span>{t("account.logout", "Logout")}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <main className="py-6 lg:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+
+            {/* ===== DESKTOP SIDEBAR ===== */}
+            <aside className="hidden lg:block lg:col-span-3">
+              <div className="sticky top-6 space-y-3">
+                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-2">
+                  <nav className="space-y-0.5">
+                    {menuItems.map((item) => (
+                      <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all group ${activeTab === item.id ? "bg-gradient-to-r from-[var(--brand-primary)]/10 to-[var(--brand-accent)]/5 border border-[var(--brand-primary)]/20" : "hover:bg-[var(--surface-2)]"}`}>
+                        <span className={`text-lg shrink-0 ${activeTab === item.id ? "scale-110" : "group-hover:scale-105"} transition-transform`}>{item.icon}</span>
+                        <div className="min-w-0">
+                          <div className={`text-sm font-medium ${activeTab === item.id ? "text-[var(--brand-primary)]" : "text-[var(--text)]"}`}>{item.label}</div>
+                          <div className="text-[10px] text-[var(--text-subtle)] truncate">{item.desc}</div>
+                        </div>
+                        {activeTab === item.id && <div className="ml-auto w-1.5 h-6 rounded-full bg-[var(--brand-primary)]"></div>}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
+                {/* Logout */}
+                <button onClick={() => { if (confirm(t("account.logoutConfirm", "Are you sure you want to logout?"))) logout(); }} className="w-full px-3.5 py-3 rounded-2xl border border-red-200 dark:border-red-500/20 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all group">
+                  <span className="text-lg">🚪</span>
+                  <span className="text-sm font-medium">{t("account.logout", "Logout")}</span>
+                </button>
+
+                {/* Help Card */}
+                <div className="bg-gradient-to-br from-[var(--brand-primary)]/5 to-[var(--brand-accent)]/5 border border-[var(--brand-primary)]/10 rounded-2xl p-4">
+                  <h4 className="text-sm font-semibold text-[var(--text)] mb-1">{t("account.needHelp", "Need Help?")}</h4>
+                  <p className="text-xs text-[var(--text-muted)] mb-3">{t("account.helpDesc", "Our support team is available 24/7 to assist you.")}</p>
+                  <Link to="/contact" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">{t("account.contactSupport", "Contact Support")} →</Link>
+                </div>
+              </div>
+            </aside>
+
+            {/* ===== MAIN CONTENT ===== */}
+            <div className="lg:col-span-9">
+              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 sm:p-6 lg:p-8 min-h-[500px]">
                 {activeTab === "dashboard" && <AccountDashboard />}
-
-                {/* Orders */}
                 {activeTab === "orders" && <AccountOrders />}
-
-                {/* Returns */}
                 {activeTab === "returns" && <AccountReturns />}
-
-                {/* Addresses */}
                 {activeTab === "addresses" && <AccountAddresses />}
-
-                {/* Profile */}
                 {activeTab === "profile" && <AccountProfile />}
-
-                {/* Password Change */}
                 {activeTab === "password" && <AccountPassword />}
-
-                {/* Store */}
-                {activeTab === "store" && user?.role === "store" && (
-                  <AccountStore />
-                )}
+                {activeTab === "store" && user?.role === "store" && <AccountStore />}
               </div>
             </div>
           </div>

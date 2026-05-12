@@ -11,6 +11,7 @@ import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
+import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
 
 const isSuperAdmin = (user) => user?.role === "super_admin";
 
@@ -58,9 +59,12 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     await store.save();
   }
 
-  // todo send verification code to the user via email or sms
-
   await user.save();
+
+  // Send welcome email with verification code (non-blocking)
+  sendWelcomeEmail(user).catch((err) =>
+    console.error("Failed to send welcome email:", err)
+  );
 
   generateTokensAndSetCookies(res, user._id);
 
@@ -101,6 +105,11 @@ export const reSendVerificationEmail = controllerWrapper(
     user.verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
     await user.save();
+
+    // Send verification email (non-blocking)
+    sendVerificationEmail(user).catch((err) =>
+      console.error("Failed to send verification email:", err)
+    );
 
     res.status(200).json({
       success: true,
@@ -252,10 +261,14 @@ export const forgotPassword = controllerWrapper(
 
     await user.save();
 
+    // Send password reset email (non-blocking)
+    sendPasswordResetEmail(user, resetToken).catch((err) =>
+      console.error("Failed to send password reset email:", err)
+    );
+
     res.status(200).json({
       success: true,
       message: "Password reset link sent to your email",
-      resetToken, // !Danger! must be send via email
     });
   },
 );

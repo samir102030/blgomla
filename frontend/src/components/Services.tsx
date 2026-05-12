@@ -14,52 +14,46 @@ const Services: React.FC = () => {
   const services: Service[] = [
     {
       id: 1,
-      icon: "✈️",
-      title: t("Free home delivery"),
-      description: t(
-        "Provide free home delivery for the all product over $100"
-      ),
+      icon: "🚚",
+      title: t("Free Delivery"),
+      description: t("Free shipping on all orders over 5,000 EGP across Egypt"),
     },
     {
       id: 2,
-      icon: "🏆",
-      title: t("Quality Products"),
-      description: t("We ensure the product quality that is our main goal"),
+      icon: "✅",
+      title: t("Genuine Products"),
+      description: t("100% authentic products with manufacturer warranty"),
     },
     {
       id: 3,
       icon: "↩️",
-      title: t("3 Days Return"),
-      description: t("Our Return Policy is very simple and easy for all"),
+      title: t("Easy Returns"),
+      description: t("Hassle-free 3-day return policy on all items"),
     },
     {
       id: 4,
-      icon: "🎧",
-      title: t("Online Support"),
-      description: t("Provide 24/7 online support for any information"),
+      icon: "💬",
+      title: t("24/7 Support"),
+      description: t("Expert technical support available around the clock"),
     },
   ];
+
   return (
-    <section className="py-16 bg-[#FAFAFA] dark:bg-slate-950">
+    <section className="py-12 sm:py-16 border-t border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 stagger-children">
           {services.map((service) => (
             <div
               key={service.id}
-              className="text-center group hover:bg-white hover:shadow-lg rounded-lg p-6 transition-all duration-300 border border-[#9E9E9E]/10 bg-white/60 dark:bg-slate-900/70 dark:border-slate-800 dark:hover:bg-slate-900 dark:hover:shadow-2xl"
+              className="group text-center p-5 sm:p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-primary)]/30 hover:shadow-md transition-all duration-300"
             >
-              {/* Icon */}
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FFD600]/20 rounded-full mb-4 group-hover:bg-[#FFD600]/30 transition-colors duration-300 dark:bg-amber-400/10 dark:group-hover:bg-amber-400/20">
-                <span className="text-2xl">{service.icon}</span>
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[var(--brand-primary)]/8 mb-3 sm:mb-4 group-hover:bg-[var(--brand-primary)]/15 group-hover:scale-110 transition-all duration-300">
+                <span className="text-xl sm:text-2xl">{service.icon}</span>
               </div>
-
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-[#333333] dark:text-white mb-3">
+              <h3 className="text-sm sm:text-base font-semibold text-[var(--text)] mb-1.5">
                 {service.title}
               </h3>
-
-              {/* Description */}
-              <p className="text-sm text-[#9E9E9E] dark:text-slate-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
                 {service.description}
               </p>
             </div>

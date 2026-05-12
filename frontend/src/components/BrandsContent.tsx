@@ -70,7 +70,7 @@ const BrandsContent: React.FC = () => {
       const selectedCategoryIds = filters.categories.flatMap((catId) =>
         getAllSubcategoryIds(catId, categories)
       );
-      if (!selectedCategoryIds.includes(product.Category || "")) {
+      if (!selectedCategoryIds.includes(product.category || "")) {
         return false;
       }
     }

@@ -7,7 +7,10 @@ import {
   PencilIcon,
   TrashIcon,
   FunnelIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import toast from "react-hot-toast";
 import { useProductStore } from "../../stores/product.store";
 import { useBrandStore } from "../../stores/brand.store";
 import { useCategoryStore } from "../../stores/category.store";
@@ -35,6 +38,13 @@ const ProductsPage: React.FC = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [vendors, setVendors] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkAction, setBulkAction] = useState("");
+  const [bulkValue, setBulkValue] = useState("");
+  const [bulkUpdating, setBulkUpdating] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState<ProductFilters>({
     brand: "",
     category: "",
@@ -80,23 +90,27 @@ const ProductsPage: React.FC = () => {
     fetchVendorsData();
   }, [fetchBrands, fetchCategories]);
 
-  // Fetch products based on user role
+  // Fetch products based on user role with pagination
   useEffect(() => {
     if (isAdminLike) {
-      // Admin sees all products
-      fetchProducts();
+      fetchProducts({ page: currentPage, limit: pageSize });
     } else if (user?.role === "store") {
-      // Store user sees only their products
       fetchVendorStore();
     }
-  }, [user?.role, fetchProducts, fetchVendorStore]);
+  }, [user?.role, fetchProducts, fetchVendorStore, currentPage, pageSize]);
 
   // Fetch products when vendor store is loaded
   useEffect(() => {
     if (user?.role === "store" && vendorStore?._id) {
-      fetchProducts({ storeId: vendorStore._id });
+      fetchProducts({ storeId: vendorStore._id, page: currentPage, limit: pageSize });
     }
-  }, [user?.role, vendorStore?._id, fetchProducts]);
+  }, [user?.role, vendorStore?._id, fetchProducts, currentPage, pageSize]);
+
+  // Clear selection when page changes
+  useEffect(() => {
+    setSelectedIds(new Set());
+    setShowBulkActions(false);
+  }, [currentPage]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -126,7 +140,7 @@ const ProductsPage: React.FC = () => {
   // Helper to display category name whether populated or id
   const getCategoryName = (product: any) => {
     if (!product) return "";
-    const cat = product.Category;
+    const cat = product.category;
     if (!cat) return "";
     return typeof cat === "string"
       ? safeCategories.find((c) => c._id === cat)?.name || ""
@@ -143,7 +157,7 @@ const ProductsPage: React.FC = () => {
     const matchesCategory =
       categoryFilter === "all" ||
       getCategoryName(product) === categoryFilter ||
-      product.Category === categoryFilter;
+      product.category === categoryFilter;
 
     // Advanced filters
     const matchesBrand =
@@ -151,9 +165,9 @@ const ProductsPage: React.FC = () => {
 
     const matchesAdvancedCategory =
       !advancedFilters.category ||
-      (typeof product.Category === "string"
-        ? product.Category === advancedFilters.category
-        : (product.Category as any)?._id === advancedFilters.category);
+      (typeof product.category === "string"
+        ? product.category === advancedFilters.category
+        : (product.category as any)?._id === advancedFilters.category);
 
     const matchesPriceMin =
       !advancedFilters.priceMin ||
@@ -221,9 +235,120 @@ const ProductsPage: React.FC = () => {
   // Helper function to refresh products based on user role
   const refreshProducts = () => {
     if (isAdminLike) {
-      fetchProducts();
+      fetchProducts({ page: currentPage, limit: pageSize });
     } else if (user?.role === "store" && vendorStore?._id) {
-      fetchProducts({ storeId: vendorStore._id });
+      fetchProducts({ storeId: vendorStore._id, page: currentPage, limit: pageSize });
+    }
+  };
+
+  // Pagination helpers
+  const totalPages = paginated?.pages ?? 1;
+  const totalProducts = paginated?.total ?? products.length;
+  const startItem = (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, totalProducts);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  // Selection helpers
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredProducts.length) {
+      setSelectedIds(new Set());
+      setShowBulkActions(false);
+    } else {
+      setSelectedIds(new Set(filteredProducts.map((p) => p._id)));
+      setShowBulkActions(true);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+    setShowBulkActions(next.size > 0);
+  };
+
+  // Bulk update handler
+  const handleBulkUpdate = async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    setBulkUpdating(true);
+    try {
+      const ids = Array.from(selectedIds);
+      let updateData: Record<string, any> = {};
+
+      switch (bulkAction) {
+        case "activate":
+          updateData = { isActive: true };
+          break;
+        case "deactivate":
+          updateData = { isActive: false };
+          break;
+        case "set_price":
+          if (!bulkValue || isNaN(Number(bulkValue))) {
+            toast.error("Please enter a valid price");
+            setBulkUpdating(false);
+            return;
+          }
+          updateData = { price: Number(bulkValue) };
+          break;
+        case "set_stock":
+          if (!bulkValue || isNaN(Number(bulkValue))) {
+            toast.error("Please enter a valid stock number");
+            setBulkUpdating(false);
+            return;
+          }
+          updateData = { stock: Number(bulkValue) };
+          break;
+        case "set_sale":
+          if (!bulkValue || isNaN(Number(bulkValue))) {
+            toast.error("Please enter a valid sale percentage");
+            setBulkUpdating(false);
+            return;
+          }
+          updateData = { salePercentage: Number(bulkValue), saleActive: true };
+          break;
+        case "remove_sale":
+          updateData = { salePercentage: 0, saleActive: false };
+          break;
+        case "feature":
+          updateData = { featured: true };
+          break;
+        case "unfeature":
+          updateData = { featured: false };
+          break;
+        default:
+          setBulkUpdating(false);
+          return;
+      }
+
+      // Apply updates to each selected product
+      let successCount = 0;
+      for (const id of ids) {
+        try {
+          await axiosInstance.put(`/products/${id}`, updateData);
+          successCount++;
+        } catch {
+          // continue with others
+        }
+      }
+
+      toast.success(`Updated ${successCount}/${ids.length} products`);
+      setSelectedIds(new Set());
+      setShowBulkActions(false);
+      setBulkAction("");
+      setBulkValue("");
+      refreshProducts();
+    } catch (err) {
+      toast.error("Bulk update failed");
+    } finally {
+      setBulkUpdating(false);
     }
   };
 
@@ -427,12 +552,66 @@ const ProductsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {showBulkActions && (
+        <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg flex flex-wrap items-center gap-4">
+          <span className="text-sm font-medium text-blue-800">
+            {selectedIds.size} product{selectedIds.size !== 1 ? "s" : ""} selected
+          </span>
+          <select
+            value={bulkAction}
+            onChange={(e) => { setBulkAction(e.target.value); setBulkValue(""); }}
+            className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="">Select action...</option>
+            <option value="activate">✅ Activate</option>
+            <option value="deactivate">🚫 Deactivate</option>
+            <option value="set_price">💰 Set Price</option>
+            <option value="set_stock">📦 Set Stock</option>
+            <option value="set_sale">🏷️ Set Sale %</option>
+            <option value="remove_sale">❌ Remove Sale</option>
+            <option value="feature">⭐ Mark Featured</option>
+            <option value="unfeature">☆ Unmark Featured</option>
+          </select>
+          {["set_price", "set_stock", "set_sale"].includes(bulkAction) && (
+            <input
+              type="number"
+              placeholder={bulkAction === "set_price" ? "Price" : bulkAction === "set_stock" ? "Stock qty" : "Sale %"}
+              value={bulkValue}
+              onChange={(e) => setBulkValue(e.target.value)}
+              className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm w-32 focus:ring-2 focus:ring-blue-400"
+            />
+          )}
+          <button
+            onClick={handleBulkUpdate}
+            disabled={!bulkAction || bulkUpdating}
+            className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {bulkUpdating ? "Updating..." : "Apply"}
+          </button>
+          <button
+            onClick={() => { setSelectedIds(new Set()); setShowBulkActions(false); }}
+            className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800"
+          >
+            Clear Selection
+          </button>
+        </div>
+      )}
+
       {/* Products Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
+                <th className="px-4 py-3 text-left">
+                  <input
+                    type="checkbox"
+                    checked={filteredProducts.length > 0 && selectedIds.size === filteredProducts.length}
+                    onChange={toggleSelectAll}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("product.product")}
                 </th>
@@ -464,7 +643,15 @@ const ProductsPage: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredProducts.map((product) => (
-                <tr key={product._id} className="hover:bg-gray-50">
+                <tr key={product._id} className={`hover:bg-gray-50 ${selectedIds.has(product._id) ? "bg-blue-50" : ""}`}>
+                  <td className="px-4 py-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(product._id)}
+                      onChange={() => toggleSelect(product._id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {product.images?.[0]?.url ? (
@@ -591,30 +778,56 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      {/* <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
-        <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">5</span> of{" "}
-          <span className="font-medium">2,847</span> results
+      {totalPages > 1 && (
+        <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Showing <span className="font-medium">{startItem}</span> to{" "}
+            <span className="font-medium">{endItem}</span> of{" "}
+            <span className="font-medium">{totalProducts.toLocaleString()}</span> results
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="p-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeftIcon className="h-4 w-4" />
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let page: number;
+              if (totalPages <= 5) {
+                page = i + 1;
+              } else if (currentPage <= 3) {
+                page = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                page = totalPages - 4 + i;
+              } else {
+                page = currentPage - 2 + i;
+              }
+              return (
+                <button
+                  key={page}
+                  onClick={() => goToPage(page)}
+                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                    page === currentPage
+                      ? "bg-blue-600 text-white"
+                      : "border border-gray-300 hover:bg-gray-50 text-gray-700"
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className="p-1.5 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRightIcon className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex space-x-2">
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">
-            Previous
-          </button>
-          <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
-            1
-          </button>
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">
-            2
-          </button>
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">
-            3
-          </button>
-          <button className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">
-            Next
-          </button>
-        </div>
-      </div> */}
+      )}
     </div>
   );
 };

@@ -168,7 +168,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           description: form.newCategoryDescription,
         };
       } else if (form.category) {
-        payload.Category = form.category;
+        payload.category = form.category;
       }
 
       // Import createProduct from store here to avoid circular imports

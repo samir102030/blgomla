@@ -98,7 +98,7 @@ const VendorProductManagement: React.FC = () => {
       price: product.price,
       salePrice: product.salePrice || 0,
       stock: product.stock,
-      Category: product.Category || "",
+      category: product.category || "",
       brand: product.brand || "",
       images: product.images,
       features: product.features || [],
@@ -128,7 +128,7 @@ const VendorProductManagement: React.FC = () => {
       (product.description &&
         product.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory =
-      !categoryFilter || product.Category === categoryFilter;
+      !categoryFilter || product.category === categoryFilter;
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "pending" && (product as any).hasPendingRequests === true);
@@ -383,7 +383,7 @@ const VendorProductManagement: React.FC = () => {
                       Category *
                     </label>
                     <select
-                      value={productForm.Category}
+                      value={productForm.category}
                       onChange={(e) =>
                         setProductForm((prev) => ({
                           ...prev,

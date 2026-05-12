@@ -42,6 +42,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { user, toggleLoveProduct, getLovedProducts } = useUserStore();
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   // Check if product is in user's wishlist
   useEffect(() => {
@@ -57,8 +58,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return Array.from({ length: 5 }, (_, i) => (
       <span
         key={i}
-        className={`text-lg ${
-          i < Math.floor(rating) ? "text-[#FFD600]" : "text-[#9E9E9E]"
+        className={`text-xs ${
+          i < Math.floor(rating)
+            ? "text-amber-400"
+            : "text-[var(--border-strong)]"
         }`}
       >
         ★
@@ -71,17 +74,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const stockLabel = hasStock
     ? stock !== undefined
       ? stock <= 5
-        ? `Only ${stock} left`
-        : "In Stock"
-      : "In Stock"
-    : "Out of Stock";
+        ? `${t("Only")} ${stock} ${t("left")}`
+        : t("In Stock")
+      : t("In Stock")
+    : t("Out of Stock");
   const stockBadgeClasses = hasStock
-    ? "text-emerald-700 bg-emerald-50 border border-emerald-100"
-    : "text-red-700 bg-red-50 border border-red-100";
+    ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30"
+    : "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30";
 
   const toggleWishlist = async () => {
     if (!user) {
-      toast.error("Please login to add items to wishlist");
+      toast.error(t("Please login to add items to wishlist"));
       navigate("/login");
       return;
     }
@@ -90,38 +93,37 @@ const ProductCard: React.FC<ProductCardProps> = ({
     try {
       const success = await toggleLoveProduct(id);
       if (success) {
-        // Refresh the loved products to update the UI
         await getLovedProducts();
         toast.success(
-          isWishlisted ? "Removed from wishlist" : "Added to wishlist"
+          isWishlisted ? t("Removed from wishlist") : t("Added to wishlist")
         );
       } else {
-        toast.error("Failed to update wishlist");
+        toast.error(t("Failed to update wishlist"));
       }
     } catch {
-      toast.error("Failed to update wishlist");
+      toast.error(t("Failed to update wishlist"));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-[var(--surface)] rounded-lg p-3 sm:p-4 lg:p-6 relative border border-[var(--border)] shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
+    <div className="group relative bg-[var(--surface)] rounded-2xl border border-[var(--border)] card-hover flex flex-col h-full overflow-hidden">
       {/* Badges */}
-      <div className="absolute top-2 sm:top-3 lg:top-4 left-2 sm:left-3 lg:left-4 flex flex-col gap-0.5 sm:gap-1 z-10">
+      <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
         {isFeatured && (
-          <span className="bg-[#FF6B35] text-white px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded">
-            {t("Featured")}
+          <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm uppercase tracking-wider">
+            ⭐ {t("Featured")}
           </span>
         )}
         {isNew && (
-          <span className="bg-[#009688] text-white px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded">
+          <span className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm uppercase tracking-wider">
             {t("New")}
           </span>
         )}
         {isOnSale && salePercentage && (
-          <span className="bg-[#D32F2F] text-white px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-medium rounded">
-            {salePercentage}{t("% OFF")}
+          <span className="bg-gradient-to-r from-red-500 to-rose-500 text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm">
+            -{salePercentage}%
           </span>
         )}
       </div>
@@ -130,32 +132,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <button
         onClick={toggleWishlist}
         disabled={isLoading}
-        className="absolute top-2 sm:top-3 lg:top-4 right-2 sm:right-3 lg:right-4 z-10 p-1 sm:p-2 rounded-full hover:bg-[#FFD600]/20 dark:hover:bg-white/10 hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-xl bg-[var(--surface)]/90 backdrop-blur-sm border border-[var(--border)] flex items-center justify-center hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
       >
         {isLoading ? (
           <svg
-            className="w-5 h-5 sm:w-6 sm:h-6 text-[#9E9E9E] animate-spin"
+            className="w-4 h-4 text-[var(--text-subtle)] animate-spin"
             fill="none"
             viewBox="0 0 24 24"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
         ) : (
           <svg
-            className={`w-5 h-5 sm:w-6 sm:h-6 ${
-              isWishlisted ? "text-[#D32F2F] fill-current" : "text-[#9E9E9E]"
+            className={`w-4 h-4 transition-all duration-200 ${
+              isWishlisted ? "text-red-500 fill-current scale-110" : "text-[var(--text-subtle)]"
             }`}
             fill={isWishlisted ? "currentColor" : "none"}
             stroke="currentColor"
@@ -172,50 +163,81 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </button>
 
       {/* Product Image */}
-      <div className="flex justify-center mb-3 sm:mb-4 lg:mb-6 flex-grow">
-        <Link to={`/product/${id}`}>
+      <div className="relative flex justify-center p-4 sm:p-5 flex-grow img-zoom bg-[var(--surface-2)]/50">
+        {!imgLoaded && (
+          <div className="absolute inset-0 animate-shimmer rounded-t-2xl" />
+        )}
+        <Link to={`/product/${id}`} className="flex items-center justify-center w-full py-2">
           <img
             src={image}
             alt={name}
-            className="w-24 h-24 sm:w-32 sm:h-32 lg:w-48 lg:h-48 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+            loading="lazy"
+            onLoad={() => setImgLoaded(true)}
+            className={`w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 object-contain transition-all duration-500 group-hover:scale-105 ${
+              imgLoaded ? "opacity-100" : "opacity-0"
+            }`}
           />
         </Link>
+
+        {/* Quick View overlay */}
+        <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+          <Link
+            to={`/product/${id}`}
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-[var(--brand-primary)] text-white text-xs sm:text-sm font-semibold hover:bg-[var(--brand-primary-hover)] transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            {t("Quick View")}
+          </Link>
+        </div>
       </div>
 
       {/* Product Info */}
-      <div className="text-center mb-2 sm:mb-4 flex-grow">
-        <h3 className="text-sm sm:text-base lg:text-xl font-semibold text-[#333333] dark:text-white mb-1 sm:mb-2 line-clamp-2">
-          {name}
-        </h3>
-        <div className="flex justify-center mb-1 sm:mb-3 gap-0.5 sm:gap-1">
+      <div className="p-4 sm:p-5 flex flex-col flex-grow">
+        <Link to={`/product/${id}`}>
+          <h3 className="text-sm sm:text-base font-semibold text-[var(--text)] mb-1.5 line-clamp-2 hover:text-[var(--brand-primary)] transition-colors cursor-pointer leading-snug">
+            {name}
+          </h3>
+        </Link>
+        <div className="flex items-center mb-2 gap-0.5">
           {renderStars(rating)}
-        </div>
-        <p className="text-[#9E9E9E] dark:text-slate-400 text-xs sm:text-sm leading-relaxed mb-2 sm:mb-4 line-clamp-2 hidden sm:block">
-          {description}
-        </p>
-      </div>
-
-      {/* Price */}
-      <div className="text-center">
-        <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap">
-          <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[#333333] dark:text-white">
-            {price} {currency}
+          <span className="text-[11px] text-[var(--text-subtle)] ml-1.5">
+            ({rating.toFixed(1)})
           </span>
-          {originalPrice && (
-            <span className="text-sm sm:text-base lg:text-lg text-[#9E9E9E] dark:text-slate-400 line-through">
-              {originalPrice} {currency}
+        </div>
+        {description && (
+          <p className="text-[var(--text-subtle)] text-xs leading-relaxed line-clamp-2 hidden sm:block mb-3">
+            {description}
+          </p>
+        )}
+
+        {/* Price */}
+        <div className="mt-auto pt-3 border-t border-[var(--border)]/50">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-lg sm:text-xl font-bold text-[var(--brand-primary)]">
+              {price.toLocaleString()}{" "}
+              <span className="text-xs font-medium text-[var(--text-muted)]">
+                {currency}
+              </span>
             </span>
+            {originalPrice && (
+              <span className="text-sm text-[var(--text-subtle)] line-through">
+                {originalPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
+          {hasStockInfo && (
+            <div className="mt-2">
+              <span
+                className={`inline-flex items-center px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-lg ${stockBadgeClasses}`}
+              >
+                {stockLabel}
+              </span>
+            </div>
           )}
         </div>
-        {hasStockInfo && (
-          <div className="mt-2 flex justify-center">
-            <span
-              className={`inline-flex items-center justify-center px-3 py-1 text-xs font-semibold rounded-full ${stockBadgeClasses}`}
-            >
-              {stockLabel}
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );

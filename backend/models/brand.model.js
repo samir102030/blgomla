@@ -8,6 +8,11 @@ const brandSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    slug: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
     description: {
       type: String,
       trim: true,
@@ -15,6 +20,36 @@ const brandSchema = new mongoose.Schema(
     logo: {
       type: String,
       trim: true,
+    },
+    website: {
+      type: String,
+      trim: true,
+    },
+    country: {
+      type: String,
+      trim: true,
+    },
+    categories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+      },
+    ],
+
+    // ── SEO ──
+    metaTitle: {
+      type: String,
+      trim: true,
+    },
+    metaDescription: {
+      type: String,
+      trim: true,
+    },
+
+    // ── Display ──
+    sortOrder: {
+      type: Number,
+      default: 0,
     },
     isActive: {
       type: Boolean,
@@ -27,6 +62,23 @@ const brandSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// ── Indexes ──
+brandSchema.index({ slug: 1 }, { unique: true });
+brandSchema.index({ isActive: 1, deleted: 1 });
+brandSchema.index({ sortOrder: 1, name: 1 });
+
+// ── Slug auto-generation ──
+brandSchema.pre("save", function (next) {
+  if (this.isModified("name")) {
+    this.slug = this.name
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+  next();
+});
 
 const Brand = mongoose.model("Brand", brandSchema);
 export default Brand;

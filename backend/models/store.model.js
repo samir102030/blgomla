@@ -304,16 +304,16 @@ const storeSchema = new mongoose.Schema(
 );
 
 // Indexes for better query performance
-// storeSchema.index({ owner: 1 });
-// storeSchema.index({ status: 1 });
-// storeSchema.index({ businessName: 1 });
-// storeSchema.index({ city: 1, governorate: 1 });
-// storeSchema.index({ productCategories: 1 });
-// storeSchema.index({ rating: -1 });
-// storeSchema.index({ isActive: 1, deleted: 1 });
+storeSchema.index({ owner: 1 });
+storeSchema.index({ status: 1 });
+storeSchema.index({ businessName: 1 });
+storeSchema.index({ city: 1, governorate: 1 });
+storeSchema.index({ productCategories: 1 });
+storeSchema.index({ rating: -1 });
+storeSchema.index({ isActive: 1, deleted: 1 });
 
 // Compound index for efficient filtering
-// storeSchema.index({ status: 1, isActive: 1, deleted: 1 });
+storeSchema.index({ status: 1, isActive: 1, deleted: 1 });
 
 // Virtual for full address
 // storeSchema.virtual("fullAddress").get(function () {

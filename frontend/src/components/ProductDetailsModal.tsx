@@ -260,7 +260,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                 <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">
                   <div className="text-sm text-gray-500 dark:text-gray-300 mb-1">Category</div>
                   <div className="font-semibold text-gray-900 dark:text-gray-50">
-                    {getCategoryName(product.Category)}
+                    {getCategoryName(product.category)}
                   </div>
                 </div>
                 <div className="bg-gray-50 dark:bg-slate-800 rounded-lg p-4">

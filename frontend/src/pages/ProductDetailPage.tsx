@@ -316,7 +316,7 @@ const ProductDetailPage: React.FC = () => {
 
   const specifications = [
     product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
-    product.Category ? `Category: ${product.Category}` : undefined,
+    product.category ? `Category: ${product.category}` : undefined,
     `Price: $${baseUnitPrice.toFixed(2)}`,
     ...(product.features || []).map((f) => `Feature: ${f}`),
     ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),

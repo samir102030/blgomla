@@ -12,104 +12,64 @@ const Newsletter: React.FC = () => {
       console.log("Newsletter subscription:", email);
       setIsSubmitted(true);
       setEmail("");
-
-      setTimeout(() => {
-        setIsSubmitted(false);
-      }, 3000);
+      setTimeout(() => setIsSubmitted(false), 3000);
     }
   };
 
   return (
-    <section className="relative py-16 bg-gradient-to-r from-[#FAFAFA] to-[#9E9E9E]/10 dark:from-slate-950 dark:to-slate-900 overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10 w-20 h-20 bg-[#002B5B] rounded-full"></div>
-        <div className="absolute top-32 right-20 w-16 h-16 bg-[#673AB7] rounded-full"></div>
-        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-[#FFD600] rounded-full"></div>
-        <div className="absolute bottom-32 right-1/3 w-8 h-8 bg-[#009688] rounded-full"></div>
+    <section className="relative py-14 sm:py-20 overflow-hidden">
+      {/* Gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)]/6 via-transparent to-[var(--brand-accent)]/4" />
+
+      {/* Ambient orbs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-10 left-[10%] w-48 h-48 bg-[var(--brand-primary)] rounded-full opacity-[0.04] blur-3xl" />
+        <div className="absolute bottom-10 right-[15%] w-40 h-40 bg-[var(--brand-accent)] rounded-full opacity-[0.04] blur-3xl" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Content */}
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#333333] dark:text-white mb-4">
-              {t("SUBSCRIBE OUR NEWSLETTER")}
-            </h2>
-            <p className="text-lg text-[#9E9E9E] dark:text-slate-400 mb-8">
-              {t("GET UPDATE FOR NEWS, OFFERS")}
-            </p>
-
-            {/* Newsletter Form */}
-            <form onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="flex-1 relative">
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t("Enter your email here")}
-                    className="w-full px-4 py-3 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent outline-none transition-all duration-300 bg-white/80 dark:bg-slate-900/80 dark:text-white dark:placeholder:text-slate-500 dark:border-slate-700"
-                    required
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-[#FFD600] text-[#333333] rounded-lg hover:bg-[#e6c100] dark:bg-white/10 dark:text-white dark:hover:bg-white/20 transition-colors duration-300 font-medium flex items-center justify-center"
-                >
-                  <span className="mr-2">✈️</span>
-                  {t("Subscribe")}
-                </button>
-              </div>
-
-              {isSubmitted && (
-                <div className="mt-4 p-3 bg-[#009688]/10 border border-[#009688]/30 rounded-lg dark:bg-emerald-500/10 dark:border-emerald-500/30">
-                  <p className="text-[#009688] dark:text-emerald-300 text-sm">
-                    ✅ {t("Thank you for subscribing to our newsletter!")}
-                  </p>
-                </div>
-              )}
-            </form>
-
-            {/* Additional Info */}
-            <p className="text-sm text-[#9E9E9E] dark:text-slate-500 mt-4">
-              {t("Join Belgomla family")}
-            </p>
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="w-14 h-14 mx-auto mb-5 rounded-2xl bg-[var(--brand-primary)]/10 flex items-center justify-center">
+            <span className="text-2xl">📬</span>
           </div>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--text)] mb-3">
+            {t("Stay in the Loop")}
+          </h2>
+          <p className="text-sm sm:text-base text-[var(--text-muted)] mb-8 max-w-md mx-auto">
+            {t("Get the latest tech deals, new arrivals, and exclusive offers delivered to your inbox.")}
+          </p>
 
-          {/* Camera Image */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="relative">
-              {/* Main Router Placeholder */}
-              <div className="w-80 h-64 md:w-96 md:h-80 bg-gray-800 rounded-lg shadow-2xl flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500 dark:bg-slate-900">
-                <div className="text-center text-white dark:text-slate-100">
-                  <div className="text-6xl mb-4">📡</div>
-                  <p className="text-xl font-bold">{t("TP-Link AX10")}</p>
-                  <p className="text-sm opacity-75">{t("Wi-Fi 6 Router")}</p>
-
-                  {/* Router Details */}
-                  <div className="mt-4 text-xs opacity-60">
-                    <p>{t("AX1500 Dual Band Wi-Fi 6")}</p>
-                    <p>{t("Advanced Security Features")}</p>
-                    <p>{t("Easy Setup & Management")}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Decorative Elements */}
-              <div className="absolute -top-6 -left-6 w-12 h-12 bg-blue-500 rounded-full opacity-20 animate-pulse"></div>
-              <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-purple-500 rounded-full opacity-30 animate-pulse delay-1000"></div>
-              <div className="absolute top-1/2 -right-8 w-6 h-6 bg-yellow-500 rounded-full opacity-40 animate-pulse delay-500"></div>
-
-              {/* Floating Icons */}
-              <div className="absolute top-10 -left-10 text-2xl animate-bounce">
-                📸
-              </div>
-              <div className="absolute bottom-10 -right-10 text-2xl animate-bounce delay-300">
-                🎯
-              </div>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="max-w-lg mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("Enter your email")}
+                className="flex-1 px-5 py-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all"
+                required
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-[var(--brand-primary)]/20 active:scale-[0.98] transition-all"
+              >
+                {t("Subscribe")}
+              </button>
             </div>
-          </div>
+
+            {isSubmitted && (
+              <div className="mt-4 p-3 bg-[var(--success)]/10 border border-[var(--success)]/20 rounded-xl animate-fadeIn">
+                <p className="text-[var(--success)] text-sm font-medium">
+                  ✅ {t("Thank you for subscribing to our newsletter!")}
+                </p>
+              </div>
+            )}
+          </form>
+
+          <p className="text-xs text-[var(--text-subtle)] mt-4">
+            {t("No spam. Unsubscribe anytime.")}
+          </p>
         </div>
       </div>
     </section>

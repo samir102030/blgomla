@@ -13,6 +13,7 @@ interface FilterState {
   search: string;
   featured: boolean;
   onSale: boolean;
+  inStock: boolean;
 }
 
 interface FilterSidebarProps {
@@ -32,10 +33,13 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
   const { t } = useTranslation();
   const [expandedSections, setExpandedSections] = useState({
     category: true,
-    brand: false,
-    price: false,
-    rating: false,
+    brand: true,
+    price: true,
+    rating: true,
+    availability: true,
   });
+
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({
@@ -63,15 +67,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
   };
 
   const handleRatingChange = (rating: string) => {
-    onFilterChange?.({ rating });
-  };
-
-  const handleFeaturedChange = (featured: boolean) => {
-    onFilterChange?.({ featured });
-  };
-
-  const handleOnSaleChange = (onSale: boolean) => {
-    onFilterChange?.({ onSale });
+    onFilterChange?.({ rating: filters.rating === rating ? "" : rating });
   };
 
   const clearFilters = () => {
@@ -83,96 +79,206 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
       maxPrice: "",
       rating: "",
       search: "",
+      featured: false,
+      onSale: false,
+      inStock: false,
     });
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow-sm">
-      {/* Clear Filters */}
-      <div className="p-4 border-b border-gray-200">
-        <button
-          onClick={clearFilters}
-          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-md text-sm font-medium transition-colors"
-        >
-          Clear All Filters
-        </button>
+  const activeFilterCount = [
+    filters.categories.length > 0,
+    filters.brands.length > 0,
+    filters.minPrice || filters.maxPrice,
+    filters.rating,
+    filters.featured,
+    filters.onSale,
+    (filters as any).inStock,
+  ].filter(Boolean).length;
+
+  // Separate parent and sub categories
+  const parentCategories = categories?.filter((c) => !c.parentCategory) || [];
+
+  const SectionToggle = ({ section, title, count }: { section: string; title: string; count?: number }) => (
+    <button
+      onClick={() => toggleSection(section)}
+      className="w-full flex items-center justify-between p-3 text-left hover:bg-[var(--surface-2)]/50 rounded-lg transition-colors"
+    >
+      <h3 className="font-semibold text-sm text-[var(--text)]">
+        {title}
+        {count !== undefined && count > 0 && (
+          <span className="ml-2 text-xs bg-[var(--brand-primary)] text-white px-1.5 py-0.5 rounded-full">
+            {count}
+          </span>
+        )}
+      </h3>
+      <svg
+        className={`w-4 h-4 text-[var(--text-muted)] transition-transform duration-200 ${
+          expandedSections[section as keyof typeof expandedSections] ? "rotate-180" : ""
+        }`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  );
+
+  const filterContent = (
+    <div className="space-y-1">
+      {/* Header + Clear */}
+      <div className="p-3 border-b border-[var(--border)]">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="font-bold text-[var(--text)] flex items-center gap-2">
+            <svg className="w-5 h-5 text-[var(--brand-primary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            </svg>
+            {t("Filters")}
+            {activeFilterCount > 0 && (
+              <span className="text-xs bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] px-2 py-0.5 rounded-full font-medium">
+                {activeFilterCount} {t("active")}
+              </span>
+            )}
+          </h2>
+        </div>
+        {activeFilterCount > 0 && (
+          <button
+            onClick={clearFilters}
+            className="w-full bg-[var(--surface-2)] hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-200 border border-[var(--border)]"
+          >
+            ✕ {t("Clear All Filters")}
+          </button>
+        )}
+      </div>
+
+      {/* Quick Toggles */}
+      <div className="p-3 border-b border-[var(--border)] space-y-2">
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={filters.onSale}
+              onChange={(e) => onFilterChange?.({ onSale: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-[var(--surface-2)] rounded-full peer-checked:bg-[var(--brand-primary)] transition-colors border border-[var(--border)]" />
+            <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
+          </div>
+          <span className="text-sm text-[var(--text)] group-hover:text-[var(--brand-primary)] transition-colors flex items-center gap-1.5">
+            🏷️ {t("On Sale")}
+          </span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={filters.featured}
+              onChange={(e) => onFilterChange?.({ featured: e.target.checked })}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-[var(--surface-2)] rounded-full peer-checked:bg-[var(--brand-accent)] transition-colors border border-[var(--border)]" />
+            <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
+          </div>
+          <span className="text-sm text-[var(--text)] group-hover:text-[var(--brand-accent)] transition-colors flex items-center gap-1.5">
+            ⭐ {t("Featured")}
+          </span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              checked={(filters as any).inStock || false}
+              onChange={(e) => onFilterChange?.({ inStock: e.target.checked } as any)}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-[var(--surface-2)] rounded-full peer-checked:bg-green-500 transition-colors border border-[var(--border)]" />
+            <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
+          </div>
+          <span className="text-sm text-[var(--text)] group-hover:text-green-500 transition-colors flex items-center gap-1.5">
+            📦 {t("In Stock Only")}
+          </span>
+        </label>
       </div>
 
       {/* Category */}
-      <div className="border-b border-gray-200">
-        <button
-          onClick={() => toggleSection("category")}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-        >
-          <h3 className="font-semibold text-gray-900">{t("Category")}</h3>
-          <span className="text-gray-500">
-            {expandedSections.category ? "−" : "+"}
-          </span>
-        </button>
+      <div className="border-b border-[var(--border)]">
+        <SectionToggle section="category" title={t("Category")} count={filters.categories.length} />
         {expandedSections.category && (
-          <div className="px-4 pb-4">
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {categories?.map((category) => (
-                <label
-                  key={category._id}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={filters.categories.includes(category._id!)}
-                      onChange={(e) =>
-                        handleCategoryChange(category._id!, e.target.checked)
-                      }
-                      className="mr-3"
-                    />
-                    <span className="text-sm text-gray-700">
-                      {category.name}
-                    </span>
+          <div className="px-3 pb-3">
+            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+              {parentCategories.map((category) => {
+                const subCats = categories?.filter((c) => c.parentCategory === category._id) || [];
+                const isChecked = filters.categories.includes(category._id!);
+                return (
+                  <div key={category._id}>
+                    <label className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[var(--surface-2)]/60 cursor-pointer transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => handleCategoryChange(category._id!, e.target.checked)}
+                        className="w-4 h-4 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
+                      />
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {category.image && (
+                          <img src={category.image} alt="" className="w-5 h-5 object-contain" />
+                        )}
+                        <span className="text-sm text-[var(--text)] truncate">{category.name}</span>
+                      </div>
+                    </label>
+                    {subCats.length > 0 && isChecked && (
+                      <div className="ml-7 mt-1 space-y-1 border-l-2 border-[var(--brand-primary)]/20 pl-3">
+                        {subCats.map((sub) => (
+                          <label
+                            key={sub._id}
+                            className="flex items-center gap-2.5 py-1 px-2 rounded-lg hover:bg-[var(--surface-2)]/60 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={filters.categories.includes(sub._id!)}
+                              onChange={(e) => handleCategoryChange(sub._id!, e.target.checked)}
+                              className="w-3.5 h-3.5 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
+                            />
+                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                              {sub.image && (
+                                <img src={sub.image} alt="" className="w-4 h-4 object-contain" />
+                              )}
+                              <span className="text-xs text-[var(--text-muted)]">{sub.name}</span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <span className="text-xs text-gray-500">
-                    ({category.productCount || 0})
-                  </span>
-                </label>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
       </div>
 
       {/* Brand */}
-      <div className="border-b border-gray-200">
-        <button
-          onClick={() => toggleSection("brand")}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-        >
-          <h3 className="font-semibold text-gray-900">{t("Brand")}</h3>
-          <span className="text-gray-500">
-            {expandedSections.brand ? "−" : "+"}
-          </span>
-        </button>
+      <div className="border-b border-[var(--border)]">
+        <SectionToggle section="brand" title={t("Brand")} count={filters.brands.length} />
         {expandedSections.brand && (
-          <div className="px-4 pb-4">
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+          <div className="px-3 pb-3">
+            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
               {brands?.map((brand) => (
                 <label
                   key={brand._id}
-                  className="flex items-center justify-between"
+                  className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[var(--surface-2)]/60 cursor-pointer transition-colors"
                 >
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={filters.brands.includes(brand._id!)}
-                      onChange={(e) =>
-                        handleBrandChange(brand._id!, e.target.checked)
-                      }
-                      className="mr-3"
-                    />
-                    <span className="text-sm text-gray-700">{brand.name}</span>
+                  <input
+                    type="checkbox"
+                    checked={filters.brands.includes(brand._id!)}
+                    onChange={(e) => handleBrandChange(brand._id!, e.target.checked)}
+                    className="w-4 h-4 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
+                  />
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {brand.logo && (
+                      <img src={brand.logo} alt="" className="w-5 h-5 object-contain" />
+                    )}
+                    <span className="text-sm text-[var(--text)] truncate">{brand.name}</span>
                   </div>
-                  <span className="text-xs text-gray-500">
-                    ({brand.productCount || 0})
-                  </span>
                 </label>
               ))}
             </div>
@@ -181,105 +287,134 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
       </div>
 
       {/* Price Range */}
-      <div className="border-b border-gray-200">
-        <button
-          onClick={() => toggleSection("price")}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-        >
-          <h3 className="font-semibold text-gray-900">{t("Price Range")}</h3>
-          <span className="text-gray-500">
-            {expandedSections.price ? "−" : "+"}
-          </span>
-        </button>
+      <div className="border-b border-[var(--border)]">
+        <SectionToggle section="price" title={t("Price Range (EGP)")} />
         {expandedSections.price && (
-          <div className="px-4 pb-4">
-            <div className="flex items-center space-x-2">
+          <div className="px-3 pb-3">
+            <div className="flex items-center gap-2">
               <input
                 type="number"
                 placeholder={t("Min")}
                 value={filters.minPrice}
                 onChange={(e) => handlePriceChange("minPrice", e.target.value)}
-                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg text-sm bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all"
               />
-              <span className="text-gray-500">-</span>
+              <span className="text-[var(--text-muted)] text-sm">—</span>
               <input
                 type="number"
                 placeholder={t("Max")}
                 value={filters.maxPrice}
                 onChange={(e) => handlePriceChange("maxPrice", e.target.value)}
-                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg text-sm bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all"
               />
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Rating */}
-      <div className="border-b border-gray-200">
-        <button
-          onClick={() => toggleSection("rating")}
-          className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
-        >
-          <h3 className="font-semibold text-gray-900">{t("Minimum Rating")}</h3>
-          <span className="text-gray-500">
-            {expandedSections.rating ? "−" : "+"}
-          </span>
-        </button>
-        {expandedSections.rating && (
-          <div className="px-4 pb-4">
-            <div className="space-y-2">
-              {[4, 3, 2, 1].map((rating) => (
-                <label key={rating} className="flex items-center">
-                  <input
-                    type="radio"
-                    name="rating"
-                    value={rating}
-                    checked={filters.rating === rating.toString()}
-                    onChange={(e) => handleRatingChange(e.target.value)}
-                    className="mr-3"
-                  />
-                  <span className="text-sm text-gray-700">
-                    {rating}+ {t("Stars")}
-                  </span>
-                </label>
+            {/* Quick price presets */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {[
+                { label: "< 5K", min: "", max: "5000" },
+                { label: "5K-20K", min: "5000", max: "20000" },
+                { label: "20K-50K", min: "20000", max: "50000" },
+                { label: "50K+", min: "50000", max: "" },
+              ].map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => onFilterChange?.({ minPrice: preset.min, maxPrice: preset.max })}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
+                    filters.minPrice === preset.min && filters.maxPrice === preset.max
+                      ? "bg-[var(--brand-primary)] text-white border-[var(--brand-primary)]"
+                      : "border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"
+                  }`}
+                >
+                  {preset.label}
+                </button>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Featured */}
-      <div className="border-b border-gray-200">
-        <div className="p-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filters.featured}
-              onChange={(e) => handleFeaturedChange(e.target.checked)}
-              className="mr-3"
-            />
-            <span className="text-sm text-gray-700">
-              {t("Featured Products")}
-            </span>
-          </label>
-        </div>
-      </div>
-
-      {/* On Sale */}
+      {/* Rating */}
       <div>
-        <div className="p-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={filters.onSale}
-              onChange={(e) => handleOnSaleChange(e.target.checked)}
-              className="mr-3"
-            />
-            <span className="text-sm text-gray-700">{t("On Sale")}</span>
-          </label>
-        </div>
+        <SectionToggle section="rating" title={t("Minimum Rating")} />
+        {expandedSections.rating && (
+          <div className="px-3 pb-3">
+            <div className="space-y-1.5">
+              {[4, 3, 2, 1].map((rating) => (
+                <button
+                  key={rating}
+                  onClick={() => handleRatingChange(rating.toString())}
+                  className={`w-full flex items-center gap-2 py-1.5 px-2 rounded-lg transition-all text-left ${
+                    filters.rating === rating.toString()
+                      ? "bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)]/30"
+                      : "hover:bg-[var(--surface-2)]/60"
+                  }`}
+                >
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <svg
+                        key={i}
+                        className={`w-3.5 h-3.5 ${i < rating ? "text-yellow-400" : "text-[var(--text-muted)]/30"}`}
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <span className="text-xs text-[var(--text-muted)]">& {t("Up")}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Toggle */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="md:hidden w-full flex items-center justify-center gap-2 py-3 px-4 bg-[var(--surface)] border border-[var(--border)] rounded-xl text-sm font-medium text-[var(--text)] mb-4"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        {t("Filters")}
+        {activeFilterCount > 0 && (
+          <span className="bg-[var(--brand-primary)] text-white text-xs px-1.5 py-0.5 rounded-full">
+            {activeFilterCount}
+          </span>
+        )}
+      </button>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden shadow-sm">
+        {filterContent}
+      </div>
+
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-[var(--surface)] overflow-y-auto shadow-2xl">
+            <div className="p-3 border-b border-[var(--border)] flex items-center justify-between sticky top-0 bg-[var(--surface)] z-10">
+              <span className="font-bold text-[var(--text)]">{t("Filters")}</span>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {filterContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -20,7 +20,7 @@ export const validateCreateProduct = validate([
   body("name").trim().notEmpty().withMessage("Name is required"),
   body("description").optional().trim(),
   body("price").isFloat({ gt: 0 }).withMessage("Price must be positive"),
-  body("Category").optional().isMongoId(),
+  body("category").optional().isMongoId(),
   body("brand").optional().isMongoId(),
   body("stock").optional().isInt({ min: 0 }),
   body("images.*.url").optional().isURL(),

@@ -15,7 +15,28 @@ const orderItemSchema = new mongoose.Schema({
   price: { type: Number, required: true }, // Price at time of purchase
   salePercentage: { type: Number, default: 0 }, // Sale percentage at time of purchase
   couponDiscount: { type: Number, default: 0 }, // Coupon discount applied to this item
+  // ── Variant support ──
+  variant: {
+    label: { type: String }, // e.g. "Color: Red, Size: L"
+    sku: { type: String },
+  },
 });
+
+const statusTimelineSchema = new mongoose.Schema(
+  {
+    status: {
+      type: String,
+      enum: ["pending", "paid", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "refunded"],
+      required: true,
+    },
+    note: { type: String },
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  { timestamps: true }
+);
 
 const orderSchema = new mongoose.Schema(
   {
@@ -30,7 +51,11 @@ const orderSchema = new mongoose.Schema(
       ref: "Address",
       required: true,
     },
-    paymentMethod: { type: String, required: true },
+    paymentMethod: {
+      type: String,
+      enum: ["cod", "stripe", "paymob"],
+      required: true,
+    },
     paymentResult: {
       id: String,
       status: String,
@@ -55,14 +80,25 @@ const orderSchema = new mongoose.Schema(
     deliveredAt: { type: Date },
     status: {
       type: String,
-      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      enum: ["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"],
       default: "pending",
     },
+    // ── Status Timeline for order tracking ──
+    statusTimeline: [statusTimelineSchema],
     cancelled: { type: Boolean, default: false },
     notes: { type: String },
+    // ── Tracking info ──
+    trackingNumber: { type: String },
+    trackingUrl: { type: String },
+    estimatedDelivery: { type: Date },
   },
-  { timestamps: true, suppressReservedKeysWarning: true },
+  { timestamps: true, suppressReservedKeysWarning: true }
 );
+
+// Index for performance
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ store: 1, status: 1 });
+orderSchema.index({ isPaid: 1 });
 
 const Order = mongoose.model("Order", orderSchema);
 export default Order;

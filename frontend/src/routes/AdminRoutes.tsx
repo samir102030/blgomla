@@ -18,6 +18,11 @@ import VendorCollectionsPage from "../pages/vendor/VendorCollectionsPage";
 import AdminCollectionsPage from "../pages/admin/AdminCollectionsPage";
 import AdvertisementsPage from "../pages/admin/AdvertisementsPage";
 import ProductApprovalsPage from "../pages/admin/ProductApprovalsPage";
+import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
+import InventoryAlertsPage from "../pages/admin/InventoryAlertsPage";
+import CustomerAnalyticsPage from "../pages/admin/CustomerAnalyticsPage";
+import VisitorAnalyticsPage from "../pages/admin/VisitorAnalyticsPage";
+import QuotationsPage from "../pages/admin/QuotationsPage";
 import { useUserStore } from "../stores/user.store";
 import AdminsPage from "../pages/admin/AdminsPage";
 
@@ -87,6 +92,11 @@ const AdminRoutes: React.FC = () => {
 
         {/* Sales & Analytics */}
         <Route path="/sales" element={<SalesPage />} />
+        <Route path="/payments" element={<PaymentManagementPage />} />
+        <Route path="/inventory" element={<InventoryAlertsPage />} />
+        <Route path="/customers" element={<CustomerAnalyticsPage />} />
+        <Route path="/visitors" element={<VisitorAnalyticsPage />} />
+        <Route path="/quotations" element={<QuotationsPage />} />
         <Route
           path="/report"
           element={

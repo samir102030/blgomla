@@ -24,11 +24,13 @@ import {
   getNewestProducts,
   getProductAttributes,
   getProductById,
+  getProductBySlug,
   getProductFeatures,
   getProductsByBrand,
   getProductsByCategory,
   getSaleProducts,
   getStoreProducts,
+  getStorefrontProducts,
   removeFromCart,
   restoreProduct,
   getProductApprovals,
@@ -44,6 +46,14 @@ import {
   updateProductReview,
   updateProductStock,
   checkReviewEligibility,
+  bulkUpdateProducts,
+  suggestPrice,
+  getPriceSuggestions,
+  reviewPriceSuggestion,
+  addCompetitorPrice,
+  getCompetitorPrices,
+  updateCompetitorPrice,
+  deleteCompetitorPrice,
 } from "../controllers/product.controller.js";
 
 import {
@@ -64,156 +74,85 @@ import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
-// Public routes
-router.get("/", translateResponse, validateGetAllProducts, getAllProducts); // can search also
+// ═══════════════════════════════════════════════
+// PUBLIC: Static routes MUST come before /:productId
+// ═══════════════════════════════════════════════
+router.get("/", translateResponse, validateGetAllProducts, getAllProducts);
+router.get("/storefront", translateResponse, getStorefrontProducts);
 router.get("/featured", translateResponse, getFeaturedProducts);
-router.get("/category/:categoryId", translateResponse, getProductsByCategory); // not tested
-router.get("/brand/:brandId", translateResponse, getProductsByBrand); // not tested
-router.get("/store/:storeId", translateResponse, getStoreProducts);
+router.get("/newest", translateResponse, getNewestProducts);
+router.get("/bestSellers", translateResponse, getBestSellers);
+router.get("/mostRated", translateResponse, getMostRatedProducts);
 router.get("/saleProducts", translateResponse, getSaleProducts);
-router.get("/filter", translateResponse, validateFilterProducts, filterProducts); // Filter products based on criteria [price, category, brand, etc.]
+router.get("/filter", translateResponse, validateFilterProducts, filterProducts);
+router.get("/category/:categoryId", translateResponse, getProductsByCategory);
+router.get("/brand/:brandId", translateResponse, getProductsByBrand);
+router.get("/store/:storeId", translateResponse, getStoreProducts);
+router.get("/slug/:slug", translateResponse, getProductBySlug);
 
-// filter products
+// ═══════════════════════════════════════════════
+// CART (authenticated)
+// ═══════════════════════════════════════════════
+router.post("/cart", protectRoute, addProductToCart);
+router.get("/cart", translateResponse, protectRoute, getCart);
+router.put("/cart/:productId", protectRoute, updateCart);
+router.delete("/cart/:productId", protectRoute, removeFromCart);
 
-// Protected routes (admin)
-router.post(
-  "/",
-  protectRoute,
-  storeRoute,
-  validateCreateProduct,
-  createProduct
-); // Create product
-router.get(
-  "/approvals",
-  protectRoute,
-  adminRoute,
-  getProductApprovals
-);
-router.post(
-  "/:productId/approve",
-  protectRoute,
-  adminRoute,
-  approveProduct
-);
-router.post(
-  "/:productId/reject",
-  protectRoute,
-  adminRoute,
-  rejectProduct
-);
-router.put(
-  "/:productId",
-  protectRoute,
-  adminOrStoreRoute,
-  validateUpdateProduct,
-  updateProduct
-); // Update product
-router.put(
-  "/sale/:productId",
-  protectRoute,
-  adminOrStoreRoute,
-  toggleSaleProduct
-); // Toggle sale status
-router.put(
-  "/featured/:productId",
-  protectRoute,
-  adminOrStoreRoute,
-  toggleFeaturedProduct
-); // Toggle featured status
-router.put(
-  "/stock/:productId",
-  protectRoute,
-  adminOrStoreRoute,
-  validateUpdateStock,
-  updateProductStock
-); // Update product stock
-router.delete(
-  "/delete/:productId",
-  protectRoute,
-  adminOrStoreRoute,
-  softDeleteProduct
-); // Soft delete product
-router.put(
-  "/restore/:productId",
-  protectRoute,
-  adminOrStoreRoute,
-  restoreProduct
-); // Restore soft deleted product
-router.delete("/:productId", protectRoute, adminOrStoreRoute, deleteProduct); // Delete product
+// ═══════════════════════════════════════════════
+// ADMIN / STORE: Product management
+// ═══════════════════════════════════════════════
+router.post("/", protectRoute, storeRoute, validateCreateProduct, createProduct);
+router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
+router.get("/approvals", protectRoute, adminRoute, getProductApprovals);
+router.post("/:productId/approve", protectRoute, adminRoute, approveProduct);
+router.post("/:productId/reject", protectRoute, adminRoute, rejectProduct);
+router.put("/:productId", protectRoute, adminOrStoreRoute, validateUpdateProduct, updateProduct);
+router.put("/sale/:productId", protectRoute, adminOrStoreRoute, toggleSaleProduct);
+router.put("/featured/:productId", protectRoute, adminOrStoreRoute, toggleFeaturedProduct);
+router.put("/stock/:productId", protectRoute, adminOrStoreRoute, validateUpdateStock, updateProductStock);
+router.delete("/delete/:productId", protectRoute, adminOrStoreRoute, softDeleteProduct);
+router.put("/restore/:productId", protectRoute, adminOrStoreRoute, restoreProduct);
+router.delete("/:productId", protectRoute, adminOrStoreRoute, deleteProduct);
 
-// Reviews (authenticated users)
-router.get(
-  "/:productId/reviews/eligibility",
-  protectRoute,
-  checkReviewEligibility
-); // Check if user can review this product
-router.post(
-  "/:productId/reviews",
-  protectRoute,
-  validateAddReview,
-  addProductReview
-); // Add review to product
-router.put(
-  "/:productId/reviews/:reviewId",
-  protectRoute,
-  validateUpdateReview,
-  updateProductReview
-); // Update product review
-router.delete(
-  "/:productId/reviews/:reviewId",
-  protectRoute,
-  deleteProductReview
-); // Delete product review
+// ═══════════════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════════════
+router.get("/:productId/reviews/eligibility", protectRoute, checkReviewEligibility);
+router.post("/:productId/reviews", protectRoute, validateAddReview, addProductReview);
+router.put("/:productId/reviews/:reviewId", protectRoute, validateUpdateReview, updateProductReview);
+router.delete("/:productId/reviews/:reviewId", protectRoute, deleteProductReview);
 
-// features of the product
-router.get("/:productId/features", getProductFeatures); // Get product features
-router.post(
-  "/:productId/features",
-  protectRoute,
-  adminOrStoreRoute,
-  validateAddFeature,
-  addProductFeature
-); // Add feature to product
-router.put(
-  "/:productId/features",
-  protectRoute,
-  adminOrStoreRoute,
-  validateUpdateFeature,
-  updateProductFeature
-); // Update product feature
+// ═══════════════════════════════════════════════
+// FEATURES & ATTRIBUTES
+// ═══════════════════════════════════════════════
+router.get("/:productId/features", getProductFeatures);
+router.post("/:productId/features", protectRoute, adminOrStoreRoute, validateAddFeature, addProductFeature);
+router.put("/:productId/features", protectRoute, adminOrStoreRoute, validateUpdateFeature, updateProductFeature);
+router.delete("/:productId/features/:featureId", protectRoute, adminOrStoreRoute, deleteProductFeature);
 
-// attributes of the product
-router.get("/:productId/attributes", getProductAttributes); // Get product attributes
-router.post(
-  "/:productId/attributes",
-  protectRoute,
-  adminOrStoreRoute,
-  validateAddAttribute,
-  addProductAttribute
-); // Add attribute to product
-router.put(
-  "/:productId/attributes/:attributeId",
-  protectRoute,
-  adminOrStoreRoute,
-  validateUpdateAttribute,
-  updateProductAttribute
-); // Update product attribute
-router.delete(
-  "/:productId/attributes/:attributeId",
-  protectRoute,
-  adminOrStoreRoute,
-  deleteProductAttribute
-); // Delete product attribute
+router.get("/:productId/attributes", getProductAttributes);
+router.post("/:productId/attributes", protectRoute, adminOrStoreRoute, validateAddAttribute, addProductAttribute);
+router.put("/:productId/attributes/:attributeId", protectRoute, adminOrStoreRoute, validateUpdateAttribute, updateProductAttribute);
+router.delete("/:productId/attributes/:attributeId", protectRoute, adminOrStoreRoute, deleteProductAttribute);
 
-router.get("/newest", translateResponse, getNewestProducts); // Get newest products
-router.get("/bestSellers", translateResponse, getBestSellers); // Get best sellers products
-router.get("/mostRated", translateResponse, getMostRatedProducts); // Get Most rated products
+// ═══════════════════════════════════════════════
+// PRICE SUGGESTIONS
+// ═══════════════════════════════════════════════
+router.post("/:productId/suggest-price", suggestPrice);
+router.get("/:productId/price-suggestions", protectRoute, adminOrStoreRoute, getPriceSuggestions);
+router.put("/:productId/price-suggestions/:suggestionId", protectRoute, adminRoute, reviewPriceSuggestion);
 
-// cart for user
-router.post("/cart", protectRoute, addProductToCart); // Add product to cart
-router.get("/cart", translateResponse, protectRoute, getCart); // Get cart
-router.put("/cart/:productId", protectRoute, updateCart); // Update cart
-router.delete("/cart/:productId", protectRoute, removeFromCart); // Remove product from cart
+// ═══════════════════════════════════════════════
+// COMPETITOR PRICES
+// ═══════════════════════════════════════════════
+router.get("/:productId/competitor-prices", getCompetitorPrices);
+router.post("/:productId/competitor-prices", protectRoute, adminOrStoreRoute, addCompetitorPrice);
+router.put("/:productId/competitor-prices/:competitorId", protectRoute, adminOrStoreRoute, updateCompetitorPrice);
+router.delete("/:productId/competitor-prices/:competitorId", protectRoute, adminOrStoreRoute, deleteCompetitorPrice);
 
+// ═══════════════════════════════════════════════
+// SINGLE PRODUCT (must be LAST)
+// ═══════════════════════════════════════════════
 router.get("/:productId", translateResponse, getProductById);
+
 export default router;

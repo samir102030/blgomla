@@ -6,30 +6,17 @@ import { controllerWrapper } from "../utils/wrappers.js";
 export const createCategory = controllerWrapper(
   "createCategory",
   async (req, res) => {
-    const {
-      name,
-      description,
-      image,
-      parentCategory,
-      metaTitle,
-      metaDescription,
-      sortOrder,
-    } = req.body;
+    const { name, description, image, icon, parentCategory, metaTitle, metaDescription, sortOrder } = req.body;
+
     const category = new Category({
-      name,
-      description,
-      image,
-      parentCategory,
-      metaTitle,
-      metaDescription,
-      sortOrder,
+      name, description, image, icon, parentCategory, metaTitle, metaDescription, sortOrder,
     });
     await category.save();
 
-    // If has parent, add to parent's subCategories
+    // If it has a parent, add to parent's subCategories
     if (parentCategory) {
       await Category.findByIdAndUpdate(parentCategory, {
-        $push: { subCategories: category._id },
+        $addToSet: { subCategories: category._id },
       });
     }
 
@@ -37,30 +24,70 @@ export const createCategory = controllerWrapper(
   }
 );
 
-// Get All Categories
+// Get All Categories (with aggregated product counts — no N+1)
 export const getAllCategories = controllerWrapper(
   "getAllCategories",
   async (req, res) => {
     const categories = await Category.find({ deleted: { $ne: true } })
-      .populate("parentCategory", "name")
-      .populate("subCategories", "name")
+      .populate("parentCategory", "name slug")
+      .populate("subCategories", "name slug")
       .sort({ sortOrder: 1, name: 1 });
 
-    // Add product count for each category
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        const productCount = await Product.countDocuments({
-          Category: category._id,
-          deleted: { $ne: true },
-        });
-        return {
-          ...category.toObject(),
-          productCount,
-        };
-      })
-    );
+    // Aggregate product counts in one query
+    const counts = await Product.aggregate([
+      { $match: { deleted: { $ne: true } } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+    ]);
+    const countMap = new Map(counts.map((c) => [c._id?.toString(), c.count]));
 
-    res.status(200).json({ success: true, categories: categoriesWithCount });
+    const categoriesWithCount = categories.map((category) => ({
+      ...category.toObject(),
+      productCount: countMap.get(category._id.toString()) || 0,
+    }));
+
+    res.status(200).json({ success: true, data: categoriesWithCount });
+  }
+);
+
+// Get Category Tree (nested structure for navigation)
+export const getCategoryTree = controllerWrapper(
+  "getCategoryTree",
+  async (req, res) => {
+    const categories = await Category.find({
+      deleted: { $ne: true },
+      isActive: true,
+    })
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+
+    // Aggregate product counts
+    const counts = await Product.aggregate([
+      { $match: { deleted: { $ne: true }, isActive: true } },
+      { $group: { _id: "$category", count: { $sum: 1 } } },
+    ]);
+    const countMap = new Map(counts.map((c) => [c._id?.toString(), c.count]));
+
+    // Build tree in-memory
+    const byId = new Map();
+    const roots = [];
+
+    categories.forEach((cat) => {
+      cat.productCount = countMap.get(cat._id.toString()) || 0;
+      cat.children = [];
+      byId.set(cat._id.toString(), cat);
+    });
+
+    categories.forEach((cat) => {
+      if (cat.parentCategory) {
+        const parent = byId.get(cat.parentCategory.toString());
+        if (parent) parent.children.push(cat);
+        else roots.push(cat); // orphan → treat as root
+      } else {
+        roots.push(cat);
+      }
+    });
+
+    res.status(200).json({ success: true, tree: roots });
   }
 );
 
@@ -69,12 +96,26 @@ export const getCategoryById = controllerWrapper(
   "getCategoryById",
   async (req, res) => {
     const { categoryId } = req.params;
-    const category = await Category.findById(categoryId);
+    const category = await Category.findById(categoryId)
+      .populate("parentCategory", "name slug")
+      .populate("subCategories", "name slug");
     if (!category || category.deleted)
-      return res
-        .status(404)
-        .json({ success: false, message: "Category not found" });
-    res.status(200).json({ success: true, category });
+      return res.status(404).json({ success: false, message: "Category not found" });
+    res.status(200).json({ success: true, data: category });
+  }
+);
+
+// Get Category By Slug (SEO)
+export const getCategoryBySlug = controllerWrapper(
+  "getCategoryBySlug",
+  async (req, res) => {
+    const { slug } = req.params;
+    const category = await Category.findOne({ slug, deleted: { $ne: true } })
+      .populate("parentCategory", "name slug")
+      .populate("subCategories", "name slug");
+    if (!category)
+      return res.status(404).json({ success: false, message: "Category not found" });
+    res.status(200).json({ success: true, data: category });
   }
 );
 
@@ -83,56 +124,50 @@ export const updateCategory = controllerWrapper(
   "updateCategory",
   async (req, res) => {
     const { categoryId } = req.params;
-    const updateData = req.body;
+    const category = await Category.findById(categoryId);
+    if (!category)
+      return res.status(404).json({ success: false, message: "Category not found" });
 
-    const existingCategory = await Category.findById(categoryId);
-    if (!existingCategory) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Category not found" });
-    }
+    // Handle parent change
+    const oldParent = category.parentCategory?.toString();
+    Object.assign(category, req.body);
+    await category.save();
 
-    // Handle parent category change
-    if (
-      updateData.parentCategory !== undefined &&
-      updateData.parentCategory !== existingCategory.parentCategory?.toString()
-    ) {
-      // Remove from old parent's subCategories
-      if (existingCategory.parentCategory) {
-        await Category.findByIdAndUpdate(existingCategory.parentCategory, {
-          $pull: { subCategories: categoryId },
+    const newParent = category.parentCategory?.toString();
+    if (oldParent !== newParent) {
+      // Remove from old parent
+      if (oldParent) {
+        await Category.findByIdAndUpdate(oldParent, {
+          $pull: { subCategories: category._id },
         });
       }
-
-      // Add to new parent's subCategories
-      if (updateData.parentCategory) {
-        await Category.findByIdAndUpdate(updateData.parentCategory, {
-          $push: { subCategories: categoryId },
+      // Add to new parent
+      if (newParent) {
+        await Category.findByIdAndUpdate(newParent, {
+          $addToSet: { subCategories: category._id },
         });
       }
     }
 
-    const category = await Category.findByIdAndUpdate(categoryId, updateData, {
-      new: true,
-      runValidators: true,
-    })
-      .populate("parentCategory", "name")
-      .populate("subCategories", "name");
-
-    res.status(200).json({ success: true, category });
+    res.status(200).json({ success: true, data: category });
   }
 );
 
-// Delete Category (hard delete)
+// Hard Delete Category
 export const deleteCategory = controllerWrapper(
   "deleteCategory",
   async (req, res) => {
     const { categoryId } = req.params;
     const category = await Category.findByIdAndDelete(categoryId);
     if (!category)
-      return res
-        .status(404)
-        .json({ success: false, message: "Category not found" });
+      return res.status(404).json({ success: false, message: "Category not found" });
+
+    // Remove from parent
+    if (category.parentCategory) {
+      await Category.findByIdAndUpdate(category.parentCategory, {
+        $pull: { subCategories: category._id },
+      });
+    }
     res.status(200).json({ success: true, message: "Category deleted" });
   }
 );
@@ -142,32 +177,10 @@ export const safeDeleteCategory = controllerWrapper(
   "safeDeleteCategory",
   async (req, res) => {
     const { categoryId } = req.params;
-    const category = await Category.findById(categoryId);
-    if (!category) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Category not found" });
-    }
-
-    // Remove from parent's subCategories
-    if (category.parentCategory) {
-      await Category.findByIdAndUpdate(category.parentCategory, {
-        $pull: { subCategories: categoryId },
-      });
-    }
-
-    // Remove this category from all subCategories arrays
-    await Category.updateMany(
-      { subCategories: categoryId },
-      { $pull: { subCategories: categoryId } }
-    );
-
-    category.deleted = true;
-    await category.save();
-
-    res
-      .status(200)
-      .json({ success: true, message: "Category marked as deleted" });
+    const category = await Category.findByIdAndUpdate(categoryId, { deleted: true }, { new: true });
+    if (!category)
+      return res.status(404).json({ success: false, message: "Category not found" });
+    res.status(200).json({ success: true, message: "Category soft deleted" });
   }
 );
 
@@ -176,15 +189,9 @@ export const restoreCategory = controllerWrapper(
   "restoreCategory",
   async (req, res) => {
     const { categoryId } = req.params;
-    const category = await Category.findByIdAndUpdate(
-      categoryId,
-      { deleted: false },
-      { new: true }
-    );
+    const category = await Category.findByIdAndUpdate(categoryId, { deleted: false }, { new: true });
     if (!category)
-      return res
-        .status(404)
-        .json({ success: false, message: "Category not found" });
+      return res.status(404).json({ success: false, message: "Category not found" });
     res.status(200).json({ success: true, message: "Category restored" });
   }
 );
@@ -194,11 +201,29 @@ export const getProductsByCategory = controllerWrapper(
   "getProductsByCategory",
   async (req, res) => {
     const { categoryId } = req.params;
+    const { page = 1, limit = 20 } = req.query;
+
     const products = await Product.find({
-      Category: categoryId,
+      category: categoryId,
+      deleted: { $ne: true },
+    })
+      .populate("brand", "name slug logo")
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .lean();
+
+    const total = await Product.countDocuments({
+      category: categoryId,
       deleted: { $ne: true },
     });
-    res.status(200).json({ success: true, products });
+
+    res.status(200).json({
+      success: true,
+      data: products,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+    });
   }
 );
 
@@ -210,13 +235,32 @@ export const setCategoryToProduct = controllerWrapper(
     const { categoryId } = req.body;
     const product = await Product.findByIdAndUpdate(
       productId,
-      { Category: categoryId },
+      { category: categoryId },
       { new: true }
     );
     if (!product)
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     res.status(200).json({ success: true, product });
+  }
+);
+
+// Get Brands in Category
+export const getBrandsInCategory = controllerWrapper(
+  "getBrandsInCategory",
+  async (req, res) => {
+    const { categoryId } = req.params;
+    const brandIds = await Product.distinct("brand", {
+      category: categoryId,
+      deleted: { $ne: true },
+      isActive: true,
+    });
+
+    const Brand = (await import("../models/brand.model.js")).default;
+    const brands = await Brand.find({
+      _id: { $in: brandIds },
+      deleted: { $ne: true },
+    }).sort({ sortOrder: 1, name: 1 });
+
+    res.status(200).json({ success: true, brands });
   }
 );

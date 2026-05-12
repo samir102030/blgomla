@@ -215,7 +215,7 @@ export const bulkUploadProducts = async (req, res) => {
         if (productData.categoryName) {
           const categoryId = categoryMap.get(productData.categoryName.toLowerCase());
           if (categoryId) {
-            newProduct.Category = categoryId;
+            newProduct.category = categoryId;
           } else if (dryRun && templateType === 'simple' && defaultCategoryName) {
             // allow preview; category will be created on final run
             willCreateCategory = true;

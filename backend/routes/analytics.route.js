@@ -7,6 +7,11 @@ import {
   getRevenueBreakdown,
   getSalesTrend,
 } from "../controllers/analytics.controller.js";
+import {
+  getPaymentAnalytics,
+  getInventoryAlerts,
+  getCustomerAnalytics,
+} from "../controllers/admin.analytics.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 
@@ -33,4 +38,23 @@ router.get("/revenue-breakdown", translateResponse, getRevenueBreakdown);
 // Get sales trend data
 router.get("/sales-trend", translateResponse, getSalesTrend);
 
+// ── Phase 5: Admin Analytics ──
+router.get("/payments", translateResponse, getPaymentAnalytics);
+router.get("/inventory-alerts", translateResponse, getInventoryAlerts);
+router.get("/customers", translateResponse, getCustomerAnalytics);
+
+// ── Visitor Analytics ──
+import {
+  getVisitorStats,
+  getDeviceBreakdown,
+  getLocationBreakdown,
+  getTopPages,
+} from "../controllers/visitor.controller.js";
+
+router.get("/visitors/stats", getVisitorStats);
+router.get("/visitors/devices", getDeviceBreakdown);
+router.get("/visitors/locations", getLocationBreakdown);
+router.get("/visitors/pages", getTopPages);
+
 export default router;
+

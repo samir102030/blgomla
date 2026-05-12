@@ -10,36 +10,30 @@ import {
   updateBrand,
   deleteBrand,
   safeDeleteBrand,
+  restoreBrand,
   getAllBrands,
   getBrandById,
+  getBrandBySlug,
+  getBrandsByCategory,
 } from "../controllers/brand.controller.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
-// Brand and Category CRUD
+// Public routes (static before dynamic)
+router.get("/", translateResponse, getAllBrands);
+router.get("/slug/:slug", translateResponse, getBrandBySlug);
+router.get("/category/:categoryId", translateResponse, getBrandsByCategory);
+
+// Admin / Store routes
 router.post("/", protectRoute, adminOrStoreRoute, createBrand);
 router.put("/:brandId", protectRoute, adminOrStoreRoute, updateBrand);
-
 router.delete("/:brandId", protectRoute, adminOrStoreRoute, deleteBrand);
+router.put("/delete/:brandId", protectRoute, adminOrStoreRoute, safeDeleteBrand);
+router.put("/restore/:brandId", protectRoute, adminOrStoreRoute, restoreBrand);
+router.put("/setBrandToProduct/:productId", protectRoute, adminOrStoreRoute, setBrandToProduct);
 
-router.put(
-  "/delete/:brandId",
-  protectRoute,
-  adminOrStoreRoute,
-  safeDeleteBrand
-);
-
-// Assign brand/category to product
-router.put(
-  "/setBrandToProduct/:productId",
-  protectRoute,
-  adminOrStoreRoute,
-  setBrandToProduct
-);
-
-// Getters
-router.get("/", translateResponse, getAllBrands);
+// Single brand (last)
 router.get("/:brandId", translateResponse, getBrandById);
 
 export default router;
