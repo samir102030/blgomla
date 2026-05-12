@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useNotificationStore } from "../stores/notification.store";
 import { getNotificationIcon } from "../lib/notificationIcons";
 import type { Notification } from "../types/notification.type";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 type NotificationFilter = "all" | "unread" | "read";
 
@@ -112,8 +114,9 @@ const NotificationsPage: React.FC = () => {
   const isEmpty = !loading && notifications.length === 0;
 
   return (
-    <div className="bg-[var(--surface-2)] min-h-screen">
-      <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
+    <div className="bg-[var(--surface-2)] min-h-screen flex flex-col">
+      <Header />
+      <div className="mx-auto w-full max-w-5xl flex-1 space-y-6 p-4 sm:p-6">
         <header className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
@@ -294,6 +297,7 @@ const NotificationsPage: React.FC = () => {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 };
