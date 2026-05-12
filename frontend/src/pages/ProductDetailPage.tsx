@@ -309,14 +309,22 @@ const ProductDetailPage: React.FC = () => {
     : "text-red-700 bg-red-50 border border-red-100";
 
   // Generate specifications based on product data
-  const getBrandName = (brandId: string) => {
-    const brand = brands?.find((b) => b._id === brandId);
-    return brand ? brand.name : brandId;
+  const getBrandName = (b: any) => {
+    if (!b) return "";
+    if (typeof b === "object") return b.name || "";
+    const brand = brands?.find((br) => br._id === b);
+    return brand ? brand.name : b;
+  };
+
+  const getCategoryName = (c: any) => {
+    if (!c) return "";
+    if (typeof c === "object") return c.name || "";
+    return c;
   };
 
   const specifications = [
     product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
-    product.category ? `Category: ${product.category}` : undefined,
+    product.category ? `Category: ${getCategoryName(product.category)}` : undefined,
     `Price: $${(baseUnitPrice ?? 0).toFixed(2)}`,
     ...(product.features || []).map((f) => `Feature: ${f}`),
     ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),
