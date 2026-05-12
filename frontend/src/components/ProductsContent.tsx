@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import { useBrandStore } from "../stores/brand.store";
@@ -10,7 +10,6 @@ import { getBaseUnitPrice } from "../lib/pricing";
 
 interface FilterState {
   categories: string[];
-  subcategories: string[];
   brands: string[];
   minPrice: string;
   maxPrice: string;
@@ -21,22 +20,61 @@ interface FilterState {
   inStock: boolean;
 }
 
+const EMPTY_FILTERS: FilterState = {
+  categories: [],
+  brands: [],
+  minPrice: "",
+  maxPrice: "",
+  rating: "",
+  search: "",
+  featured: false,
+  onSale: false,
+  inStock: false,
+};
+
+// Recursively collect a category and all its descendants. Visited-set
+// prevents infinite loops if the DB has a parent-child cycle.
+const collectCategoryIds = (
+  rootId: string,
+  all: any[],
+  visited = new Set<string>()
+): string[] => {
+  if (visited.has(rootId)) return [];
+  visited.add(rootId);
+  const children = all.filter((c) => c.parentCategory === rootId);
+  return [rootId, ...children.flatMap((c) => collectCategoryIds(c._id, all, visited))];
+};
+
+// Pick a string id whether the field is a populated object or a raw id.
+const idOf = (field: any): string => {
+  if (!field) return "";
+  if (typeof field === "object") return field._id || "";
+  return String(field);
+};
+
 const ProductsContent: React.FC = () => {
   const { t } = useTranslation();
-  const [filters, setFilters] = useState<FilterState>({
-    categories: [],
-    subcategories: [],
-    brands: [],
-    minPrice: "",
-    maxPrice: "",
-    rating: "",
-    search: "",
-    featured: false,
-    onSale: false,
-    inStock: false,
-  });
-  const [sortBy, setSortBy] = useState<string>("newest");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read initial state from URL so reload + deep-links preserve filters.
+  const initialFilters: FilterState = {
+    ...EMPTY_FILTERS,
+    categories: searchParams.get("category") ? [searchParams.get("category")!] : [],
+    brands: searchParams.get("brand") ? [searchParams.get("brand")!] : [],
+    minPrice: searchParams.get("min") || "",
+    maxPrice: searchParams.get("max") || "",
+    rating: searchParams.get("rating") || "",
+    search: searchParams.get("search") || "",
+    onSale: searchParams.get("sale") === "true",
+    inStock: searchParams.get("inStock") === "true",
+    featured: searchParams.get("featured") === "true",
+  };
+
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") || "newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 12;
 
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const products = useProductStore((state) => state.products);
@@ -49,129 +87,198 @@ const ProductsContent: React.FC = () => {
   const fetchCategories = useCategoryStore((state) => state.fetchCategories);
   const categories = useCategoryStore((state) => state.categories);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(12);
-  const [searchParams] = useSearchParams();
-
   useEffect(() => {
     fetchBrands();
     fetchCategories();
     fetchProducts({ isActive: true, deleted: false, approvalStatus: "approved", limit: 1000 });
   }, [fetchBrands, fetchCategories, fetchProducts]);
 
-  // Set search/category from URL params
+  // Sync state → URL (replace, not push, so filter changes don't pollute history).
   useEffect(() => {
-    const searchQuery = searchParams.get("search");
-    const categoryId = searchParams.get("category");
-    const sale = searchParams.get("sale");
-    const sort = searchParams.get("sort");
-    if (searchQuery) {
-      setFilters((prev) => ({ ...prev, search: searchQuery }));
-    }
-    if (categoryId) {
-      setFilters((prev) => ({ ...prev, categories: [categoryId] }));
-    }
-    if (sale === "true") {
-      setFilters((prev) => ({ ...prev, onSale: true }));
-    }
-    if (sort) {
-      setSortBy(sort);
-    }
-  }, [searchParams]);
+    const next = new URLSearchParams();
+    if (filters.categories[0]) next.set("category", filters.categories[0]);
+    if (filters.brands[0]) next.set("brand", filters.brands[0]);
+    if (filters.minPrice) next.set("min", filters.minPrice);
+    if (filters.maxPrice) next.set("max", filters.maxPrice);
+    if (filters.rating) next.set("rating", filters.rating);
+    if (filters.search) next.set("search", filters.search);
+    if (filters.onSale) next.set("sale", "true");
+    if (filters.inStock) next.set("inStock", "true");
+    if (filters.featured) next.set("featured", "true");
+    if (sortBy && sortBy !== "newest") next.set("sort", sortBy);
+    setSearchParams(next, { replace: true });
+  }, [filters, sortBy, setSearchParams]);
 
-  // Helper function to get all subcategory IDs recursively
-  const getAllSubcategoryIds = (
-    categoryId: string,
-    allCategories: any[]
-  ): string[] => {
-    const subcategories = allCategories.filter(
-      (cat) => cat.parentCategory === categoryId
-    );
-    let ids = [categoryId];
-    subcategories.forEach((sub) => {
-      ids = ids.concat(getAllSubcategoryIds(sub._id, allCategories));
+  // Build category-name lookup once so search can match by category name.
+  const categoryNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    (categories || []).forEach((c: any) => m.set(c._id, c.name));
+    return m;
+  }, [categories]);
+
+  const brandNameById = useMemo(() => {
+    const m = new Map<string, string>();
+    (brands || []).forEach((b: any) => m.set(b._id, b.name));
+    return m;
+  }, [brands]);
+
+  // Filter — memoized so it only re-runs when inputs change.
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+
+    // Normalize price range: if user typed reversed, swap.
+    const minP = filters.minPrice ? parseFloat(filters.minPrice) : 0;
+    const maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : Infinity;
+    const [lo, hi] = minP > maxP && maxP > 0 ? [maxP, minP] : [minP, maxP];
+
+    // Expand selected categories to include all descendants.
+    const expandedCategoryIds =
+      filters.categories.length > 0
+        ? new Set(
+            filters.categories.flatMap((id) => collectCategoryIds(id, categories || []))
+          )
+        : null;
+
+    const term = filters.search.trim().toLowerCase();
+
+    return products.filter((product: any) => {
+      // Category filter (matches product's category or any descendant).
+      if (expandedCategoryIds) {
+        const pid = idOf(product.category);
+        if (!expandedCategoryIds.has(pid)) return false;
+      }
+
+      // Brand filter.
+      if (filters.brands.length > 0) {
+        const pid = idOf(product.brand);
+        if (!filters.brands.includes(pid)) return false;
+      }
+
+      // Price range.
+      const price = getBaseUnitPrice(product);
+      if (price < lo) return false;
+      if (price > hi) return false;
+
+      // Rating: product must meet OR exceed the threshold.
+      if (filters.rating) {
+        const r = parseFloat(filters.rating);
+        if ((product.rating ?? 0) < r) return false;
+      }
+
+      // Toggles.
+      if (filters.featured && !product.featured) return false;
+      if (filters.onSale && !(product.saleActive && (product.salePercentage ?? 0) > 0)) {
+        return false;
+      }
+      if (filters.inStock && (product.stock ?? 0) <= 0) return false;
+
+      // Full-text search across name, description, brand name, category name, tags.
+      if (term) {
+        const haystack = [
+          product.name,
+          product.description,
+          typeof product.brand === "object" ? product.brand?.name : brandNameById.get(idOf(product.brand)),
+          typeof product.category === "object" ? product.category?.name : categoryNameById.get(idOf(product.category)),
+          ...(product.tags || []),
+          ...(product.attributes || []).map((a: any) => `${a.name} ${a.value}`),
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        if (!haystack.includes(term)) return false;
+      }
+
+      return true;
     });
-    return ids;
-  };
+  }, [products, filters, categories, brandNameById, categoryNameById]);
 
-  // Apply filters
-  const filteredProducts = products?.filter((product) => {
-    if (filters.categories.length > 0) {
-      const selectedCategoryIds = filters.categories.flatMap((catId) =>
-        getAllSubcategoryIds(catId, categories)
-      );
-      const productCategoryId = typeof product.category === 'object' && product.category
-        ? (product.category as any)._id
-        : product.category;
-      if (!selectedCategoryIds.includes(productCategoryId || "")) {
-        return false;
+  // Sort — also memoized.
+  const sortedProducts = useMemo(() => {
+    const arr = [...filteredProducts];
+    arr.sort((a: any, b: any) => {
+      switch (sortBy) {
+        case "price-low":
+          return getBaseUnitPrice(a) - getBaseUnitPrice(b);
+        case "price-high":
+          return getBaseUnitPrice(b) - getBaseUnitPrice(a);
+        case "rating":
+          return (b.rating ?? 0) - (a.rating ?? 0);
+        case "newest":
+          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        case "name":
+        default:
+          return a.name.localeCompare(b.name);
       }
-    }
+    });
+    return arr;
+  }, [filteredProducts, sortBy]);
 
-    if (filters.brands.length > 0) {
-      const productBrandId = typeof product.brand === 'object' && product.brand
-        ? (product.brand as any)._id
-        : product.brand;
-      if (!filters.brands.includes(productBrandId || "")) {
-        return false;
-      }
-    }
-
-    const price = getBaseUnitPrice(product);
-    if (filters.minPrice && price < parseFloat(filters.minPrice)) return false;
-    if (filters.maxPrice && price > parseFloat(filters.maxPrice)) return false;
-    if (filters.rating && product.rating < parseFloat(filters.rating)) return false;
-    if (filters.featured && !product.featured) return false;
-    if (filters.onSale && !product.saleActive) return false;
-    if (filters.inStock && product.stock <= 0) return false;
-
-    if (filters.search) {
-      const searchTerm = filters.search.toLowerCase();
-      const matchesName = product.name.toLowerCase().includes(searchTerm);
-      const matchesDescription =
-        product.description?.toLowerCase().includes(searchTerm) || false;
-      if (!matchesName && !matchesDescription) return false;
-    }
-
-    return true;
-  });
-
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return getBaseUnitPrice(a) - getBaseUnitPrice(b);
-      case "price-high":
-        return getBaseUnitPrice(b) - getBaseUnitPrice(a);
-      case "rating":
-        return b.rating - a.rating;
-      case "newest":
-        return (
-          new Date(b.createdAt || 0).getTime() -
-          new Date(a.createdAt || 0).getTime()
-        );
-      case "name":
-      default:
-        return a.name.localeCompare(b.name);
-    }
-  });
-
-  // Frontend pagination
+  // Pagination — clamp page if filters shrank the result set below currentPage.
   const totalProducts = sortedProducts.length;
-  const totalPages = Math.ceil(totalProducts / pageSize);
+  const totalPages = Math.max(1, Math.ceil(totalProducts / pageSize));
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalProducts);
   const currentProducts = sortedProducts.slice(startIndex, endIndex);
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
-    setCurrentPage(1); // Reset to page 1 on filter change
+    setCurrentPage(1);
   };
 
   const handleSearchChange = (search: string) => {
     setFilters((prev) => ({ ...prev, search }));
     setCurrentPage(1);
   };
+
+  const handleSortChange = (s: string) => {
+    setSortBy(s);
+    setCurrentPage(1);
+  };
+
+  const clearAll = () => {
+    setFilters(EMPTY_FILTERS);
+    setSortBy("newest");
+    setCurrentPage(1);
+  };
+
+  // Active-filter chips data
+  const activeChips: Array<{ label: string; onRemove: () => void }> = [];
+  filters.categories.forEach((id) => {
+    const name = categoryNameById.get(id) || "Category";
+    activeChips.push({
+      label: name,
+      onRemove: () =>
+        handleFilterChange({
+          categories: filters.categories.filter((c) => c !== id),
+        }),
+    });
+  });
+  filters.brands.forEach((id) => {
+    const name = brandNameById.get(id) || "Brand";
+    activeChips.push({
+      label: name,
+      onRemove: () =>
+        handleFilterChange({ brands: filters.brands.filter((b) => b !== id) }),
+    });
+  });
+  if (filters.minPrice || filters.maxPrice) {
+    activeChips.push({
+      label: `${filters.minPrice || "0"} – ${filters.maxPrice || "∞"} EGP`,
+      onRemove: () => handleFilterChange({ minPrice: "", maxPrice: "" }),
+    });
+  }
+  if (filters.rating) {
+    activeChips.push({
+      label: `${filters.rating}+ stars`,
+      onRemove: () => handleFilterChange({ rating: "" }),
+    });
+  }
+  if (filters.onSale) activeChips.push({ label: t("On Sale"), onRemove: () => handleFilterChange({ onSale: false }) });
+  if (filters.featured) activeChips.push({ label: t("Featured"), onRemove: () => handleFilterChange({ featured: false }) });
+  if (filters.inStock) activeChips.push({ label: t("In Stock"), onRemove: () => handleFilterChange({ inStock: false }) });
 
   return (
     <div className="min-h-screen bg-[var(--bg)] py-6 sm:py-8">
@@ -195,7 +302,7 @@ const ProductsContent: React.FC = () => {
           <div className="md:col-span-1 order-2 md:order-1">
             <div className="sticky top-24">
               <ProductFilterSidebar
-                filters={filters}
+                filters={{ ...filters, subcategories: [] }}
                 categories={categories}
                 brands={brands}
                 onFilterChange={handleFilterChange}
@@ -226,14 +333,17 @@ const ProductsContent: React.FC = () => {
                 {/* Sort + View Mode + Count */}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <span className="text-xs text-[var(--text-muted)]">
-                    {t("Showing")} <span className="font-semibold text-[var(--text)]">{Math.min(startIndex + 1, totalProducts)}–{Math.min(endIndex, totalProducts)}</span> {t("of")} <span className="font-semibold text-[var(--text)]">{totalProducts}</span> {t("products")}
+                    {totalProducts > 0
+                      ? <>{t("Showing")} <span className="font-semibold text-[var(--text)]">{startIndex + 1}–{endIndex}</span> {t("of")} <span className="font-semibold text-[var(--text)]">{totalProducts}</span> {t("products")}</>
+                      : <>{t("Showing")} <span className="font-semibold text-[var(--text)]">0</span> {t("of")} <span className="font-semibold text-[var(--text)]">0</span> {t("products")}</>
+                    }
                   </span>
 
                   <div className="flex items-center gap-2">
-                    {/* View Mode Toggle */}
                     <div className="hidden sm:flex items-center bg-[var(--surface-2)] rounded-lg border border-[var(--border)] p-0.5">
                       <button
                         onClick={() => setViewMode("grid")}
+                        aria-label={t("Grid view")}
                         className={`p-1.5 rounded-md transition-all ${viewMode === "grid" ? "bg-[var(--brand-primary)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -242,6 +352,7 @@ const ProductsContent: React.FC = () => {
                       </button>
                       <button
                         onClick={() => setViewMode("list")}
+                        aria-label={t("List view")}
                         className={`p-1.5 rounded-md transition-all ${viewMode === "list" ? "bg-[var(--brand-primary)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -250,10 +361,10 @@ const ProductsContent: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Sort */}
                     <select
                       value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
+                      onChange={(e) => handleSortChange(e.target.value)}
+                      aria-label={t("Sort by")}
                       className="border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all"
                     >
                       <option value="newest">{t("Newest First")}</option>
@@ -264,6 +375,28 @@ const ProductsContent: React.FC = () => {
                     </select>
                   </div>
                 </div>
+
+                {/* Active filter chips */}
+                {activeChips.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    {activeChips.map((chip, i) => (
+                      <button
+                        key={i}
+                        onClick={chip.onRemove}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] text-xs font-medium hover:bg-[var(--brand-primary)]/20 transition-colors"
+                      >
+                        {chip.label}
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    ))}
+                    <button
+                      onClick={clearAll}
+                      className="ml-1 text-xs text-[var(--text-muted)] underline hover:text-[var(--text)]"
+                    >
+                      {t("Clear all")}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -288,15 +421,13 @@ const ProductsContent: React.FC = () => {
                   <p className="text-[var(--text-muted)]">{error}</p>
                 </div>
               ) : (
-                currentProducts.map((product) => (
+                currentProducts.map((product: any) => (
                   <ProductCard
                     key={product._id}
                     id={product._id!}
                     name={product.name}
                     price={getBaseUnitPrice(product)}
-                    originalPrice={
-                      product.saleActive ? product.price : undefined
-                    }
+                    originalPrice={product.saleActive ? product.price : undefined}
                     image={product.images?.[0]?.url || ""}
                     rating={product.rating}
                     description={product?.description}
@@ -311,23 +442,19 @@ const ProductsContent: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
+            {totalPages > 1 && totalProducts > 0 && (
               <div className="flex justify-center mt-8">
                 <div className="flex items-center gap-1.5 bg-[var(--surface)] border border-[var(--border)] rounded-xl p-1.5 shadow-sm">
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
+                    aria-label={t("Previous page")}
                     className="px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     ←
                   </button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(
-                      (page) =>
-                        page === 1 ||
-                        page === totalPages ||
-                        Math.abs(page - currentPage) <= 1
-                    )
+                    .filter((page) => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
                     .map((page, index, arr) => (
                       <React.Fragment key={page}>
                         {index > 0 && arr[index - 1] !== page - 1 && (
@@ -335,6 +462,7 @@ const ProductsContent: React.FC = () => {
                         )}
                         <button
                           onClick={() => setCurrentPage(page)}
+                          aria-current={currentPage === page ? "page" : undefined}
                           className={`min-w-[36px] py-2 rounded-lg text-sm font-medium transition-all ${
                             currentPage === page
                               ? "bg-[var(--brand-primary)] text-white shadow-sm"
@@ -348,6 +476,7 @@ const ProductsContent: React.FC = () => {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
+                    aria-label={t("Next page")}
                     className="px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     →
@@ -367,11 +496,7 @@ const ProductsContent: React.FC = () => {
                   {t("Try adjusting your filters or search terms.")}
                 </p>
                 <button
-                  onClick={() => handleFilterChange({
-                    categories: [], subcategories: [], brands: [],
-                    minPrice: "", maxPrice: "", rating: "", search: "",
-                    featured: false, onSale: false, inStock: false,
-                  })}
+                  onClick={clearAll}
                   className="px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
                 >
                   {t("Clear All Filters")}
