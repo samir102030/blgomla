@@ -170,7 +170,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   const discountAmount = calculateCouponDiscount();
-  const grandTotal = subtotal + shippingFee - discountAmount;
+  const grandTotal = Math.max(0, subtotal + shippingFee - discountAmount);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {

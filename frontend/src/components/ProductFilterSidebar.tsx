@@ -220,7 +220,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                       />
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         {category.image && (
-                          <img src={category.image} alt="" className="w-5 h-5 object-contain" />
+                          <img src={category.image} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-5 h-5 object-contain" />
                         )}
                         <span className="text-sm text-[var(--text)] truncate">{category.name}</span>
                       </div>
@@ -240,7 +240,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                             />
                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
                               {sub.image && (
-                                <img src={sub.image} alt="" className="w-4 h-4 object-contain" />
+                                <img src={sub.image} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-4 h-4 object-contain" />
                               )}
                               <span className="text-xs text-[var(--text-muted)]">{sub.name}</span>
                             </div>
@@ -275,7 +275,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                   />
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {brand.logo && (
-                      <img src={brand.logo} alt="" className="w-5 h-5 object-contain" />
+                      <img src={brand.logo} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-5 h-5 object-contain" />
                     )}
                     <span className="text-sm text-[var(--text)] truncate">{brand.name}</span>
                   </div>

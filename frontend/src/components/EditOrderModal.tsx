@@ -141,7 +141,7 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
                   <div>
                     <span className="text-gray-600">{t("common.total")}:</span>
                     <p className="font-medium text-gray-900">
-                      ${order.totalPrice.toFixed(2)}
+                      ${(order.totalPrice ?? 0).toFixed(2)}
                     </p>
                   </div>
                   <div>

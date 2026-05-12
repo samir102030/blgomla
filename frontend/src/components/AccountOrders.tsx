@@ -138,8 +138,8 @@ const AccountOrders: React.FC = () => {
                       <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.status", "Status")}:</span><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(selectedOrder?.status || "")}`}>{selectedOrder?.status}</span></div>
                       {selectedOrder?.couponCode ? (
                         <>
-                          <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.subtotal", "Subtotal")}:</span><span className="font-medium text-[var(--text)]">{(selectedOrder?.itemsPrice + (selectedOrder?.shippingPrice || 0)).toFixed(2)} EGP</span></div>
-                          <div className="flex justify-between text-emerald-600 dark:text-emerald-400"><span>{t("account.coupon", "Coupon")} ({selectedOrder.couponCode}):</span><span className="font-medium">-{(selectedOrder?.itemsPrice + (selectedOrder?.shippingPrice || 0) - selectedOrder?.totalPrice).toFixed(2)} EGP</span></div>
+                          <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.subtotal", "Subtotal")}:</span><span className="font-medium text-[var(--text)]">{(((selectedOrder?.itemsPrice ?? 0) + (selectedOrder?.shippingPrice ?? 0))).toFixed(2)} EGP</span></div>
+                          <div className="flex justify-between text-emerald-600 dark:text-emerald-400"><span>{t("account.coupon", "Coupon")} ({selectedOrder.couponCode}):</span><span className="font-medium">-{(((selectedOrder?.itemsPrice ?? 0) + (selectedOrder?.shippingPrice ?? 0) - (selectedOrder?.totalPrice ?? 0))).toFixed(2)} EGP</span></div>
                           <div className="flex justify-between border-t border-[var(--border)] pt-2"><span className="font-medium text-[var(--text-muted)]">{t("account.total", "Total")}:</span><span className="font-bold text-[var(--text)]">{selectedOrder?.totalPrice} EGP</span></div>
                         </>
                       ) : (
@@ -174,7 +174,12 @@ const AccountOrders: React.FC = () => {
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                             {product.images && product.images.length > 0 ? (
-                              <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
+                              <img
+                                src={product.images?.[0]?.url || "/placeholder.png"}
+                                alt={product.name}
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
+                                className="w-full h-full object-cover"
+                              />
                             ) : <span className="text-lg text-[var(--text-subtle)]">📦</span>}
                           </div>
                           <div className="min-w-0">
@@ -186,13 +191,13 @@ const AccountOrders: React.FC = () => {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          {product.saleActive && product.salePercentage > 0 ? (
+                          {product.saleActive && (product.salePercentage ?? 0) > 0 ? (
                             <>
-                              <p className="text-xs text-[var(--text-subtle)] line-through">{product.price.toFixed(2)} EGP</p>
-                              <p className="text-sm font-medium text-red-500">{(product.itemPrice || product.salePrice || product.price * (1 - product.salePercentage / 100)).toFixed(2)} EGP</p>
+                              <p className="text-xs text-[var(--text-subtle)] line-through">{(product.price ?? 0).toFixed(2)} EGP</p>
+                              <p className="text-sm font-medium text-red-500">{(product.itemPrice || product.salePrice || (product.price ?? 0) * (1 - (product.salePercentage ?? 0) / 100)).toFixed(2)} EGP</p>
                               <p className="text-[10px] text-red-400">-{product.salePercentage}%</p>
                             </>
-                          ) : <p className="text-sm font-medium text-[var(--text)]">{(product.itemPrice || product.price).toFixed(2)} EGP</p>}
+                          ) : <p className="text-sm font-medium text-[var(--text)]">{((product.itemPrice ?? product.price ?? 0)).toFixed(2)} EGP</p>}
                         </div>
                       </div>
                     ))}

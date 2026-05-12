@@ -308,11 +308,12 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                             {item.product?.images &&
                             item.product.images.length > 0 ? (
                               <img
-                                src={item.product.images[0].url}
+                                src={item.product.images?.[0]?.url || "/placeholder.png"}
                                 alt={
-                                  item.product.images[0].alt ||
+                                  item.product.images?.[0]?.alt ||
                                   item.product.name
                                 }
+                                onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -343,7 +344,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                             {item.salePercentage > 0 && (
                               <p className="text-xs text-green-600 font-medium">
                                 {t("modal.orderDetails.salePriceEach", {
-                                  price: item.price.toFixed(2),
+                                  price: (item.price ?? 0).toFixed(2),
                                 })}
                               </p>
                             )}
@@ -351,18 +352,18 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-gray-900">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            ${((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}
                           </p>
                           {item.couponDiscount && item.couponDiscount > 0 && (
                             <p className="text-xs text-green-600">
                               {t("modal.orderDetails.couponLine", {
-                                amount: item.couponDiscount.toFixed(2),
+                                amount: (item.couponDiscount ?? 0).toFixed(2),
                               })}
                             </p>
                           )}
                           {item.salePercentage > 0 && (
                             <p className="text-xs text-gray-500 line-through">
-                              ${(item.product.price * item.quantity).toFixed(2)}
+                              ${((item.product?.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}
                             </p>
                           )}
                         </div>
@@ -383,8 +384,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                       </span>
                       <span className="text-sm font-medium text-gray-900">
                         $
-                        {order.itemsPrice?.toFixed(2) ||
-                          order.totalPrice.toFixed(2)}
+                        {(order.itemsPrice ?? order.totalPrice ?? 0).toFixed(2)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -409,7 +409,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           })}
                         </span>
                         <span className="text-sm font-medium text-green-600">
-                          -${order.couponDiscount.toFixed(2)}
+                          -${(order.couponDiscount ?? 0).toFixed(2)}
                         </span>
                       </div>
                     )}
@@ -418,7 +418,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         {t("Total")}:
                       </span>
                       <span className="text-lg font-bold text-gray-900">
-                        ${order.totalPrice.toFixed(2)}
+                        ${(order.totalPrice ?? 0).toFixed(2)}
                       </span>
                     </div>
                   </div>

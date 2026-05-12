@@ -74,7 +74,7 @@ const AccountProfile: React.FC = () => {
             {imagePreview ? (
               <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
             ) : user?.profilePicture ? (
-              <img src={user.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+              <img src={user.profilePicture} alt="Profile" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
             ) : (
               <span className="text-3xl text-[var(--text-subtle)]">{user?.name?.[0]?.toUpperCase() || "👤"}</span>
             )}

@@ -120,7 +120,7 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t("common.total")}:</span>
                   <span className="font-medium text-gray-900">
-                    ${order.totalPrice.toFixed(2)}
+                    ${(order.totalPrice ?? 0).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
