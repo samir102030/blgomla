@@ -27,7 +27,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-[#0f172a] text-white relative overflow-hidden">
+    <footer className="bg-[#0B0B10] text-white relative overflow-hidden">
       {/* Top gradient line */}
       <div className="h-1 w-full bg-gradient-to-r from-[var(--brand-primary)] via-[var(--brand-accent)] to-[var(--brand-secondary)]" />
 
