@@ -69,6 +69,12 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
+// Lightweight ping for keep-warm cron — runs BEFORE the DB middleware so
+// it returns instantly without forcing a Mongo connection.
+app.get("/api/_ping", (req, res) => {
+  res.json({ ok: true, ts: Date.now() });
+});
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
@@ -88,6 +94,30 @@ app.use(async (req, res, next) => {
 });
 
 app.use(trackVisitor);
+
+// Cache-Control for public, read-only GETs that change rarely.
+// Browser keeps for 60s; Vercel CDN keeps for 5 min and serves stale up to
+// 1h while it revalidates in the background. Anonymous GETs only — anything
+// authenticated (cookies present) bypasses the cache.
+const cacheablePrefixes = [
+  "/api/products",
+  "/api/brands",
+  "/api/categories",
+  "/api/collections",
+  "/api/advertisements",
+];
+app.use((req, res, next) => {
+  if (req.method !== "GET") return next();
+  const isCacheable = cacheablePrefixes.some((p) => req.path.startsWith(p));
+  if (!isCacheable) return next();
+  // Skip cache for authenticated requests (they may see admin/vendor data)
+  if (req.headers.cookie && req.headers.cookie.includes("accessToken")) return next();
+  res.setHeader(
+    "Cache-Control",
+    "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
+  );
+  next();
+});
 
 app.use("/api", systemRoutes);
 

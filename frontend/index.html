@@ -25,6 +25,10 @@
     <meta property="og:description" content="Egypt's premier marketplace for IT, networking, and technology products." />
     <meta property="og:image" content="/logo.png" />
 
+    <!-- Preconnect to backend so the TLS handshake happens in parallel with HTML parsing -->
+    <link rel="preconnect" href="https://halafawystore-backend.vercel.app" crossorigin />
+    <link rel="dns-prefetch" href="https://halafawystore-backend.vercel.app" />
+
     <!-- Google Fonts (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
