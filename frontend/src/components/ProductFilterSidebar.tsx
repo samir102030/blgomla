@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import type { Category } from "../types/category.type";
 import type { Brand } from "../types/brand.type";
 import { useTranslation } from "react-i18next";
+import { getCategoryIcon } from "../lib/categoryIcon";
 
 interface FilterState {
   categories: string[];
@@ -219,9 +220,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                         className="w-4 h-4 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
                       />
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {category.image && (
-                          <img src={category.image} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-5 h-5 object-contain" />
-                        )}
+                        <span className="text-base shrink-0" aria-hidden="true">{getCategoryIcon(category.name)}</span>
                         <span className="text-sm text-[var(--text)] truncate">{category.name}</span>
                       </div>
                     </label>
@@ -239,9 +238,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                               className="w-3.5 h-3.5 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
                             />
                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                              {sub.image && (
-                                <img src={sub.image} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-4 h-4 object-contain" />
-                              )}
+                              <span className="text-sm shrink-0" aria-hidden="true">{getCategoryIcon(sub.name)}</span>
                               <span className="text-xs text-[var(--text-muted)]">{sub.name}</span>
                             </div>
                           </label>

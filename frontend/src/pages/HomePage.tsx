@@ -10,6 +10,7 @@ import BrandLogos from "../components/BrandLogos";
 import { getBaseUnitPrice } from "../lib/pricing";
 import CountdownTimer from "../components/CountdownTimer";
 import ScrollReveal from "../components/ScrollReveal";
+import { getCategoryIcon } from "../lib/categoryIcon";
 import { useCategoryStore } from "../stores";
 import { useUserStore } from "../stores/user.store";
 import { useCollectionStore } from "../stores/collection.store";
@@ -259,20 +260,9 @@ const HomePage: React.FC = () => {
                       className="group flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-accent)] hover:shadow-md transition-all duration-300"
                     >
                       <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-[var(--surface-2)] flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300">
-                        {cat.image ? (
-                          <img
-                            src={cat.image}
-                            alt={cat.name}
-                            className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 object-contain"
-                            loading="lazy"
-                            decoding="async"
-                            width={48}
-                            height={48}
-                            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                          />
-                        ) : (
-                          <span className="text-2xl sm:text-3xl">📦</span>
-                        )}
+                        <span className="text-2xl sm:text-3xl" aria-hidden="true">
+                          {getCategoryIcon(cat.name)}
+                        </span>
                       </div>
                       <span className="text-xs sm:text-sm font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] text-center line-clamp-2 transition-colors">
                         {cat.name}
