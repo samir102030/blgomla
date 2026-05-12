@@ -92,7 +92,7 @@ const ShoppingCartPage: React.FC = () => {
               return {
                 ...item,
                 type: "product",
-                productDetails: data.data?.[0] ?? undefined,
+                productDetails: (data?.data?._id ? data.data : data?.data?.[0] || data?.product) ?? undefined,
               };
             } catch (error) {
               console.error("Error fetching cart item details:", error);
@@ -641,7 +641,7 @@ const ShoppingCartPage: React.FC = () => {
                                   : "0.00"}
                               </span>
                               <span className="font-medium text-[#002B5B]">
-                                ${getItemPrice(item).toFixed(2)}
+                                {(getItemPrice(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                               </span>
                             </div>
                           ) : item.productDetails ? (
@@ -654,7 +654,7 @@ const ShoppingCartPage: React.FC = () => {
                                 <div className="flex flex-col">
                                   {display.showStrike && (
                                     <span className="line-through text-gray-500 text-xs">
-                                      ${display.strikePrice.toFixed(2)}
+                                      {(display.strikePrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                                     </span>
                                   )}
                                   <span
@@ -664,13 +664,13 @@ const ShoppingCartPage: React.FC = () => {
                                         : "text-gray-900"
                                     }`}
                                   >
-                                    ${display.unitPrice.toFixed(2)}
+                                    {(display.unitPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                                   </span>
                                 </div>
                               );
                             })()
                           ) : (
-                            <span>$0.00</span>
+                            <span>0 EGP</span>
                           )}
                           {item.type !== "collection" &&
                             item.productDetails?.saleActive && (
@@ -738,7 +738,7 @@ const ShoppingCartPage: React.FC = () => {
                       </td>
                       <td className="px-4 sm:px-6 py-4">
                         <div className="text-xs sm:text-sm font-medium text-gray-900">
-                          ${getItemTotal(item).toFixed(2)}
+                          {(getItemTotal(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4">
@@ -835,7 +835,7 @@ const ShoppingCartPage: React.FC = () => {
                                 : "0.00"}
                             </span>
                             <span className="ml-2 font-medium text-[#002B5B]">
-                              ${getItemPrice(item).toFixed(2)}
+                              {(getItemPrice(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                             </span>
                           </>
                         ) : item.productDetails ? (
@@ -848,7 +848,7 @@ const ShoppingCartPage: React.FC = () => {
                               <>
                                 {display.showStrike && (
                                   <span className="line-through text-gray-500">
-                                    ${display.strikePrice.toFixed(2)}
+                                    {(display.strikePrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                                   </span>
                                 )}
                                 <span
@@ -858,13 +858,13 @@ const ShoppingCartPage: React.FC = () => {
                                       : "text-gray-900"
                                   }`}
                                 >
-                                  ${display.unitPrice.toFixed(2)}
+                                  {(display.unitPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                                 </span>
                               </>
                             );
                           })()
                         ) : (
-                          <span>$0.00</span>
+                          <span>0 EGP</span>
                         )}
                       </p>
                     </div>
@@ -958,7 +958,7 @@ const ShoppingCartPage: React.FC = () => {
                       Total:
                     </span>
                     <span className="text-sm font-bold text-gray-900">
-                      ${getItemTotal(item).toFixed(2)}
+                      {(getItemTotal(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                     </span>
                   </div>
                 </div>
@@ -1072,26 +1072,26 @@ const ShoppingCartPage: React.FC = () => {
               <div className="space-y-3 sm:space-y-4 mb-6">
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Sub Total</span>
-                  <span className="font-medium">${subtotal.toFixed(2)}</span>
+                  <span className="font-medium">{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                 </div>
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Shipping Cost</span>
                   <span className="font-medium">
-                    ${shippingCost.toFixed(2)}
+                    {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                   </span>
                 </div>
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-xs sm:text-sm text-green-600">
                     <span>Coupon Discount ({appliedCoupon?.code})</span>
                     <span className="font-medium">
-                      -${couponDiscount.toFixed(2)}
+                      -{(couponDiscount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                     </span>
                   </div>
                 )}
                 <div className="border-t pt-3 sm:pt-4">
                   <div className="flex justify-between text-base sm:text-lg font-semibold">
                     <span>Grand Total</span>
-                    <span>${grandTotal.toFixed(2)}</span>
+                    <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                   </div>
                 </div>
               </div>

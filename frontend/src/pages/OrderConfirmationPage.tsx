@@ -185,7 +185,7 @@ const OrderConfirmationPage: React.FC = () => {
                           {t("Quantity:")} {item.quantity}
                         </p>
                         <p className="text-sm font-medium text-gray-900">
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          {((item.product.price * item.quantity)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                         </p>
                       </div>
                     </div>
@@ -203,20 +203,20 @@ const OrderConfirmationPage: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>{t("Subtotal")}</span>
-                      <span>${order!.itemsPrice.toFixed(2)}</span>
+                      <span>{(order!.itemsPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                     </div>
                     <div className="flex justify-between">
                       <span>{t("Shipping")}</span>
-                      <span>${order!.shippingPrice.toFixed(2)}</span>
+                      <span>{(order!.shippingPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                     </div>
                     <div className="flex justify-between">
                       <span>{t("Tax")}</span>
-                      <span>${order!.taxPrice.toFixed(2)}</span>
+                      <span>{(order!.taxPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                     </div>
                     <div className="border-t pt-2">
                       <div className="flex justify-between text-lg font-bold">
                         <span>{t("Total")}</span>
-                        <span>${order!.totalPrice.toFixed(2)}</span>
+                        <span>{(order!.totalPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                       </div>
                     </div>
                   </div>

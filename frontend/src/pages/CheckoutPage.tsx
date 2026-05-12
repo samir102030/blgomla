@@ -94,7 +94,7 @@ const CheckoutPage: React.FC = () => {
                 return {
                   ...item,
                   type: "product",
-                  productDetails: data.data?.[0] ?? undefined,
+                  productDetails: (data?.data?._id ? data.data : data?.data?.[0] || data?.product) ?? undefined,
                 };
               } catch (error: any) {
                 console.error("Error fetching cart item:", error);
@@ -229,7 +229,7 @@ const CheckoutPage: React.FC = () => {
         useCouponStore.setState({ appliedCoupon: couponData });
 
         toast.success(
-          `Coupon applied! You saved $${calculateCouponDiscount().toFixed(2)}`
+          `Coupon applied! You saved ${(calculateCouponDiscount()).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP`
         );
         setCouponCode("");
       } else {
@@ -988,7 +988,7 @@ const CheckoutPage: React.FC = () => {
                         X {item.quantity.toString().padStart(2, "0")}
                       </span>
                       <span>
-                        ${(getItemPrice(item) * item.quantity).toFixed(2)}
+                        {((getItemPrice(item) * item.quantity)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                       </span>
                     </div>
                   ))}
@@ -996,21 +996,21 @@ const CheckoutPage: React.FC = () => {
                   <div className="border-t pt-3 sm:pt-4 space-y-1 sm:space-y-2">
                     <div className="flex justify-between text-xs sm:text-sm">
                       <span>Sub Total</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                     </div>
                     <div className="flex justify-between text-xs sm:text-sm">
                       <span>Shipping Fee</span>
-                      <span>${shippingFee.toFixed(2)}</span>
+                      <span>{(shippingFee).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between text-xs sm:text-sm text-green-600">
                         <span>Coupon Discount</span>
-                        <span>-${discountAmount.toFixed(2)}</span>
+                        <span>-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                       </div>
                     )}
                     <div className="flex justify-between text-base sm:text-lg font-bold border-t pt-2">
                       <span>Grand Total</span>
-                      <span>${grandTotal.toFixed(2)}</span>
+                      <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                     </div>
                   </div>
                 </div>
@@ -1046,7 +1046,7 @@ const CheckoutPage: React.FC = () => {
                           {appliedCoupon.code}
                         </span>
                         <span className="text-green-600 text-xs sm:text-sm">
-                          (-${discountAmount.toFixed(2)})
+                          (-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP)
                         </span>
                       </div>
                       <button
