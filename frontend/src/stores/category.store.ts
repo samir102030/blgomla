@@ -77,10 +77,11 @@ export const useCategoryStore = create<CategoryStore>()(
         try {
           const { data } = await axiosInstance.get<{
             success: boolean;
-            categories: Category[];
+            data?: Category[];
+            categories?: Category[];
           }>("/categories", { params });
           set({
-            categories: data.categories,
+            categories: data.data || data.categories || [],
             loading: false,
           });
         } catch (error: any) {
