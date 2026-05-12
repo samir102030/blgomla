@@ -1,143 +1,194 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useUserStore } from "../../stores/user.store";
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
+  const navigate = useNavigate();
+  const user = useUserStore((s) => s.user);
+  const logout = useUserStore((s) => s.logout);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
   const notifications = [
-    { id: 1, title: 'New order received', time: '2 min ago', type: 'order' },
-    { id: 2, title: 'Vendor registration pending', time: '5 min ago', type: 'vendor' },
-    { id: 3, title: 'Payment processed', time: '10 min ago', type: 'payment' },
-    { id: 4, title: 'Support ticket created', time: '15 min ago', type: 'support' }
+    { id: 1, title: "New order received", time: "2 min ago", type: "order" },
+    { id: 2, title: "Vendor registration pending", time: "5 min ago", type: "vendor" },
+    { id: 3, title: "Payment processed", time: "10 min ago", type: "payment" },
+    { id: 4, title: "Support ticket created", time: "15 min ago", type: "support" },
   ];
 
+  const iconFor = (t: string) =>
+    t === "order" ? "🛒" : t === "vendor" ? "🏪" : t === "payment" ? "💰" : "🎧";
+
+  const handleLogout = async () => {
+    await logout?.();
+    navigate("/login");
+  };
+
+  const displayName = user?.name || user?.email?.split("@")[0] || "Admin";
+  const initial = (displayName || "A").charAt(0).toUpperCase();
+
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="flex items-center justify-between px-6 py-4">
-        {/* Left side */}
-        <div className="flex items-center">
-          {/* Mobile menu button */}
+    <header className="bg-[var(--surface)] border-b border-[var(--border)]">
+      <div className="flex items-center justify-between gap-4 px-4 sm:px-6 py-3">
+        {/* Left */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+            className="lg:hidden p-2 rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
+            aria-label="Open menu"
           >
             <span className="text-xl">☰</span>
           </button>
-          
-          {/* Search */}
-          <div className="ml-4 flex-1 max-w-lg">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-400">🔍</span>
-              </div>
-              <input
-                type="text"
-                placeholder="Search vendors, products, orders..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500"
-              />
-            </div>
+
+          <div className="hidden sm:block relative flex-1 max-w-lg">
+            <span className="absolute inset-y-0 left-3 flex items-center text-[var(--text-subtle)] pointer-events-none">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Search vendors, products, orders..."
+              className="block w-full pl-10 pr-3 py-2 text-sm rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] placeholder-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition"
+            />
           </div>
         </div>
 
-        {/* Right side */}
-        <div className="flex items-center space-x-4">
-          {/* Quick Actions */}
-          <div className="hidden md:flex items-center space-x-2">
-            <button className="px-3 py-2 text-sm bg-yellow-100 text-yellow-800 rounded-md hover:bg-yellow-200 transition-colors">
-              + Add Product
-            </button>
-            <button className="px-3 py-2 text-sm bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 transition-colors">
-              + Add Vendor
-            </button>
-          </div>
+        {/* Right */}
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Link
+            to="/dashboard/products/add"
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md text-white shadow-sm hover:opacity-95 transition"
+            style={{ background: "var(--brand-gradient)" }}
+          >
+            + Add Product
+          </Link>
+          <Link
+            to="/dashboard/vendors/add"
+            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[var(--border)] text-[var(--text)] hover:bg-[var(--surface-2)] transition"
+          >
+            + Add Vendor
+          </Link>
 
           {/* Notifications */}
           <div className="relative">
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 text-gray-400 hover:text-gray-500 relative"
+              onClick={() => {
+                setShowNotifications((v) => !v);
+                setShowProfile(false);
+              }}
+              className="relative p-2 rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+              aria-label="Notifications"
             >
-              <span className="text-xl">🔔</span>
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                {notifications.length}
-              </span>
+              <span className="text-lg">🔔</span>
+              {notifications.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 text-[10px] font-bold rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              )}
             </button>
 
-            {/* Notifications Dropdown */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-3">Notifications</h3>
-                  <div className="space-y-3">
-                    {notifications.map((notification) => (
-                      <div key={notification.id} className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md">
-                        <div className="flex-shrink-0">
-                          <span className="text-sm">
-                            {notification.type === 'order' && '🛒'}
-                            {notification.type === 'vendor' && '🏪'}
-                            {notification.type === 'payment' && '💰'}
-                            {notification.type === 'support' && '🎧'}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-                          <p className="text-xs text-gray-500">{notification.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <button className="text-sm text-yellow-600 hover:text-yellow-500">
-                      View all notifications
-                    </button>
-                  </div>
+              <div className="absolute right-0 mt-2 w-80 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-[var(--border)]">
+                  <h3 className="text-sm font-semibold text-[var(--text)]">
+                    Notifications
+                  </h3>
                 </div>
+                <div className="max-h-80 overflow-y-auto divide-y divide-[var(--border)]">
+                  {notifications.map((n) => (
+                    <div
+                      key={n.id}
+                      className="flex items-start gap-3 px-4 py-3 hover:bg-[var(--surface-2)] cursor-pointer"
+                    >
+                      <span className="text-base mt-0.5">{iconFor(n.type)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[var(--text)] truncate">
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                          {n.time}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Link
+                  to="/notifications"
+                  onClick={() => setShowNotifications(false)}
+                  className="block px-4 py-2.5 text-center text-sm font-medium text-[var(--brand-primary)] border-t border-[var(--border)] hover:bg-[var(--surface-2)]"
+                >
+                  View all notifications
+                </Link>
               </div>
             )}
           </div>
 
-          {/* Messages */}
-          <button className="p-2 text-gray-400 hover:text-gray-500 relative">
-            <span className="text-xl">💬</span>
-            <span className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">
-              3
-            </span>
-          </button>
-
-          {/* Profile Dropdown */}
+          {/* Profile */}
           <div className="relative">
             <button
-              onClick={() => setShowProfile(!showProfile)}
-              className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-100"
+              onClick={() => {
+                setShowProfile((v) => !v);
+                setShowNotifications(false);
+              }}
+              className="flex items-center gap-2 p-1 sm:pl-1 sm:pr-2 rounded-md hover:bg-[var(--surface-2)]"
             >
-              <div className="h-8 w-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium">A</span>
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm"
+                style={{ background: "var(--brand-gradient)" }}
+              >
+                {initial}
               </div>
-              <span className="hidden md:block text-sm font-medium text-gray-700">Halafawy</span>
-              <span className="text-gray-400">▼</span>
+              <span className="hidden md:block text-sm font-medium text-[var(--text)] max-w-[120px] truncate">
+                {displayName}
+              </span>
+              <span className="hidden md:block text-[var(--text-subtle)] text-xs">
+                ▼
+              </span>
             </button>
 
-            {/* Profile Dropdown Menu */}
             {showProfile && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+              <div className="absolute right-0 mt-2 w-52 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="px-3 py-3 border-b border-[var(--border)]">
+                  <p className="text-sm font-semibold text-[var(--text)] truncate">
+                    {displayName}
+                  </p>
+                  <p className="text-xs text-[var(--text-muted)] truncate">
+                    {user?.email}
+                  </p>
+                </div>
                 <div className="py-1">
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <Link
+                    to="/account"
+                    onClick={() => setShowProfile(false)}
+                    className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
+                  >
                     👤 Your Profile
-                  </a>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  </Link>
+                  <Link
+                    to="/dashboard/settings/general"
+                    onClick={() => setShowProfile(false)}
+                    className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
+                  >
                     ⚙️ Settings
-                  </a>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    🎨 Appearance
-                  </a>
-                  <div className="border-t border-gray-100"></div>
-                  <a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  </Link>
+                  <Link
+                    to="/"
+                    onClick={() => setShowProfile(false)}
+                    className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
+                  >
+                    🏠 Back to site
+                  </Link>
+                </div>
+                <div className="border-t border-[var(--border)] py-1">
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[var(--surface-2)]"
+                  >
                     🚪 Sign out
-                  </a>
+                  </button>
                 </div>
               </div>
             )}
@@ -145,22 +196,22 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </div>
       </div>
 
-      {/* Quick Stats Bar */}
-      <div className="bg-gray-50 border-t border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center space-x-2">
-              <span className="text-green-600">●</span>
-              <span className="text-gray-600">System Status: Online</span>
+      {/* Status strip */}
+      <div className="bg-[var(--surface-2)] border-t border-[var(--border)] px-4 sm:px-6 py-2">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[var(--text-muted)]">System Online</span>
             </div>
-            <div className="text-gray-600">
-              Last updated: {new Date().toLocaleTimeString()}
-            </div>
+            <span className="hidden sm:inline text-[var(--text-subtle)]">
+              {new Date().toLocaleTimeString()}
+            </span>
           </div>
-          <div className="flex items-center space-x-4 text-xs">
-            <span className="text-gray-500">Active Vendors: 156</span>
-            <span className="text-gray-500">Pending Orders: 23</span>
-            <span className="text-gray-500">Support Tickets: 8</span>
+          <div className="hidden md:flex items-center gap-4 text-[var(--text-subtle)]">
+            <span>Vendors: 156</span>
+            <span>Pending Orders: 23</span>
+            <span>Tickets: 8</span>
           </div>
         </div>
       </div>
