@@ -47,6 +47,27 @@ const Header: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock body scroll while the mobile drawer is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isMenuOpen]);
+
+  // Close drawer with Escape key
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isMenuOpen]);
+
   // Debounced search effect
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -334,14 +355,10 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav
-        className={`border-t border-[var(--border)] bg-[var(--brand-nav)] transition-all duration-300 ${
-          isMenuOpen ? "block" : "hidden"
-        } lg:block`}
-      >
+      {/* Desktop Navigation */}
+      <nav className="hidden lg:block border-t border-[var(--border)] bg-[var(--brand-nav)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <ul className="flex flex-col lg:flex-row lg:items-center lg:gap-1">
+          <ul className="flex flex-row items-center gap-1">
             {navigationItems
               .filter((item) => item.condition === undefined || item.condition)
               .map((item) => (
@@ -349,7 +366,6 @@ const Header: React.FC = () => {
                   <Link
                     to={item.path}
                     className={`block py-3 px-4 text-sm font-medium text-[var(--brand-nav-text)] opacity-70 hover:opacity-100 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all ${item.className || ""}`}
-                    onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}
                   </Link>
@@ -358,6 +374,60 @@ const Header: React.FC = () => {
           </ul>
         </div>
       </nav>
+
+      {/* Mobile drawer — slides in from the right */}
+      <div
+        className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${
+          isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+        aria-hidden={!isMenuOpen}
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/40"
+          onClick={() => setIsMenuOpen(false)}
+        />
+        {/* Panel */}
+        <aside
+          className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] bg-[var(--surface)] shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
+            isMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
+            <span className="text-base font-semibold text-[var(--text)]">
+              {t("Menu", "Menu")}
+            </span>
+            <button
+              onClick={() => setIsMenuOpen(false)}
+              aria-label="Close menu"
+              className="w-9 h-9 rounded-lg hover:bg-[var(--surface-2)] flex items-center justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <nav className="flex-1 overflow-y-auto px-2 py-3">
+            <ul className="flex flex-col gap-1">
+              {navigationItems
+                .filter((item) => item.condition === undefined || item.condition)
+                .map((item) => (
+                  <li key={item.path}>
+                    <Link
+                      to={item.path}
+                      className={`block py-3 px-4 text-base font-medium text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors ${item.className || ""}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </nav>
+        </aside>
+      </div>
     </header>
   );
 };
