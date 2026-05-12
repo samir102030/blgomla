@@ -174,7 +174,7 @@ export const useProductStore = create<ProductStore>()(
           console.log("fetchProductById response:", data);
 
           // Handle different response formats
-          const product = data.product || data.data?.[0] || data;
+          const product = data?.data?._id ? data.data : (data.product || data);
           set({ product, loading: false });
         } catch (error: any) {
           console.error("fetchProductById error:", error);
@@ -321,7 +321,7 @@ export const useProductStore = create<ProductStore>()(
             review
           );
           console.log("addReview response:", data);
-          const product = data.product || data.data?.[0] || data;
+          const product = data?.data?._id ? data.data : (data.product || data);
           set({ product, loading: false });
         } catch (error: any) {
           console.error("addReview error:", error);
@@ -344,7 +344,7 @@ export const useProductStore = create<ProductStore>()(
             review
           );
           console.log("updateReview response:", data);
-          const product = data.product || data.data?.[0] || data;
+          const product = data?.data?._id ? data.data : (data.product || data);
           set({ product, loading: false });
         } catch (error: any) {
           console.error("updateReview error:", error);
@@ -362,7 +362,7 @@ export const useProductStore = create<ProductStore>()(
             `/products/${productId}/reviews/${reviewId}`
           );
           console.log("deleteReview response:", data);
-          const product = data.product || data.data?.[0] || data;
+          const product = data?.data?._id ? data.data : (data.product || data);
           set({ product, loading: false });
         } catch (error: any) {
           console.error("deleteReview error:", error);
