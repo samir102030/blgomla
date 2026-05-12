@@ -33,24 +33,47 @@ const LoginRegisterPage: React.FC = () => {
     try {
       const user = await login({ email: loginData.email, password: loginData.password });
       if (user) navigate("/");
-      else setLoginError(error || t("login.failed", "Login failed."));
-    } catch { setLoginError(error || t("login.failed", "Login failed.")); }
-    finally { setLoginLoading(false); }
+      else {
+        const latest = useUserStore.getState().error;
+        setLoginError(latest || t("login.failed", "Login failed."));
+      }
+    } catch {
+      const latest = useUserStore.getState().error;
+      setLoginError(latest || t("login.failed", "Login failed."));
+    } finally { setLoginLoading(false); }
   };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegisterError(null);
     setRegisterSuccess(null);
+    if (!registerData.name.trim()) {
+      setRegisterError(t("login.nameRequired", "Please enter your full name."));
+      return;
+    }
+    if (registerData.password.length < 6) {
+      setRegisterError(t("login.passwordTooShort", "Password must be at least 6 characters."));
+      return;
+    }
     if (registerData.password !== registerData.confirmPassword) {
       setRegisterError(t("login.passwordsMismatch", "Passwords do not match."));
       return;
     }
     try {
-      const user = await signup({ name: registerData.name, email: registerData.email, password: registerData.password });
+      const user = await signup({
+        name: registerData.name.trim(),
+        email: registerData.email.trim().toLowerCase(),
+        password: registerData.password,
+      });
       if (user) navigate("/");
-      else setRegisterError(error || t("login.registerFailed", "Registration failed."));
-    } catch { setRegisterError(error || t("login.registerFailed", "Registration failed.")); }
+      else {
+        const latest = useUserStore.getState().error;
+        setRegisterError(latest || t("login.registerFailed", "Registration failed."));
+      }
+    } catch {
+      const latest = useUserStore.getState().error;
+      setRegisterError(latest || t("login.registerFailed", "Registration failed."));
+    }
   };
 
   const inputClass = "w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all";
@@ -179,11 +202,12 @@ const LoginRegisterPage: React.FC = () => {
                       <div>
                         <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">{t("login.password", "Password")}</label>
                         <div className="relative">
-                          <input type={showRegPassword ? "text" : "password"} placeholder="••••••••" value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className={inputClass + " pr-11"} required />
+                          <input type={showRegPassword ? "text" : "password"} placeholder="••••••••" minLength={6} value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className={inputClass + " pr-11"} required />
                           <button type="button" onClick={() => setShowRegPassword(!showRegPassword)} className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[var(--text-subtle)] hover:text-[var(--text-muted)] transition-colors">
                             {showRegPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                           </button>
                         </div>
+                        <p className="text-[11px] text-[var(--text-subtle)] mt-1">{t("login.passwordHint", "At least 6 characters")}</p>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">{t("login.confirmPassword", "Confirm Password")}</label>
