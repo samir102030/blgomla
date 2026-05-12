@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import type { Product } from "../types/product.type";
+import { getBaseUnitPrice } from "../lib/pricing";
 import PleaseLogin from "../components/PleaseLogin";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -97,14 +98,19 @@ const WishlistPage: React.FC = () => {
   }, [lovedProducts, searchQuery, sortBy]);
 
   const stats = useMemo(() => {
-    const totalValue = lovedProducts.reduce((sum, p) => sum + (p.salePrice || p.price), 0);
-    const onSale = lovedProducts.filter(p => p.saleActive && p.salePrice).length;
+    const totalValue = lovedProducts.reduce((sum, p) => sum + getBaseUnitPrice(p), 0);
+    const onSale = lovedProducts.filter(p => p.saleActive).length;
     const outOfStock = lovedProducts.filter(p => p.stock <= 0).length;
     return { total: lovedProducts.length, totalValue, onSale, outOfStock };
   }, [lovedProducts]);
 
-  const getEffectivePrice = (p: Product) => p.saleActive && p.salePrice ? p.salePrice : p.price;
-  const getDiscount = (p: Product) => p.saleActive && p.salePrice ? Math.round(((p.price - p.salePrice) / p.price) * 100) : 0;
+  const getEffectivePrice = (p: Product) => getBaseUnitPrice(p);
+  const getDiscount = (p: Product) => {
+    if (!p.saleActive) return 0;
+    if (typeof p.salePercentage === "number" && p.salePercentage > 0) return Math.round(p.salePercentage);
+    const eff = getBaseUnitPrice(p);
+    return p.price > 0 ? Math.round(((p.price - eff) / p.price) * 100) : 0;
+  };
 
   const renderProductCard = (item: Product) => {
     const isRemoving = removingId === item._id;

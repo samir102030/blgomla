@@ -7,6 +7,7 @@ import Newsletter from "../components/Newsletter";
 import Services from "../components/Services";
 import Footer from "../components/Footer";
 import BrandLogos from "../components/BrandLogos";
+import { getBaseUnitPrice } from "../lib/pricing";
 import CountdownTimer from "../components/CountdownTimer";
 import ScrollReveal from "../components/ScrollReveal";
 import { useCategoryStore } from "../stores";
@@ -191,10 +192,7 @@ const HomePage: React.FC = () => {
     ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 stagger-children">
         {(products || []).slice(0, count).map((product) => {
-          const discounted =
-            product.saleActive && product.salePercentage
-              ? product.price * (1 - product.salePercentage / 100)
-              : product.salePrice ?? product.price;
+          const discounted = getBaseUnitPrice(product);
           return (
           <ProductCard
             key={product._id}
@@ -359,7 +357,7 @@ const HomePage: React.FC = () => {
                     key={product._id}
                     id={product._id}
                     name={product.name}
-                    price={product.saleActive && product.salePrice ? product.salePrice : product.price}
+                    price={getBaseUnitPrice(product)}
                     currency="EGP"
                     originalPrice={product.saleActive ? product.price : undefined}
                     image={product.images?.[0]?.url || "/placeholder.png"}

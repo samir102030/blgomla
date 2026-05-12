@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { useProductStore } from "../stores/product.store";
 import { useTranslation } from "react-i18next";
 import ProductCard from "./ProductCard";
+import { getBaseUnitPrice } from "../lib/pricing";
 
 const FeaturedProducts: React.FC = () => {
   const { t } = useTranslation();
@@ -49,11 +50,7 @@ const FeaturedProducts: React.FC = () => {
                 key={product._id}
                 id={product._id}
                 name={product.name}
-                price={
-                  product.saleActive && product.salePrice
-                    ? product.salePrice
-                    : product.price
-                }
+                price={getBaseUnitPrice(product)}
                 currency="EGP"
                 originalPrice={product.saleActive ? product.price : undefined}
                 image={product.images?.[0]?.url || "/placeholder.png"}

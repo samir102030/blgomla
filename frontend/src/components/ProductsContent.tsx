@@ -6,6 +6,7 @@ import ProductCard from "./ProductCard";
 import { useProductStore } from "../stores/product.store";
 import { useCategoryStore } from "../stores/category.store";
 import { useTranslation } from "react-i18next";
+import { getBaseUnitPrice } from "../lib/pricing";
 
 interface FilterState {
   categories: string[];
@@ -116,10 +117,7 @@ const ProductsContent: React.FC = () => {
       }
     }
 
-    const price =
-      product.saleActive && product.salePrice
-        ? product.salePrice
-        : product.price;
+    const price = getBaseUnitPrice(product);
     if (filters.minPrice && price < parseFloat(filters.minPrice)) return false;
     if (filters.maxPrice && price > parseFloat(filters.maxPrice)) return false;
     if (filters.rating && product.rating < parseFloat(filters.rating)) return false;
@@ -141,16 +139,10 @@ const ProductsContent: React.FC = () => {
   // Sort products
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
-      case "price-low": {
-        const priceA = a.saleActive && a.salePrice ? a.salePrice : a.price;
-        const priceB = b.saleActive && b.salePrice ? b.salePrice : b.price;
-        return priceA - priceB;
-      }
-      case "price-high": {
-        const priceAHigh = a.saleActive && a.salePrice ? a.salePrice : a.price;
-        const priceBHigh = b.saleActive && b.salePrice ? b.salePrice : b.price;
-        return priceBHigh - priceAHigh;
-      }
+      case "price-low":
+        return getBaseUnitPrice(a) - getBaseUnitPrice(b);
+      case "price-high":
+        return getBaseUnitPrice(b) - getBaseUnitPrice(a);
       case "rating":
         return b.rating - a.rating;
       case "newest":
@@ -301,15 +293,9 @@ const ProductsContent: React.FC = () => {
                     key={product._id}
                     id={product._id!}
                     name={product.name}
-                    price={
-                      product.saleActive && product.salePrice !== undefined
-                        ? product.salePrice
-                        : product.price
-                    }
+                    price={getBaseUnitPrice(product)}
                     originalPrice={
-                      product.saleActive && product.salePrice !== undefined
-                        ? product.price
-                        : undefined
+                      product.saleActive ? product.price : undefined
                     }
                     image={product.images?.[0]?.url || ""}
                     rating={product.rating}

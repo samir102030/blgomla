@@ -4,6 +4,7 @@ import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
 import { useProductStore } from "../stores/product.store";
 import { useCategoryStore } from "../stores/category.store";
+import { getBaseUnitPrice } from "../lib/pricing";
 
 interface FilterState {
   categories: string[];
@@ -84,10 +85,7 @@ const BrandsContent: React.FC = () => {
     }
 
     // Price filter
-    const price =
-      product.saleActive && product.salePrice
-        ? product.salePrice
-        : product.price;
+    const price = getBaseUnitPrice(product);
     if (filters.minPrice && price < parseFloat(filters.minPrice)) {
       return false;
     }
@@ -213,15 +211,9 @@ const BrandsContent: React.FC = () => {
                     key={product._id}
                     id={product._id!}
                     name={product.name}
-                    price={
-                      product.saleActive && product.salePrice !== undefined
-                        ? product.salePrice
-                        : product.price
-                    }
+                    price={getBaseUnitPrice(product)}
                     originalPrice={
-                      product.saleActive && product.salePrice !== undefined
-                        ? product.price
-                        : undefined
+                      product.saleActive ? product.price : undefined
                     }
                     image={product.images?.[0]?.url || ""}
                     rating={product.rating}

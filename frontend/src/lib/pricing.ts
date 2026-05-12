@@ -16,10 +16,15 @@ const sortBulkPricing = (rules?: BulkPricingRule[]) => {
     .sort((a, b) => a.minQty - b.minQty);
 };
 
-export const getBaseUnitPrice = (product: PriceInput) => {
-  return product.saleActive
-    ? product.price * (1 - product.salePercentage / 100)
-    : product.price;
+export const getBaseUnitPrice = (product: PriceInput & { salePrice?: number }) => {
+  if (!product.saleActive) return product.price;
+  if (typeof product.salePrice === "number" && product.salePrice > 0) {
+    return product.salePrice;
+  }
+  if (typeof product.salePercentage === "number" && product.salePercentage > 0) {
+    return product.price * (1 - product.salePercentage / 100);
+  }
+  return product.price;
 };
 
 export const getBulkPricing = (product: BulkInput, quantity: number) => {

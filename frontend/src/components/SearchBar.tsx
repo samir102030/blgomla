@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../lib/axios";
+import { getBaseUnitPrice } from "../lib/pricing";
 
 interface SearchResult {
   _id: string;
@@ -216,10 +217,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
                         </p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-sm font-bold text-[var(--text)]">
-                            {(product.saleActive && product.salePrice
-                              ? product.salePrice
-                              : product.price
-                            ).toLocaleString()}{" "}
+                            {getBaseUnitPrice(product).toLocaleString()}{" "}
                             <span className="text-xs font-normal text-[var(--text-muted)]">EGP</span>
                           </span>
                           {product.saleActive && (
