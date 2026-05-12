@@ -1,18 +1,35 @@
-import React, { useEffect } from "react";
-import { useProductStore } from "../stores/product.store";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ProductCard from "./ProductCard";
 import { getBaseUnitPrice } from "../lib/pricing";
+import { axiosInstance } from "../lib/axios";
+import type { Product } from "../types/product.type";
 
 const FeaturedProducts: React.FC = () => {
   const { t } = useTranslation();
-  const fetchFeaturedProducts = useProductStore((s) => s.fetchFeaturedProducts);
-  const products = useProductStore((s) => s.products);
-  const loading = useProductStore((s) => s.loading);
+  // Local state instead of the shared product store — otherwise the featured
+  // fetch overwrites the global products list and breaks pages like All Products.
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchFeaturedProducts();
-  }, [fetchFeaturedProducts]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await axiosInstance.get<{ data: Product[] }>(
+          "/products/featured"
+        );
+        if (!cancelled) setProducts(data.data || []);
+      } catch {
+        if (!cancelled) setProducts([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Don't render if no featured products
   if (!loading && (!products || products.length === 0)) return null;

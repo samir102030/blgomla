@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
-import { useProductStore } from "../stores/product.store";
 import { useTranslation } from "react-i18next";
+import { axiosInstance } from "../lib/axios";
+import type { Product } from "../types/product.type";
 import {
   ArrowRightOnRectangleIcon,
   HeartIcon,
@@ -24,10 +25,11 @@ interface NavigationItem {
 const Header: React.FC = () => {
   const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
-  const { fetchProducts, products, loading } = useProductStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searching, setSearching] = useState(false);
   const [language, setLanguage] = useState(i18n.language);
   const [scrolled, setScrolled] = useState(false);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
@@ -68,25 +70,42 @@ const Header: React.FC = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [isMenuOpen]);
 
-  // Debounced search effect
+  // Debounced search — uses a local results buffer so it doesn't trample the
+  // global product store (which the All Products page reads from).
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (searchQuery.trim()) {
-        fetchProducts({
-          search: searchQuery,
-          limit: 5,
-          isActive: true,
-          deleted: false,
-          approvalStatus: "approved",
-        });
-        setShowDropdown(true);
-      } else {
-        setShowDropdown(false);
+    if (!searchQuery.trim()) {
+      setShowDropdown(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      setShowDropdown(true);
+      try {
+        const { data } = await axiosInstance.get<{ data: Product[] }>(
+          "/products",
+          {
+            params: {
+              search: searchQuery,
+              limit: 5,
+              isActive: true,
+              deleted: false,
+              approvalStatus: "approved",
+            },
+          }
+        );
+        if (!cancelled) setSearchResults(data.data || []);
+      } catch {
+        if (!cancelled) setSearchResults([]);
+      } finally {
+        if (!cancelled) setSearching(false);
       }
     }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, fetchProducts]);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
 
   // Handle clicks outside dropdown
   useEffect(() => {
@@ -147,14 +166,14 @@ const Header: React.FC = () => {
   const SearchDropdown = () =>
     showDropdown ? (
       <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto animate-fadeInDown">
-        {loading ? (
+        {searching ? (
           <div className="p-5 text-center text-[var(--text-subtle)]">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent mx-auto" />
             <p className="mt-2 text-sm">{t("Searching...")}</p>
           </div>
-        ) : products.length > 0 ? (
+        ) : searchResults.length > 0 ? (
           <div className="py-2">
-            {products.map((product) => (
+            {searchResults.map((product) => (
               <button
                 key={product._id}
                 type="button"
