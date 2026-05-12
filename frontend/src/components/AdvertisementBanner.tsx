@@ -123,8 +123,8 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
         }`}
         style={{
           background: isHero
-            ? "linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)"
-            : "linear-gradient(135deg, #0a192f 0%, #112240 50%, #0a192f 100%)",
+            ? "linear-gradient(135deg, #0B0B10 0%, #15151C 50%, #0B0B10 100%)"
+            : "linear-gradient(135deg, #15151C 0%, #1c1c25 50%, #15151C 100%)",
         }}
       >
         {/* Animated background elements */}
@@ -134,8 +134,8 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
             className="absolute w-64 h-64 rounded-full opacity-20 blur-3xl"
             style={{
               background: isHero
-                ? "radial-gradient(circle, #06b6d4, transparent)"
-                : "radial-gradient(circle, #3b82f6, transparent)",
+                ? "radial-gradient(circle, #FF6A1A, transparent)"
+                : "radial-gradient(circle, #E8530A, transparent)",
               top: "-30%",
               right: "10%",
               animation: "float 6s ease-in-out infinite",
@@ -145,8 +145,8 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
             className="absolute w-48 h-48 rounded-full opacity-15 blur-3xl"
             style={{
               background: isHero
-                ? "radial-gradient(circle, #8b5cf6, transparent)"
-                : "radial-gradient(circle, #06b6d4, transparent)",
+                ? "radial-gradient(circle, #FFB382, transparent)"
+                : "radial-gradient(circle, #FF6A1A, transparent)",
               bottom: "-20%",
               left: "15%",
               animation: "float 8s ease-in-out infinite reverse",
@@ -168,7 +168,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
             className="absolute top-0 right-0 w-1/3 h-full opacity-10"
             style={{
               background: `linear-gradient(135deg, transparent 30%, ${
-                isHero ? "#06b6d4" : "#3b82f6"
+                isHero ? "#FF6A1A" : "#E8530A"
               } 50%, transparent 70%)`,
             }}
           />
@@ -208,8 +208,8 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
                           className="bg-clip-text text-transparent"
                           style={{
                             backgroundImage: isHero
-                              ? "linear-gradient(135deg, #06b6d4, #22d3ee)"
-                              : "linear-gradient(135deg, #3b82f6, #60a5fa)",
+                              ? "linear-gradient(135deg, #FF6A1A, #FFB382)"
+                              : "linear-gradient(135deg, #E8530A, #FF6A1A)",
                           }}
                         >
                           {word}
@@ -237,7 +237,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
               <button
                 className={`inline-flex items-center gap-2 font-semibold rounded-xl transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg ${
                   isHero
-                    ? "px-6 py-3 text-sm bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25"
+                    ? "px-6 py-3 text-sm bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] text-white shadow-lg shadow-[#FF6A1A]/30"
                     : "px-5 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20"
                 }`}
               >
@@ -276,8 +276,8 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
                     }`}
                     style={{
                       backgroundImage: isHero
-                        ? "linear-gradient(135deg, #06b6d4, #8b5cf6)"
-                        : "linear-gradient(135deg, #3b82f6, #06b6d4)",
+                        ? "linear-gradient(135deg, #FF6A1A, #FFB382)"
+                        : "linear-gradient(135deg, #E8530A, #FF6A1A)",
                     }}
                   >
                     25%

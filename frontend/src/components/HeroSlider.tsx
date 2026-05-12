@@ -25,7 +25,7 @@ const HeroSlider: React.FC = () => {
       description: t("Discover laptops, cameras, and IT gear from the world's leading brands at wholesale prices."),
       buttonText: t("Shop Now"),
       buttonLink: "/products",
-      accentColor: "from-blue-600 to-cyan-500",
+      accentColor: "from-[#FF6A1A] to-[#E8530A]",
       icon: "💻",
     },
     {
@@ -35,7 +35,7 @@ const HeroSlider: React.FC = () => {
       description: t("Professional DSLR, mirrorless cameras, and lenses from Canon, Sony, and Nikon."),
       buttonText: t("Explore Cameras"),
       buttonLink: "/products?category=cameras",
-      accentColor: "from-purple-600 to-pink-500",
+      accentColor: "from-[#FFB382] to-[#FF6A1A]",
       icon: "📸",
     },
     {
@@ -45,7 +45,7 @@ const HeroSlider: React.FC = () => {
       description: t("Routers, switches, and access points for home and enterprise. Bulk pricing available."),
       buttonText: t("View Products"),
       buttonLink: "/products?category=networking",
-      accentColor: "from-emerald-600 to-teal-500",
+      accentColor: "from-[#E8530A] to-[#0B0B10]",
       icon: "🌐",
     },
   ];

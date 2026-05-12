@@ -86,11 +86,13 @@ const SectionHeader: React.FC<{
 };
 
 /* ─── Bundle Themes ─── */
+// Warm orange spectrum derived from the Belgomla palette
+// (orange #FF6A1A, orangeDeep #E8530A, orangeSoft #FFB382, ink #0B0B10).
 const bundleThemes = [
-  { gradient: "from-rose-500 to-orange-500", badge: "📸" },
-  { gradient: "from-blue-500 to-indigo-600", badge: "💼" },
-  { gradient: "from-purple-500 to-pink-600", badge: "🎮" },
-  { gradient: "from-teal-500 to-cyan-600", badge: "🌐" },
+  { gradient: "from-[#FF6A1A] to-[#E8530A]", badge: "📸" },
+  { gradient: "from-[#FFB382] to-[#FF6A1A]", badge: "💼" },
+  { gradient: "from-[#E8530A] to-[#FF6A1A]", badge: "🎮" },
+  { gradient: "from-[#FF6A1A] to-[#0B0B10]", badge: "🌐" },
 ];
 
 /* ═════════════════════ Main Page ═════════════════════ */
