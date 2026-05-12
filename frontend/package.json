@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --config vite.config.ts",
     "dev:watch": "nodemon --exec \"npm run dev\"",
-    "build": "tsc -b && vite build --config vite.config.ts",
+    "build": "vite build --config vite.config.ts",
+    "build:typecheck": "tsc -b && vite build --config vite.config.ts",
     "lint": "eslint .",
     "preview": "vite preview --config vite.config.ts"
   },
