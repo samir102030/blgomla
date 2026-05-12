@@ -291,21 +291,23 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
         <SectionToggle section="price" title={t("Price Range (EGP)")} />
         {expandedSections.price && (
           <div className="px-3 pb-3">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <input
                 type="number"
+                inputMode="numeric"
                 placeholder={t("Min")}
                 value={filters.minPrice}
                 onChange={(e) => handlePriceChange("minPrice", e.target.value)}
-                className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg text-sm bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all"
+                className="min-w-0 flex-1 px-2 py-2 border border-[var(--border)] rounded-lg text-sm bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <span className="text-[var(--text-muted)] text-sm">—</span>
+              <span className="shrink-0 text-[var(--text-muted)] text-sm">—</span>
               <input
                 type="number"
+                inputMode="numeric"
                 placeholder={t("Max")}
                 value={filters.maxPrice}
                 onChange={(e) => handlePriceChange("maxPrice", e.target.value)}
-                className="flex-1 px-3 py-2 border border-[var(--border)] rounded-lg text-sm bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all"
+                className="min-w-0 flex-1 px-2 py-2 border border-[var(--border)] rounded-lg text-sm bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
             {/* Quick price presets */}
