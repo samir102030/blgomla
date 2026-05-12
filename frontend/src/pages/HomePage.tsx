@@ -448,7 +448,7 @@ const HomePage: React.FC = () => {
                             {(collection.items || []).slice(0, 3).map((item: any, i: number) => (
                               <div
                                 key={i}
-                                className="w-8 h-8 rounded-lg bg-[var(--bg)] border border-[var(--border)] overflow-hidden"
+                                className="w-8 h-8 rounded-lg bg-white border border-[var(--border)] overflow-hidden"
                               >
                                 <img
                                   src={item.product?.images?.[0]?.url || "/placeholder.png"}

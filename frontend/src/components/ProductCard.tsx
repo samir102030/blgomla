@@ -162,8 +162,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
       </button>
 
-      {/* Product Image */}
-      <div className="relative flex justify-center p-4 sm:p-5 flex-grow img-zoom bg-[var(--surface-2)]/50">
+      {/* Product Image — always on a light background, even in dark mode, so
+          product photos (typically shot on white) blend in instead of glowing. */}
+      <div className="relative flex justify-center p-4 sm:p-5 flex-grow img-zoom bg-white rounded-t-2xl">
         {!imgLoaded && (
           <div className="absolute inset-0 animate-shimmer rounded-t-2xl" />
         )}

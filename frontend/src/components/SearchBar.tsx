@@ -200,7 +200,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
                           : "hover:bg-[var(--surface-2)]"
                       }`}
                     >
-                      <div className="w-10 h-10 rounded-lg bg-[var(--surface-2)] flex-shrink-0 overflow-hidden">
+                      <div className="w-10 h-10 rounded-lg bg-white flex-shrink-0 overflow-hidden">
                         {product.images?.[0]?.url ? (
                           <img
                             src={product.images[0].url}
