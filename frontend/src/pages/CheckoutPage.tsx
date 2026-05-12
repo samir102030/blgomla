@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import PleaseLogin from "../components/PleaseLogin";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
@@ -569,28 +570,7 @@ const CheckoutPage: React.FC = () => {
   };
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Please Login to Continue
-            </h2>
-            <p className="text-gray-600 mb-6">
-              You need to be logged in to checkout.
-            </p>
-            <Link
-              to="/login"
-              className="bg-[#FFD600] text-[#333333] px-6 py-3 rounded-md hover:bg-[#e6c100] font-medium"
-            >
-              Login
-            </Link>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
+    return <PleaseLogin />;
   }
 
   if (cartItems.length === 0 && !loading) {

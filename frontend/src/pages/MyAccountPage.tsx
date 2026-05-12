@@ -54,7 +54,7 @@ const MyAccountPage: React.FC = () => {
     setSidebarOpen(false);
   };
 
-  if (!user) return <><Header /><PleaseLogin /><Footer /></>;
+  if (!user) return <PleaseLogin />;
 
   const memberSince = user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "";
 

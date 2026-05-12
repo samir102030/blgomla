@@ -176,6 +176,8 @@ const WishlistPage: React.FC = () => {
     );
   };
 
+  if (!user) return <PleaseLogin />;
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <Header />
@@ -219,9 +221,7 @@ const WishlistPage: React.FC = () => {
 
       <main className="py-8 lg:py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {!user ? (
-            <PleaseLogin />
-          ) : userLoading && lovedProducts.length === 0 ? (
+          {userLoading && lovedProducts.length === 0 ? (
             <div className="text-center py-20">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--surface-2)] mb-4 animate-pulse">
                 <span className="text-3xl">❤️</span>
