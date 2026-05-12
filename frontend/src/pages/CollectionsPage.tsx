@@ -8,13 +8,14 @@ import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
 
 /* ─── gradient accents per bundle ─── */
+// Belgomla orange spectrum — keep all tiles on-brand instead of a rainbow.
 const bundleThemes = [
-  { gradient: "from-rose-500 to-orange-500", badge: "📸", tagline: "For Creators" },
-  { gradient: "from-blue-500 to-indigo-600", badge: "💼", tagline: "For Business" },
-  { gradient: "from-purple-500 to-pink-600", badge: "🎮", tagline: "For Gamers" },
-  { gradient: "from-teal-500 to-cyan-600", badge: "🌐", tagline: "For Networks" },
-  { gradient: "from-amber-500 to-yellow-600", badge: "⭐", tagline: "Featured" },
-  { gradient: "from-emerald-500 to-green-600", badge: "🔥", tagline: "Hot Deal" },
+  { gradient: "from-[#FF6A1A] to-[#E8530A]", badge: "📸", tagline: "For Creators" },
+  { gradient: "from-[#FFB382] to-[#FF6A1A]", badge: "💼", tagline: "For Business" },
+  { gradient: "from-[#E8530A] to-[#FF6A1A]", badge: "🎮", tagline: "For Gamers" },
+  { gradient: "from-[#FF6A1A] to-[#0B0B10]", badge: "🌐", tagline: "For Networks" },
+  { gradient: "from-[#FFB382] to-[#E8530A]", badge: "⭐", tagline: "Featured" },
+  { gradient: "from-[#E8530A] to-[#0B0B10]", badge: "🔥", tagline: "Hot Deal" },
 ];
 
 const CollectionsPage: React.FC = () => {

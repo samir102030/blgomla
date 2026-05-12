@@ -1440,11 +1440,11 @@ const VendorRegistrationPage: React.FC = () => {
       <main className="min-h-screen bg-[var(--bg)]">
 
         {/* ═══════ HERO SECTION ═══════ */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-[#1e1b4b] to-slate-900 py-14 sm:py-20">
+        <section className="relative overflow-hidden bg-gradient-to-br from-[#15151C] via-[#0B0B10] to-[#15151C] py-14 sm:py-20">
           {/* Ambient orbs */}
           <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 right-[20%] w-72 h-72 bg-[var(--brand-primary)] rounded-full opacity-[0.07] blur-3xl" />
-            <div className="absolute bottom-0 left-[15%] w-64 h-64 bg-purple-500 rounded-full opacity-[0.06] blur-3xl" />
+            <div className="absolute bottom-0 left-[15%] w-64 h-64 bg-[var(--brand-accent)] rounded-full opacity-[0.06] blur-3xl" />
           </div>
           {/* Grid */}
           <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
@@ -1459,7 +1459,7 @@ const VendorRegistrationPage: React.FC = () => {
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
               {t("vendorRegistration.heroTitle", "Grow Your Business")}
-              <span className="block bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-[#FF6A1A] to-[#FFB382] bg-clip-text text-transparent">
                 {t("vendorRegistration.heroTitleAccent", "with Belgomla")}
               </span>
             </h1>

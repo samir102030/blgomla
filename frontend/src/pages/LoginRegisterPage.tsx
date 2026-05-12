@@ -95,7 +95,7 @@ const LoginRegisterPage: React.FC = () => {
 
             {/* ===== LEFT: BRANDING PANEL ===== */}
             <div className="hidden lg:flex lg:col-span-2 flex-col h-full">
-              <div className="relative flex-1 rounded-3xl overflow-hidden bg-gradient-to-br from-[var(--brand-primary)] via-[var(--brand-accent)] to-rose-500 p-8 flex flex-col justify-between" style={{ minHeight: '520px' }}>
+              <div className="relative flex-1 rounded-3xl overflow-hidden bg-gradient-to-br from-[var(--brand-primary)] via-[var(--brand-accent)] to-[#0B0B10] p-8 flex flex-col justify-between" style={{ minHeight: '520px' }}>
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA1Ij48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-60"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-8">
