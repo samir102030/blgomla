@@ -14,6 +14,7 @@ import {
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import ThemeToggle from "./ThemeToggle";
+import Logo, { BRAND } from "./Logo";
 
 interface NavigationItem {
   label: string;
@@ -239,16 +240,18 @@ const Header: React.FC = () => {
       {/* Main header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-18 gap-4">
-          {/* Logo */}
+          {/* Logo — Belgomla MarkBag (geometric B with bag handle) + wordmark */}
           <Link
             to="/"
             className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0"
+            aria-label="Belgomla home"
           >
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center text-white font-bold text-lg shadow-md">
-              B
-            </div>
-            <span className="text-lg sm:text-xl font-bold text-[var(--text)] hidden sm:inline tracking-tight">
-              Belgomla
+            <Logo size={32} color={BRAND.orange} />
+            <span
+              className="text-xl sm:text-2xl font-semibold text-[var(--text)] hidden sm:inline lowercase"
+              style={{ letterSpacing: "-0.045em", lineHeight: 0.9 }}
+            >
+              belgomla
             </span>
           </Link>
 

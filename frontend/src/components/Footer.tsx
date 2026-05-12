@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import Logo, { BRAND } from "./Logo";
 
 const Footer: React.FC = () => {
   const { t } = useTranslation();
@@ -34,12 +35,13 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-center text-white font-bold text-lg shadow-md">
-                B
-              </div>
-              <span className="text-lg font-bold tracking-tight">
-                Belgomla
+            <Link to="/" className="flex items-center gap-2.5 mb-4" aria-label="Belgomla home">
+              <Logo size={32} color={BRAND.orange} />
+              <span
+                className="text-2xl font-semibold lowercase text-white"
+                style={{ letterSpacing: "-0.045em", lineHeight: 0.9 }}
+              >
+                belgomla
               </span>
             </Link>
             <p className="text-sm text-white/70 leading-relaxed mb-5">
