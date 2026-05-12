@@ -34,21 +34,10 @@ async function main() {
     // Strip pack info for matching: "Deco X20(3-pack)" → "Deco X20"
     const baseModel = fullModel.split("(")[0].trim();
 
-    // Try exact match first, then base model
+    // Exact match on full model, then on base model (strip pack/variant suffix).
+    // No substring fallback — it silently picks wrong images for models that share a prefix
+    // (e.g. DS-2CD1027G2H-LIU is a prefix of DS-2CD1027G2H-LIUF/SL).
     let imageUrl = imageMap[fullModel] || imageMap[baseModel];
-
-    if (!imageUrl) {
-      // Try matching by iterating through the map keys
-      const mapKey = Object.keys(imageMap).find((k) => {
-        const kBase = k.split("(")[0].trim();
-        return (
-          kBase === baseModel ||
-          fullModel.includes(k) ||
-          k.includes(baseModel)
-        );
-      });
-      if (mapKey) imageUrl = imageMap[mapKey];
-    }
 
     if (imageUrl) {
       const currentUrl = product.images?.[0]?.url;
