@@ -56,3 +56,8 @@ Thumbs.db
 
 # Optional npm cache
 .npm
+
+# Confidential supplier data
+products/*.pdf
+products/products_data.json
+
