@@ -190,12 +190,17 @@ const HomePage: React.FC = () => {
       </div>
     ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 stagger-children">
-        {(products || []).slice(0, count).map((product) => (
+        {(products || []).slice(0, count).map((product) => {
+          const discounted =
+            product.saleActive && product.salePercentage
+              ? product.price * (1 - product.salePercentage / 100)
+              : product.salePrice ?? product.price;
+          return (
           <ProductCard
             key={product._id}
             id={product._id}
             name={product.name}
-            price={product.saleActive && product.salePrice ? product.salePrice : product.price}
+            price={discounted}
             currency="EGP"
             originalPrice={product.saleActive ? product.price : undefined}
             image={product.images?.[0]?.url || "/placeholder.png"}
@@ -212,7 +217,7 @@ const HomePage: React.FC = () => {
             isInStock={product.stock > 0}
             stock={product.stock}
           />
-        ))}
+        );})}
       </div>
     );
 
