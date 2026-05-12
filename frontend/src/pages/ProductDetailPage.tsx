@@ -317,7 +317,7 @@ const ProductDetailPage: React.FC = () => {
   const specifications = [
     product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
     product.category ? `Category: ${product.category}` : undefined,
-    `Price: $${baseUnitPrice.toFixed(2)}`,
+    `Price: $${(baseUnitPrice ?? 0).toFixed(2)}`,
     ...(product.features || []).map((f) => `Feature: ${f}`),
     ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),
   ].filter(Boolean);
@@ -439,14 +439,14 @@ const ProductDetailPage: React.FC = () => {
               <div className="mb-6">
                 <div className="flex items-center space-x-3 flex-wrap">
                   <span className="text-3xl font-bold text-gray-900">
-                    ${unitPrice.toFixed(2)}
+                    ${(unitPrice ?? 0).toFixed(2)}
                   </span>
                   {product.saleActive &&
                     product.salePercentage &&
                     product.salePercentage > 0 && (
                     <>
                       <span className="text-xl text-gray-500 line-through">
-                        ${product.price.toFixed(2)}
+                        ${(product.price ?? 0).toFixed(2)}
                       </span>
                       <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
                         Sale ({product.salePercentage}% off)
@@ -457,14 +457,14 @@ const ProductDetailPage: React.FC = () => {
                     applicableRule &&
                     unitPrice < baseUnitPrice && (
                       <span className="text-xl text-gray-500 line-through">
-                        ${baseUnitPrice.toFixed(2)}
+                        ${(baseUnitPrice ?? 0).toFixed(2)}
                       </span>
                     )}
                 </div>
                 {applicableRule && (
                   <p className="mt-2 text-sm text-green-700">
                     Bulk price applied: {applicableRule.minQty}+ units at $
-                    {applicableRule.unitPrice.toFixed(2)} each.
+                    {(applicableRule.unitPrice ?? 0).toFixed(2)} each.
                   </p>
                 )}
               </div>
@@ -532,7 +532,7 @@ const ProductDetailPage: React.FC = () => {
                           >
                             <td className="px-4 py-2">{rule.minQty}</td>
                             <td className="px-4 py-2">
-                              ${rule.unitPrice.toFixed(2)}
+                              ${(rule.unitPrice ?? 0).toFixed(2)}
                             </td>
                           </tr>
                         ))}
