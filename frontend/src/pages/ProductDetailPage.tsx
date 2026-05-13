@@ -8,11 +8,13 @@ import { useUserStore } from "../stores/user.store";
 import { useBrandStore } from "../stores/brand.store";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { ProductReview } from "../types/product.type";
 import { getBulkPricing } from "../lib/pricing";
 import { cldImg, cldSrcSet } from "../lib/cldImage";
 
 const ProductDetailPage: React.FC = () => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState("description");
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
@@ -144,12 +146,12 @@ const ProductDetailPage: React.FC = () => {
   const handleSubmitReview = async () => {
     if (!editingReview && !canReview) {
       toast.error(
-        "Only customers who purchased this product can leave a review"
+        t("Only customers who purchased this product can leave a review.")
       );
       return;
     }
     if (!productId || !reviewComment.trim()) {
-      toast.error("Please provide a comment for your review");
+      toast.error(t("Please provide a comment for your review"));
       return;
     }
 
@@ -159,13 +161,13 @@ const ProductDetailPage: React.FC = () => {
           rating: reviewRating,
           comment: reviewComment,
         });
-        toast.success("Review updated successfully!");
+        toast.success(t("Review updated successfully!"));
       } else {
         await addReview(productId, {
           rating: reviewRating,
           comment: reviewComment,
         });
-        toast.success("Review added successfully!");
+        toast.success(t("Review added successfully!"));
       }
 
       // Refetch the product to ensure we have the latest data
@@ -177,7 +179,7 @@ const ProductDetailPage: React.FC = () => {
       setEditingReview(null);
     } catch (error) {
       console.error("Failed to submit review:", error);
-      toast.error("Failed to submit review");
+      toast.error(t("Failed to submit review"));
     }
   };
 
@@ -195,13 +197,13 @@ const ProductDetailPage: React.FC = () => {
 
     try {
       await deleteReview(productId, reviewId);
-      toast.success("Review deleted successfully!");
+      toast.success(t("Review deleted successfully!"));
 
       // Refetch the product to ensure we have the latest data
       await fetchProductById(productId);
     } catch (error) {
       console.error("Failed to delete review:", error);
-      toast.error("Failed to delete review");
+      toast.error(t("Failed to delete review"));
     }
   };
 
@@ -226,28 +228,28 @@ const ProductDetailPage: React.FC = () => {
       await toggleLoveProduct(productId);
       await getLovedProducts();
       toast.success(
-        isProductLoved() ? "Removed from wishlist" : "Added to wishlist"
+        isProductLoved() ? t("Removed from wishlist") : t("Added to wishlist")
       );
     } catch (error) {
       console.error("Failed to update wishlist:", error);
-      toast.error("Failed to update wishlist");
+      toast.error(t("Failed to update wishlist"));
     }
   };
 
   const handleAddToCart = async () => {
     if (!productId) return;
     if (isOutOfStock) {
-      toast.error("Product is currently out of stock.");
+      toast.error(t("Product is currently out of stock."));
       return;
     }
 
     try {
       await addToCart(productId, quantity);
       await fetchCart(); // Update user store cart
-      toast.success("Product added to cart successfully!");
+      toast.success(t("Product added to cart successfully!"));
     } catch (error) {
       console.error("Failed to add product to cart:", error);
-      toast.error("Failed to add product to cart");
+      toast.error(t("Failed to add product to cart"));
     }
   };
 
@@ -258,7 +260,7 @@ const ProductDetailPage: React.FC = () => {
   if (loading && !product) {
     return (
       <div className="min-h-screen bg-[var(--surface)] flex items-center justify-center">
-        <span className="text-lg text-[var(--text-muted)]">Loading...</span>
+        <span className="text-lg text-[var(--text-muted)]">{t("Loading...")}</span>
       </div>
     );
   }
@@ -270,16 +272,16 @@ const ProductDetailPage: React.FC = () => {
         <main className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-2xl font-bold text-[var(--text)] mb-4">
-              Product Not Found
+              {t("Product Not Found")}
             </h1>
             <p className="text-[var(--text-muted)] mb-8">
-              The product you're looking for doesn't exist.
+              {t("The product you're looking for doesn't exist.")}
             </p>
             <Link
               to="/brands"
               className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700"
             >
-              Browse Products
+              {t("Browse Products")}
             </Link>
           </div>
         </main>
@@ -303,9 +305,9 @@ const ProductDetailPage: React.FC = () => {
   const isOutOfStock = stockValue === 0;
   const stockBadgeText = hasStockAvailability
     ? stockValue <= 5
-      ? `Only ${stockValue} left in stock`
-      : "In Stock"
-    : "Out of Stock";
+      ? t("Only {{count}} left in stock", { count: stockValue })
+      : t("In Stock")
+    : t("Out of Stock");
   const stockBadgeClasses = hasStockAvailability
     ? "text-emerald-700 bg-emerald-50 border border-emerald-100"
     : "text-red-700 bg-red-50 border border-red-100";
@@ -325,10 +327,10 @@ const ProductDetailPage: React.FC = () => {
   };
 
   const specifications = [
-    product.brand ? `Brand: ${getBrandName(product.brand)}` : undefined,
-    product.category ? `Category: ${getCategoryName(product.category)}` : undefined,
-    `Price: ${(baseUnitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP`,
-    ...(product.features || []).map((f) => `Feature: ${f}`),
+    product.brand ? t("Brand: {{name}}", { name: getBrandName(product.brand) }) : undefined,
+    product.category ? t("Category: {{name}}", { name: getCategoryName(product.category) }) : undefined,
+    t("Price: {{price}} EGP", { price: (baseUnitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 }) }),
+    ...(product.features || []).map((f) => t("Feature: {{feature}}", { feature: f })),
     ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),
   ].filter(Boolean);
 
@@ -344,7 +346,10 @@ const ProductDetailPage: React.FC = () => {
         totalQuantity > product.stock
       ) {
         toast.error(
-          `Only ${product.stock} items available in stock. You already have ${currentCartQuantity} in cart.`
+          t("Only {{stock}} items available in stock. You already have {{cart}} in cart.", {
+            stock: product.stock,
+            cart: currentCartQuantity,
+          })
         );
         return;
       }
@@ -380,11 +385,11 @@ const ProductDetailPage: React.FC = () => {
       <main className="py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
-          <nav className="flex mb-8" aria-label="Breadcrumb">
+          <nav className="flex mb-8" aria-label={t("Breadcrumb")}>
             <ol className="flex items-center space-x-4">
               <li>
                 <Link to="/" className="text-[var(--text-subtle)] hover:text-[var(--text)]">
-                  Home
+                  {t("Home")}
                 </Link>
               </li>
               <li>
@@ -395,7 +400,7 @@ const ProductDetailPage: React.FC = () => {
                   to="/brands"
                   className="text-[var(--text-subtle)] hover:text-[var(--text)]"
                 >
-                  Products
+                  {t("Products")}
                 </Link>
               </li>
               <li>
@@ -456,7 +461,7 @@ const ProductDetailPage: React.FC = () => {
                   {renderStars(Math.floor(product.rating))}
                 </div>
                 <span className="ml-2 text-[var(--text-muted)]">
-                  ({getVisibleReviewCount()} reviews)
+                  {t("({{count}} reviews)", { count: getVisibleReviewCount() })}
                 </span>
               </div>
 
@@ -465,17 +470,17 @@ const ProductDetailPage: React.FC = () => {
                 <div className="flex items-center space-x-3 flex-wrap">
                   <span className="text-3xl font-bold text-[var(--text)]">
                     {(unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })}
-                    <span className="text-base font-medium text-[var(--text-subtle)] ml-1">EGP</span>
+                    <span className="text-base font-medium text-[var(--text-subtle)] ml-1">{t("EGP")}</span>
                   </span>
                   {product.saleActive &&
                     product.salePercentage &&
                     product.salePercentage > 0 && (
                     <>
                       <span className="text-xl text-[var(--text-subtle)] line-through">
-                        {(product.price ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                        {(product.price ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                       </span>
                       <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                        Sale ({product.salePercentage}% off)
+                        {t("Sale ({{percent}}% off)", { percent: product.salePercentage })}
                       </span>
                     </>
                   )}
@@ -483,14 +488,16 @@ const ProductDetailPage: React.FC = () => {
                     applicableRule &&
                     unitPrice < baseUnitPrice && (
                       <span className="text-xl text-[var(--text-subtle)] line-through">
-                        {(baseUnitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                        {(baseUnitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                       </span>
                     )}
                 </div>
                 {applicableRule && (
                   <p className="mt-2 text-sm text-green-700">
-                    Bulk price applied: {applicableRule.minQty}+ units at{" "}
-                    {(applicableRule.unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP each.
+                    {t("Bulk price applied: {{min}}+ units at {{price}} EGP each.", {
+                      min: applicableRule.minQty,
+                      price: (applicableRule.unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 }),
+                    })}
                   </p>
                 )}
               </div>
@@ -504,7 +511,7 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Specifications */}
               <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4">Specifications</h3>
+                <h3 className="text-lg font-semibold mb-4">{t("Specifications")}</h3>
                 <ul className="space-y-2">
                   {specifications.map((spec, index) => (
                     <li key={index} className="flex items-center">
@@ -518,7 +525,7 @@ const ProductDetailPage: React.FC = () => {
               {/* Tags */}
               {product.tags && product.tags.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4">Tags</h3>
+                  <h3 className="text-lg font-semibold mb-4">{t("Tags")}</h3>
                   <div className="flex flex-wrap gap-2">
                     {product.tags.map((tag, index) => (
                       <span
@@ -535,15 +542,15 @@ const ProductDetailPage: React.FC = () => {
               {/* Bulk Pricing */}
               {rules.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4">Bulk Pricing</h3>
+                  <h3 className="text-lg font-semibold mb-4">{t("Bulk Pricing")}</h3>
                   <div className="overflow-hidden border border-[var(--border)] rounded-lg">
                     <table className="min-w-full text-sm">
                       <thead className="bg-[var(--bg)] text-[var(--text-muted)]">
                         <tr>
                           <th className="px-4 py-2 text-left">
-                            Buy At Least
+                            {t("Buy At Least")}
                           </th>
-                          <th className="px-4 py-2 text-left">Unit Price</th>
+                          <th className="px-4 py-2 text-left">{t("Unit Price")}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--border)]">
@@ -558,7 +565,7 @@ const ProductDetailPage: React.FC = () => {
                           >
                             <td className="px-4 py-2">{rule.minQty}</td>
                             <td className="px-4 py-2">
-                              {(rule.unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                              {(rule.unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                             </td>
                           </tr>
                         ))}
@@ -571,7 +578,7 @@ const ProductDetailPage: React.FC = () => {
               {/* Quantity */}
               <div className="mb-8">
                 <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-                  Quantity:
+                  {t("Quantity:")}
                 </label>
                 <div className="flex items-center space-x-3">
                   <button
@@ -595,7 +602,7 @@ const ProductDetailPage: React.FC = () => {
                   </button>
                   {isProductInCart() && (
                     <span className="text-sm text-[var(--text-subtle)] ml-2">
-                      Go to cart to change quantity
+                      {t("Go to cart to change quantity")}
                     </span>
                   )}
                 </div>
@@ -615,12 +622,12 @@ const ProductDetailPage: React.FC = () => {
                   } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {loading
-                    ? "Adding..."
+                    ? t("Adding...")
                     : isProductInCart()
-                    ? "In Cart"
+                    ? t("In Cart")
                     : isOutOfStock
-                    ? "Out of Stock"
-                    : "Add to Cart"}
+                    ? t("Out of Stock")
+                    : t("Add to Cart")}
                 </button>
                 <button
                   onClick={handleLoveProduct}
@@ -631,8 +638,8 @@ const ProductDetailPage: React.FC = () => {
                     } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isProductLoved()
-                    ? "❤️ Remove from Wishlist"
-                    : "❤️ Add to Wishlist"}
+                    ? t("❤️ Remove from Wishlist")
+                    : t("❤️ Add to Wishlist")}
                 </button>
               </div>
 
@@ -640,8 +647,7 @@ const ProductDetailPage: React.FC = () => {
               {isProductInCart() && (
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-green-800 text-sm">
-                    This item is already in your cart ({getCartQuantity()}{" "}
-                    quantity)
+                    {t("This item is already in your cart ({{count}} quantity)", { count: getCartQuantity() })}
                   </p>
                 </div>
               )}
@@ -658,7 +664,7 @@ const ProductDetailPage: React.FC = () => {
                   }`}
                 onClick={() => setTab("description")}
               >
-                Description
+                {t("Description")}
               </button>
               <button
                 className={`pb-4 text-2xl font-bold text-[var(--text)] border-b-2 transition-colors ${tab === "reviews"
@@ -667,7 +673,7 @@ const ProductDetailPage: React.FC = () => {
                   }`}
                 onClick={() => setTab("reviews")}
               >
-                Reviews
+                {t("Reviews")}
               </button>
             </div>
             <div className="py-8">
@@ -692,32 +698,31 @@ const ProductDetailPage: React.FC = () => {
                               }`}
                           >
                             {checkingEligibility
-                              ? "Checking eligibility..."
-                              : "Write a Review"}
+                              ? t("Checking eligibility...")
+                              : t("Write a Review")}
                           </button>
                           {!canReview && !checkingEligibility && (
                             <span className="text-sm text-[var(--text-muted)] bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2">
-                              Only customers who purchased this product can
-                              leave a review.
+                              {t("Only customers who purchased this product can leave a review.")}
                             </span>
                           )}
                         </div>
                       ) : (
                         <div className="mb-6 p-4 bg-[var(--bg)] rounded-md">
                           <p className="text-[var(--text-muted)] mb-2">
-                            You have already reviewed this product.
+                            {t("You have already reviewed this product.")}
                           </p>
                           <button
                             onClick={() => handleEditReview(userReview!)}
                             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 mr-2"
                           >
-                            Edit Review
+                            {t("Edit Review")}
                           </button>
                           <button
                             onClick={() => handleDeleteReview(userReview!._id)}
                             className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
                           >
-                            Delete Review
+                            {t("Delete Review")}
                           </button>
                         </div>
                       )}
@@ -725,13 +730,13 @@ const ProductDetailPage: React.FC = () => {
                       {showReviewForm && (
                         <div className="bg-[var(--bg)] p-6 rounded-md mb-6">
                           <h3 className="text-lg font-semibold mb-4">
-                            {editingReview ? "Edit Review" : "Write a Review"}
+                            {editingReview ? t("Edit Review") : t("Write a Review")}
                           </h3>
 
                           {/* Rating */}
                           <div className="mb-4">
                             <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-                              Rating:
+                              {t("Rating:")}
                             </label>
                             <div className="flex space-x-1">
                               {[1, 2, 3, 4, 5].map((star) => (
@@ -752,14 +757,14 @@ const ProductDetailPage: React.FC = () => {
                           {/* Comment */}
                           <div className="mb-4">
                             <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
-                              Comment:
+                              {t("Comment:")}
                             </label>
                             <textarea
                               value={reviewComment}
                               onChange={(e) => setReviewComment(e.target.value)}
                               className="w-full p-3 border border-[var(--border)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               rows={4}
-                              placeholder="Share your experience with this product..."
+                              placeholder={t("Share your experience with this product...")}
                             />
                           </div>
 
@@ -770,14 +775,14 @@ const ProductDetailPage: React.FC = () => {
                               className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
                             >
                               {editingReview
-                                ? "Update Review"
-                                : "Submit Review"}
+                                ? t("Update Review")
+                                : t("Submit Review")}
                             </button>
                             <button
                               onClick={handleCancelReview}
                               className="bg-gray-500 text-white px-6 py-2 rounded-md hover:bg-gray-600"
                             >
-                              Cancel
+                              {t("Cancel")}
                             </button>
                           </div>
                         </div>
@@ -786,13 +791,13 @@ const ProductDetailPage: React.FC = () => {
                   ) : (
                     <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
                       <p className="text-blue-800 mb-3">
-                        Please log in to write a review for this product.
+                        {t("Please log in to write a review for this product.")}
                       </p>
                       <Link
                         to="/login"
                         className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
                       >
-                        Login to Review
+                        {t("Login to Review")}
                       </Link>
                     </div>
                   )}
@@ -809,11 +814,11 @@ const ProductDetailPage: React.FC = () => {
                                   review.user.profilePicture ||
                                   "https://cdn-icons-png.flaticon.com/512/12808/12808894.png"
                                 }
-                                alt={review.user.name || "User Avatar"}
+                                alt={review.user.name || t("User Avatar")}
                                 className="w-10 h-10 rounded-full mr-3"
                               />
                               <span className="font-semibold text-[var(--text)] mr-2">
-                                {review.user.name || "Anonymous"}
+                                {review.user.name || t("Anonymous")}
                               </span>
                               <span className="text-yellow-400">
                                 {"★".repeat(review.rating)}
@@ -824,7 +829,7 @@ const ProductDetailPage: React.FC = () => {
                                 review.user._id === user._id &&
                                 review.isVisible === false && (
                                   <span className="ml-2 bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                    Hidden
+                                    {t("Hidden")}
                                   </span>
                                 )}
                             </div>
@@ -836,13 +841,13 @@ const ProductDetailPage: React.FC = () => {
                                   onClick={() => handleEditReview(review)}
                                   className="text-blue-600 hover:text-blue-700 text-sm"
                                 >
-                                  Edit
+                                  {t("Edit")}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteReview(review._id)}
                                   className="text-red-600 hover:text-red-700 text-sm"
                                 >
-                                  Delete
+                                  {t("Delete")}
                                 </button>
                               </div>
                             )}
@@ -857,7 +862,7 @@ const ProductDetailPage: React.FC = () => {
                       ))}
                     </ul>
                   ) : (
-                    <div className="text-[var(--text-subtle)]">No reviews yet.</div>
+                    <div className="text-[var(--text-subtle)]">{t("No reviews yet.")}</div>
                   )}
                 </div>
               )}
