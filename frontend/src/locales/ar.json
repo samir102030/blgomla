@@ -2236,5 +2236,9 @@
   "Please login to add items to wishlist": "يرجى تسجيل الدخول لإضافة المنتجات إلى المفضلة",
   "Quick View": "عرض سريع",
   "left": "متبقي",
-  "D": "يوم"
+  "D": "يوم",
+  "brand": {
+    "wordmark": "بلجملا",
+    "homeLabel": "الصفحة الرئيسية لبلجملا"
+  }
 }

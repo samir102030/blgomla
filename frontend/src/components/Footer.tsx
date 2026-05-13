@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Logo, { BRAND } from "./Logo";
 
 const Footer: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const footerLinks = {
     shop: [
@@ -35,13 +35,19 @@ const Footer: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10">
           {/* Brand */}
           <div>
-            <Link to="/" className="flex items-center gap-2.5 mb-4" aria-label="Belgomla home">
+            <Link to="/" className="flex items-center gap-2.5 mb-4" aria-label={t("brand.homeLabel", "Belgomla home")}>
               <Logo size={32} color={BRAND.orange} />
               <span
-                className="text-2xl font-semibold lowercase text-white"
-                style={{ letterSpacing: "-0.045em", lineHeight: 0.9 }}
+                className={`text-2xl font-semibold text-white ${
+                  i18n.language === "ar" ? "" : "lowercase"
+                }`}
+                style={
+                  i18n.language === "ar"
+                    ? { lineHeight: 1 }
+                    : { letterSpacing: "-0.045em", lineHeight: 0.9 }
+                }
               >
-                belgomla
+                {t("brand.wordmark", "belgomla")}
               </span>
             </Link>
             <p className="text-sm text-white/70 leading-relaxed mb-5">

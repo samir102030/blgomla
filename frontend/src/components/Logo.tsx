@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 // Belgomla brand tokens — kept here so the mark renders identically across
 // light/dark surfaces without depending on CSS variables.
@@ -25,6 +26,7 @@ const Logo: React.FC<LogoProps> = ({
   color = BRAND.orange,
   showHandle = true,
 }) => {
+  const { t } = useTranslation();
   return (
     <svg
       width={size}
@@ -32,7 +34,7 @@ const Logo: React.FC<LogoProps> = ({
       viewBox="0 0 160 180"
       className={className}
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="Belgomla"
+      aria-label={t("brand.wordmark", "Belgomla")}
       role="img"
     >
       {showHandle && (

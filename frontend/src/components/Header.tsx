@@ -267,14 +267,20 @@ const Header: React.FC = () => {
           <Link
             to="/"
             className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0"
-            aria-label="Belgomla home"
+            aria-label={t("brand.homeLabel", "Belgomla home")}
           >
             <Logo size={32} color={BRAND.orange} />
             <span
-              className="text-xl sm:text-2xl font-semibold text-[var(--text)] hidden sm:inline lowercase"
-              style={{ letterSpacing: "-0.045em", lineHeight: 0.9 }}
+              className={`text-xl sm:text-2xl font-semibold text-[var(--text)] hidden sm:inline ${
+                i18n.language === "ar" ? "" : "lowercase"
+              }`}
+              style={
+                i18n.language === "ar"
+                  ? { lineHeight: 1 }
+                  : { letterSpacing: "-0.045em", lineHeight: 0.9 }
+              }
             >
-              belgomla
+              {t("brand.wordmark", "belgomla")}
             </span>
           </Link>
 

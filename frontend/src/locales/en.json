@@ -2236,5 +2236,9 @@
   "Please login to add items to wishlist": "Please login to add items to wishlist",
   "Quick View": "Quick View",
   "left": "left",
-  "D": "D"
+  "D": "D",
+  "brand": {
+    "wordmark": "belgomla",
+    "homeLabel": "Belgomla home"
+  }
 }
