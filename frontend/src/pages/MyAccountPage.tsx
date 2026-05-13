@@ -39,13 +39,15 @@ const MyAccountPage: React.FC = () => {
     }
   }, [user?._id, fetchUserAddresses, fetchUserOrders, fetchVendorStore, fetchMyReturns, user?.role]);
 
-  const menuItems = [
+  type MenuItem = { id: string; label: string; icon: string; desc: string; href?: string };
+  const menuItems: MenuItem[] = [
     { id: "dashboard", label: t("account.dashboard", "Dashboard"), icon: "📊", desc: t("account.dashboardDesc", "Overview & stats") },
     { id: "orders", label: t("account.orders", "Orders"), icon: "📦", desc: t("account.ordersDesc", "Track & manage") },
     { id: "returns", label: t("account.returns", "Returns"), icon: "📤", desc: t("account.returnsDesc", "Return requests") },
     { id: "addresses", label: t("account.addresses", "Addresses"), icon: "📍", desc: t("account.addressesDesc", "Shipping info") },
     { id: "profile", label: t("account.accountDetails", "Profile"), icon: "👤", desc: t("account.profileDesc", "Personal info") },
     { id: "password", label: t("account.changePassword", "Password"), icon: "🔒", desc: t("account.passwordDesc", "Security settings") },
+    { id: "notifications", label: t("account.notifications", "Notifications"), icon: "🔔", desc: t("account.notificationsDesc", "Email & alert preferences"), href: "/account/notifications" },
     ...(user?.role === "store" ? [{ id: "store", label: t("account.myStore", "My Store"), icon: "🏪", desc: t("account.storeDesc", "Vendor panel") }] : []),
   ];
 
@@ -114,9 +116,15 @@ const MyAccountPage: React.FC = () => {
         {sidebarOpen && (
           <div className="border-t border-[var(--border)] bg-[var(--surface)] px-2 py-2 space-y-1 max-h-[60vh] overflow-y-auto">
             {menuItems.map((item) => (
-              <button key={item.id} onClick={() => handleMenuClick(item.id)} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 transition-all ${activeTab === item.id ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-semibold" : "text-[var(--text-muted)] hover:bg-[var(--surface-2)]"}`}>
-                <span className="text-base">{item.icon}</span>{item.label}
-              </button>
+              item.href ? (
+                <Link key={item.id} to={item.href} onClick={() => setSidebarOpen(false)} className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 transition-all text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
+                  <span className="text-base">{item.icon}</span>{item.label}
+                </Link>
+              ) : (
+                <button key={item.id} onClick={() => handleMenuClick(item.id)} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 transition-all ${activeTab === item.id ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-semibold" : "text-[var(--text-muted)] hover:bg-[var(--surface-2)]"}`}>
+                  <span className="text-base">{item.icon}</span>{item.label}
+                </button>
+              )
             ))}
             <hr className="border-[var(--border)] my-1" />
             <button onClick={() => { if (confirm(t("account.logoutConfirm", "Are you sure you want to logout?"))) logout(); }} className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
@@ -136,14 +144,24 @@ const MyAccountPage: React.FC = () => {
                 <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-2">
                   <nav className="space-y-0.5">
                     {menuItems.map((item) => (
-                      <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all group ${activeTab === item.id ? "bg-gradient-to-r from-[var(--brand-primary)]/10 to-[var(--brand-accent)]/5 border border-[var(--brand-primary)]/20" : "hover:bg-[var(--surface-2)]"}`}>
-                        <span className={`text-lg shrink-0 ${activeTab === item.id ? "scale-110" : "group-hover:scale-105"} transition-transform`}>{item.icon}</span>
-                        <div className="min-w-0">
-                          <div className={`text-sm font-medium ${activeTab === item.id ? "text-[var(--brand-primary)]" : "text-[var(--text)]"}`}>{item.label}</div>
-                          <div className="text-[10px] text-[var(--text-subtle)] truncate">{item.desc}</div>
-                        </div>
-                        {activeTab === item.id && <div className="ml-auto w-1.5 h-6 rounded-full bg-[var(--brand-primary)]"></div>}
-                      </button>
+                      item.href ? (
+                        <Link key={item.id} to={item.href} className="w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all group hover:bg-[var(--surface-2)]">
+                          <span className="text-lg shrink-0 group-hover:scale-105 transition-transform">{item.icon}</span>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-[var(--text)]">{item.label}</div>
+                            <div className="text-[10px] text-[var(--text-subtle)] truncate">{item.desc}</div>
+                          </div>
+                        </Link>
+                      ) : (
+                        <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all group ${activeTab === item.id ? "bg-gradient-to-r from-[var(--brand-primary)]/10 to-[var(--brand-accent)]/5 border border-[var(--brand-primary)]/20" : "hover:bg-[var(--surface-2)]"}`}>
+                          <span className={`text-lg shrink-0 ${activeTab === item.id ? "scale-110" : "group-hover:scale-105"} transition-transform`}>{item.icon}</span>
+                          <div className="min-w-0">
+                            <div className={`text-sm font-medium ${activeTab === item.id ? "text-[var(--brand-primary)]" : "text-[var(--text)]"}`}>{item.label}</div>
+                            <div className="text-[10px] text-[var(--text-subtle)] truncate">{item.desc}</div>
+                          </div>
+                          {activeTab === item.id && <div className="ml-auto w-1.5 h-6 rounded-full bg-[var(--brand-primary)]"></div>}
+                        </button>
+                      )
                     ))}
                   </nav>
                 </div>

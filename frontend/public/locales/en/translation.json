@@ -1738,5 +1738,7 @@
   "vendorAnalytics.colStatus": "Status",
   "vendorAnalytics.colApplied": "Applied",
   "vendorAnalytics.colCategory": "Category",
-  "vendorAnalytics.notSpecified": "Not specified"
+  "vendorAnalytics.notSpecified": "Not specified",
+  "account.notifications": "Notifications",
+  "account.notificationsDesc": "Email & alert preferences"
 }
