@@ -26,6 +26,7 @@ interface NavigationItem {
 const Header: React.FC = () => {
   const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
+  const logout = useUserStore((state) => state.logout);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -33,9 +34,28 @@ const Header: React.FC = () => {
   const [searching, setSearching] = useState(false);
   const [language, setLanguage] = useState(i18n.language);
   const [scrolled, setScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [userMenuOpen]);
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false);
+    await logout();
+    navigate("/");
+  };
 
   const goToProduct = (productId: string) => {
     navigate(`/product/${productId}`);
@@ -305,12 +325,61 @@ const Header: React.FC = () => {
                 <span className="hidden lg:block font-medium">{t("Login")}</span>
               </Link>
             )}
-            <Link
-              to="/account"
-              className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
-            >
-              <UserCircleIcon className="w-5 h-5" />
-            </Link>
+            {user ? (
+              <div ref={userMenuRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={userMenuOpen}
+                  className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
+                >
+                  <UserCircleIcon className="w-5 h-5" />
+                </button>
+                {userMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute ltr:right-0 rtl:left-0 mt-2 w-56 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden z-50"
+                  >
+                    <div className="px-3 py-2.5 border-b border-[var(--border)]">
+                      <p className="text-xs text-[var(--text-subtle)]">{t("Signed in as")}</p>
+                      <p className="text-sm font-medium text-[var(--text)] truncate">{user.name || user.email}</p>
+                    </div>
+                    <Link
+                      to="/account"
+                      onClick={() => setUserMenuOpen(false)}
+                      role="menuitem"
+                      className="block px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                    >
+                      {t("My Account")}
+                    </Link>
+                    <Link
+                      to="/account/notifications"
+                      onClick={() => setUserMenuOpen(false)}
+                      role="menuitem"
+                      className="block px-3 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
+                    >
+                      {t("Notifications")}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      role="menuitem"
+                      className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors border-t border-[var(--border)]"
+                    >
+                      {t("Logout")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/account"
+                className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
+              >
+                <UserCircleIcon className="w-5 h-5" />
+              </Link>
+            )}
             {user && <NotificationBell />}
             <Link
               to="/wishlist"
