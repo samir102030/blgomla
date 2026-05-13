@@ -1,13 +1,9 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
 import HeroSlider from "../components/HeroSlider";
-import FeaturedProducts from "../components/FeaturedProducts";
-import Newsletter from "../components/Newsletter";
-import Services from "../components/Services";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
-import BrandLogos from "../components/BrandLogos";
 import { getBaseUnitPrice } from "../lib/pricing";
 import CountdownTimer from "../components/CountdownTimer";
 import ScrollReveal from "../components/ScrollReveal";
@@ -16,9 +12,14 @@ import { useCategoryStore } from "../stores";
 import { useUserStore } from "../stores/user.store";
 import { useCollectionStore } from "../stores/collection.store";
 import { useTranslation } from "react-i18next";
-import AdvertisementBanner from "../components/AdvertisementBanner";
 import { Link } from "react-router-dom";
 import { cldImg } from "../lib/cldImage";
+
+const FeaturedProducts = lazy(() => import("../components/FeaturedProducts"));
+const Newsletter = lazy(() => import("../components/Newsletter"));
+const Services = lazy(() => import("../components/Services"));
+const BrandLogos = lazy(() => import("../components/BrandLogos"));
+const AdvertisementBanner = lazy(() => import("../components/AdvertisementBanner"));
 import { axiosInstance } from "../lib/axios";
 import type { Product } from "../types/product.type";
 import type { Category } from "../types/category.type";
@@ -234,7 +235,9 @@ const HomePage: React.FC = () => {
             guarantees before they scroll into products
             ════════════════════════════════════════════ */}
         <ScrollReveal>
-          <Services />
+          <Suspense fallback={null}>
+            <Services />
+          </Suspense>
         </ScrollReveal>
 
         {/* ════════════════════════════════════════════
@@ -306,7 +309,9 @@ const HomePage: React.FC = () => {
             Full-width promo creates rhythm.
             ════════════════════════════════════════════ */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AdvertisementBanner position="hero" />
+          <Suspense fallback={null}>
+            <AdvertisementBanner position="hero" />
+          </Suspense>
         </div>
 
         {/* ════════════════════════════════════════════
@@ -315,7 +320,9 @@ const HomePage: React.FC = () => {
             guide undecided users toward best sellers
             ════════════════════════════════════════════ */}
         <ScrollReveal>
-          <FeaturedProducts />
+          <Suspense fallback={null}>
+            <FeaturedProducts />
+          </Suspense>
         </ScrollReveal>
 
         {/* ════════════════════════════════════════════
@@ -323,7 +330,9 @@ const HomePage: React.FC = () => {
             Authority logos between product sections
             reinforces that the store carries genuine gear
             ════════════════════════════════════════════ */}
-        <BrandLogos />
+        <Suspense fallback={null}>
+          <BrandLogos />
+        </Suspense>
 
         {/* ════════════════════════════════════════════
             § 8.  NEWEST ARRIVALS  — Freshness signal
@@ -372,7 +381,9 @@ const HomePage: React.FC = () => {
             Wholesale/bulk CTA  — second visual break
             ════════════════════════════════════════════ */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AdvertisementBanner position="banner" />
+          <Suspense fallback={null}>
+            <AdvertisementBanner position="banner" />
+          </Suspense>
         </div>
 
         {/* ════════════════════════════════════════════
@@ -520,14 +531,18 @@ const HomePage: React.FC = () => {
             Users at the bottom are highly engaged.
             ════════════════════════════════════════════ */}
         <ScrollReveal>
-          <Newsletter />
+          <Suspense fallback={null}>
+            <Newsletter />
+          </Suspense>
         </ScrollReveal>
       </main>
 
       <Footer />
 
       {/* Advertisement Popup */}
-      <AdvertisementBanner position="popup" />
+      <Suspense fallback={null}>
+        <AdvertisementBanner position="popup" />
+      </Suspense>
     </div>
   );
 };

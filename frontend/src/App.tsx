@@ -7,9 +7,13 @@ import useNotificationSocket from "./hooks/useNotificationSocket";
 
 // ── Eagerly loaded (above-the-fold critical path) ──
 import HomePage from "./pages/HomePage";
-import GeneralSupportChat from "./components/GeneralSupportChat";
-import InstallPrompt from "./components/InstallPrompt";
-import RouteAnalytics from "./components/RouteAnalytics";
+
+// ── Deferred (off the critical mobile path) ──
+// Chat widget, PWA install prompt, and analytics listener mount after first paint
+// so the home view's LCP isn't dragged down by socket.io / GA bootstrap.
+const GeneralSupportChat = lazy(() => import("./components/GeneralSupportChat"));
+const InstallPrompt = lazy(() => import("./components/InstallPrompt"));
+const RouteAnalytics = lazy(() => import("./components/RouteAnalytics"));
 
 // ── Error Boundary ──
 interface ErrorBoundaryProps {
@@ -109,7 +113,9 @@ function App() {
 
   return (
     <Router>
-      <RouteAnalytics />
+      <Suspense fallback={null}>
+        <RouteAnalytics />
+      </Suspense>
       <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
         <Routes>
@@ -157,8 +163,10 @@ function App() {
         </Routes>
       </Suspense>
       </ErrorBoundary>
-      <GeneralSupportChat />
-      <InstallPrompt />
+      <Suspense fallback={null}>
+        <GeneralSupportChat />
+        <InstallPrompt />
+      </Suspense>
       <Toaster
         position="top-right"
         toastOptions={{
