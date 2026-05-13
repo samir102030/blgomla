@@ -1,131 +1,111 @@
-import {
-  translateProduct,
-  translateBrand,
-  translateCategory,
-} from "../utils/translate.js";
-
 /**
- * Middleware to translate API responses to Arabic based on Accept-Language header
- * Usage: Add this middleware after your route handler
+ * Localize middleware — when the request asks for Arabic, walk the response
+ * body and swap stored AR sibling fields (`nameAr`, `descriptionAr`) into
+ * the user-facing fields (`name`, `description`). Falls back to the English
+ * field when the AR sibling is empty.
+ *
+ * This replaces the previous Google-translate-on-read middleware which made
+ * ~50 outbound HTTP calls per page and frequently hit rate limits, causing
+ * AR responses to hang or arrive truncated.
+ *
+ * Admin/vendor surfaces that need to edit *both* languages should send
+ * `?raw=1` (or set the `x-i18n-raw` header) to bypass this localization.
  */
-export const translateResponse = async (req, res, next) => {
-  // Get language from Accept-Language header or query parameter
-  const language =
-    req.headers["accept-language"] ||
-    req.query.lang ||
-    req.headers["x-language"] ||
-    "en";
 
-  // Only translate if language is Arabic
-  if (!language.toLowerCase().includes("ar")) {
-    return next();
-  }
+const I18N_FIELDS = ["name", "description"];
 
-  // Store original json method
-  const originalJson = res.json.bind(res);
+const wantsRaw = (req) =>
+  req.query?.raw === "1" ||
+  req.query?.raw === "true" ||
+  req.headers["x-i18n-raw"] === "1";
 
-  // Override res.json to translate before sending
-  res.json = async function (data) {
-    try {
-      // Only translate successful responses with data
-      if (data && data.success !== false) {
-        // Translate single product
-        if (data.product) {
-          data.product = await translateProduct(data.product);
-        }
-
-        // Translate array of products
-        if (data.products && Array.isArray(data.products)) {
-          data.products = await Promise.all(
-            data.products.map((product) => translateProduct(product))
-          );
-        }
-
-        // Translate paginated products
-        if (data.data && Array.isArray(data.data)) {
-          data.data = await Promise.all(
-            data.data.map((item) => translateProduct(item))
-          );
-        }
-
-        // Translate single brand
-        if (data.brand) {
-          data.brand = await translateBrand(data.brand);
-        }
-
-        // Translate array of brands
-        if (data.brands && Array.isArray(data.brands)) {
-          data.brands = await Promise.all(
-            data.brands.map((brand) => translateBrand(brand))
-          );
-        }
-
-        // Translate single category
-        if (data.category) {
-          data.category = await translateCategory(data.category);
-        }
-
-        // Translate array of categories
-        if (data.categories && Array.isArray(data.categories)) {
-          data.categories = await Promise.all(
-            data.categories.map((category) => translateCategory(category))
-          );
-        }
-
-        // Translate cart items (products in cart)
-        if (data.cart && Array.isArray(data.cart)) {
-          data.cart = await Promise.all(
-            data.cart.map(async (item) => {
-              if (item.productDetails) {
-                item.productDetails = await translateProduct(
-                  item.productDetails
-                );
-              }
-              return item;
-            })
-          );
-        }
-
-        // Translate order items
-        if (data.order && data.order.orderItems) {
-          data.order.orderItems = await Promise.all(
-            data.order.orderItems.map(async (item) => {
-              if (item.product && typeof item.product === "object") {
-                item.product = await translateProduct(item.product);
-              }
-              return item;
-            })
-          );
-        }
-
-        // Translate orders array
-        if (data.orders && Array.isArray(data.orders)) {
-          data.orders = await Promise.all(
-            data.orders.map(async (order) => {
-              if (order.orderItems && Array.isArray(order.orderItems)) {
-                order.orderItems = await Promise.all(
-                  order.orderItems.map(async (item) => {
-                    if (item.product && typeof item.product === "object") {
-                      item.product = await translateProduct(item.product);
-                    }
-                    return item;
-                  })
-                );
-              }
-              return order;
-            })
-          );
-        }
-      }
-    } catch (error) {
-      console.error("Translation middleware error:", error);
-      // If translation fails, send original data
-    }
-
-    // Call original json method with (possibly translated) data
-    return originalJson(data);
-  };
-
-  next();
+const isArabic = (req) => {
+  const headerLang = (req.headers["accept-language"] || "").toLowerCase();
+  const queryLang = (req.query?.lang || "").toLowerCase();
+  const customLang = (req.headers["x-language"] || "").toLowerCase();
+  return [headerLang, queryLang, customLang].some((v) => v.startsWith("ar"));
 };
 
+/**
+ * In-place swap on a single document-like object. Doesn't recurse into
+ * arbitrary nesting — only into the fields callers typically populate
+ * (brand, category, items[].product, orderItems[].product, etc.).
+ */
+const localizeDoc = (doc) => {
+  if (!doc || typeof doc !== "object") return doc;
+  for (const f of I18N_FIELDS) {
+    const arKey = `${f}Ar`;
+    if (typeof doc[arKey] === "string" && doc[arKey].trim()) {
+      doc[f] = doc[arKey];
+    }
+  }
+  // Populated refs commonly held on Product / Collection / OrderItem
+  if (doc.brand && typeof doc.brand === "object") localizeDoc(doc.brand);
+  if (doc.category && typeof doc.category === "object") localizeDoc(doc.category);
+  if (doc.product && typeof doc.product === "object") localizeDoc(doc.product);
+  if (doc.productDetails && typeof doc.productDetails === "object") {
+    localizeDoc(doc.productDetails);
+  }
+  if (doc.collectionDetails && typeof doc.collectionDetails === "object") {
+    localizeDoc(doc.collectionDetails);
+    if (Array.isArray(doc.collectionDetails.items)) {
+      doc.collectionDetails.items.forEach((it) => {
+        if (it?.product && typeof it.product === "object") localizeDoc(it.product);
+      });
+    }
+  }
+  if (Array.isArray(doc.items)) {
+    doc.items.forEach((it) => {
+      if (it?.product && typeof it.product === "object") localizeDoc(it.product);
+    });
+  }
+  if (Array.isArray(doc.orderItems)) {
+    doc.orderItems.forEach((it) => {
+      if (it?.product && typeof it.product === "object") localizeDoc(it.product);
+    });
+  }
+  if (Array.isArray(doc.parentCategory) || (doc.parentCategory && typeof doc.parentCategory === "object")) {
+    if (Array.isArray(doc.parentCategory)) doc.parentCategory.forEach(localizeDoc);
+    else localizeDoc(doc.parentCategory);
+  }
+  if (Array.isArray(doc.subCategories)) doc.subCategories.forEach(localizeDoc);
+  return doc;
+};
+
+const walk = (value) => {
+  if (Array.isArray(value)) {
+    value.forEach(walk);
+  } else if (value && typeof value === "object") {
+    localizeDoc(value);
+    // Recurse into common envelope keys
+    for (const key of [
+      "products",
+      "brands",
+      "categories",
+      "collections",
+      "cart",
+      "orders",
+      "data",
+      "saleProducts",
+      "newestProducts",
+      "featured",
+    ]) {
+      if (value[key]) walk(value[key]);
+    }
+  }
+};
+
+export const translateResponse = (req, res, next) => {
+  if (wantsRaw(req) || !isArabic(req)) return next();
+
+  const originalJson = res.json.bind(res);
+  res.json = function (body) {
+    try {
+      if (body && body.success !== false) walk(body);
+    } catch (err) {
+      console.error("Localize middleware error:", err);
+    }
+    return originalJson(body);
+  };
+  next();
+};

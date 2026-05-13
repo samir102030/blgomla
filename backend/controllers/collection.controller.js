@@ -31,7 +31,7 @@ const validateCollectionItems = async (items, storeId) => {
 export const createCollection = controllerWrapper(
   "createCollection",
   async (req, res) => {
-    const { name, description, items, bundlePrice } = req.body;
+    const { name, nameAr, description, descriptionAr, items, bundlePrice } = req.body;
 
     if (!Array.isArray(items) || items.length < 2) {
       return res.status(400).json({
@@ -67,7 +67,9 @@ export const createCollection = controllerWrapper(
 
     const collection = await Collection.create({
       name,
+      nameAr,
       description,
+      descriptionAr,
       items,
       bundlePrice,
       store: storeId,
@@ -129,7 +131,7 @@ export const getMyCollections = controllerWrapper(
 export const updateCollection = controllerWrapper(
   "updateCollection",
   async (req, res) => {
-    const { name, description, items, bundlePrice, isActive } = req.body;
+    const { name, nameAr, description, descriptionAr, items, bundlePrice, isActive } = req.body;
     const collection = await Collection.findById(req.params.id);
 
     if (!collection) {
@@ -152,7 +154,9 @@ export const updateCollection = controllerWrapper(
     }
 
     if (name !== undefined) collection.name = name;
+    if (nameAr !== undefined) collection.nameAr = nameAr;
     if (description !== undefined) collection.description = description;
+    if (descriptionAr !== undefined) collection.descriptionAr = descriptionAr;
     if (bundlePrice !== undefined) collection.bundlePrice = bundlePrice;
     if (isActive !== undefined) collection.isActive = isActive;
 

@@ -6,8 +6,8 @@ import { controllerWrapper } from "../utils/wrappers.js";
 export const createBrand = controllerWrapper(
   "createBrand",
   async (req, res) => {
-    const { name, description, logo, website, country, categories, metaTitle, metaDescription, sortOrder } = req.body;
-    const brand = new Brand({ name, description, logo, website, country, categories, metaTitle, metaDescription, sortOrder });
+    const { name, nameAr, description, descriptionAr, logo, website, country, categories, metaTitle, metaDescription, sortOrder } = req.body;
+    const brand = new Brand({ name, nameAr, description, descriptionAr, logo, website, country, categories, metaTitle, metaDescription, sortOrder });
     await brand.save();
     res.status(201).json({ success: true, brand });
   }

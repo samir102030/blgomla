@@ -135,6 +135,13 @@ const productSchema = new mongoose.Schema(
       required: [true, "Product name is required"],
       trim: true,
     },
+    // Arabic counterpart — optional. When set and the request asks for `ar`,
+    // the localize middleware swaps it into `name` before responding.
+    nameAr: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     slug: {
       type: String,
       trim: true,
@@ -148,6 +155,11 @@ const productSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
+    },
+    descriptionAr: {
+      type: String,
+      trim: true,
+      default: "",
     },
     price: {
       type: Number,

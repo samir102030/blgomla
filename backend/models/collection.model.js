@@ -15,7 +15,9 @@ const collectionItemSchema = new mongoose.Schema(
 const collectionSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
+    nameAr: { type: String, trim: true, default: "" },
     description: { type: String, trim: true, maxlength: 2000 },
+    descriptionAr: { type: String, trim: true, maxlength: 2000, default: "" },
     store: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",

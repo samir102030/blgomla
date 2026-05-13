@@ -8,6 +8,11 @@ const categorySchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    nameAr: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     slug: {
       type: String,
       trim: true,
@@ -16,6 +21,11 @@ const categorySchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
+    },
+    descriptionAr: {
+      type: String,
+      trim: true,
+      default: "",
     },
     image: {
       type: String,

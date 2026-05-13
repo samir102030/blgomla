@@ -6,10 +6,10 @@ import { controllerWrapper } from "../utils/wrappers.js";
 export const createCategory = controllerWrapper(
   "createCategory",
   async (req, res) => {
-    const { name, description, image, icon, parentCategory, metaTitle, metaDescription, sortOrder } = req.body;
+    const { name, nameAr, description, descriptionAr, image, icon, parentCategory, metaTitle, metaDescription, sortOrder } = req.body;
 
     const category = new Category({
-      name, description, image, icon, parentCategory, metaTitle, metaDescription, sortOrder,
+      name, nameAr, description, descriptionAr, image, icon, parentCategory, metaTitle, metaDescription, sortOrder,
     });
     await category.save();
 
