@@ -9,6 +9,7 @@ import useNotificationSocket from "./hooks/useNotificationSocket";
 import HomePage from "./pages/HomePage";
 import GeneralSupportChat from "./components/GeneralSupportChat";
 import InstallPrompt from "./components/InstallPrompt";
+import RouteAnalytics from "./components/RouteAnalytics";
 
 // ── Error Boundary ──
 interface ErrorBoundaryProps {
@@ -108,6 +109,7 @@ function App() {
 
   return (
     <Router>
+      <RouteAnalytics />
       <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
         <Routes>
