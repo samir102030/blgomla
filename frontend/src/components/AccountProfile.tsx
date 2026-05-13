@@ -72,7 +72,7 @@ const AccountProfile: React.FC = () => {
         <div className="flex items-center gap-5">
           <div className="w-20 h-20 rounded-2xl bg-[var(--surface-2)] border-2 border-[var(--border)] flex items-center justify-center overflow-hidden shrink-0">
             {imagePreview ? (
-              <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+              <img src={imagePreview} alt="Preview" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
             ) : user?.profilePicture ? (
               <img src={user.profilePicture} alt="Profile" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
             ) : (

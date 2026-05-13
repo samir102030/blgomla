@@ -50,7 +50,7 @@ const InstallPrompt: React.FC = () => {
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-4 flex items-start gap-3">
         {/* App icon */}
         <div className="w-12 h-12 rounded-xl bg-[#002B5B] flex items-center justify-center flex-shrink-0">
-          <img src="/logo.png" alt="Belgomla" className="w-8 h-8" />
+          <img src="/logo.png" alt="Belgomla" className="w-8 h-8" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
         </div>
 
         <div className="flex-grow min-w-0">
