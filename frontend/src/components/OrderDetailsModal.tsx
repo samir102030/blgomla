@@ -1,6 +1,14 @@
 import React from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
+import OrderTimeline from "./OrderTimeline";
+
+interface TimelineEvent {
+  status: string;
+  note?: string;
+  createdAt: string;
+  updatedBy?: { name?: string };
+}
 
 interface Order {
   _id: string;
@@ -37,6 +45,7 @@ interface Order {
   couponDiscount?: number;
   discountPrice?: number;
   status: string;
+  statusTimeline?: TimelineEvent[];
   paymentMethod: string;
   createdAt: string;
   isPaid: boolean;
@@ -423,6 +432,19 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Order Status Timeline */}
+                {order.statusTimeline && order.statusTimeline.length > 0 && (
+                  <div className="bg-gray-50 rounded-lg p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                      {t("Order Tracking")}
+                    </h4>
+                    <OrderTimeline
+                      events={order.statusTimeline}
+                      currentStatus={order.status}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

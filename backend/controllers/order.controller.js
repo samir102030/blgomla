@@ -312,6 +312,9 @@ export const createOrder = controllerWrapper(
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         couponDiscount,
         discountPrice,
+        statusTimeline: [
+          { status: "pending", note: "Order placed", updatedBy: req.user._id },
+        ],
       });
 
       const savedOrder = await order.save({ session });
@@ -471,7 +474,8 @@ export const getOrderById = controllerWrapper(
     const order = await Order.findById(req.params.id)
       .populate("user")
       .populate("shippingAddress")
-      .populate("orderItems.product");
+      .populate("orderItems.product")
+      .populate("statusTimeline.updatedBy", "name");
     if (!order)
       return res
         .status(404)
@@ -504,10 +508,15 @@ export const getMyOrders = controllerWrapper(
 export const updateOrderStatus = controllerWrapper(
   "updateOrderStatus",
   async (req, res) => {
-    const { status } = req.body;
+    const { status, note } = req.body;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { status },
+      {
+        status,
+        $push: {
+          statusTimeline: { status, note, updatedBy: req.user._id },
+        },
+      },
       { new: true }
     );
     if (!order)
@@ -559,6 +568,13 @@ export const markOrderPaid = controllerWrapper(
         isPaid: true,
         paidAt: new Date(),
         paymentResult: req.body.paymentResult,
+        $push: {
+          statusTimeline: {
+            status: "paid",
+            note: "Payment confirmed",
+            updatedBy: req.user?._id,
+          },
+        },
       },
       { new: true }
     );
@@ -575,7 +591,18 @@ export const markOrderDelivered = controllerWrapper(
   async (req, res) => {
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { isDelivered: true, deliveredAt: new Date(), status: "delivered" },
+      {
+        isDelivered: true,
+        deliveredAt: new Date(),
+        status: "delivered",
+        $push: {
+          statusTimeline: {
+            status: "delivered",
+            note: "Order delivered",
+            updatedBy: req.user?._id,
+          },
+        },
+      },
       { new: true }
     );
     if (!order)
@@ -591,7 +618,17 @@ export const cancelOrder = controllerWrapper(
   async (req, res) => {
     const order = await Order.findByIdAndUpdate(
       req.params.id,
-      { status: "cancelled", cancelled: true },
+      {
+        status: "cancelled",
+        cancelled: true,
+        $push: {
+          statusTimeline: {
+            status: "cancelled",
+            note: req.body?.reason || "Order cancelled",
+            updatedBy: req.user?._id,
+          },
+        },
+      },
       { new: true }
     );
     if (!order)

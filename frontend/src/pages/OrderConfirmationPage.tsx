@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import OrderTimeline from "../components/OrderTimeline";
 import { useOrderStore } from "../stores/order.store";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,13 @@ interface OrderItem {
   quantity: number;
 }
 
+interface TimelineEvent {
+  status: string;
+  note?: string;
+  createdAt: string;
+  updatedBy?: { name?: string };
+}
+
 interface PopulatedOrder {
   _id: string;
   orderItems: OrderItem[];
@@ -26,6 +34,7 @@ interface PopulatedOrder {
   paymentMethod: string;
   status: string;
   createdAt?: string;
+  statusTimeline?: TimelineEvent[];
   shippingAddress: {
     name: string;
     address: string;
@@ -155,11 +164,24 @@ const OrderConfirmationPage: React.FC = () => {
                 {new Date(order!.createdAt || Date.now()).toLocaleTimeString()}
               </p>
               <div className="mt-2">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]">
                   {t("Status:")} {order!.status}
                 </span>
               </div>
             </div>
+
+            {/* Order Status Timeline */}
+            {order!.statusTimeline && order!.statusTimeline.length > 0 && (
+              <div className="border-b border-gray-200 pb-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  {t("Order Tracking")}
+                </h3>
+                <OrderTimeline
+                  events={order!.statusTimeline}
+                  currentStatus={order!.status}
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Order Items */}
