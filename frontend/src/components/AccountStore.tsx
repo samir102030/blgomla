@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useVendorStore } from "../stores/vendor.store";
 import { axiosInstance } from "../lib/axios";
 
 const AccountStore: React.FC = () => {
+  const { t } = useTranslation();
   const {
     vendorStore,
     dashboardStats,
@@ -39,7 +41,7 @@ const AccountStore: React.FC = () => {
     if (response.data.success) {
       return response.data.url;
     } else {
-      throw new Error(response.data.message || "Upload failed");
+      throw new Error(response.data.message || t("Upload failed"));
     }
   };
 
@@ -60,7 +62,7 @@ const AccountStore: React.FC = () => {
       // Refresh store data
       fetchVendorStore();
     } catch (error: any) {
-      setUploadError(error.message || "Failed to upload logo");
+      setUploadError(error.message || t("Failed to upload logo"));
     } finally {
       setUploadingLogo(false);
     }
@@ -122,9 +124,9 @@ const AccountStore: React.FC = () => {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">
-          Store Information
+          {t("Store Information")}
         </h2>
-        <p className="text-gray-600">No store information found.</p>
+        <p className="text-gray-600">{t("No store information found.")}</p>
       </div>
     );
   }
@@ -220,7 +222,7 @@ const AccountStore: React.FC = () => {
         {/* Store Logo and Basic Info */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Store Overview
+            {t("Store Overview")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2 flex items-center space-x-6">
@@ -256,7 +258,7 @@ const AccountStore: React.FC = () => {
                       disabled={uploadingLogo}
                     />
                     {uploadingLogo ? (
-                      <div className="text-white text-xs">Uploading...</div>
+                      <div className="text-white text-xs">{t("Uploading...")}</div>
                     ) : (
                       <svg
                         className="w-6 h-6 text-white"
@@ -294,8 +296,8 @@ const AccountStore: React.FC = () => {
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">
-                  Active: {vendorStore.isActive ? "Yes" : "No"} | Deleted:{" "}
-                  {vendorStore.deleted ? "Yes" : "No"}
+                  Active: {vendorStore.isActive ? t("Yes") : t("No")} | Deleted:{" "}
+                  {vendorStore.deleted ? t("Yes") : t("No")}
                 </p>
               </div>
             </div>
@@ -305,12 +307,12 @@ const AccountStore: React.FC = () => {
         {/* Basic Store Information */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Basic Information
+            {t("Basic Information")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store ID
+                {t("Store ID")}
               </label>
               <p className="text-gray-900 font-mono text-sm">
                 {vendorStore._id}
@@ -319,44 +321,44 @@ const AccountStore: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store Name
+                {t("Store Name")}
               </label>
               <p className="text-gray-900">{vendorStore.name}</p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+                {t("Email")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.email || "Not provided"}
+                {vendorStore.email || t("Not provided")}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone
+                {t("Phone")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.phone || "Not provided"}
+                {vendorStore.phone || t("Not provided")}
               </p>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Alternative Phone
+                {t("Alternative Phone")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.alternativePhone || "Not provided"}
+                {vendorStore.alternativePhone || t("Not provided")}
               </p>
             </div>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+                {t("Description")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.description || "No description available"}
+                {vendorStore.description || t("No description available")}
               </p>
             </div>
           </div>
@@ -365,47 +367,47 @@ const AccountStore: React.FC = () => {
         {/* Business Information */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Business Information
+            {t("Business Information")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Name
+                {t("Business Name")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.businessName || "Not provided"}
+                {vendorStore.businessName || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Type
+                {t("Business Type")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.businessType || "Not provided"}
+                {vendorStore.businessType || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Commercial Registration Number
+                {t("Commercial Registration Number")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.commercialRegistrationNumber || "Not provided"}
+                {vendorStore.commercialRegistrationNumber || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tax Number
+                {t("Tax Number")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.taxNumber || "Not provided"}
+                {vendorStore.taxNumber || t("Not provided")}
               </p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business Description
+                {t("Business Description")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.businessDescription || "No description available"}
+                {vendorStore.businessDescription || t("No description available")}
               </p>
             </div>
           </div>
@@ -414,44 +416,44 @@ const AccountStore: React.FC = () => {
         {/* Legal Entity Information */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Legal Entity Information
+            {t("Legal Entity Information")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Legal Entity Type
+                {t("Legal Entity Type")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.legalEntityType || "Not provided"}
+                {vendorStore.legalEntityType || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                License Number
+                {t("License Number")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.licenseNumber || "Not provided"}
+                {vendorStore.licenseNumber || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Name
+                {t("Company Name")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.companyName || "Not provided"}
+                {vendorStore.companyName || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Address
+                {t("Company Address")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.companyAddress || "Not provided"}
+                {vendorStore.companyAddress || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Issue Date
+                {t("Issue Date")}
               </label>
               <p className="text-gray-900">
                 {vendorStore.issueDate
@@ -461,7 +463,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expiry Date
+                {t("Expiry Date")}
               </label>
               <p className="text-gray-900">
                 {vendorStore.expiryDate
@@ -471,10 +473,10 @@ const AccountStore: React.FC = () => {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Allowed Activities
+                {t("Allowed Activities")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.allowedActivities || "Not provided"}
+                {vendorStore.allowedActivities || t("Not provided")}
               </p>
             </div>
           </div>
@@ -483,15 +485,15 @@ const AccountStore: React.FC = () => {
         {/* Contact Information */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Contact Information
+            {t("Contact Information")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Person Name
+                {t("Contact Person Name")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.contactPersonName || "Not provided"}
+                {vendorStore.contactPersonName || t("Not provided")}
               </p>
             </div>
           </div>
@@ -500,47 +502,47 @@ const AccountStore: React.FC = () => {
         {/* Address Information */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Address Information
+            {t("Address Information")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address
+                {t("Address")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.address || "Not provided"}
+                {vendorStore.address || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                City
+                {t("City")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.city || "Not provided"}
+                {vendorStore.city || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Governorate
+                {t("Governorate")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.governorate || "Not provided"}
+                {vendorStore.governorate || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Postal Code
+                {t("Postal Code")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.postalCode || "Not provided"}
+                {vendorStore.postalCode || t("Not provided")}
               </p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
+                {t("Location")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.location || "Not provided"}
+                {vendorStore.location || t("Not provided")}
               </p>
             </div>
           </div>
@@ -549,20 +551,20 @@ const AccountStore: React.FC = () => {
         {/* Product and Business Details */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Product & Business Details
+            {t("Product & Business Details")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Expected Monthly Volume
+                {t("Expected Monthly Volume")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.expectedMonthlyVolume || "Not provided"}
+                {vendorStore.expectedMonthlyVolume || t("Not provided")}
               </p>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Product Categories
+                {t("Product Categories")}
               </label>
               <div className="flex flex-wrap gap-2">
                 {vendorStore.productCategories &&
@@ -576,7 +578,7 @@ const AccountStore: React.FC = () => {
                     </span>
                   ))
                 ) : (
-                  <p className="text-gray-600">No categories specified</p>
+                  <p className="text-gray-600">{t("No categories specified")}</p>
                 )}
               </div>
             </div>
@@ -586,28 +588,28 @@ const AccountStore: React.FC = () => {
         {/* Store Status and Approval */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Status & Approval
+            {t("Status & Approval")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+                {t("Status")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.status || "Not provided"}
+                {vendorStore.status || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rejection Reason
+                {t("Rejection Reason")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.rejectionReason || "Not provided"}
+                {vendorStore.rejectionReason || t("Not provided")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Approved At
+                {t("Approved At")}
               </label>
               <p className="text-gray-900">
                 {vendorStore.approvedAt
@@ -617,7 +619,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rejected At
+                {t("Rejected At")}
               </label>
               <p className="text-gray-900">
                 {vendorStore.rejectedAt
@@ -631,12 +633,12 @@ const AccountStore: React.FC = () => {
         {/* Documents */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Documents
+            {t("Documents")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Commercial Registration
+                {t("Commercial Registration")}
               </label>
               <div className="flex items-center space-x-2">
                 {vendorStore.documents?.commercialRegistration ? (
@@ -646,10 +648,10 @@ const AccountStore: React.FC = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
-                    View Document
+                    {t("View Document")}
                   </a>
                 ) : (
-                  <span className="text-gray-600">Not uploaded</span>
+                  <span className="text-gray-600">{t("Not uploaded")}</span>
                 )}
                 <label className="cursor-pointer">
                   <input
@@ -671,7 +673,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tax Card
+                {t("Tax Card")}
               </label>
               <div className="flex items-center space-x-2">
                 {vendorStore.documents?.taxCard ? (
@@ -681,10 +683,10 @@ const AccountStore: React.FC = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
-                    View Document
+                    {t("View Document")}
                   </a>
                 ) : (
-                  <span className="text-gray-600">Not uploaded</span>
+                  <span className="text-gray-600">{t("Not uploaded")}</span>
                 )}
                 <label className="cursor-pointer">
                   <input
@@ -704,7 +706,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                National ID
+                {t("National ID")}
               </label>
               <div className="flex items-center space-x-2">
                 {vendorStore.documents?.nationalId ? (
@@ -714,10 +716,10 @@ const AccountStore: React.FC = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
-                    View Document
+                    {t("View Document")}
                   </a>
                 ) : (
-                  <span className="text-gray-600">Not uploaded</span>
+                  <span className="text-gray-600">{t("Not uploaded")}</span>
                 )}
                 <label className="cursor-pointer">
                   <input
@@ -737,7 +739,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bank Statement
+                {t("Bank Statement")}
               </label>
               <div className="flex items-center space-x-2">
                 {vendorStore.documents?.bankStatement ? (
@@ -747,10 +749,10 @@ const AccountStore: React.FC = () => {
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 underline"
                   >
-                    View Document
+                    {t("View Document")}
                   </a>
                 ) : (
-                  <span className="text-gray-600">Not uploaded</span>
+                  <span className="text-gray-600">{t("Not uploaded")}</span>
                 )}
                 <label className="cursor-pointer">
                   <input
@@ -774,23 +776,23 @@ const AccountStore: React.FC = () => {
         {/* Agreement Acceptance */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Agreement Acceptance
+            {t("Agreement Acceptance")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Terms Accepted
+                {t("Terms Accepted")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.termsAccepted ? "Yes" : "No"}
+                {vendorStore.termsAccepted ? t("Yes") : t("No")}
               </p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Privacy Policy Accepted
+                {t("Privacy Policy Accepted")}
               </label>
               <p className="text-gray-900">
-                {vendorStore.privacyPolicyAccepted ? "Yes" : "No"}
+                {vendorStore.privacyPolicyAccepted ? t("Yes") : t("No")}
               </p>
             </div>
           </div>
@@ -799,12 +801,12 @@ const AccountStore: React.FC = () => {
         {/* Store Metrics */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Store Metrics
+            {t("Store Metrics")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Sales
+                {t("Total Sales")}
               </label>
               <p className="text-gray-900">
                 ${dashboardStats?.totalSales || 0}
@@ -812,7 +814,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Products
+                {t("Total Products")}
               </label>
               <p className="text-gray-900">
                 {dashboardStats?.totalProducts || 0}
@@ -820,7 +822,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Orders
+                {t("Total Orders")}
               </label>
               <p className="text-gray-900">
                 {dashboardStats?.totalOrders || 0}
@@ -828,19 +830,19 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rating
+                {t("Rating")}
               </label>
               <p className="text-gray-900">{vendorStore.rating || 0}/5</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Reviews
+                {t("Total Reviews")}
               </label>
               <p className="text-gray-900">{vendorStore.totalReviews || 0}</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Commission
+                {t("Commission")}
               </label>
               <p className="text-gray-900">{vendorStore.commission || 0}%</p>
             </div>
@@ -850,12 +852,12 @@ const AccountStore: React.FC = () => {
         {/* Store Customization */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Store Customization
+            {t("Store Customization")}
           </h3>
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Subscribers
+                {t("Subscribers")}
               </label>
               <p className="text-gray-900">
                 {vendorStore.subscribers?.length || 0} subscribers
@@ -866,7 +868,7 @@ const AccountStore: React.FC = () => {
             {vendorStore.about && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  About
+                  {t("About")}
                 </label>
                 <p className="text-gray-900">{vendorStore.about}</p>
               </div>
@@ -876,7 +878,7 @@ const AccountStore: React.FC = () => {
             {vendorStore.story && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Story
+                  {t("Story")}
                 </label>
                 <p className="text-gray-900">{vendorStore.story}</p>
               </div>
@@ -887,7 +889,7 @@ const AccountStore: React.FC = () => {
               vendorStore.achievements.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Achievements
+                    {t("Achievements")}
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {vendorStore.achievements.map((achievement, index) => (
@@ -911,7 +913,7 @@ const AccountStore: React.FC = () => {
             {vendorStore.socialLinks && vendorStore.socialLinks.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Social Links
+                  {t("Social Links")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {vendorStore.socialLinks.map((link, index) => (
@@ -933,7 +935,7 @@ const AccountStore: React.FC = () => {
             {vendorStore.features && vendorStore.features.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Features
+                  {t("Features")}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {vendorStore.features.map((feature, index) => (
@@ -957,7 +959,7 @@ const AccountStore: React.FC = () => {
             {vendorStore.slider && vendorStore.slider.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slider Images
+                  {t("Slider Images")}
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {vendorStore.slider.map((slide, index) => (
@@ -986,12 +988,12 @@ const AccountStore: React.FC = () => {
         {/* Timestamps */}
         <div className="bg-white rounded-lg p-6 border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Timestamps
+            {t("Timestamps")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Created At
+                {t("Created At")}
               </label>
               <p className="text-gray-900">
                 {new Date(vendorStore.createdAt).toLocaleDateString()}
@@ -999,7 +1001,7 @@ const AccountStore: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Updated At
+                {t("Updated At")}
               </label>
               <p className="text-gray-900">
                 {new Date(vendorStore.updatedAt).toLocaleDateString()}

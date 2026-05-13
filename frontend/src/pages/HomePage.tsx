@@ -218,8 +218,8 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <SEO
-        title="Home"
-        description="Egypt's premier marketplace for IT, networking, and technology products. Shop routers, switches, cables, servers, cameras, and more at the best prices."
+        title={t("Home")}
+        description={t("Egypt's premier marketplace for IT, networking, and technology products. Shop routers, switches, cables, servers, cameras, and more at the best prices.")}
       />
       <Header />
 
