@@ -53,20 +53,73 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
     });
   };
 
+  // Full admin navigation. Routes correspond to AdminRoutes.tsx.
   const menuItems = [
     { name: t("admin.dashboard"), href: "/dashboard", icon: HomeIcon },
+
+    // ── Vendor management ─────────────────────────────────────
     {
       name: t("admin.vendors"),
-      href: "/dashboard/vendors",
       icon: BuildingStorefrontIcon,
       roles: ["admin"],
+      children: [
+        { name: "All Vendors", href: "/dashboard/vendors", roles: ["admin"] },
+        { name: t("admin.requests"), href: "/dashboard/requests", roles: ["admin"] },
+        { name: "Product Approvals", href: "/dashboard/approvals", roles: ["admin"] },
+        { name: "Admins", href: "/dashboard/admins", roles: ["super_admin"] },
+      ],
     },
+
+    // ── Catalog / E-commerce ─────────────────────────────────
     {
-      name: t("admin.requests"),
-      href: "/dashboard/requests",
-      icon: ClipboardDocumentListIcon,
-      roles: ["admin"],
+      name: t("admin.ecommerce"),
+      icon: ShoppingBagIcon,
+      children: [
+        { name: t("admin.products"), href: "/dashboard/products", roles: ["admin", "store"] },
+        { name: t("admin.category"), href: "/dashboard/category", roles: ["admin"] },
+        { name: t("admin.brands"), href: "/dashboard/brands", roles: ["admin"] },
+        { name: t("admin.collections"), href: "/dashboard/collections", roles: ["admin", "store"] },
+        { name: t("admin.coupons"), href: "/dashboard/coupons", roles: ["admin", "store"] },
+        { name: t("admin.advertisements"), href: "/dashboard/advertisements", roles: ["admin"] },
+      ],
     },
+
+    // ── Order operations ─────────────────────────────────────
+    {
+      name: t("admin.order"),
+      icon: ClipboardDocumentListIcon,
+      children: [
+        { name: "All Orders", href: "/dashboard/order", roles: ["admin", "store"] },
+        { name: t("admin.returns"), href: "/dashboard/returns", roles: ["admin", "store"] },
+        { name: t("Quotations"), href: "/dashboard/quotations", roles: ["admin"] },
+        { name: "Inventory Alerts", href: "/dashboard/inventory", roles: ["admin", "store"] },
+      ],
+    },
+
+    // ── Customers / CRM ──────────────────────────────────────
+    {
+      name: "Customers",
+      icon: UserIcon,
+      children: [
+        { name: t("admin.user"), href: "/dashboard/user", roles: ["admin"] },
+        { name: t("admin.customerReviews"), href: "/dashboard/reviews", roles: ["admin"] },
+        { name: t("admin.customerSupport"), href: "/dashboard/support", roles: ["admin"] },
+      ],
+    },
+
+    // ── Analytics & Finance ──────────────────────────────────
+    {
+      name: t("admin.sales"),
+      icon: ChartBarIcon,
+      children: [
+        { name: "Sales Overview", href: "/dashboard/sales", roles: ["admin", "store"] },
+        { name: "Payments", href: "/dashboard/payments", roles: ["admin"] },
+        { name: "Customer Analytics", href: "/dashboard/customers", roles: ["admin"] },
+        { name: "Visitor Analytics", href: "/dashboard/visitors", roles: ["admin"] },
+      ],
+    },
+
+    // ── Quick-access top-level entries (kept flat for visibility) ──
     {
       name: "Approvals",
       href: "/dashboard/approvals",
@@ -74,137 +127,29 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
       roles: ["admin"],
     },
     {
-      name: "Admins",
-      href: "/dashboard/admins",
-      icon: ShieldCheckIcon,
-      roles: ["super_admin"],
-    },
-    {
-      name: t("admin.ecommerce"),
-      icon: ShoppingBagIcon,
-      children: [
-        {
-          name: t("admin.category"),
-          href: "/dashboard/category",
-          roles: ["admin"],
-        },
-        {
-          name: t("admin.brands"),
-          href: "/dashboard/brands",
-          roles: ["admin"],
-        },
-        {
-          name: t("admin.products"),
-          href: "/dashboard/products",
-          roles: ["admin", "store"],
-        },
-        {
-          name: t("admin.coupons"),
-          href: "/dashboard/coupons",
-          roles: ["admin", "store"],
-        },
-        // { name: "Attributes", href: "/dashboard/attributes" },
-        {
-          name: t("admin.order"),
-          href: "/dashboard/order",
-          roles: ["admin", "store"],
-        },
-        {
-          name: t("admin.collections"),
-          href: "/dashboard/vendor-collections",
-          roles: ["store"],
-        },
-      ],
-    },
-    {
-      name: t("admin.returns"),
-      href: "/dashboard/returns",
-      icon: ClipboardDocumentListIcon,
-      roles: ["admin", "store"],
-    },
-    {
-      name: t("admin.collections"),
-      href: "/dashboard/collections",
-      icon: TagIcon,
-      roles: ["admin", "store"],
-    },
-    {
-      name: t("Quotations"),
-      href: "/dashboard/quotations",
-      icon: ClipboardDocumentListIcon,
-      roles: ["admin"],
-    },
-    {
-      name: t("admin.user"),
-      href: "/dashboard/user",
-      icon: UserIcon,
-      roles: ["admin"],
-    },
-    {
-      name: t("admin.customerReviews"),
-      href: "/dashboard/reviews",
-      icon: ChatBubbleLeftRightIcon,
-      roles: ["admin"],
-    },
-    {
-      name: t("admin.customerSupport"),
+      name: "Communications",
       href: "/dashboard/support",
       icon: ChatBubbleLeftRightIcon,
       roles: ["admin"],
     },
     {
-      name: t("admin.sales"),
-      icon: ChartBarIcon,
-      children: [
-        {
-          name: "Sales Overview",
-          href: "/dashboard/sales",
-          roles: ["admin", "store"],
-        },
-        {
-          name: "Payments",
-          href: "/dashboard/payments",
-          roles: ["admin"],
-        },
-        {
-          name: "Inventory Alerts",
-          href: "/dashboard/inventory",
-          roles: ["admin", "store"],
-        },
-        {
-          name: "Customers",
-          href: "/dashboard/customers",
-          roles: ["admin"],
-        },
-        {
-          name: "Visitors",
-          href: "/dashboard/visitors",
-          roles: ["admin"],
-        },
-      ],
-    },
-    {
-      name: t("admin.advertisements"),
+      name: "Promotions",
       href: "/dashboard/advertisements",
       icon: MegaphoneIcon,
       roles: ["admin"],
     },
-    // { name: "Gallery", href: "/dashboard/gallery", icon: TagIcon },
-    // {
-    //   name: "Report",
-    //   href: "/dashboard/report",
-    //   icon: ClipboardDocumentListIcon,
-    //   roles: ["admin", "store"],
-    // },
-    // {
-    //   name: "Location",
-    //   href: "/dashboard/location",
-    //   icon: BuildingStorefrontIcon,
-    // },
-    // { name: "Pages", href: "/dashboard/pages", icon: TagIcon },
-    // { name: "Components", href: "/dashboard/components", icon: CogIcon },
-    // { name: "Help Center", href: "/dashboard/help", icon: UserGroupIcon },
-    // { name: "FAQs", href: "/dashboard/faqs", icon: TagIcon },
+    {
+      name: "Roles & Access",
+      href: "/dashboard/admins",
+      icon: ShieldCheckIcon,
+      roles: ["admin", "super_admin"],
+    },
+    {
+      name: t("admin.collections"),
+      href: "/dashboard/collections",
+      icon: TagIcon,
+      roles: ["store"],
+    },
   ];
 
   const isActive = (href: string) => location.pathname === href;
@@ -278,15 +223,14 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               return false;
             }
 
-            // If user is store, check store approval
+            // Only store-role users go through the store-approval check.
+            // Admins and super_admins are unaffected even if user.store is null.
             if (user?.role === "store") {
-              // console.log("store", user.store);
               if (
-                // !user.store ||
+                !user.store ||
                 user.store.status !== "approved" ||
                 user.store.deleted
               ) {
-                console.log("Store not approved or deleted");
                 return false;
               }
             }
