@@ -872,7 +872,7 @@ const VendorRegistrationPage: React.FC = () => {
             </option>
             {egyptianGovernorates.map((gov) => (
               <option key={gov} value={gov}>
-                {gov}
+                {t(`vendorRegistration.governorates.${gov}`, gov)}
               </option>
             ))}
           </select>

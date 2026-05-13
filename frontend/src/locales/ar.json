@@ -1186,7 +1186,11 @@
       "uppercase": "حرف كبير واحد على الأقل (A-Z)",
       "lowercase": "حرف صغير واحد على الأقل (a-z)",
       "number": "رقم واحد على الأقل (0-9)",
-      "minLength": "8 أحرف على الأقل"
+      "minLength": "8 أحرف على الأقل",
+      "securityNote": {
+        "title": "بياناتك آمنة",
+        "content": "جميع المعلومات مشفّرة وتُستخدم فقط للتحقق من نشاطك ومعالجة طلبك. لن نشاركها مع أي طرف ثالث."
+      }
     },
     "securityNote": {
       "title": "ملاحظة أمنية مهمة",
@@ -1244,6 +1248,42 @@
       "Food & Beverages": "الطعام والمشروبات",
       "Office Supplies": "مستلزمات المكتب",
       "Pet Supplies": "مستلزمات الحيوانات الأليفة"
+    },
+    "steps": {
+      "license": "الرخصة",
+      "business": "النشاط",
+      "store": "المتجر",
+      "documents": "المستندات",
+      "account": "الحساب"
+    },
+    "governorates": {
+      "Cairo": "القاهرة",
+      "Alexandria": "الإسكندرية",
+      "Giza": "الجيزة",
+      "Qalyubia": "القليوبية",
+      "Port Said": "بورسعيد",
+      "Suez": "السويس",
+      "Luxor": "الأقصر",
+      "Aswan": "أسوان",
+      "Dakahlia": "الدقهلية",
+      "Sharqia": "الشرقية",
+      "Gharbia": "الغربية",
+      "Menofia": "المنوفية",
+      "Beheira": "البحيرة",
+      "Ismailia": "الإسماعيلية",
+      "Damietta": "دمياط",
+      "Kafr El Sheikh": "كفر الشيخ",
+      "Matrouh": "مطروح",
+      "North Sinai": "شمال سيناء",
+      "South Sinai": "جنوب سيناء",
+      "Beni Suef": "بني سويف",
+      "Fayoum": "الفيوم",
+      "Minya": "المنيا",
+      "Asyut": "أسيوط",
+      "Sohag": "سوهاج",
+      "Qena": "قنا",
+      "Red Sea": "البحر الأحمر",
+      "New Valley": "الوادي الجديد"
     }
   },
   "adminCollections.accessDenied": "تم رفض الوصول",

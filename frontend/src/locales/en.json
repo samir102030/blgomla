@@ -1186,7 +1186,11 @@
       "uppercase": "At least one uppercase letter (A-Z)",
       "lowercase": "At least one lowercase letter (a-z)",
       "number": "At least one number (0-9)",
-      "minLength": "At least 8 characters long"
+      "minLength": "At least 8 characters long",
+      "securityNote": {
+        "title": "Your data is safe",
+        "content": "All information is encrypted and used only for verifying your business and processing your application. We will never share it with third parties."
+      }
     },
     "securityNote": {
       "title": "Important Security Note",
@@ -1244,6 +1248,42 @@
       "Food & Beverages": "Food & Beverages",
       "Office Supplies": "Office Supplies",
       "Pet Supplies": "Pet Supplies"
+    },
+    "steps": {
+      "license": "License",
+      "business": "Business",
+      "store": "Store",
+      "documents": "Documents",
+      "account": "Account"
+    },
+    "governorates": {
+      "Cairo": "Cairo",
+      "Alexandria": "Alexandria",
+      "Giza": "Giza",
+      "Qalyubia": "Qalyubia",
+      "Port Said": "Port Said",
+      "Suez": "Suez",
+      "Luxor": "Luxor",
+      "Aswan": "Aswan",
+      "Dakahlia": "Dakahlia",
+      "Sharqia": "Sharqia",
+      "Gharbia": "Gharbia",
+      "Menofia": "Menofia",
+      "Beheira": "Beheira",
+      "Ismailia": "Ismailia",
+      "Damietta": "Damietta",
+      "Kafr El Sheikh": "Kafr El Sheikh",
+      "Matrouh": "Matrouh",
+      "North Sinai": "North Sinai",
+      "South Sinai": "South Sinai",
+      "Beni Suef": "Beni Suef",
+      "Fayoum": "Fayoum",
+      "Minya": "Minya",
+      "Asyut": "Asyut",
+      "Sohag": "Sohag",
+      "Qena": "Qena",
+      "Red Sea": "Red Sea",
+      "New Valley": "New Valley"
     }
   },
   "adminCollections.accessDenied": "Access Denied",
