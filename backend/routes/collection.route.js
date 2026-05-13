@@ -16,11 +16,14 @@ import {
   validateUpdateCollection,
 } from "../validations/collection.validate.js";
 import { protectRoute, storeRoute } from "../middleware/auth.middleware.js";
+import { cacheHeaders } from "../middleware/cache.middleware.js";
 
 const router = express.Router();
 
+const publicCache = cacheHeaders(60, 300);
+
 // Public collections list
-router.get("/", getCollections);
+router.get("/", publicCache, getCollections);
 
 // Vendor collections
 router.get("/vendor/my-collections", protectRoute, storeRoute, getMyCollections);

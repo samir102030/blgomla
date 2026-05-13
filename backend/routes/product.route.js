@@ -71,19 +71,24 @@ import {
 } from "../validations/product.validate.js";
 
 import { translateResponse } from "../middleware/translation.middleware.js";
+import { cacheHeaders } from "../middleware/cache.middleware.js";
 
 const router = express.Router();
+
+// Shared CDN cache for public product listings — 60s fresh, 5min stale-while-revalidate.
+// First visitor warms the cold function; subsequent visitors get instant edge-cached responses.
+const publicListCache = cacheHeaders(60, 300);
 
 // ═══════════════════════════════════════════════
 // PUBLIC: Static routes MUST come before /:productId
 // ═══════════════════════════════════════════════
-router.get("/", translateResponse, validateGetAllProducts, getAllProducts);
-router.get("/storefront", translateResponse, getStorefrontProducts);
-router.get("/featured", translateResponse, getFeaturedProducts);
-router.get("/newest", translateResponse, getNewestProducts);
-router.get("/bestSellers", translateResponse, getBestSellers);
-router.get("/mostRated", translateResponse, getMostRatedProducts);
-router.get("/saleProducts", translateResponse, getSaleProducts);
+router.get("/", publicListCache, translateResponse, validateGetAllProducts, getAllProducts);
+router.get("/storefront", publicListCache, translateResponse, getStorefrontProducts);
+router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);
+router.get("/newest", publicListCache, translateResponse, getNewestProducts);
+router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);
+router.get("/mostRated", publicListCache, translateResponse, getMostRatedProducts);
+router.get("/saleProducts", publicListCache, translateResponse, getSaleProducts);
 router.get("/filter", translateResponse, validateFilterProducts, filterProducts);
 router.get("/category/:categoryId", translateResponse, getProductsByCategory);
 router.get("/brand/:brandId", translateResponse, getProductsByBrand);
