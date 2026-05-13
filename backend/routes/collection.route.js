@@ -17,22 +17,23 @@ import {
 } from "../validations/collection.validate.js";
 import { protectRoute, storeRoute } from "../middleware/auth.middleware.js";
 import { cacheHeaders } from "../middleware/cache.middleware.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
 const publicCache = cacheHeaders(60, 300);
 
 // Public collections list
-router.get("/", publicCache, getCollections);
+router.get("/", publicCache, translateResponse, getCollections);
 
-// Vendor collections
+// Vendor collections (raw — vendors need to see/edit both languages)
 router.get("/vendor/my-collections", protectRoute, storeRoute, getMyCollections);
 router.post("/", protectRoute, storeRoute, validateCreateCollection, createCollection);
 router.put("/:id", protectRoute, storeRoute, validateUpdateCollection, updateCollection);
 router.delete("/:id", protectRoute, storeRoute, deleteCollection);
 
-// Collection detail
-router.get("/:id", validateCollectionIdParam, getCollectionById);
+// Collection detail (public)
+router.get("/:id", translateResponse, validateCollectionIdParam, getCollectionById);
 
 // Collection cart actions
 router.post("/cart", protectRoute, addCollectionToCart);
