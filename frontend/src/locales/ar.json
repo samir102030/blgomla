@@ -1824,5 +1824,14 @@
   "Order Tracking": "تتبّع الطلب",
   "Phone:": "الهاتف:",
   "Order ID is missing": "رقم الطلب مفقود",
-  "Failed to load order details": "فشل تحميل تفاصيل الطلب"
+  "Failed to load order details": "فشل تحميل تفاصيل الطلب",
+  "General Support": "الدعم العام",
+  "We're here to help!": "نحن هنا لمساعدتك!",
+  "Loading conversation...": "جارٍ تحميل المحادثة...",
+  "Error": "خطأ",
+  "Admin Support": "دعم المسؤول",
+  "Support": "الدعم",
+  "Type your message...": "اكتب رسالتك...",
+  "Send": "إرسال",
+  "Failed to start conversation": "فشل بدء المحادثة"
 }

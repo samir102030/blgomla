@@ -1824,5 +1824,14 @@
   "Order Tracking": "Order Tracking",
   "Phone:": "Phone:",
   "Order ID is missing": "Order ID is missing",
-  "Failed to load order details": "Failed to load order details"
+  "Failed to load order details": "Failed to load order details",
+  "General Support": "General Support",
+  "We're here to help!": "We're here to help!",
+  "Loading conversation...": "Loading conversation...",
+  "Error": "Error",
+  "Admin Support": "Admin Support",
+  "Support": "Support",
+  "Type your message...": "Type your message...",
+  "Send": "Send",
+  "Failed to start conversation": "Failed to start conversation"
 }

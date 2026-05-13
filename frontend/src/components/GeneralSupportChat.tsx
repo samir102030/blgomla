@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useUserStore } from "../stores/user.store";
 import { axiosInstance } from "../lib/axios";
 
@@ -20,6 +21,7 @@ interface Message {
 }
 
 const GeneralSupportChat: React.FC = () => {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -61,7 +63,7 @@ const GeneralSupportChat: React.FC = () => {
     } catch (error: any) {
       console.error("Error initializing conversation:", error);
       setError(
-        error?.response?.data?.message || "Failed to start conversation"
+        error?.response?.data?.message || t("Failed to start conversation")
       );
       setConversation(null);
       initializedRef.current = false; // Allow retry on error
@@ -194,8 +196,8 @@ const GeneralSupportChat: React.FC = () => {
       {/* Chat Header */}
       <div className="p-4 bg-green-600 text-white rounded-t-lg flex items-center justify-between">
         <div>
-          <h3 className="font-medium">General Support</h3>
-          <p className="text-sm text-green-100">We're here to help!</p>
+          <h3 className="font-medium">{t("General Support")}</h3>
+          <p className="text-sm text-green-100">{t("We're here to help!")}</p>
         </div>
         <button
           onClick={() => setIsOpen(false)}
@@ -221,12 +223,12 @@ const GeneralSupportChat: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loading ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-gray-500">Loading conversation...</div>
+            <div className="text-gray-500">{t("Loading conversation...")}</div>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="text-red-500 mb-2">⚠️ Error</div>
+              <div className="text-red-500 mb-2">⚠️ {t("Error")}</div>
               <div className="text-gray-600 text-sm">{error}</div>
             </div>
           </div>
@@ -255,9 +257,9 @@ const GeneralSupportChat: React.FC = () => {
             const getRoleLabel = () => {
               switch (senderRole) {
                 case "admin":
-                  return "Admin Support";
+                  return t("Admin Support");
                 default:
-                  return "Support";
+                  return t("Support");
               }
             };
 
@@ -301,7 +303,7 @@ const GeneralSupportChat: React.FC = () => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Type your message..."
+            placeholder={t("Type your message...")}
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
           />
           <button
@@ -309,7 +311,7 @@ const GeneralSupportChat: React.FC = () => {
             disabled={!newMessage.trim() || sending || !conversation || !!error}
             className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
-            {sending ? "Sending..." : "Send"}
+            {sending ? t("Sending...") : t("Send")}
           </button>
         </div>
       </div>
