@@ -12,7 +12,7 @@
  * `?raw=1` (or set the `x-i18n-raw` header) to bypass this localization.
  */
 
-const I18N_FIELDS = ["name", "description"];
+const I18N_FIELDS = ["name", "description", "title", "subtitle"];
 
 const wantsRaw = (req) =>
   req.query?.raw === "1" ||
@@ -89,6 +89,7 @@ const walk = (value) => {
       "saleProducts",
       "newestProducts",
       "featured",
+      "advertisements",
     ]) {
       if (value[key]) walk(value[key]);
     }

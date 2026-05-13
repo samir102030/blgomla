@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAdvertisementStore } from "../stores/advertisement.store";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
@@ -9,6 +10,8 @@ interface AdvertisementBannerProps {
 const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
   position = "banner",
 }) => {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === "ar";
   const {
     activeAdvertisements,
     fetchActiveAdvertisements,
@@ -105,8 +108,17 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
 
   // Determine ad theme based on title keywords
   const isHero = position === "hero";
-  const title = currentAd.title || "";
-  const subtitle = currentAd.subtitle || currentAd.description || "";
+  // Prefer titleAr / subtitleAr / descriptionAr when available and in AR mode.
+  // Otherwise the localize middleware would have already swapped fields into
+  // title/subtitle/description, but defending here keeps it correct if the ad
+  // was fetched before the middleware was applied to the route.
+  const title =
+    (isRtl && (currentAd as any).titleAr) || currentAd.title || "";
+  const subtitle =
+    (isRtl && ((currentAd as any).subtitleAr || (currentAd as any).descriptionAr)) ||
+    currentAd.subtitle ||
+    currentAd.description ||
+    "";
 
   // ── Premium CSS-based promotional banner ──
   return (
@@ -183,7 +195,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-4">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
-                  {isHero ? "🔥 Limited Time Offer" : "💼 Wholesale Pricing"}
+                  {isHero ? `🔥 ${t("Limited Time Offer")}` : `💼 ${t("Wholesale Pricing")}`}
                 </span>
               </div>
 
@@ -241,9 +253,11 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
                     : "px-5 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20"
                 }`}
               >
-                {isHero ? "Shop Now" : "View Deals"}
+                {isHero ? t("Shop Now") : t("View Deals")}
                 <svg
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${
+                    isRtl ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -268,7 +282,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
                   } rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 flex flex-col items-center justify-center`}
                 >
                   <span className="text-xs text-white/50 uppercase tracking-wider font-medium">
-                    {isHero ? "Up to" : "Save"}
+                    {isHero ? t("Up to") : t("Save")}
                   </span>
                   <span
                     className={`font-black bg-clip-text text-transparent ${
@@ -283,7 +297,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
                     25%
                   </span>
                   <span className="text-xs text-white/50 uppercase tracking-wider font-medium">
-                    off
+                    {t("off")}
                   </span>
                 </div>
 

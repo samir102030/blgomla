@@ -1,5 +1,6 @@
 import express from "express";
 import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { translateResponse } from "../middleware/translation.middleware.js";
 import {
   createAdvertisement,
   getAllAdvertisements,
@@ -14,7 +15,7 @@ import {
 const router = express.Router();
 
 // Public routes
-router.get("/active", getActiveAdvertisements);
+router.get("/active", translateResponse, getActiveAdvertisements);
 router.post("/:advertisementId/view", incrementViewCount);
 router.post("/:advertisementId/click", incrementClickCount);
 

@@ -23,6 +23,10 @@ const advertisementSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    descriptionAr: {
+      type: String,
+      trim: true,
+    },
     backgroundColor: {
       type: String,
       trim: true,
