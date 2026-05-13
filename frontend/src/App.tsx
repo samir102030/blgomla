@@ -80,6 +80,8 @@ const VendorRegistrationPage = lazy(() => import("./pages/VendorRegistrationPage
 const VendorRegistrationSuccess = lazy(() => import("./pages/VendorRegistrationSuccess"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
 const VendorRoutes = lazy(() => import("./routes/VendorRoutes"));
 
@@ -122,6 +124,8 @@ function App() {
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/brands" element={<BrandsPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />

@@ -14,9 +14,8 @@ const Footer: React.FC = () => {
     ],
     support: [
       { label: t("Contact"), path: "/contact" },
-      { label: t("Delivery Information"), path: "/delivery" },
-      { label: t("Return Policy"), path: "/returns" },
       { label: t("Terms & Conditions"), path: "/terms" },
+      { label: t("Privacy Policy"), path: "/privacy" },
     ],
     account: [
       { label: t("My Account"), path: "/account" },
