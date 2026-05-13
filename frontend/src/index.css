@@ -9,6 +9,15 @@
    Premium Dark-First IT & Camera E-Commerce
    ───────────────────────────────────────────────── */
 
+html, body {
+  /* Hard guard against rogue horizontal overflow on mobile (e.g. fixed-width
+     widgets wider than the viewport, decorative blur orbs that escape their
+     parent, RTL transforms). Without this, users can swipe sideways off the
+     page. overflow-x: clip would be ideal but Safari < 16 falls back to
+     visible, so use hidden for broad support. */
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
