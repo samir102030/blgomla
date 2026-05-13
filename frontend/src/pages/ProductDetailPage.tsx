@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import { useProductStore } from "../stores/product.store";
 import { useUserStore } from "../stores/user.store";
 import { useBrandStore } from "../stores/brand.store";
@@ -364,6 +365,15 @@ const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title={product.name}
+        description={
+          product.description?.slice(0, 160) ||
+          `${product.name} — available on Belgomla, Egypt's IT & networking marketplace.`
+        }
+        image={product.images?.[0]?.url}
+        type="product"
+      />
       <Header />
 
       <main className="py-8">

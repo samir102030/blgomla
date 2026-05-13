@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import { useTranslation } from "react-i18next";
 
 const AboutUsPage: React.FC = () => {
@@ -75,6 +76,10 @@ const AboutUsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title="About Us"
+        description="Learn about Belgomla — Egypt's marketplace for IT, networking, and technology. Our story, mission, and the team behind the platform."
+      />
       <Header />
 
       {/* Hero Section */}

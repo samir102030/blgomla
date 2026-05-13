@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import { useCollectionStore } from "../stores/collection.store";
 import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
@@ -49,6 +50,10 @@ const CollectionsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO
+        title="Collections"
+        description="Curated tech bundles from Belgomla — pre-packaged sets for creators, businesses, gamers, and more, at bundle pricing."
+      />
       <Header />
 
       {/* ═══ Hero ═══ */}

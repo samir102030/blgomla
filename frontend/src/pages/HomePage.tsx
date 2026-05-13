@@ -6,6 +6,7 @@ import FeaturedProducts from "../components/FeaturedProducts";
 import Newsletter from "../components/Newsletter";
 import Services from "../components/Services";
 import Footer from "../components/Footer";
+import SEO from "../components/SEO";
 import BrandLogos from "../components/BrandLogos";
 import { getBaseUnitPrice } from "../lib/pricing";
 import CountdownTimer from "../components/CountdownTimer";
@@ -224,6 +225,10 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO
+        title="Home"
+        description="Egypt's premier marketplace for IT, networking, and technology products. Shop routers, switches, cables, servers, cameras, and more at the best prices."
+      />
       <Header />
 
       <main>
