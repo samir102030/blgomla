@@ -1,4 +1,5 @@
 import Notification from "../models/notification.model.js";
+import NotificationPreferences from "../models/notificationPreferences.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import {
@@ -194,5 +195,40 @@ export const createNotification = controllerWrapper(
       message: "Notification created successfully",
       notification,
     });
+  }
+);
+
+// ── Notification Preferences ──
+export const getMyNotificationPreferences = controllerWrapper(
+  "getMyNotificationPreferences",
+  async (req, res) => {
+    let prefs = await NotificationPreferences.findOne({ user: req.user._id });
+    if (!prefs) {
+      prefs = await NotificationPreferences.create({ user: req.user._id });
+    }
+    res.status(200).json({ success: true, preferences: prefs });
+  }
+);
+
+export const updateMyNotificationPreferences = controllerWrapper(
+  "updateMyNotificationPreferences",
+  async (req, res) => {
+    const allowed = [
+      "emailNotifications",
+      "pushNotifications",
+      "smsNotifications",
+      "frequency",
+      "quietHours",
+    ];
+    const update = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+    const prefs = await NotificationPreferences.findOneAndUpdate(
+      { user: req.user._id },
+      { $set: update },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    res.status(200).json({ success: true, preferences: prefs });
   }
 );

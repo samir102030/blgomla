@@ -68,6 +68,9 @@ const MyAccountPage = lazy(() => import("./pages/MyAccountPage"));
 const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
 const CollectionDetailPage = lazy(() => import("./pages/CollectionDetailPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const NotificationPreferencesPage = lazy(
+  () => import("./pages/NotificationPreferencesPage")
+);
 const VendorRegistrationPage = lazy(() => import("./pages/VendorRegistrationPage"));
 const VendorRegistrationSuccess = lazy(() => import("./pages/VendorRegistrationSuccess"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
@@ -131,6 +134,10 @@ function App() {
           />
           <Route path="/account" element={<MyAccountPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route
+            path="/account/notifications"
+            element={<NotificationPreferencesPage />}
+          />
           <Route
             path="/vendor-registration"
             element={<VendorRegistrationPage />}

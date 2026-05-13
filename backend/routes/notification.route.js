@@ -8,6 +8,8 @@ import {
   getUnreadCount,
   getAllNotifications,
   createNotification,
+  getMyNotificationPreferences,
+  updateMyNotificationPreferences,
 } from "../controllers/notification.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -19,6 +21,8 @@ router.use(protectRoute);
 // User routes
 router.get("/", getNotifications);
 router.get("/unread-count", getUnreadCount);
+router.get("/preferences", getMyNotificationPreferences);
+router.put("/preferences", updateMyNotificationPreferences);
 router.get("/:id", getNotificationById);
 router.put("/:id/read", markAsRead);
 router.put("/mark-all-read", markAllAsRead);
