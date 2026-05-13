@@ -1820,5 +1820,9 @@
   "Brand: {{name}}": "Brand: {{name}}",
   "Category: {{name}}": "Category: {{name}}",
   "Price: {{price}} EGP": "Price: {{price}} EGP",
-  "Feature: {{feature}}": "Feature: {{feature}}"
+  "Feature: {{feature}}": "Feature: {{feature}}",
+  "Order Tracking": "Order Tracking",
+  "Phone:": "Phone:",
+  "Order ID is missing": "Order ID is missing",
+  "Failed to load order details": "Failed to load order details"
 }

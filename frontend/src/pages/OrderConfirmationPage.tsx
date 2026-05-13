@@ -59,7 +59,7 @@ const OrderConfirmationPage: React.FC = () => {
   useEffect(() => {
     const loadOrder = async () => {
       if (!orderId) {
-        toast.error("Order ID is missing");
+        toast.error(t("Order ID is missing"));
         navigate("/");
         return;
       }
@@ -69,7 +69,7 @@ const OrderConfirmationPage: React.FC = () => {
         setLoading(false);
       } catch (error: any) {
         console.error("Error loading order:", error);
-        toast.error("Failed to load order details");
+        toast.error(t("Failed to load order details"));
         navigate("/");
       }
     };
@@ -119,7 +119,7 @@ const OrderConfirmationPage: React.FC = () => {
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=400&fit=crop"
-            alt="Order Confirmation"
+            alt={t("Order Confirmed!")}
             className="w-full h-full object-cover opacity-20"
           />
         </div>
@@ -208,7 +208,7 @@ const OrderConfirmationPage: React.FC = () => {
                           {t("Quantity:")} {item.quantity}
                         </p>
                         <p className="text-sm font-medium text-gray-900">
-                          {((item.product.price * item.quantity)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                          {((item.product.price * item.quantity)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                         </p>
                       </div>
                     </div>
@@ -226,20 +226,20 @@ const OrderConfirmationPage: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>{t("Subtotal")}</span>
-                      <span>{(order!.itemsPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                      <span>{(order!.itemsPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>{t("Shipping")}</span>
-                      <span>{(order!.shippingPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                      <span>{(order!.shippingPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>{t("Tax")}</span>
-                      <span>{(order!.taxPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                      <span>{(order!.taxPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
                     <div className="border-t pt-2">
                       <div className="flex justify-between text-lg font-bold">
                         <span>{t("Total")}</span>
-                        <span>{(order!.totalPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                        <span>{(order!.totalPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                       </div>
                     </div>
                   </div>
@@ -271,7 +271,7 @@ const OrderConfirmationPage: React.FC = () => {
                       {order!.shippingAddress.zipCode}
                     </p>
                     <p>{order!.shippingAddress.country}</p>
-                    <p>Phone: {order!.shippingAddress.phone}</p>
+                    <p>{t("Phone:")} {order!.shippingAddress.phone}</p>
                   </div>
                 </div>
               </div>

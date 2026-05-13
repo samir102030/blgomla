@@ -1820,5 +1820,9 @@
   "Brand: {{name}}": "العلامة التجارية: {{name}}",
   "Category: {{name}}": "الفئة: {{name}}",
   "Price: {{price}} EGP": "السعر: {{price}} ج.م.",
-  "Feature: {{feature}}": "ميزة: {{feature}}"
+  "Feature: {{feature}}": "ميزة: {{feature}}",
+  "Order Tracking": "تتبّع الطلب",
+  "Phone:": "الهاتف:",
+  "Order ID is missing": "رقم الطلب مفقود",
+  "Failed to load order details": "فشل تحميل تفاصيل الطلب"
 }
