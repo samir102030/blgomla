@@ -125,14 +125,14 @@ const ShoppingCartPage: React.FC = () => {
         : item.product === itemId
     );
     if (!item) {
-      toast.error("Product Error: Item details not available. Please refresh");
+      toast.error(t("Product Error: Item details not available. Please refresh"));
       return;
     }
 
     if (itemType === "collection") {
       if (!item.collectionDetails) {
         toast.error(
-          "Collection Error: Details not available. Please refresh the page"
+          t("Collection Error: Details not available. Please refresh the page")
         );
         return;
       }
@@ -143,23 +143,25 @@ const ShoppingCartPage: React.FC = () => {
       });
       if (outOfStock) {
         toast.error(
-          `Stock Error: ${outOfStock.product.name} does not have enough stock for this bundle`
+          t("Stock Error: {{name}} does not have enough stock for this bundle", { name: outOfStock.product.name })
         );
         return;
       }
     } else {
       if (!item.productDetails) {
         toast.error(
-          "Product Error: Item details not available. Please refresh the page"
+          t("Product Error: Item details not available. Please refresh the page")
         );
         return;
       }
 
       if (newQuantity > item.productDetails.stock) {
         toast.error(
-          `Stock Error: Only ${item.productDetails.stock} ${
-            item.productDetails.stock === 1 ? "item" : "items"
-          } available for ${item.productDetails.name}. Please adjust quantity`
+          t("Stock Error: Only {{count}} {{unit}} available for {{name}}. Please adjust quantity", {
+            count: item.productDetails.stock,
+            unit: item.productDetails.stock === 1 ? t("item") : t("items"),
+            name: item.productDetails.name,
+          })
         );
         return;
       }
@@ -167,7 +169,7 @@ const ShoppingCartPage: React.FC = () => {
       if (item.productDetails.stock === 0) {
         await removeItem(itemId, "product");
         toast.error(
-          `Stock Error: ${item.productDetails.name} is out of stock and has been removed from your cart`
+          t("Stock Error: {{name}} is out of stock and has been removed from your cart", { name: item.productDetails.name })
         );
         return;
       }
@@ -180,7 +182,7 @@ const ShoppingCartPage: React.FC = () => {
       } else {
         await updateCartItem(itemId, newQuantity);
       }
-      toast.success("Cart updated successfully");
+      toast.success(t("Cart updated successfully"));
 
       // Refresh cart data and update local state
       await fetchCart();
@@ -200,8 +202,8 @@ const ShoppingCartPage: React.FC = () => {
     } catch (error: any) {
       console.error("Error updating quantity:", error);
       const errorMessage =
-        error?.response?.data?.message || "Failed to update cart";
-      toast.error(`Cart Update Error: ${errorMessage}. Please try again`);
+        error?.response?.data?.message || t("Failed to update cart");
+      toast.error(t("Cart Update Error: {{msg}}. Please try again", { msg: errorMessage }));
     } finally {
       setUpdatingItem(null);
     }
@@ -215,7 +217,7 @@ const ShoppingCartPage: React.FC = () => {
         } else {
           await removeFromCart(cartItemId);
         }
-        toast.success("Item removed from cart");
+        toast.success(t("Item removed from cart"));
 
         // Refresh cart data from user store
         await fetchCart();
@@ -231,8 +233,8 @@ const ShoppingCartPage: React.FC = () => {
       } catch (error: any) {
         console.error("Error removing item:", error);
         const errorMessage =
-          error?.response?.data?.message || "Failed to remove item";
-        toast.error(`Remove Item Error: ${errorMessage}. Please try again`);
+          error?.response?.data?.message || t("Failed to remove item");
+        toast.error(t("Remove Item Error: {{msg}}. Please try again", { msg: errorMessage }));
       }
     },
     [removeFromCart, removeCollectionFromCart, fetchCart]
@@ -365,7 +367,7 @@ const ShoppingCartPage: React.FC = () => {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      toast.error("Please enter a coupon code");
+      toast.error(t("Please enter a coupon code"));
       return;
     }
 
@@ -398,7 +400,7 @@ const ShoppingCartPage: React.FC = () => {
       // Apply the coupon by storing it in the coupon store
       // The validation response now includes the full coupon data
       if (!validation.coupon) {
-        toast.error("Failed to apply coupon");
+        toast.error(t("Failed to apply coupon"));
         return;
       }
 
@@ -427,7 +429,7 @@ const ShoppingCartPage: React.FC = () => {
       // Set the applied coupon in the store
       useCouponStore.setState({ appliedCoupon: couponData });
 
-      toast.success("Coupon applied successfully!");
+      toast.success(t("Coupon applied successfully!"));
       setCouponCode(""); // Clear the input
     } catch (error: any) {
       console.error("Error applying coupon:", error);
@@ -437,7 +439,7 @@ const ShoppingCartPage: React.FC = () => {
 
   const handleRemoveCoupon = () => {
     removeCoupon();
-    toast.success("Coupon removed");
+    toast.success(t("Coupon removed"));
   };
 
   const handleProductClick = (productId: string) => {
@@ -574,27 +576,27 @@ const ShoppingCartPage: React.FC = () => {
         <div className="absolute inset-0">
           <img
             src="net1.jpeg"
-            alt="Camera"
+            alt={t("Camera")}
             className="w-full h-full object-cover opacity-20"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">
-            Shopping Cart
+            {t("Shopping Cart")}
           </h1>
           <nav className="text-xs sm:text-sm text-[var(--text-muted)]">
             <Link to="/" className="hover:text-[var(--text)]">
-              Home
+              {t("Home")}
             </Link>
             <span className="mx-2">/</span>
-            <span>Shopping Cart</span>
+            <span>{t("Shopping Cart")}</span>
           </nav>
         </div>
         {/* Camera Image positioned on the right */}
         <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
           <img
             src="net2.jpeg"
-            alt="Professional Camera"
+            alt={t("Professional Camera")}
             className="h-full w-full object-contain"
           />
         </div>
@@ -610,22 +612,22 @@ const ShoppingCartPage: React.FC = () => {
                 <thead className="bg-[var(--bg)]">
                   <tr>
                     <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
-                      Image
+                      {t("Image")}
                     </th>
                     <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
-                      Product
+                      {t("Product")}
                     </th>
                     <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
-                      Price
+                      {t("Price")}
                     </th>
                     <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
-                      Quantity
+                      {t("Quantity")}
                     </th>
                     <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
-                      Total
+                      {t("Total")}
                     </th>
                     <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
-                      Remove
+                      {t("Remove")}
                     </th>
                   </tr>
                 </thead>
@@ -641,7 +643,7 @@ const ShoppingCartPage: React.FC = () => {
                                   ?.images?.[0]?.url,
                                 { w: 160 }
                               )}
-                              alt={item.collectionDetails?.name || "Bundle"}
+                              alt={item.collectionDetails?.name || t("Bundle")}
                               loading="lazy"
                               decoding="async"
                               className="w-full h-full object-cover"
@@ -656,7 +658,7 @@ const ShoppingCartPage: React.FC = () => {
                           >
                             <img
                               src={cldImg(item.productDetails?.images?.[0]?.url, { w: 160 })}
-                              alt={item.productDetails?.name || "Product"}
+                              alt={item.productDetails?.name || t("Product")}
                               loading="lazy"
                               decoding="async"
                               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
@@ -668,9 +670,9 @@ const ShoppingCartPage: React.FC = () => {
                         {item.type === "collection" ? (
                           <div className="space-y-1">
                             <div className="text-xs sm:text-sm font-medium text-[var(--text)]">
-                              {item.collectionDetails?.name || "Bundle"}
+                              {item.collectionDetails?.name || t("Bundle")}
                               <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-[#FFD600]/20 text-[#333333]">
-                                Bundle
+                                {t("Bundle")}
                               </span>
                             </div>
                             <div className="text-[10px] sm:text-xs text-[var(--text-subtle)]">
@@ -799,7 +801,7 @@ const ShoppingCartPage: React.FC = () => {
                       </td>
                       <td className="px-4 sm:px-6 py-4">
                         <div className="text-xs sm:text-sm font-medium text-[var(--text)]">
-                          {(getItemTotal(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                          {(getItemTotal(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4">
@@ -964,7 +966,7 @@ const ShoppingCartPage: React.FC = () => {
                     </button>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--text-muted)]">Quantity:</span>
+                    <span className="text-xs text-[var(--text-muted)]">{t("Quantity:")}</span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
@@ -1018,7 +1020,7 @@ const ShoppingCartPage: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t">
                     <span className="text-xs font-medium text-[var(--text)]">
-                      Total:
+                      {t("Total:")}
                     </span>
                     <span className="text-sm font-bold text-[var(--text)]">
                       {(getItemTotal(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
@@ -1035,7 +1037,7 @@ const ShoppingCartPage: React.FC = () => {
               {/* Calculate Shipping */}
               <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
                 <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
-                  Calculate Shipping
+                  {t("Calculate Shipping")}
                 </h3>
                 <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4">
                   <select
@@ -1048,7 +1050,7 @@ const ShoppingCartPage: React.FC = () => {
                     }
                     className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   >
-                    <option value="Egypt">Egypt</option>
+                    <option value="Egypt">{t("Egypt")}</option>
                   </select>
                   <select
                     value={shippingInfo.city}
@@ -1057,12 +1059,12 @@ const ShoppingCartPage: React.FC = () => {
                     }
                     className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   >
-                    <option value="Cairo">Cairo</option>
+                    <option value="Cairo">{t("Cairo")}</option>
                   </select>
                 </div>
                 <input
                   type="text"
-                  placeholder="Postcode / Zip"
+                  placeholder={t("Postcode / Zip")}
                   value={shippingInfo.postcode}
                   onChange={(e) =>
                     setShippingInfo({
@@ -1073,14 +1075,14 @@ const ShoppingCartPage: React.FC = () => {
                   className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4 text-xs sm:text-sm"
                 />
                 <button className="w-full bg-[#002B5B] text-white py-2 px-4 rounded-lg hover:bg-[#001a3d] transition-colors text-xs sm:text-sm font-medium">
-                  ESTIMATE
+                  {t("ESTIMATE")}
                 </button>
               </div>
 
               {/* Discount Coupon */}
               <div className="bg-[#FAFAFA] p-4 sm:p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
                 <h3 className="text-base sm:text-lg font-semibold text-[#333333] mb-3 sm:mb-4">
-                  Discount Coupon Code
+                  {t("Discount Coupon Code")}
                 </h3>
 
                 {appliedCoupon ? (
@@ -1119,7 +1121,7 @@ const ShoppingCartPage: React.FC = () => {
                       disabled={couponLoading || !couponCode.trim()}
                       className="bg-[#D32F2F] text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-[#b71c1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium whitespace-nowrap"
                     >
-                      {couponLoading ? "APPLYING..." : "APPLY CODE"}
+                      {couponLoading ? t("APPLYING...") : t("APPLY CODE")}
                     </button>
                   </div>
                 )}
@@ -1129,32 +1131,32 @@ const ShoppingCartPage: React.FC = () => {
             {/* Right Column - Cart Summary */}
             <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
               <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-4 sm:mb-6">
-                Cart Summary
+                {t("Cart Summary")}
               </h3>
 
               <div className="space-y-3 sm:space-y-4 mb-6">
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-[var(--text-muted)]">Sub Total</span>
-                  <span className="font-medium">{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                  <span className="text-[var(--text-muted)]">{t("Sub Total")}</span>
+                  <span className="font-medium">{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                 </div>
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-[var(--text-muted)]">Shipping Cost</span>
+                  <span className="text-[var(--text-muted)]">{t("Shipping Cost")}</span>
                   <span className="font-medium">
-                    {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                    {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                   </span>
                 </div>
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-xs sm:text-sm text-green-600">
-                    <span>Coupon Discount ({appliedCoupon?.code})</span>
+                    <span>{t("Coupon Discount")} ({appliedCoupon?.code})</span>
                     <span className="font-medium">
-                      -{(couponDiscount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                      -{(couponDiscount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                     </span>
                   </div>
                 )}
                 <div className="border-t pt-3 sm:pt-4">
                   <div className="flex justify-between text-base sm:text-lg font-semibold">
-                    <span>Grand Total</span>
-                    <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                    <span>{t("Grand Total")}</span>
+                    <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                   </div>
                 </div>
               </div>
@@ -1164,7 +1166,7 @@ const ShoppingCartPage: React.FC = () => {
                   onClick={handleCheckout}
                   className="w-full bg-[#FFD600] text-[#333333] py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-[#e6c100] transition-colors text-center text-xs sm:text-sm"
                 >
-                  CHECKOUT
+                  {t("CHECKOUT")}
                 </button>
               </div>
             </div>

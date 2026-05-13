@@ -109,7 +109,7 @@ const CheckoutPage: React.FC = () => {
         } catch (error: any) {
           console.error("Error loading cart items:", error);
           toast.error(
-            "Cart Loading Error: Some items could not be loaded. Please refresh the page"
+            t("Cart Loading Error: Some items could not be loaded. Please refresh the page")
           );
         }
       }
@@ -121,7 +121,7 @@ const CheckoutPage: React.FC = () => {
         } catch (error: any) {
           console.error("Error loading addresses:", error);
           toast.error(
-            "Address Loading Error: Could not load your saved addresses"
+            t("Address Loading Error: Could not load your saved addresses")
           );
         }
       }
@@ -155,7 +155,7 @@ const CheckoutPage: React.FC = () => {
     if (currentDate > endDate) {
       // Remove expired coupon
       removeCoupon();
-      toast.error("The applied coupon has expired and has been removed");
+      toast.error(t("The applied coupon has expired and has been removed"));
       return 0;
     }
 
@@ -174,7 +174,7 @@ const CheckoutPage: React.FC = () => {
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      toast.error("Please enter a coupon code");
+      toast.error(t("Please enter a coupon code"));
       return;
     }
 
@@ -244,7 +244,7 @@ const CheckoutPage: React.FC = () => {
   const handleRemoveCoupon = () => {
     removeCoupon();
     setCouponCode("");
-    toast.success("Coupon removed");
+    toast.success(t("Coupon removed"));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -252,7 +252,7 @@ const CheckoutPage: React.FC = () => {
 
     // Enhanced validation with specific error messages
     if (!user) {
-      toast.error("Authentication Error: Please log in to place an order");
+      toast.error(t("Authentication Error: Please log in to place an order"));
       return;
     }
 
@@ -322,7 +322,7 @@ const CheckoutPage: React.FC = () => {
     }
 
     if (!paymentMethod) {
-      toast.error("Payment Error: Please select a payment method to proceed");
+      toast.error(t("Payment Error: Please select a payment method to proceed"));
       return;
     }
 
@@ -359,7 +359,7 @@ const CheckoutPage: React.FC = () => {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(billingData.email)) {
-      toast.error("Email Error: Please enter a valid email address");
+      toast.error(t("Email Error: Please enter a valid email address"));
       return;
     }
 
@@ -607,25 +607,25 @@ const CheckoutPage: React.FC = () => {
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=400&fit=crop"
-            alt="Camera"
+            alt={t("Camera")}
             className="w-full h-full object-cover opacity-20"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">Checkout</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">{t("Checkout")}</h1>
           <nav className="text-xs sm:text-sm text-[var(--text-muted)]">
             <Link to="/" className="hover:text-[var(--text)]">
-              Home
+              {t("Home")}
             </Link>
             <span className="mx-2">/</span>
-            <span>Checkout</span>
+            <span>{t("Checkout")}</span>
           </nav>
         </div>
         {/* Camera Image positioned on the right */}
         <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
           <img
             src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=400&fit=crop"
-            alt="Professional Camera"
+            alt={t("Professional Camera")}
             className="h-full w-full object-contain"
           />
         </div>
@@ -638,14 +638,14 @@ const CheckoutPage: React.FC = () => {
               {/* Billing Address */}
               <div className="bg-[var(--surface)] p-4 sm:p-6 lg:p-8 rounded-lg shadow-sm">
                 <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)] mb-4 sm:mb-6">
-                  Billing Address
+                  {t("Billing Address")}
                 </h2>
 
                 {/* Address Selection */}
                 {addresses && addresses.length > 0 && (
                   <div className="mb-4 sm:mb-6">
                     <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
-                      Select Shipping Address
+                      {t("Select Shipping Address")}
                     </h3>
                     <div className="space-y-2 sm:space-y-3">
                       {addresses
@@ -697,7 +697,7 @@ const CheckoutPage: React.FC = () => {
                               </div>
                               {address.phone && (
                                 <div className="text-sm text-[var(--text-muted)]">
-                                  Phone: {address.phone}
+                                  {t("Phone:")} {address.phone}
                                 </div>
                               )}
                             </div>
@@ -715,7 +715,7 @@ const CheckoutPage: React.FC = () => {
                           className="text-blue-600 focus:ring-blue-500"
                         />
                         <span className="ml-2 text-sm text-[var(--text-muted)]">
-                          Use new address
+                          {t("Use new address")}
                         </span>
                       </label>
                     </div>
@@ -726,11 +726,11 @@ const CheckoutPage: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                        First Name*
+                        {t("First Name*")}
                       </label>
                       <input
                         type="text"
-                        placeholder="First Name"
+                        placeholder={t("First Name")}
                         value={billingData.firstName}
                         onChange={(e) =>
                           setBillingData({
@@ -744,11 +744,11 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                        Last Name*
+                        {t("Last Name*")}
                       </label>
                       <input
                         type="text"
-                        placeholder="Last Name"
+                        placeholder={t("Last Name")}
                         value={billingData.lastName}
                         onChange={(e) =>
                           setBillingData({
@@ -765,11 +765,11 @@ const CheckoutPage: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                        Email Address*
+                        {t("Email Address*")}
                       </label>
                       <input
                         type="email"
-                        placeholder="Email Address"
+                        placeholder={t("Email Address")}
                         value={billingData.email}
                         onChange={(e) =>
                           setBillingData({
@@ -783,11 +783,11 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                        Phone No*
+                        {t("Phone No*")}
                       </label>
                       <input
                         type="tel"
-                        placeholder="Phone number"
+                        placeholder={t("Phone number")}
                         value={billingData.phone}
                         onChange={(e) =>
                           setBillingData({
@@ -803,11 +803,11 @@ const CheckoutPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                      Company Name
+                      {t("Company Name")}
                     </label>
                     <input
                       type="text"
-                      placeholder="Company Name"
+                      placeholder={t("Company Name")}
                       value={billingData.company}
                       onChange={(e) =>
                         setBillingData({
@@ -821,11 +821,11 @@ const CheckoutPage: React.FC = () => {
 
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                      Address*
+                      {t("Address*")}
                     </label>
                     <input
                       type="text"
-                      placeholder="Address line 1"
+                      placeholder={t("Address line 1")}
                       value={billingData.address1}
                       onChange={(e) =>
                         setBillingData({
@@ -838,7 +838,7 @@ const CheckoutPage: React.FC = () => {
                     />
                     <input
                       type="text"
-                      placeholder="Address line 2"
+                      placeholder={t("Address line 2")}
                       value={billingData.address2}
                       onChange={(e) =>
                         setBillingData({
@@ -870,11 +870,11 @@ const CheckoutPage: React.FC = () => {
                     </div> */}
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                        Town/City*
+                        {t("Town/City*")}
                       </label>
                       <input
                         type="text"
-                        placeholder="Town/City"
+                        placeholder={t("Town/City")}
                         value={billingData.city}
                         onChange={(e) =>
                           setBillingData({
@@ -891,11 +891,11 @@ const CheckoutPage: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                        State*
+                        {t("State*")}
                       </label>
                       <input
                         type="text"
-                        placeholder="State"
+                        placeholder={t("State")}
                         value={billingData.state}
                         onChange={(e) =>
                           setBillingData({
@@ -909,11 +909,11 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
-                        Zip Code*
+                        {t("Zip Code*")}
                       </label>
                       <input
                         type="text"
-                        placeholder="Zip Code"
+                        placeholder={t("Zip Code")}
                         value={billingData.zipCode}
                         onChange={(e) =>
                           setBillingData({
@@ -967,14 +967,14 @@ const CheckoutPage: React.FC = () => {
               {/* Order Summary */}
               <div className="bg-[var(--surface)] p-4 sm:p-6 lg:p-8 rounded-lg shadow-sm">
                 <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)] mb-4 sm:mb-6">
-                  Cart Total
+                  {t("Cart Total")}
                 </h2>
 
                 {/* Order Items */}
                 <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                   <div className="flex justify-between font-medium border-b pb-2 text-xs sm:text-sm">
-                    <span>Product</span>
-                    <span>Total</span>
+                    <span>{t("Product")}</span>
+                    <span>{t("Total")}</span>
                   </div>
                   {cartItems.map((item) => (
                     <div
@@ -983,34 +983,34 @@ const CheckoutPage: React.FC = () => {
                     >
                       <span>
                         {item.type === "collection"
-                          ? item.collectionDetails?.name || "Bundle"
-                          : item.productDetails?.name || "Product"}{" "}
+                          ? item.collectionDetails?.name || t("Bundle")
+                          : item.productDetails?.name || t("Product")}{" "}
                         X {item.quantity.toString().padStart(2, "0")}
                       </span>
                       <span>
-                        {((getItemPrice(item) * item.quantity)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
+                        {((getItemPrice(item) * item.quantity)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                       </span>
                     </div>
                   ))}
 
                   <div className="border-t pt-3 sm:pt-4 space-y-1 sm:space-y-2">
                     <div className="flex justify-between text-xs sm:text-sm">
-                      <span>Sub Total</span>
-                      <span>{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                      <span>{t("Sub Total")}</span>
+                      <span>{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
                     <div className="flex justify-between text-xs sm:text-sm">
-                      <span>Shipping Fee</span>
-                      <span>{(shippingFee).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                      <span>{t("Shipping Fee")}</span>
+                      <span>{(shippingFee).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between text-xs sm:text-sm text-green-600">
-                        <span>Coupon Discount</span>
-                        <span>-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                        <span>{t("Coupon Discount")}</span>
+                        <span>-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-base sm:text-lg font-bold border-t pt-2">
-                      <span>Grand Total</span>
-                      <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
+                      <span>{t("Grand Total")}</span>
+                      <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
                   </div>
                 </div>
@@ -1018,13 +1018,13 @@ const CheckoutPage: React.FC = () => {
                 {/* Coupon Code */}
                 <div className="mb-4 sm:mb-6">
                   <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-2 sm:mb-4">
-                    Coupon Code
+                    {t("Coupon Code")}
                   </h3>
                   {!appliedCoupon ? (
                     <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
-                        placeholder="Enter coupon code"
+                        placeholder={t("Enter coupon code")}
                         value={couponCode}
                         onChange={(e) =>
                           setCouponCode(e.target.value.toUpperCase())
@@ -1036,7 +1036,7 @@ const CheckoutPage: React.FC = () => {
                         onClick={handleApplyCoupon}
                         className="bg-blue-600 text-white px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
                       >
-                        Apply
+                        {t("Apply")}
                       </button>
                     </div>
                   ) : (
@@ -1046,7 +1046,7 @@ const CheckoutPage: React.FC = () => {
                           {appliedCoupon.code}
                         </span>
                         <span className="text-green-600 text-xs sm:text-sm">
-                          (-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP)
+                          (-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")})
                         </span>
                       </div>
                       <button
@@ -1054,7 +1054,7 @@ const CheckoutPage: React.FC = () => {
                         onClick={handleRemoveCoupon}
                         className="text-red-600 hover:text-red-800 text-xs sm:text-sm"
                       >
-                        Remove
+                        {t("Remove")}
                       </button>
                     </div>
                   )}
