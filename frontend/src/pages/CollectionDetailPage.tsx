@@ -69,7 +69,7 @@ const CollectionDetailPage: React.FC = () => {
         setCollection(data.collection);
         setError(null);
       } catch (err: any) {
-        setError(err?.response?.data?.message || "Failed to load collection");
+        setError(err?.response?.data?.message || t("Failed to load collection"));
       } finally {
         setLoading(false);
       }
@@ -214,7 +214,7 @@ const CollectionDetailPage: React.FC = () => {
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-[var(--bg)] border border-[var(--border)] shrink-0">
                   <img
                     src={cldImg(item.product?.images?.[0]?.url, { w: 200 })}
-                    alt={item.product?.name || "Product"}
+                    alt={item.product?.name || t("Product")}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -229,7 +229,7 @@ const CollectionDetailPage: React.FC = () => {
                     to={`/product/${item.product?._id}`}
                     className="text-sm font-semibold text-[var(--text)] hover:text-[var(--brand-primary)] transition-colors line-clamp-1"
                   >
-                    {item.product?.name || "Product"}
+                    {item.product?.name || t("Product")}
                   </Link>
                   <p className="text-xs text-[var(--text-muted)] mt-0.5 line-clamp-1">
                     {item.product?.description || ""}
@@ -298,7 +298,7 @@ const CollectionDetailPage: React.FC = () => {
                     </p>
                     {savings > 0 && (
                       <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                        💰 {t("Save")} EGP {savings.toLocaleString()} ({savingsPercent}%)
+                        💰 {t("Save")} {t("EGP")} {savings.toLocaleString()} ({savingsPercent}%)
                       </p>
                     )}
                   </div>

@@ -52,8 +52,8 @@ const CollectionsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <SEO
-        title="Collections"
-        description="Curated tech bundles from Belgomla — pre-packaged sets for creators, businesses, gamers, and more, at bundle pricing."
+        title={t("Collections")}
+        description={t("Curated tech bundles from Belgomla — pre-packaged sets for creators, businesses, gamers, and more, at bundle pricing.")}
       />
       <Header />
 
@@ -83,7 +83,7 @@ const CollectionsPage: React.FC = () => {
           {[
             { value: collections.length || "—", label: t("Bundles Available") },
             { value: "15%+", label: t("Average Savings") },
-            { value: "Free", label: t("Shipping on Bundles") },
+            { value: t("Free"), label: t("Shipping on Bundles") },
           ].map((stat, i) => (
             <div key={i} className="p-4 sm:p-6 text-center">
               <p className="text-xl sm:text-2xl font-bold text-[var(--brand-primary)]">{stat.value}</p>
@@ -196,7 +196,7 @@ const CollectionsPage: React.FC = () => {
                             <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface)] border border-[var(--border)] shrink-0">
                               <img
                                 src={cldImg(item.product?.images?.[0]?.url, { w: 120 })}
-                                alt={item.product?.name || "Product"}
+                                alt={item.product?.name || t("Product")}
                                 loading="lazy"
                                 decoding="async"
                                 className="w-full h-full object-cover"
@@ -204,7 +204,7 @@ const CollectionsPage: React.FC = () => {
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-[var(--text)] truncate">
-                                {item.product?.name || "Product"}
+                                {item.product?.name || t("Product")}
                               </p>
                               <p className="text-[11px] text-[var(--text-muted)]">
                                 {t("Qty")}: {item.quantity}
@@ -236,7 +236,7 @@ const CollectionsPage: React.FC = () => {
                         </div>
                         {savings > 0 && (
                           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                            💰 {t("You save")} EGP {savings.toLocaleString()}
+                            💰 {t("You save")} {t("EGP")} {savings.toLocaleString()}
                           </p>
                         )}
                       </div>
