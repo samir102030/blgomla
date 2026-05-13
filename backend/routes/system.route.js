@@ -20,9 +20,11 @@ import bulkProductRoutes from "./bulkProduct.route.js";
 import advertisementRoutes from "./advertisement.route.js";
 import paymentRoutes from "./payment.route.js";
 import quotationRoutes from "./quotation.route.js";
+import homeFeedRoutes from "./home.route.js";
 
 const router = express.Router();
 
+router.use("/home-feed", homeFeedRoutes);
 router.use("/products", productsRoutes);
 router.use("/users", usersRoutes);
 router.use("/brands", brandsRoutes);

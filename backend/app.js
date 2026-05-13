@@ -116,6 +116,7 @@ app.use(trackVisitor);
 // 1h while it revalidates in the background. Anonymous GETs only — anything
 // authenticated (cookies present) bypasses the cache.
 const cacheablePrefixes = [
+  "/api/home-feed",
   "/api/products",
   "/api/brands",
   "/api/categories",

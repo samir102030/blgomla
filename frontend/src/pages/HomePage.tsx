@@ -119,61 +119,51 @@ const HomePage: React.FC = () => {
     return d;
   }, []);
 
-  /* ── Data Fetching ── */
+  /* ── Single batched fetch — see /api/home-feed ── */
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
-      setLoadingAll(true);
       try {
-        const { data } = await axiosInstance.get("/products", {
-          params: { limit: 12, isActive: true, deleted: false, approvalStatus: "approved" },
-        });
-        setAllProducts(data.data || []);
+        const { data } = await axiosInstance.get("/home-feed");
+        if (cancelled) return;
+        const feed = data?.data || {};
+        setAllProducts(feed.products || []);
+        setSaleProducts(feed.saleProducts || []);
+        setNewestProducts(feed.newestProducts || []);
+        useCategoryStore.setState({ categories: feed.categories || [], loading: false });
+        useCollectionStore.setState({ collections: feed.collections || [], loading: false });
       } catch (err) {
-        console.error("Failed to load products:", err);
+        console.error("Home feed failed, falling back to per-section fetches:", err);
+        // Fallback: hit each endpoint individually so a partial outage doesn't blank the page.
+        fetchCategories();
+        fetchCollections({ activeOnly: true });
+        try {
+          const { data: p } = await axiosInstance.get("/products", {
+            params: { limit: 12, isActive: true, deleted: false, approvalStatus: "approved" },
+          });
+          if (!cancelled) setAllProducts(p.data || []);
+        } catch {}
+        try {
+          const { data: s } = await axiosInstance.get("/products/saleProducts");
+          if (!cancelled) setSaleProducts(s.data || []);
+        } catch {}
+        try {
+          const { data: n } = await axiosInstance.get("/products/newest");
+          if (!cancelled) setNewestProducts(n.data || []);
+        } catch {}
       } finally {
-        setLoadingAll(false);
+        if (!cancelled) {
+          setLoadingAll(false);
+          setLoadingSale(false);
+          setLoadingNewest(false);
+        }
       }
     };
     load();
-  }, []);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoadingSale(true);
-      try {
-        const { data } = await axiosInstance.get("/products/saleProducts");
-        setSaleProducts(data.data || []);
-      } catch (err) {
-        console.error("Failed to load sale products:", err);
-      } finally {
-        setLoadingSale(false);
-      }
+    return () => {
+      cancelled = true;
     };
-    load();
-  }, []);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoadingNewest(true);
-      try {
-        const { data } = await axiosInstance.get("/products/newest");
-        setNewestProducts(data.data || []);
-      } catch (err) {
-        console.error("Failed to load newest products:", err);
-      } finally {
-        setLoadingNewest(false);
-      }
-    };
-    load();
-  }, []);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
-  useEffect(() => {
-    fetchCollections({ activeOnly: true });
-  }, [fetchCollections]);
+  }, [fetchCategories, fetchCollections]);
 
   const handleAddBundleToCart = async (collectionId: string) => {
     const success = await addCollectionToCart(collectionId, 1);
