@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import Logo, { BRAND } from "./Logo";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -7,8 +8,10 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const InstallPrompt: React.FC = () => {
-  const { t } = useTranslation();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.language === "ar";
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -45,12 +48,19 @@ const InstallPrompt: React.FC = () => {
 
   if (!isVisible || isDismissed) return null;
 
+  // Edge positioning: bottom-right in RTL, bottom-left in LTR.
+  // Mobile still spans both gutters so the toast stays readable
+  // on narrow screens.
+  const positionClasses = isRtl
+    ? "fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-sm"
+    : "fixed bottom-4 left-4 right-4 md:right-auto md:left-6 md:max-w-sm";
+
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:max-w-sm z-50 animate-slideUp">
+    <div className={`${positionClasses} z-50 animate-slideUp`} dir={isRtl ? "rtl" : "ltr"}>
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-4 flex items-start gap-3">
-        {/* App icon */}
-        <div className="w-12 h-12 rounded-xl bg-[#002B5B] flex items-center justify-center flex-shrink-0">
-          <img src="/logo.png" alt="Belgomla" className="w-8 h-8" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+        {/* App icon — Belgomla mark on brand-color tile */}
+        <div className="w-12 h-12 rounded-xl bg-[var(--brand-primary)] flex items-center justify-center flex-shrink-0">
+          <Logo size={28} color={BRAND.white} />
         </div>
 
         <div className="flex-grow min-w-0">
@@ -63,7 +73,7 @@ const InstallPrompt: React.FC = () => {
           <div className="flex items-center gap-2 mt-2.5">
             <button
               onClick={handleInstall}
-              className="px-4 py-1.5 bg-[var(--brand-nav)] text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
+              className="px-4 py-1.5 bg-[var(--brand-primary)] text-white text-xs font-semibold rounded-lg hover:opacity-90 transition-opacity"
             >
               {t("Install")}
             </button>
@@ -79,10 +89,21 @@ const InstallPrompt: React.FC = () => {
         {/* Close */}
         <button
           onClick={handleDismiss}
+          aria-label={t("Close")}
           className="text-[var(--text-subtle)] hover:text-[var(--text)] flex-shrink-0 mt-0.5"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
