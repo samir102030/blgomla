@@ -42,6 +42,27 @@ html[dir="rtl"] .tracking-tighter {
   letter-spacing: 0;
 }
 
+/* Flip explicit text-align utilities in RTL so dropdown items,
+   form labels, list rows, and section headings hug the right
+   edge — the natural reading start in Arabic. Logical .text-start
+   / .text-end are preferred for new code but most of the codebase
+   uses .text-left / .text-right. Tailwind's md:/lg: variants
+   compile to .md\:text-left etc., which these selectors also
+   cover. Opt out by using .text-start / .text-end or explicit
+   .ltr-only-text-left where needed. */
+html[dir="rtl"] .text-left,
+html[dir="rtl"] .sm\:text-left,
+html[dir="rtl"] .md\:text-left,
+html[dir="rtl"] .lg\:text-left {
+  text-align: right;
+}
+html[dir="rtl"] .text-right,
+html[dir="rtl"] .sm\:text-right,
+html[dir="rtl"] .md\:text-right,
+html[dir="rtl"] .lg\:text-right {
+  text-align: left;
+}
+
 /* ─────────────────────────────────────────────────
    DESIGN SYSTEM — Belgomla Tech Marketplace
    Premium Dark-First IT & Camera E-Commerce

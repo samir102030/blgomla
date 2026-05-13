@@ -190,7 +190,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
         <div className="relative max-w-7xl mx-auto px-6 md:px-8 lg:px-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Left: Text content */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="flex-1 text-center md:text-start">
               {/* Badge */}
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-4">
                 <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
