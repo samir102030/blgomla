@@ -13,7 +13,9 @@ interface BrandModalProps {
 const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
   const [formData, setFormData] = useState({
     name: "",
+    nameAr: "",
     description: "",
+    descriptionAr: "",
     logo: "",
     isActive: true,
   });
@@ -27,7 +29,9 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
     if (brand) {
       setFormData({
         name: brand.name,
+        nameAr: brand.nameAr || "",
         description: brand.description || "",
+        descriptionAr: brand.descriptionAr || "",
         logo: brand.logo || "",
         isActive: brand.isActive,
       });
@@ -35,7 +39,9 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
     } else {
       setFormData({
         name: "",
+        nameAr: "",
         description: "",
+        descriptionAr: "",
         logo: "",
         isActive: true,
       });
@@ -130,35 +136,69 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter brand name"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Brand Name (English) *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter brand name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                اسم العلامة التجارية (عربي)
+              </label>
+              <input
+                type="text"
+                dir="rtl"
+                value={formData.nameAr}
+                onChange={(e) =>
+                  setFormData({ ...formData, nameAr: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="أدخل اسم العلامة التجارية"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter brand description"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description (English)
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter brand description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                الوصف (عربي)
+              </label>
+              <textarea
+                dir="rtl"
+                value={formData.descriptionAr}
+                onChange={(e) =>
+                  setFormData({ ...formData, descriptionAr: e.target.value })
+                }
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="أدخل وصف العلامة التجارية"
+              />
+            </div>
           </div>
 
           <div>

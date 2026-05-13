@@ -19,7 +19,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     name: "",
+    nameAr: "",
     description: "",
+    descriptionAr: "",
     image: "",
     parentCategory: "",
     metaTitle: "",
@@ -37,7 +39,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     if (category) {
       setFormData({
         name: category.name,
+        nameAr: (category as any).nameAr || "",
         description: category.description || "",
+        descriptionAr: (category as any).descriptionAr || "",
         image: category.image || "",
         parentCategory:
           typeof category.parentCategory === "object"
@@ -52,7 +56,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     } else {
       setFormData({
         name: "",
+        nameAr: "",
         description: "",
+        descriptionAr: "",
         image: "",
         parentCategory: "",
         metaTitle: "",
@@ -155,7 +161,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category Name *
+                Category Name (English) *
               </label>
               <input
                 type="text"
@@ -166,6 +172,22 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter category name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                اسم الفئة (عربي)
+              </label>
+              <input
+                type="text"
+                dir="rtl"
+                value={formData.nameAr}
+                onChange={(e) =>
+                  setFormData({ ...formData, nameAr: e.target.value })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="أدخل اسم الفئة"
               />
             </div>
 
@@ -192,19 +214,36 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter category description"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description (English)
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter category description"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                الوصف (عربي)
+              </label>
+              <textarea
+                dir="rtl"
+                value={formData.descriptionAr}
+                onChange={(e) =>
+                  setFormData({ ...formData, descriptionAr: e.target.value })
+                }
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="أدخل وصف الفئة"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

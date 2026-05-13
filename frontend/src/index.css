@@ -1,8 +1,46 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ─────────────────────────────────────────────────
+   Arabic typography — Cairo handles vowel marks
+   (shadda, fatha, kasra) and descenders gracefully.
+   Inter clips them at tight line-heights.
+   ───────────────────────────────────────────────── */
+html[lang="ar"] body,
+html[dir="rtl"] body {
+  font-family: 'Cairo', 'Inter', sans-serif;
+}
+
+/* Loosen line-height on large headings in RTL so diacritics
+   and descenders don't get cropped. tracking-tight (negative
+   letter-spacing) also makes no sense for connected Arabic
+   script — neutralize it. */
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3,
+html[dir="rtl"] h4 {
+  line-height: 1.55;
+  letter-spacing: normal;
+}
+
+/* Same for any element opting into Tailwind's leading-tight /
+   leading-snug — those crop AR glyphs even outside headings. */
+html[dir="rtl"] .leading-tight,
+html[dir="rtl"] .leading-snug {
+  line-height: 1.55;
+}
+
+/* Tailwind tracking-tight / tracking-tighter both shrink letter
+   spacing; for connected Arabic script they make joins look
+   broken. Reset to 0 in RTL. */
+html[dir="rtl"] .tracking-tight,
+html[dir="rtl"] .tracking-tighter {
+  letter-spacing: 0;
+}
 
 /* ─────────────────────────────────────────────────
    DESIGN SYSTEM — Belgomla Tech Marketplace

@@ -23,14 +23,18 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const { vendorStore } = useVendorStore();
   const [form, setForm] = useState({
     name: "",
+    nameAr: "",
     description: "",
+    descriptionAr: "",
     price: "",
     stock: "0",
     brand: "",
     category: "",
     newBrandName: "",
+    newBrandNameAr: "",
     newBrandDescription: "",
     newCategoryName: "",
+    newCategoryNameAr: "",
     newCategoryDescription: "",
     salePercentage: "",
     saleActive: false,
@@ -49,14 +53,18 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (isOpen) {
       setForm({
         name: "",
+        nameAr: "",
         description: "",
+        descriptionAr: "",
         price: "",
         stock: "0",
         brand: "",
         category: "",
         newBrandName: "",
+        newBrandNameAr: "",
         newBrandDescription: "",
         newCategoryName: "",
+        newCategoryNameAr: "",
         newCategoryDescription: "",
         salePercentage: "",
         saleActive: false,
@@ -121,7 +129,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
       const payload: any = {
         name: form.name,
+        nameAr: form.nameAr,
         description: form.description,
+        descriptionAr: form.descriptionAr,
         price: Number(form.price),
         stock: Number(form.stock),
         images,
@@ -155,6 +165,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       if (form.brand === "CREATE_NEW") {
         payload.newBrand = {
           name: form.newBrandName,
+          nameAr: form.newBrandNameAr,
           description: form.newBrandDescription,
         };
       } else if (form.brand) {
@@ -165,6 +176,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
       if (form.category === "CREATE_NEW") {
         payload.newCategory = {
           name: form.newCategoryName,
+          nameAr: form.newCategoryNameAr,
           description: form.newCategoryDescription,
         };
       } else if (form.category) {
@@ -272,7 +284,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Name
+                  Name (English)
                 </label>
                 <input
                   required
@@ -284,18 +296,31 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Price
+                  الاسم (عربي)
                 </label>
                 <input
-                  required
-                  placeholder="0.00"
-                  type="number"
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  dir="rtl"
+                  placeholder="اسم المنتج"
+                  value={form.nameAr}
+                  onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
                   className="mt-1 block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                Price
+              </label>
+              <input
+                required
+                placeholder="0.00"
+                type="number"
+                step="0.01"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                className="mt-1 block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
@@ -468,18 +493,34 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               </label>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <textarea
-                placeholder="Short description"
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-yellow-300"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Description (English)
+                </label>
+                <textarea
+                  placeholder="Short description"
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  الوصف (عربي)
+                </label>
+                <textarea
+                  dir="rtl"
+                  placeholder="وصف موجز"
+                  value={form.descriptionAr}
+                  onChange={(e) =>
+                    setForm({ ...form, descriptionAr: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+                />
+              </div>
             </div>
 
             {/* Bulk Pricing */}

@@ -23,7 +23,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   const { t } = useTranslation();
   const [form, setForm] = useState({
     name: "",
+    nameAr: "",
     description: "",
+    descriptionAr: "",
     price: "",
     stock: "0",
     brand: "",
@@ -46,7 +48,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     if (isOpen && product) {
       setForm({
         name: product.name || "",
+        nameAr: product.nameAr || "",
         description: product.description || "",
+        descriptionAr: product.descriptionAr || "",
         price: product.price?.toString() || "",
         stock: product.stock?.toString() || "0",
         brand: product.brand || "",
@@ -127,7 +131,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
 
       const payload: any = {
         name: form.name,
+        nameAr: form.nameAr,
         description: form.description,
+        descriptionAr: form.descriptionAr,
         price: Number(form.price),
         stock: Number(form.stock),
         images: allImages,
@@ -290,13 +296,25 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  {t("modal.editProduct.nameLabel")}
+                  {t("modal.editProduct.nameLabel")} (English)
                 </label>
                 <input
                   required
                   placeholder={t("modal.editProduct.namePlaceholder")}
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  الاسم (عربي)
+                </label>
+                <input
+                  dir="rtl"
+                  placeholder="اسم المنتج"
+                  value={form.nameAr}
+                  onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
                   className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 />
               </div>
@@ -430,18 +448,34 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               </label>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                {t("modal.editProduct.descriptionLabel")}
-              </label>
-              <textarea
-                placeholder={t("modal.editProduct.descriptionPlaceholder")}
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  {t("modal.editProduct.descriptionLabel")} (English)
+                </label>
+                <textarea
+                  placeholder={t("modal.editProduct.descriptionPlaceholder")}
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  الوصف (عربي)
+                </label>
+                <textarea
+                  dir="rtl"
+                  placeholder="وصف موجز"
+                  value={form.descriptionAr}
+                  onChange={(e) =>
+                    setForm({ ...form, descriptionAr: e.target.value })
+                  }
+                  className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 h-24 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                />
+              </div>
             </div>
 
             {/* Bulk Pricing */}
