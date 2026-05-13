@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MagnifyingGlassIcon,
   EyeIcon,
@@ -10,6 +11,7 @@ import {
 import { useUserStore } from "../../stores/user.store";
 
 const UsersPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -150,10 +152,10 @@ const UsersPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            Users Management
+            {t("users.title")}
           </h1>
           <p className="text-[#9E9E9E]">
-            Manage system users and their permissions
+            {t("users.subtitle")}
           </p>
         </div>
       </div>
@@ -163,7 +165,7 @@ const UsersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Users</p>
+              <p className="text-sm text-gray-600">{t("users.totalUsers")}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {paginated?.total || 0}
               </p>
@@ -176,7 +178,7 @@ const UsersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active Users</p>
+              <p className="text-sm text-gray-600">{t("users.activeUsers")}</p>
               <p className="text-2xl font-bold text-green-600">
                 {users.filter((u) => u.active).length}
               </p>
@@ -189,7 +191,7 @@ const UsersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Inactive Users</p>
+              <p className="text-sm text-gray-600">{t("users.inactiveUsers")}</p>
               <p className="text-2xl font-bold text-red-600">
                 {users.filter((u) => !u.active).length}
               </p>
@@ -202,7 +204,7 @@ const UsersPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Deleted Users</p>
+              <p className="text-sm text-gray-600">{t("users.deletedUsers")}</p>
               <p className="text-2xl font-bold text-red-600">
                 {users.filter((u) => u.deleted).length}
               </p>
@@ -222,7 +224,7 @@ const UsersPage: React.FC = () => {
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search users by name or email..."
+                placeholder={t("users.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -235,20 +237,20 @@ const UsersPage: React.FC = () => {
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="store">Store</option>
-              <option value="customer">Customer</option>
+              <option value="all">{t("users.allRoles")}</option>
+              <option value="admin">{t("users.admin")}</option>
+              <option value="store">{t("users.store")}</option>
+              <option value="customer">{t("users.customer")}</option>
             </select>
             <select
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="deleted">Deleted</option>
+              <option value="all">{t("users.allStatus")}</option>
+              <option value="active">{t("users.active")}</option>
+              <option value="inactive">{t("users.inactive")}</option>
+              <option value="deleted">{t("users.deleted")}</option>
             </select>
           </div>
         </div>
@@ -259,16 +261,16 @@ const UsersPage: React.FC = () => {
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-accent)] mx-auto"></div>
-            <p className="mt-2 text-gray-600">Loading users...</p>
+            <p className="mt-2 text-gray-600">{t("users.loading")}</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center">
-            <p className="text-red-600">Error loading users: {error}</p>
+            <p className="text-red-600">{t("users.errorLoading")}: {error}</p>
             <button
               onClick={() => fetchUsers({ page: currentPage, limit: 10 })}
               className="mt-2 px-4 py-2 bg-[var(--brand-accent)] text-white rounded hover:bg-[var(--brand-accent)]"
             >
-              Retry
+              {t("users.retry")}
             </button>
           </div>
         ) : (
@@ -277,22 +279,22 @@ const UsersPage: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
+                    {t("users.colUser")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
+                    {t("users.colRole")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t("users.colStatus")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Join Date
+                    {t("users.colJoinDate")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Last Login
+                    {t("users.colLastLogin")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                    {t("users.colActions")}
                   </th>
                 </tr>
               </thead>
@@ -303,7 +305,7 @@ const UsersPage: React.FC = () => {
                       colSpan={6}
                       className="px-6 py-4 text-center text-gray-500"
                     >
-                      No users found
+                      {t("users.noUsers")}
                     </td>
                   </tr>
                 ) : (
@@ -349,10 +351,10 @@ const UsersPage: React.FC = () => {
                           )}`}
                         >
                           {user.deleted
-                            ? "Deleted"
+                            ? t("users.deleted")
                             : user.active
-                            ? "Active"
-                            : "Inactive"}
+                            ? t("users.active")
+                            : t("users.inactive")}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -470,7 +472,7 @@ const UsersPage: React.FC = () => {
       {showViewModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold mb-4">User Details</h3>
+            <h3 className="text-lg font-bold mb-4">{t("users.userDetails")}</h3>
             <div className="space-y-2">
               <p>
                 <strong>Name:</strong> {selectedUser.name || "N/A"}
@@ -510,7 +512,7 @@ const UsersPage: React.FC = () => {
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
                 onClick={() => setShowViewModal(false)}
               >
-                Close
+                {t("users.close")}
               </button>
             </div>
           </div>
@@ -521,7 +523,7 @@ const UsersPage: React.FC = () => {
       {showEditModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold mb-4">Edit User</h3>
+            <h3 className="text-lg font-bold mb-4">{t("users.editUser")}</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Role</label>
@@ -576,7 +578,7 @@ const UsersPage: React.FC = () => {
       {showDeleteModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold mb-4">Delete User</h3>
+            <h3 className="text-lg font-bold mb-4">{t("users.deleteUser")}</h3>
             <p>
               Are you sure you want to{" "}
               {selectedUser.deleted ? "permanently delete" : "delete"} user "
@@ -609,7 +611,7 @@ const UsersPage: React.FC = () => {
       {showRestoreModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold mb-4">Restore User</h3>
+            <h3 className="text-lg font-bold mb-4">{t("users.restoreUser")}</h3>
             <p>
               Are you sure you want to restore user "
               {selectedUser.name || selectedUser.email}"?

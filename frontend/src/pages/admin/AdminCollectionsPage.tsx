@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCollectionStore } from "../../stores/collection.store";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
@@ -16,6 +17,7 @@ interface Product {
 }
 
 const AdminCollectionsPage: React.FC = () => {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   const {
     collections,
@@ -44,10 +46,10 @@ const AdminCollectionsPage: React.FC = () => {
         <div className="text-center">
           <div className="text-6xl mb-4">🚫</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Access Denied
+            {t("adminCollections.accessDenied")}
           </h1>
           <p className="text-gray-600">
-            You are not authorized to access this page.
+            {t("adminCollections.notAuthorized")}
           </p>
         </div>
       </div>
@@ -97,13 +99,13 @@ const AdminCollectionsPage: React.FC = () => {
       .map(([productId, quantity]) => ({ product: productId, quantity }));
 
     if (collectionItems.length === 0) {
-      toast.error("Please add at least one product to the collection");
+      toast.error(t("adminCollections.addAtLeastOne"));
       return;
     }
 
     const bundlePrice = parseFloat(formState.bundlePrice);
     if (isNaN(bundlePrice) || bundlePrice <= 0) {
-      toast.error("Please enter a valid bundle price");
+      toast.error(t("adminCollections.invalidBundlePrice"));
       return;
     }
 
@@ -128,14 +130,14 @@ const AdminCollectionsPage: React.FC = () => {
       setShowForm(false);
       toast.success(
         editingId
-          ? "Collection updated successfully"
-          : "Collection created successfully",
+          ? t("adminCollections.updateSuccess")
+          : t("adminCollections.createSuccess"),
       );
     } else {
       toast.error(
         editingId
-          ? "Failed to update collection"
-          : "Failed to create collection",
+          ? t("adminCollections.updateFailed")
+          : t("adminCollections.createFailed"),
       );
     }
   };
@@ -156,12 +158,12 @@ const AdminCollectionsPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this collection?")) {
+    if (window.confirm(t("adminCollections.confirmDelete"))) {
       const success = await deleteCollection(id);
       if (success) {
-        toast.success("Collection deleted successfully");
+        toast.success(t("adminCollections.deleteSuccess"));
       } else {
-        toast.error("Failed to delete collection");
+        toast.error(t("adminCollections.deleteFailed"));
       }
     }
   };
@@ -178,7 +180,7 @@ const AdminCollectionsPage: React.FC = () => {
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002B5B] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading collections...</p>
+          <p className="mt-4 text-gray-600">{t("adminCollections.loading")}</p>
         </div>
       </div>
     );
@@ -189,17 +191,17 @@ const AdminCollectionsPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            Collections Management
+            {t("adminCollections.title")}
           </h1>
           <p className="text-[#9E9E9E]">
-            Create and manage product collections
+            {t("adminCollections.subtitle")}
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
           className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors"
         >
-          Create Collection
+          {t("adminCollections.createCollection")}
         </button>
       </div>
 
@@ -212,12 +214,12 @@ const AdminCollectionsPage: React.FC = () => {
       {showForm && (
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold mb-4">
-            {editingId ? "Edit Collection" : "Create New Collection"}
+            {editingId ? t("adminCollections.editCollection") : t("adminCollections.createNewCollection")}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Collection Name
+                {t("adminCollections.collectionName")}
               </label>
               <input
                 type="text"
@@ -231,7 +233,7 @@ const AdminCollectionsPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
+                {t("adminCollections.description")}
               </label>
               <textarea
                 value={formState.description}
@@ -244,7 +246,7 @@ const AdminCollectionsPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Bundle Price
+                {t("adminCollections.bundlePrice")}
               </label>
               <input
                 type="number"
@@ -260,7 +262,7 @@ const AdminCollectionsPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Add Products
+                {t("adminCollections.addProducts")}
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-60 overflow-y-auto">
                 {products.map((product) => (
@@ -299,7 +301,7 @@ const AdminCollectionsPage: React.FC = () => {
 
             {selectedProducts.length > 0 && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium mb-2">Selected Products</h3>
+                <h3 className="font-medium mb-2">{t("adminCollections.selectedProducts")}</h3>
                 <div className="space-y-2">
                   {selectedProducts.map((product) => (
                     <div
@@ -321,10 +323,10 @@ const AdminCollectionsPage: React.FC = () => {
                   ))}
                   <div className="border-t pt-2 flex justify-between font-medium">
                     <span>
-                      Total Original: ${totalOriginalPrice.toFixed(2)}
+                      {t("adminCollections.totalOriginal")}: ${totalOriginalPrice.toFixed(2)}
                     </span>
                     <span>
-                      Bundle: $
+                      {t("adminCollections.bundle")}: $
                       {parseFloat(formState.bundlePrice || "0").toFixed(2)}
                     </span>
                   </div>
@@ -337,14 +339,14 @@ const AdminCollectionsPage: React.FC = () => {
                 type="submit"
                 className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors"
               >
-                {editingId ? "Update" : "Create"}
+                {editingId ? t("adminCollections.update") : t("adminCollections.create")}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
               >
-                Cancel
+                {t("adminCollections.cancel")}
               </button>
             </div>
           </form>
@@ -357,19 +359,19 @@ const AdminCollectionsPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                  {t("adminCollections.colName")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Products
+                  {t("adminCollections.colProducts")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Bundle Price
+                  {t("adminCollections.colBundlePrice")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Store
+                  {t("adminCollections.colStore")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t("adminCollections.colActions")}
                 </th>
               </tr>
             </thead>
@@ -389,7 +391,7 @@ const AdminCollectionsPage: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {collection.items.length} products
+                    {collection.items.length} {t("adminCollections.productsCount")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     ${collection.bundlePrice.toFixed(2)}
@@ -404,13 +406,13 @@ const AdminCollectionsPage: React.FC = () => {
                       onClick={() => handleEdit(collection)}
                       className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                     >
-                      Edit
+                      {t("adminCollections.edit")}
                     </button>
                     <button
                       onClick={() => handleDelete(collection._id)}
                       className="text-red-600 hover:text-red-900"
                     >
-                      Delete
+                      {t("adminCollections.delete")}
                     </button>
                   </td>
                 </tr>

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
 import type { User } from "../../types/user.type";
 import { ClockIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const AdminsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [admins, setAdmins] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [duration, setDuration] = useState<{ days: string; hours: string }>({
@@ -31,7 +33,7 @@ const AdminsPage: React.FC = () => {
       setAdmins(data.data || []);
     } catch (error) {
       console.error("Failed to load admins", error);
-      toast.error("Failed to load admins");
+      toast.error(t("admins.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -48,7 +50,7 @@ const AdminsPage: React.FC = () => {
     minutesNum = 0
   ) => {
     if (daysNum <= 0 && hoursNum <= 0 && minutesNum <= 0) {
-      toast.error("Enter a positive duration");
+      toast.error(t("admins.positiveDuration"));
       return;
     }
     try {
@@ -57,22 +59,22 @@ const AdminsPage: React.FC = () => {
         hours: hoursNum,
         minutes: minutesNum,
       });
-      toast.success("Admin time updated");
+      toast.success(t("admins.timeUpdated"));
       fetchAdmins();
     } catch (error: any) {
       console.error("Failed to set admin time", error);
-      toast.error(error?.response?.data?.message || "Failed to set time");
+      toast.error(error?.response?.data?.message || t("admins.setTimeFailed"));
     }
   };
 
   const endNow = async (userId: string) => {
     try {
       await axiosInstance.put(`/users/adminTimeEnd/${userId}`);
-      toast.success("Admin access ended now");
+      toast.success(t("admins.accessEnded"));
       fetchAdmins();
     } catch (error: any) {
       console.error("Failed to end admin time", error);
-      toast.error(error?.response?.data?.message || "Failed to end time");
+      toast.error(error?.response?.data?.message || t("admins.endTimeFailed"));
     }
   };
 
@@ -98,9 +100,9 @@ const AdminsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">Admin Access Time</h1>
+          <h1 className="text-2xl font-bold text-[#333333]">{t("admins.title")}</h1>
           <p className="text-[#9E9E9E]">
-            Grant or update time windows for admin accounts.
+            {t("admins.subtitle")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -112,7 +114,7 @@ const AdminsPage: React.FC = () => {
             onChange={(e) =>
               setDuration((p) => ({ ...p, days: e.target.value }))
             }
-            placeholder="Days"
+            placeholder={t("admins.days")}
           />
           <input
             type="number"
@@ -122,11 +124,11 @@ const AdminsPage: React.FC = () => {
             onChange={(e) =>
               setDuration((p) => ({ ...p, hours: e.target.value }))
             }
-            placeholder="Hours"
+            placeholder={t("admins.hours")}
           />
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <ClockIcon className="w-5 h-5" />
-            Default grant duration
+            {t("admins.defaultGrantDuration")}
           </div>
           <button
             onClick={() =>
@@ -134,7 +136,7 @@ const AdminsPage: React.FC = () => {
             }
             className="px-3 py-2 rounded-lg bg-gray-100 border text-sm font-semibold hover:bg-gray-200"
           >
-            Grant custom duration
+            {t("admins.grantCustomDuration")}
           </button>
         </div>
       </div>
@@ -144,19 +146,19 @@ const AdminsPage: React.FC = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                Admin
+                {t("admins.colAdmin")}
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                Email
+                {t("admins.colEmail")}
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                Expires At
+                {t("admins.colExpiresAt")}
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                Remaining Time
+                {t("admins.colRemaining")}
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                Actions
+                {t("admins.colActions")}
               </th>
             </tr>
           </thead>
@@ -164,14 +166,14 @@ const AdminsPage: React.FC = () => {
             {loading && (
               <tr>
                 <td colSpan={4} className="py-6 text-center text-gray-500">
-                  Loading...
+                  {t("admins.loading")}
                 </td>
               </tr>
             )}
             {!loading && admins.length === 0 && (
               <tr>
                 <td colSpan={4} className="py-6 text-center text-gray-500">
-                  No admins found.
+                  {t("admins.noAdmins")}
                 </td>
               </tr>
             )}
@@ -201,7 +203,7 @@ const AdminsPage: React.FC = () => {
                         }
                         className="px-3 py-2 rounded-lg bg-[#002B5B] text-white text-sm font-semibold hover:bg-[#001a3d]"
                       >
-                        Grant default duration
+                        {t("admins.grantDefault")}
                       </button>
                       <button
                         onClick={() =>
@@ -213,13 +215,13 @@ const AdminsPage: React.FC = () => {
                         }
                         className="ml-2 px-3 py-2 rounded-lg bg-gray-100 border text-sm font-semibold hover:bg-gray-200"
                       >
-                        Grant custom duration
+                        {t("admins.grantCustomDuration")}
                       </button>
                       <button
                         onClick={() => endNow(admin._id!)}
                         className="ml-2 px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200"
                       >
-                        End now
+                        {t("admins.endNow")}
                       </button>
                     </td>
                   </tr>
@@ -233,7 +235,7 @@ const AdminsPage: React.FC = () => {
           <div className="bg-white w-full max-w-md rounded-xl shadow-lg border">
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <h3 className="text-lg font-semibold text-gray-900">
-                Grant custom duration {customModal.name ? `to ${customModal.name}` : ""}
+                {t("admins.grantCustomDuration")} {customModal.name ? `${t("admins.to")} ${customModal.name}` : ""}
               </h3>
               <button
                 className="p-1 rounded hover:bg-gray-100"
@@ -246,7 +248,7 @@ const AdminsPage: React.FC = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    Days
+                    {t("admins.days")}
                   </label>
                   <input
                     type="number"
@@ -260,7 +262,7 @@ const AdminsPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    Hours
+                    {t("admins.hours")}
                   </label>
                   <input
                     type="number"
@@ -274,7 +276,7 @@ const AdminsPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">
-                    Minutes
+                    {t("admins.minutes")}
                   </label>
                   <input
                     type="number"
@@ -295,7 +297,7 @@ const AdminsPage: React.FC = () => {
                   onClick={() => setCustomModal({ open: false })}
                   className="px-3 py-2 rounded-lg border text-sm font-semibold text-gray-700 hover:bg-gray-100"
                 >
-                  Cancel
+                  {t("admins.cancel")}
                 </button>
                 <button
                   onClick={() => {
@@ -303,7 +305,7 @@ const AdminsPage: React.FC = () => {
                     const h = Number(customDuration.hours) || 0;
                     const m = Number(customDuration.minutes) || 0;
                     if (!customModal.userId) {
-                      toast.error("No admin selected");
+                      toast.error(t("admins.noAdminSelected"));
                       return;
                     }
                     grantTime(customModal.userId, d, h, m);
@@ -311,7 +313,7 @@ const AdminsPage: React.FC = () => {
                   }}
                   className="px-3 py-2 rounded-lg bg-[#002B5B] text-white text-sm font-semibold hover:bg-[#001a3d]"
                 >
-                  Save
+                  {t("admins.save")}
                 </button>
               </div>
             </div>

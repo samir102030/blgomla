@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useVendorStore } from '../../../stores/vendor.store';
 
 const VendorAnalytics: React.FC = () => {
+  const { t } = useTranslation();
   const {
     vendors,
 
@@ -57,8 +59,8 @@ const VendorAnalytics: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vendor Analytics</h1>
-          <p className="text-gray-600">Comprehensive vendor performance and statistics</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('vendorAnalytics.title')}</h1>
+          <p className="text-gray-600">{t('vendorAnalytics.subtitle')}</p>
         </div>
         <div>
           <select
@@ -66,9 +68,9 @@ const VendorAnalytics: React.FC = () => {
             onChange={(e) => setTimeRange(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
           >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
+            <option value="7d">{t('vendorAnalytics.last7days')}</option>
+            <option value="30d">{t('vendorAnalytics.last30days')}</option>
+            <option value="90d">{t('vendorAnalytics.last90days')}</option>
           </select>
         </div>
       </div>
@@ -81,7 +83,7 @@ const VendorAnalytics: React.FC = () => {
               <span className="text-2xl">🏪</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Vendors</p>
+              <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.totalVendors')}</p>
               <p className="text-2xl font-bold text-gray-900">{totalVendors}</p>
             </div>
           </div>
@@ -93,7 +95,7 @@ const VendorAnalytics: React.FC = () => {
               <span className="text-2xl">✅</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Approved</p>
+              <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.approved')}</p>
               <p className="text-2xl font-bold text-green-600">{statusCounts.approved}</p>
             </div>
           </div>
@@ -105,7 +107,7 @@ const VendorAnalytics: React.FC = () => {
               <span className="text-2xl">⏳</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pending</p>
+              <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.pending')}</p>
               <p className="text-2xl font-bold text-yellow-600">{statusCounts.pending}</p>
             </div>
           </div>
@@ -117,7 +119,7 @@ const VendorAnalytics: React.FC = () => {
               <span className="text-2xl">❌</span>
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Rejected</p>
+              <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.rejected')}</p>
               <p className="text-2xl font-bold text-red-600">{statusCounts.rejected}</p>
             </div>
           </div>
@@ -128,12 +130,12 @@ const VendorAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status Distribution */}
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Vendor Status Distribution</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorAnalytics.statusDistribution')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
-                <span className="text-sm text-gray-600">Approved</span>
+                <span className="text-sm text-gray-600">{t('vendorAnalytics.approved')}</span>
               </div>
               <div className="flex items-center">
                 <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.approved}</span>
@@ -145,7 +147,7 @@ const VendorAnalytics: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-yellow-500 rounded mr-3"></div>
-                <span className="text-sm text-gray-600">Pending</span>
+                <span className="text-sm text-gray-600">{t('vendorAnalytics.pending')}</span>
               </div>
               <div className="flex items-center">
                 <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.pending}</span>
@@ -157,7 +159,7 @@ const VendorAnalytics: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-red-500 rounded mr-3"></div>
-                <span className="text-sm text-gray-600">Rejected</span>
+                <span className="text-sm text-gray-600">{t('vendorAnalytics.rejected')}</span>
               </div>
               <div className="flex items-center">
                 <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.rejected}</span>
@@ -169,7 +171,7 @@ const VendorAnalytics: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-gray-500 rounded mr-3"></div>
-                <span className="text-sm text-gray-600">Suspended</span>
+                <span className="text-sm text-gray-600">{t('vendorAnalytics.suspended')}</span>
               </div>
               <div className="flex items-center">
                 <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.suspended}</span>
@@ -183,14 +185,14 @@ const VendorAnalytics: React.FC = () => {
 
         {/* Recent Activity */}
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Registrations</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorAnalytics.recentRegistrations')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">New registrations</span>
+              <span className="text-sm text-gray-600">{t('vendorAnalytics.newRegistrations')}</span>
               <span className="text-lg font-bold text-[var(--brand-primary)]">{recentRegistrations.length}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Approval rate</span>
+              <span className="text-sm text-gray-600">{t('vendorAnalytics.approvalRate')}</span>
               <span className="text-lg font-bold text-green-600">
                 {recentRegistrations.length > 0
                   ? Math.round((recentRegistrations.filter(v => v.status === 'approved').length / recentRegistrations.length) * 100)
@@ -198,8 +200,8 @@ const VendorAnalytics: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Avg. processing time</span>
-              <span className="text-lg font-bold text-[var(--brand-primary)]">2.3 days</span>
+              <span className="text-sm text-gray-600">{t('vendorAnalytics.avgProcessingTime')}</span>
+              <span className="text-lg font-bold text-[var(--brand-primary)]">2.3 {t('vendorAnalytics.days')}</span>
             </div>
           </div>
         </div>
@@ -208,7 +210,7 @@ const VendorAnalytics: React.FC = () => {
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Vendors</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorAnalytics.topPerforming')}</h3>
           <div className="space-y-3">
             {vendors
               .filter(v => v.status === 'approved' && v.store)
@@ -221,7 +223,7 @@ const VendorAnalytics: React.FC = () => {
                     <span className="text-sm text-gray-900">{vendor.businessName}</span>
                   </div>
                   <span className="text-sm font-medium text-[var(--brand-primary)]">
-                    {vendor.store?.orderCount || 0} orders
+                    {vendor.store?.orderCount || 0} {t('vendorAnalytics.orders')}
                   </span>
                 </div>
               ))}
@@ -229,7 +231,7 @@ const VendorAnalytics: React.FC = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Distribution</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorAnalytics.categoryDistribution')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Electronics</span>
@@ -259,27 +261,27 @@ const VendorAnalytics: React.FC = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">System Health</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorAnalytics.systemHealth')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Active stores</span>
+              <span className="text-sm text-gray-600">{t('vendorAnalytics.activeStores')}</span>
               <span className="text-sm font-medium text-green-600">
                 {vendors.filter(v => v.store?.isActive).length}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Total products</span>
+              <span className="text-sm text-gray-600">{t('vendorAnalytics.totalProducts')}</span>
               <span className="text-sm font-medium text-[var(--brand-primary)]">
                 {vendors.reduce((sum, v) => sum + (v.store?.productCount || 0), 0)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Avg. rating</span>
+              <span className="text-sm text-gray-600">{t('vendorAnalytics.avgRating')}</span>
               <span className="text-sm font-medium text-yellow-600">4.2/5</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Response time</span>
-              <span className="text-sm font-medium text-[var(--brand-primary)]">1.8 days</span>
+              <span className="text-sm text-gray-600">{t('vendorAnalytics.responseTime')}</span>
+              <span className="text-sm font-medium text-[var(--brand-primary)]">1.8 {t('vendorAnalytics.days')}</span>
             </div>
           </div>
         </div>
@@ -288,23 +290,23 @@ const VendorAnalytics: React.FC = () => {
       {/* Recent Vendors Table */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Vendor Applications</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('vendorAnalytics.recentApplications')}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vendor
+                  {t('vendorAnalytics.colVendor')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t('vendorAnalytics.colStatus')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Applied
+                  {t('vendorAnalytics.colApplied')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
+                  {t('vendorAnalytics.colCategory')}
                 </th>
               </tr>
             </thead>
@@ -328,7 +330,7 @@ const VendorAnalytics: React.FC = () => {
                     {new Date(vendor.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {vendor.productCategories?.[0] || 'Not specified'}
+                    {vendor.productCategories?.[0] || t('vendorAnalytics.notSpecified')}
                   </td>
                 </tr>
               ))}

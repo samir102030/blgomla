@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../../lib/axios";
 
 interface PaymentSummary {
@@ -34,6 +35,7 @@ interface RecentPayment {
 }
 
 const PaymentManagementPage: React.FC = () => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState("30days");
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PaymentSummary | null>(null);
@@ -65,10 +67,10 @@ const PaymentManagementPage: React.FC = () => {
   }, [fetchData]);
 
   const methodLabels: Record<string, { label: string; icon: string; color: string }> = {
-    cod: { label: "Cash on Delivery", icon: "💵", color: "from-emerald-500 to-emerald-600" },
-    stripe: { label: "Stripe", icon: "💳", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
-    paymob: { label: "Paymob", icon: "🏦", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
-    unknown: { label: "Unknown", icon: "❓", color: "from-gray-400 to-gray-500" },
+    cod: { label: t("payments.cod"), icon: "💵", color: "from-emerald-500 to-emerald-600" },
+    stripe: { label: t("payments.stripe"), icon: "💳", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
+    paymob: { label: t("payments.paymob"), icon: "🏦", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
+    unknown: { label: t("payments.unknown"), icon: "❓", color: "from-gray-400 to-gray-500" },
   };
 
   const statusColors: Record<string, string> = {
@@ -95,50 +97,50 @@ const PaymentManagementPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Payment Management</h1>
-          <p className="text-sm text-gray-600">Track payment methods, transactions, and success rates</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("payments.title")}</h1>
+          <p className="text-sm text-gray-600">{t("payments.subtitle")}</p>
         </div>
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         >
-          <option value="7days">Last 7 days</option>
-          <option value="30days">Last 30 days</option>
-          <option value="90days">Last 90 days</option>
+          <option value="7days">{t("payments.last7days")}</option>
+          <option value="30days">{t("payments.last30days")}</option>
+          <option value="90days">{t("payments.last90days")}</option>
         </select>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-green-100 text-sm font-medium">Total Collected</p>
+          <p className="text-green-100 text-sm font-medium">{t("payments.totalCollected")}</p>
           <p className="text-2xl font-bold mt-1">
             {(summary?.totalPaid || 0).toLocaleString()} <span className="text-sm font-normal">EGP</span>
           </p>
-          <p className="text-green-200 text-xs mt-2">{summary?.paidOrders || 0} paid orders</p>
+          <p className="text-green-200 text-xs mt-2">{summary?.paidOrders || 0} {t("payments.paidOrders")}</p>
         </div>
         <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-yellow-100 text-sm font-medium">Pending Payments</p>
+          <p className="text-yellow-100 text-sm font-medium">{t("payments.pendingPayments")}</p>
           <p className="text-2xl font-bold mt-1">
             {(summary?.totalPending || 0).toLocaleString()} <span className="text-sm font-normal">EGP</span>
           </p>
-          <p className="text-yellow-200 text-xs mt-2">{summary?.pendingOrders || 0} awaiting payment</p>
+          <p className="text-yellow-200 text-xs mt-2">{summary?.pendingOrders || 0} {t("payments.awaitingPayment")}</p>
         </div>
         <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
-          <p className="text-white/90 text-sm font-medium">Payment Methods</p>
+          <p className="text-white/90 text-sm font-medium">{t("payments.paymentMethods")}</p>
           <p className="text-2xl font-bold mt-1">{methods.length}</p>
-          <p className="text-white/90 text-xs mt-2">Active gateways</p>
+          <p className="text-white/90 text-xs mt-2">{t("payments.activeGateways")}</p>
         </div>
         <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
-          <p className="text-white/90 text-sm font-medium">Avg Success Rate</p>
+          <p className="text-white/90 text-sm font-medium">{t("payments.avgSuccessRate")}</p>
           <p className="text-2xl font-bold mt-1">
             {methods.length > 0
               ? Math.round(methods.reduce((a, m) => a + m.successRate, 0) / methods.length)
               : 0}
             %
           </p>
-          <p className="text-white/90 text-xs mt-2">Across all methods</p>
+          <p className="text-white/90 text-xs mt-2">{t("payments.acrossAllMethods")}</p>
         </div>
       </div>
 
@@ -146,7 +148,7 @@ const PaymentManagementPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Method Breakdown */}
         <div className="bg-white rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("payments.paymentMethods")}</h3>
           <div className="space-y-4">
             {methods.map((m) => {
               const meta = methodLabels[m.method] || methodLabels.unknown;
@@ -169,21 +171,21 @@ const PaymentManagementPage: React.FC = () => {
                     />
                   </div>
                   <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>{m.count} orders</span>
-                    <span>{m.successRate}% success rate</span>
+                    <span>{m.count} {t("payments.orders")}</span>
+                    <span>{m.successRate}% {t("payments.successRate")}</span>
                   </div>
                 </div>
               );
             })}
             {methods.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">No payment data yet</p>
+              <p className="text-sm text-gray-500 text-center py-4">{t("payments.noData")}</p>
             )}
           </div>
         </div>
 
         {/* Revenue Trend */}
         <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Trend</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("payments.paymentTrend")}</h3>
           {trend.length > 0 ? (
             <div className="h-64 flex items-end gap-1">
               {trend.map((point, i) => {
@@ -196,7 +198,7 @@ const PaymentManagementPage: React.FC = () => {
                         style={{ height: `${Math.max(height, 3)}%` }}
                       >
                         <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-gray-900 text-white px-2 py-1 rounded shadow whitespace-nowrap z-10">
-                          {point.total.toLocaleString()} EGP • {point.count} orders
+                          {point.total.toLocaleString()} EGP • {point.count} {t("payments.orders")}
                         </div>
                       </div>
                     </div>
@@ -209,7 +211,7 @@ const PaymentManagementPage: React.FC = () => {
             </div>
           ) : (
             <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
-              No payment data for this period
+              {t("payments.noPeriodData")}
             </div>
           )}
         </div>
@@ -218,18 +220,18 @@ const PaymentManagementPage: React.FC = () => {
       {/* Recent Payments Table */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Recent Payments</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t("payments.recentPayments")}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Amount</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Method</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Transaction</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("payments.colCustomer")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("payments.colAmount")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("payments.colMethod")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("payments.colStatus")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("payments.colDate")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("payments.colTransaction")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -269,7 +271,7 @@ const PaymentManagementPage: React.FC = () => {
               {recentPayments.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                    No payments found
+                    {t("payments.noPayments")}
                   </td>
                 </tr>
               )}

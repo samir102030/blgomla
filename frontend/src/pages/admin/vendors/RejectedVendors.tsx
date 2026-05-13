@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { useVendorStore } from '../../../stores/vendor.store';
 
 const RejectedVendors: React.FC = () => {
+  const { t } = useTranslation();
   const {
     vendors,
     loading,
@@ -26,23 +28,23 @@ const RejectedVendors: React.FC = () => {
   );
 
   const handleReactivateVendor = async (vendorId: string) => {
-    if (window.confirm('Are you sure you want to reactivate this vendor? They will be moved to pending status.')) {
+    if (window.confirm(t('rejectedVendors.confirmReactivate'))) {
       try {
         await updateVendorStatus(vendorId, 'pending');
-        toast.success('Vendor reactivated and moved to pending status');
+        toast.success(t('rejectedVendors.reactivateSuccess'));
       } catch (error) {
-        toast.error('Failed to reactivate vendor');
+        toast.error(t('rejectedVendors.reactivateFailed'));
       }
     }
   };
 
   const handleDeleteVendor = async (vendorId: string) => {
-    if (window.confirm('Are you sure you want to permanently delete this vendor? This action cannot be undone.')) {
+    if (window.confirm(t('rejectedVendors.confirmDelete'))) {
       try {
         await deleteVendor(vendorId);
-        toast.success('Vendor deleted permanently');
+        toast.success(t('rejectedVendors.deleteSuccess'));
       } catch (error) {
-        toast.error('Failed to delete vendor');
+        toast.error(t('rejectedVendors.deleteFailed'));
       }
     }
   };
@@ -65,11 +67,11 @@ const RejectedVendors: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Rejected Vendors</h1>
-          <p className="text-gray-600">Vendors whose applications were rejected</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('rejectedVendors.title')}</h1>
+          <p className="text-gray-600">{t('rejectedVendors.subtitle')}</p>
         </div>
         <div className="text-sm text-red-600 font-medium">
-          {rejectedVendors.length} Rejected Applications
+          {rejectedVendors.length} {t('rejectedVendors.rejectedApplications')}
         </div>
       </div>
 
@@ -77,7 +79,7 @@ const RejectedVendors: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow-sm">
         <input
           type="text"
-          placeholder="Search rejected vendors..."
+          placeholder={t('rejectedVendors.searchPlaceholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -88,19 +90,19 @@ const RejectedVendors: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-red-600">{rejectedVendors.length}</div>
-          <div className="text-sm text-gray-600">Total Rejected</div>
+          <div className="text-sm text-gray-600">{t('rejectedVendors.totalRejected')}</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-orange-600">
             {rejectedVendors.filter(v => new Date(v.updatedAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
           </div>
-          <div className="text-sm text-gray-600">Rejected This Month</div>
+          <div className="text-sm text-gray-600">{t('rejectedVendors.rejectedThisMonth')}</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-[var(--brand-primary)]">
             {rejectedVendors.filter(v => v.rejectionReason?.includes('documentation')).length}
           </div>
-          <div className="text-sm text-gray-600">Documentation Issues</div>
+          <div className="text-sm text-gray-600">{t('rejectedVendors.documentationIssues')}</div>
         </div>
       </div>
 
@@ -111,19 +113,19 @@ const RejectedVendors: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vendor
+                  {t('rejectedVendors.colVendor')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Contact
+                  {t('rejectedVendors.colContact')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rejection Reason
+                  {t('rejectedVendors.colRejectionReason')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rejected Date
+                  {t('rejectedVendors.colRejectedDate')}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t('rejectedVendors.colActions')}
                 </th>
               </tr>
             </thead>
@@ -155,7 +157,7 @@ const RejectedVendors: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-sm text-gray-900 max-w-xs truncate">
-                      {vendor.rejectionReason || 'No reason provided'}
+                      {vendor.rejectionReason || t('rejectedVendors.noReason')}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -167,19 +169,19 @@ const RejectedVendors: React.FC = () => {
                         onClick={() => openDetailsModal(vendor)}
                         className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                       >
-                        View
+                        {t('rejectedVendors.view')}
                       </button>
                       <button
                         onClick={() => handleReactivateVendor(vendor._id)}
                         className="text-green-600 hover:text-green-900"
                       >
-                        Reactivate
+                        {t('rejectedVendors.reactivate')}
                       </button>
                       <button
                         onClick={() => handleDeleteVendor(vendor._id)}
                         className="text-red-600 hover:text-red-900"
                       >
-                        Delete
+                        {t('rejectedVendors.delete')}
                       </button>
                     </div>
                   </td>
@@ -192,8 +194,8 @@ const RejectedVendors: React.FC = () => {
         {rejectedVendors.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">✅</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No rejected vendors</h3>
-            <p className="text-gray-500">All vendor applications are either approved or pending</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{t('rejectedVendors.noRejected')}</h3>
+            <p className="text-gray-500">{t('rejectedVendors.allApprovedOrPending')}</p>
           </div>
         )}
       </div>
@@ -203,7 +205,7 @@ const RejectedVendors: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Rejected Vendor Details</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('rejectedVendors.vendorDetails')}</h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -267,7 +269,7 @@ const RejectedVendors: React.FC = () => {
                 onClick={() => setShowDetailsModal(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
               >
-                Close
+                {t('rejectedVendors.close')}
               </button>
               <button
                 onClick={() => {
@@ -276,7 +278,7 @@ const RejectedVendors: React.FC = () => {
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
               >
-                Reactivate
+                {t('rejectedVendors.reactivate')}
               </button>
               <button
                 onClick={() => {
@@ -285,7 +287,7 @@ const RejectedVendors: React.FC = () => {
                 }}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
-                Delete Permanently
+                {t('rejectedVendors.deletePermanently')}
               </button>
             </div>
           </div>

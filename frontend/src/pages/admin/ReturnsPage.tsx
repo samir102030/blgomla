@@ -1,8 +1,10 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useUserStore } from "../../stores/user.store";
 import { useReturnStore } from "../../stores/return.store";
 
 const ReturnsPage: React.FC = () => {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   const { returns, loading, error, fetchReturns, updateReturnStatus } =
     useReturnStore();
@@ -31,7 +33,7 @@ const ReturnsPage: React.FC = () => {
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#002B5B] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading returns...</p>
+          <p className="mt-4 text-gray-600">{t("returns.loading")}</p>
         </div>
       </div>
     );
@@ -41,13 +43,13 @@ const ReturnsPage: React.FC = () => {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-center">
-          <div className="text-red-500 text-lg mb-2">Error loading returns</div>
+          <div className="text-red-500 text-lg mb-2">{t("returns.errorLoading")}</div>
           <p className="text-gray-600">{error}</p>
           <button
             onClick={fetchReturns}
             className="mt-4 bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors"
           >
-            Try Again
+            {t("returns.tryAgain")}
           </button>
         </div>
       </div>
@@ -58,10 +60,10 @@ const ReturnsPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[#333333]">
-          Returns Management
+          {t("returns.title")}
         </h1>
         <p className="text-[#9E9E9E]">
-          Track and manage return requests across orders
+          {t("returns.subtitle")}
         </p>
       </div>
 
@@ -71,29 +73,29 @@ const ReturnsPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Return ID
+                  {t("returns.colReturnId")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order ID
+                  {t("returns.colOrderId")}
                 </th>
                 {user?.role === "admin" && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
+                    {t("returns.colCustomer")}
                   </th>
                 )}
                 {user?.role === "admin" && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Store
+                    {t("returns.colStore")}
                   </th>
                 )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t("returns.colStatus")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reason
+                  {t("returns.colReason")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t("returns.colActions")}
                 </th>
               </tr>
             </thead>
@@ -149,11 +151,11 @@ const ReturnsPage: React.FC = () => {
                           )
                         }
                       >
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="received">Received</option>
-                        <option value="refunded">Refunded</option>
+                        <option value="pending">{t("returns.pending")}</option>
+                        <option value="approved">{t("returns.approved")}</option>
+                        <option value="rejected">{t("returns.rejected")}</option>
+                        <option value="received">{t("returns.received")}</option>
+                        <option value="refunded">{t("returns.refunded")}</option>
                       </select>
                     </td>
                   </tr>

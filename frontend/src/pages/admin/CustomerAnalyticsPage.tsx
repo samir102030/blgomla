@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../../lib/axios";
 
 interface CustomerSummary {
@@ -34,6 +35,7 @@ interface FrequencyBucket {
 }
 
 const CustomerAnalyticsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState("30days");
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<CustomerSummary | null>(null);
@@ -82,44 +84,44 @@ const CustomerAnalyticsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customer Analytics</h1>
-          <p className="text-sm text-gray-600">Understand your customers and boost retention</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("customerAnalytics.title")}</h1>
+          <p className="text-sm text-gray-600">{t("customerAnalytics.subtitle")}</p>
         </div>
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
           className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         >
-          <option value="7days">Last 7 days</option>
-          <option value="30days">Last 30 days</option>
-          <option value="90days">Last 90 days</option>
-          <option value="1year">Last year</option>
+          <option value="7days">{t("customerAnalytics.last7days")}</option>
+          <option value="30days">{t("customerAnalytics.last30days")}</option>
+          <option value="90days">{t("customerAnalytics.last90days")}</option>
+          <option value="1year">{t("customerAnalytics.lastYear")}</option>
         </select>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
-          <p className="text-white/90 text-sm font-medium">Total Customers</p>
+          <p className="text-white/90 text-sm font-medium">{t("customerAnalytics.totalCustomers")}</p>
           <p className="text-2xl font-bold mt-1">{(summary?.totalUsers || 0).toLocaleString()}</p>
-          <p className="text-white/90 text-xs mt-2">{summary?.verificationRate || 0}% verified</p>
+          <p className="text-white/90 text-xs mt-2">{summary?.verificationRate || 0}% {t("customerAnalytics.verified")}</p>
         </div>
         <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
-          <p className="text-white/90 text-sm font-medium">New Customers</p>
+          <p className="text-white/90 text-sm font-medium">{t("customerAnalytics.newCustomers")}</p>
           <p className="text-2xl font-bold mt-1">{summary?.newUsers || 0}</p>
-          <p className="text-white/90 text-xs mt-2">In selected period</p>
+          <p className="text-white/90 text-xs mt-2">{t("customerAnalytics.inSelectedPeriod")}</p>
         </div>
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-green-100 text-sm font-medium">Repeat Buyers</p>
+          <p className="text-green-100 text-sm font-medium">{t("customerAnalytics.repeatBuyers")}</p>
           <p className="text-2xl font-bold mt-1">{retention?.repeatBuyers || 0}</p>
           <p className="text-green-200 text-xs mt-2">
-            {retention?.retentionRate || 0}% retention rate
+            {retention?.retentionRate || 0}% {t("customerAnalytics.retentionRate")}
           </p>
         </div>
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-orange-100 text-sm font-medium">Active Buyers</p>
+          <p className="text-orange-100 text-sm font-medium">{t("customerAnalytics.activeBuyers")}</p>
           <p className="text-2xl font-bold mt-1">{retention?.totalBuyers || 0}</p>
-          <p className="text-orange-200 text-xs mt-2">Made at least 1 order</p>
+          <p className="text-orange-200 text-xs mt-2">{t("customerAnalytics.madeAtLeast1Order")}</p>
         </div>
       </div>
 
@@ -127,7 +129,7 @@ const CustomerAnalyticsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Retention Visual */}
         <div className="bg-white rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Customer Retention</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">{t("customerAnalytics.customerRetention")}</h3>
           <div className="flex items-center justify-center gap-8">
             {/* Ring Chart */}
             <div className="relative w-40 h-40">
@@ -152,7 +154,7 @@ const CustomerAnalyticsPage: React.FC = () => {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-3xl font-bold text-gray-900">{retention?.retentionRate || 0}%</span>
-                <span className="text-xs text-gray-500">Retention</span>
+                <span className="text-xs text-gray-500">{t("customerAnalytics.retention")}</span>
               </div>
             </div>
             {/* Legend */}
@@ -160,19 +162,19 @@ const CustomerAnalyticsPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-green-500" />
                 <span className="text-sm text-gray-700">
-                  Repeat buyers: <strong>{retention?.repeatBuyers || 0}</strong>
+                  {t("customerAnalytics.repeatBuyersLabel")}: <strong>{retention?.repeatBuyers || 0}</strong>
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-gray-300" />
                 <span className="text-sm text-gray-700">
-                  One-time buyers: <strong>{retention?.oneTimeBuyers || 0}</strong>
+                  {t("customerAnalytics.oneTimeBuyers")}: <strong>{retention?.oneTimeBuyers || 0}</strong>
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-[var(--brand-primary)]" />
                 <span className="text-sm text-gray-700">
-                  Total buyers: <strong>{retention?.totalBuyers || 0}</strong>
+                  {t("customerAnalytics.totalBuyers")}: <strong>{retention?.totalBuyers || 0}</strong>
                 </span>
               </div>
             </div>
@@ -181,7 +183,7 @@ const CustomerAnalyticsPage: React.FC = () => {
 
         {/* Order Frequency */}
         <div className="bg-white rounded-xl p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Order Frequency</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">{t("customerAnalytics.orderFrequency")}</h3>
           <div className="space-y-4">
             {frequency.map((bucket) => {
               const percent = maxFrequency > 0 ? (bucket.count / maxFrequency) * 100 : 0;
@@ -189,7 +191,7 @@ const CustomerAnalyticsPage: React.FC = () => {
                 <div key={bucket.bucket} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-700 font-medium">{bucket.bucket}</span>
-                    <span className="text-gray-500">{bucket.count} customers</span>
+                    <span className="text-gray-500">{bucket.count} {t("customerAnalytics.customers")}</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-3">
                     <div
@@ -201,7 +203,7 @@ const CustomerAnalyticsPage: React.FC = () => {
               );
             })}
             {frequency.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">No order data yet</p>
+              <p className="text-sm text-gray-500 text-center py-4">{t("customerAnalytics.noOrderData")}</p>
             )}
           </div>
         </div>
@@ -209,7 +211,7 @@ const CustomerAnalyticsPage: React.FC = () => {
 
       {/* Registration Trend */}
       <div className="bg-white rounded-xl p-6 shadow-lg">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Registration Trend</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t("customerAnalytics.registrationTrend")}</h3>
         {trend.length > 0 ? (
           <div className="h-48 flex items-end gap-1">
             {trend.map((point, i) => {
@@ -222,7 +224,7 @@ const CustomerAnalyticsPage: React.FC = () => {
                       style={{ height: `${Math.max(height, 3)}%` }}
                     >
                       <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-gray-900 text-white px-2 py-1 rounded shadow whitespace-nowrap z-10">
-                        {point.count} new users • {point.date.slice(5)}
+                        {point.count} {t("customerAnalytics.newUsers")} • {point.date.slice(5)}
                       </div>
                     </div>
                   </div>
@@ -235,7 +237,7 @@ const CustomerAnalyticsPage: React.FC = () => {
           </div>
         ) : (
           <div className="h-48 flex items-center justify-center text-gray-400 text-sm">
-            No registration data for this period
+            {t("customerAnalytics.noRegistrationData")}
           </div>
         )}
       </div>
@@ -243,26 +245,26 @@ const CustomerAnalyticsPage: React.FC = () => {
       {/* Top Customers */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Top Customers by Lifetime Value</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t("customerAnalytics.topCustomers")}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">#</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Total Spent</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Orders</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">AOV</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Tier</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("customerAnalytics.colCustomer")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("customerAnalytics.colTotalSpent")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("customerAnalytics.colOrders")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("customerAnalytics.colAOV")}</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{t("customerAnalytics.colTier")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {topCustomers.map((customer, index) => {
                 const tier =
-                  customer.totalSpent >= 10000 ? "🥇 VIP" :
-                  customer.totalSpent >= 5000 ? "🥈 Premium" :
-                  customer.totalSpent >= 1000 ? "🥉 Regular" : "Standard";
+                  customer.totalSpent >= 10000 ? `🥇 ${t("customerAnalytics.tierVIP")}` :
+                  customer.totalSpent >= 5000 ? `🥈 ${t("customerAnalytics.tierPremium")}` :
+                  customer.totalSpent >= 1000 ? `🥉 ${t("customerAnalytics.tierRegular")}` : t("customerAnalytics.tierStandard");
                 const tierColor =
                   customer.totalSpent >= 10000 ? "bg-yellow-100 text-yellow-800" :
                   customer.totalSpent >= 5000 ? "bg-gray-100 text-gray-700" :
@@ -300,7 +302,7 @@ const CustomerAnalyticsPage: React.FC = () => {
               {topCustomers.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                    No customer data yet
+                    {t("customerAnalytics.noCustomerData")}
                   </td>
                 </tr>
               )}

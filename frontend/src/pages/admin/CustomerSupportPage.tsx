@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useUserStore } from "../../stores/user.store";
 import { axiosInstance } from "../../lib/axios";
 
@@ -51,6 +52,7 @@ interface Message {
 }
 
 const CustomerSupportPage: React.FC = () => {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] =
@@ -137,10 +139,10 @@ const CustomerSupportPage: React.FC = () => {
       <div className="w-1/3 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col">
         <div className="p-4 border-b border-gray-200 dark:border-slate-800">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Customer Support
+            {t("customerSupport.title")}
           </h2>
           <p className="text-sm text-gray-600 dark:text-slate-400">
-            Manage customer conversations
+            {t("customerSupport.subtitle")}
           </p>
         </div>
 
@@ -148,13 +150,13 @@ const CustomerSupportPage: React.FC = () => {
           {loading ? (
             <div className="flex items-center justify-center h-32">
               <div className="text-gray-500 dark:text-slate-400">
-                Loading conversations...
+                {t("customerSupport.loadingConversations")}
               </div>
             </div>
           ) : conversations.length === 0 ? (
             <div className="flex items-center justify-center h-32">
               <div className="text-gray-500 dark:text-slate-400">
-                No conversations yet
+                {t("customerSupport.noConversations")}
               </div>
             </div>
           ) : (
@@ -185,8 +187,8 @@ const CustomerSupportPage: React.FC = () => {
                       </p>
                       <p className="text-xs text-gray-500 dark:text-slate-400">
                         {conversation.type === "general"
-                          ? "General Support"
-                          : `Product: ${conversation.product?.name}`}
+                          ? t("customerSupport.generalSupport")
+                          : `${t("customerSupport.product")}: ${conversation.product?.name}`}
                       </p>
                     </div>
                   </div>
@@ -199,7 +201,7 @@ const CustomerSupportPage: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-slate-400 truncate">
-                  {conversation.lastMessage?.content || "No messages yet"}
+                  {conversation.lastMessage?.content || t("customerSupport.noMessages")}
                 </p>
               </div>
             ))
@@ -229,8 +231,8 @@ const CustomerSupportPage: React.FC = () => {
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-slate-400">
                     {selectedConversation.type === "general"
-                      ? "General Support"
-                      : `Product: ${selectedConversation.product?.name}`}
+                      ? t("customerSupport.generalSupport")
+                      : `${t("customerSupport.product")}: ${selectedConversation.product?.name}`}
                   </p>
                 </div>
               </div>
@@ -266,13 +268,13 @@ const CustomerSupportPage: React.FC = () => {
                 const getRoleLabel = () => {
                   switch (senderRole) {
                     case "customer":
-                      return "Customer";
+                      return t("customerSupport.roleCustomer");
                     case "vendor":
-                      return "Store";
+                      return t("customerSupport.roleStore");
                     case "admin":
-                      return "Admin";
+                      return t("customerSupport.roleAdmin");
                     default:
-                      return "Unknown";
+                      return t("customerSupport.roleUnknown");
                   }
                 };
 
@@ -317,7 +319,7 @@ const CustomerSupportPage: React.FC = () => {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                  placeholder="Type your message..."
+                  placeholder={t("customerSupport.typeMessage")}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] bg-white dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:border-slate-700"
                 />
                 <button
@@ -325,7 +327,7 @@ const CustomerSupportPage: React.FC = () => {
                   disabled={!newMessage.trim() || sending}
                   className="px-4 py-2 bg-[var(--brand-primary)] text-white rounded-md hover:bg-[var(--brand-accent)] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[var(--brand-accent)] dark:hover:bg-[var(--brand-primary)]"
                 >
-                  {sending ? "Sending..." : "Send"}
+                  {sending ? t("customerSupport.sending") : t("customerSupport.send")}
                 </button>
               </div>
             </div>
@@ -349,10 +351,10 @@ const CustomerSupportPage: React.FC = () => {
                 </svg>
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                Select a conversation
+                {t("customerSupport.selectConversation")}
               </h3>
               <p className="text-gray-500 dark:text-slate-400">
-                Choose a customer conversation from the list to start chatting
+                {t("customerSupport.chooseConversation")}
               </p>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MagnifyingGlassIcon,
   EyeIcon,
@@ -14,6 +15,7 @@ import { useUserStore } from "../../stores/user.store";
 import toast from "react-hot-toast";
 
 const CustomerReviewsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useUserStore();
   const isAdminLike =
     user?.role === "admin" || user?.role === "super_admin";
@@ -114,25 +116,23 @@ const CustomerReviewsPage: React.FC = () => {
   ) => {
     const success = await toggleReviewVisibility(productId, reviewId);
     if (success) {
-      toast.success("Review visibility updated successfully");
+      toast.success(t("reviews.visibilityUpdated"));
       fetchReviewStats(); // Refresh stats
     } else {
-      toast.error("Failed to update review visibility");
+      toast.error(t("reviews.visibilityUpdateFailed"));
     }
   };
 
   const handleDeleteReview = async (productId: string, reviewId: string) => {
     if (
-      window.confirm(
-        "Are you sure you want to delete this review? This action cannot be undone."
-      )
+      window.confirm(t("reviews.confirmDelete"))
     ) {
       const success = await deleteReview(productId, reviewId);
       if (success) {
-        toast.success("Review deleted successfully");
+        toast.success(t("reviews.deleteSuccess"));
         fetchReviewStats(); // Refresh stats
       } else {
-        toast.error("Failed to delete review");
+        toast.error(t("reviews.deleteFailed"));
       }
     }
   };
@@ -143,10 +143,10 @@ const CustomerReviewsPage: React.FC = () => {
   ) => {
     const success = await requestHideReview(productId, reviewId);
     if (success) {
-      toast.success("Request to hide review submitted successfully");
+      toast.success(t("reviews.hideRequestSubmitted"));
       setPendingRequests([...pendingRequests, `${productId}-${reviewId}-hide`]);
     } else {
-      toast.error("Failed to submit request");
+      toast.error(t("reviews.requestFailed"));
     }
   };
 
@@ -156,13 +156,13 @@ const CustomerReviewsPage: React.FC = () => {
   ) => {
     const success = await requestDeleteReview(productId, reviewId);
     if (success) {
-      toast.success("Request to delete review submitted successfully");
+      toast.success(t("reviews.deleteRequestSubmitted"));
       setPendingRequests([
         ...pendingRequests,
         `${productId}-${reviewId}-delete`,
       ]);
     } else {
-      toast.error("Failed to submit request");
+      toast.error(t("reviews.requestFailed"));
     }
   };
 
@@ -172,22 +172,22 @@ const CustomerReviewsPage: React.FC = () => {
   ) => {
     const success = await requestUnhideReview(productId, reviewId);
     if (success) {
-      toast.success("Request to unhide review submitted successfully");
+      toast.success(t("reviews.unhideRequestSubmitted"));
       setPendingRequests([
         ...pendingRequests,
         `${productId}-${reviewId}-unhide`,
       ]);
     } else {
-      toast.error("Failed to submit request");
+      toast.error(t("reviews.requestFailed"));
     }
   };
 
   const handleApproveRequest = async (productId: string, requestId: string) => {
     const success = await approveReviewRequest(productId, requestId);
     if (success) {
-      toast.success("Request approved successfully");
+      toast.success(t("reviews.requestApproved"));
     } else {
-      toast.error("Failed to approve request");
+      toast.error(t("reviews.approveFailed"));
     }
   };
 
@@ -196,7 +196,7 @@ const CustomerReviewsPage: React.FC = () => {
     requestId: string,
     reason?: string
   ) => {
-    const finalReason = reason || prompt("Enter rejection reason (optional):");
+    const finalReason = reason || prompt(t("reviews.enterRejectionReason"));
     if (finalReason !== null) {
       const success = await rejectReviewRequest(
         productId,
@@ -204,9 +204,9 @@ const CustomerReviewsPage: React.FC = () => {
         finalReason
       );
       if (success) {
-        toast.success("Request rejected successfully");
+        toast.success(t("reviews.requestRejected"));
       } else {
-        toast.error("Failed to reject request");
+        toast.error(t("reviews.rejectFailed"));
       }
     }
   };
@@ -271,7 +271,7 @@ const CustomerReviewsPage: React.FC = () => {
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
-            All Reviews
+            {t("reviews.allReviews")}
           </button>
           <button
             onClick={() => setActiveTab("requests")}
@@ -281,7 +281,7 @@ const CustomerReviewsPage: React.FC = () => {
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
-            Review Requests
+            {t("reviews.reviewRequests")}
           </button>
         </div>
       )}
@@ -297,7 +297,7 @@ const CustomerReviewsPage: React.FC = () => {
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
-            My Reviews
+            {t("reviews.myReviews")}
           </button>
           <button
             onClick={() => setActiveTab("requests")}
@@ -307,7 +307,7 @@ const CustomerReviewsPage: React.FC = () => {
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
-            My Requests
+            {t("reviews.myRequests")}
           </button>
         </div>
       )}
@@ -318,11 +318,11 @@ const CustomerReviewsPage: React.FC = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-[#333333]">
-                Customer Reviews
+                {t("reviews.title")}
               </h1>
               <p className="text-[#9E9E9E]">
-                Manage customer reviews and control their visibility
-                {user?.role === "store" && " for your products"}
+                {t("reviews.subtitle")}
+                {user?.role === "store" && ` ${t("reviews.forYourProducts")}`}
               </p>
             </div>
           </div>
@@ -336,7 +336,7 @@ const CustomerReviewsPage: React.FC = () => {
                   onClick={clearError}
                   className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
                 >
-                  Dismiss
+                  {t("reviews.dismiss")}
                 </button>
               </div>
             </div>
@@ -347,7 +347,7 @@ const CustomerReviewsPage: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Total Reviews</p>
+                  <p className="text-sm text-gray-600">{t("reviews.totalReviews")}</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {stats?.totalReviews || 0}
                   </p>
@@ -360,7 +360,7 @@ const CustomerReviewsPage: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Visible Reviews</p>
+                  <p className="text-sm text-gray-600">{t("reviews.visibleReviews")}</p>
                   <p className="text-2xl font-bold text-green-600">
                     {stats?.visibleReviews || 0}
                   </p>
@@ -373,7 +373,7 @@ const CustomerReviewsPage: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Hidden Reviews</p>
+                  <p className="text-sm text-gray-600">{t("reviews.hiddenReviews")}</p>
                   <p className="text-2xl font-bold text-red-600">
                     {stats?.hiddenReviews || 0}
                   </p>
@@ -386,7 +386,7 @@ const CustomerReviewsPage: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Average Rating</p>
+                  <p className="text-sm text-gray-600">{t("reviews.averageRating")}</p>
                   <p className="text-2xl font-bold text-yellow-600">
                     {stats?.averageRating
                       ? stats.averageRating.toFixed(1)
@@ -408,7 +408,7 @@ const CustomerReviewsPage: React.FC = () => {
                   <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search reviews by product, customer, or content..."
+                    placeholder={t("reviews.searchPlaceholder")}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -425,9 +425,9 @@ const CustomerReviewsPage: React.FC = () => {
                     )
                   }
                 >
-                  <option value="all">All Reviews</option>
-                  <option value="visible">Visible Only</option>
-                  <option value="hidden">Hidden Only</option>
+                  <option value="all">{t("reviews.allReviews")}</option>
+                  <option value="visible">{t("reviews.visibleOnly")}</option>
+                  <option value="hidden">{t("reviews.hiddenOnly")}</option>
                 </select>
                 <select
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
@@ -438,12 +438,12 @@ const CustomerReviewsPage: React.FC = () => {
                     )
                   }
                 >
-                  <option value="all">All Ratings</option>
-                  <option value="5">5 Stars</option>
-                  <option value="4">4 Stars</option>
-                  <option value="3">3 Stars</option>
-                  <option value="2">2 Stars</option>
-                  <option value="1">1 Star</option>
+                  <option value="all">{t("reviews.allRatings")}</option>
+                  <option value="5">{t("reviews.fiveStars")}</option>
+                  <option value="4">{t("reviews.fourStars")}</option>
+                  <option value="3">{t("reviews.threeStars")}</option>
+                  <option value="2">{t("reviews.twoStars")}</option>
+                  <option value="1">{t("reviews.oneStar")}</option>
                 </select>
                 <button
                   onClick={() => setShowMoreFilters(true)}
@@ -458,7 +458,7 @@ const CustomerReviewsPage: React.FC = () => {
                   }`}
                 >
                   <FunnelIcon className="h-4 w-4" />
-                  More Filters
+                  {t("reviews.moreFilters")}
                   {(dateFrom ||
                     dateTo ||
                     storeFilter ||
@@ -481,7 +481,7 @@ const CustomerReviewsPage: React.FC = () => {
                   onClick={handleClearAllFilters}
                   className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
-                  Clear All
+                  {t("reviews.clearAll")}
                 </button>
               </div>
             </div>
@@ -493,7 +493,7 @@ const CustomerReviewsPage: React.FC = () => {
               <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                 <div className="flex items-center justify-between p-6 border-b">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    More Filters
+                    {t("reviews.moreFilters")}
                   </h3>
                   <button
                     onClick={() => setShowMoreFilters(false)}
@@ -507,7 +507,7 @@ const CustomerReviewsPage: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        From Date
+                        {t("reviews.fromDate")}
                       </label>
                       <input
                         type="date"
@@ -518,7 +518,7 @@ const CustomerReviewsPage: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        To Date
+                        {t("reviews.toDate")}
                       </label>
                       <input
                         type="date"
@@ -533,11 +533,11 @@ const CustomerReviewsPage: React.FC = () => {
                   {isAdminLike && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Store ID
+                        {t("reviews.storeId")}
                       </label>
                       <input
                         type="text"
-                        placeholder="Enter store ID"
+                        placeholder={t("reviews.enterStoreId")}
                         value={storeFilter}
                         onChange={(e) => setStoreFilter(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
@@ -548,11 +548,11 @@ const CustomerReviewsPage: React.FC = () => {
                   {/* Product Filter */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Product ID
+                      {t("reviews.productId")}
                     </label>
                     <input
                       type="text"
-                      placeholder="Enter product ID"
+                      placeholder={t("reviews.enterProductId")}
                       value={productFilter}
                       onChange={(e) => setProductFilter(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
@@ -562,11 +562,11 @@ const CustomerReviewsPage: React.FC = () => {
                   {/* User Email Filter */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Customer Email
+                      {t("reviews.customerEmail")}
                     </label>
                     <input
                       type="email"
-                      placeholder="Enter customer email"
+                      placeholder={t("reviews.enterCustomerEmail")}
                       value={userEmailFilter}
                       onChange={(e) => setUserEmailFilter(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
@@ -585,13 +585,13 @@ const CustomerReviewsPage: React.FC = () => {
                     }}
                     className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
                   >
-                    Clear All
+                    {t("reviews.clearAll")}
                   </button>
                   <button
                     onClick={() => setShowMoreFilters(false)}
                     className="px-4 py-2 bg-[var(--brand-accent)] text-white rounded-md hover:bg-[var(--brand-accent)]"
                   >
-                    Apply Filters
+                    {t("reviews.applyFilters")}
                   </button>
                 </div>
               </div>
@@ -605,25 +605,25 @@ const CustomerReviewsPage: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Review Details
+                      {t("reviews.colReviewDetails")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
+                      {t("reviews.colProduct")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Customer
+                      {t("reviews.colCustomer")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rating
+                      {t("reviews.colRating")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      {t("reviews.colStatus")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
+                      {t("reviews.colDate")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {t("reviews.colActions")}
                     </th>
                   </tr>
                 </thead>
@@ -633,7 +633,7 @@ const CustomerReviewsPage: React.FC = () => {
                       <td className="px-6 py-4">
                         <div className="max-w-xs">
                           <p className="text-sm text-gray-900 line-clamp-2">
-                            {review.comment || "No comment provided"}
+                            {review.comment || t("reviews.noComment")}
                           </p>
                         </div>
                       </td>
@@ -670,7 +670,7 @@ const CustomerReviewsPage: React.FC = () => {
                               : "bg-red-100 text-red-800"
                           }`}
                         >
-                          {review.isVisible ? "Visible" : "Hidden"}
+                          {review.isVisible ? t("reviews.visible") : t("reviews.hidden")}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -818,7 +818,7 @@ const CustomerReviewsPage: React.FC = () => {
               <div className="text-center py-12">
                 <div className="text-gray-400 text-6xl mb-4">💬</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No reviews found
+                  {t("reviews.noReviewsFound")}
                 </h3>
                 <p className="text-gray-500">
                   {searchTerm ||
@@ -829,8 +829,8 @@ const CustomerReviewsPage: React.FC = () => {
                   storeFilter ||
                   productFilter ||
                   userEmailFilter
-                    ? "Try adjusting your filters or clearing them"
-                    : "No customer reviews available yet"}
+                    ? t("reviews.tryAdjustFilters")
+                    : t("reviews.noReviewsYet")}
                 </p>
               </div>
             )}
@@ -840,12 +840,12 @@ const CustomerReviewsPage: React.FC = () => {
           {pages > 1 && (
             <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
               <div className="text-sm text-gray-700">
-                Showing{" "}
-                <span className="font-medium">{(page - 1) * limit + 1}</span> to{" "}
+                {t("reviews.showing")}{" "}
+                <span className="font-medium">{(page - 1) * limit + 1}</span> {t("reviews.to")}{" "}
                 <span className="font-medium">
                   {Math.min(page * limit, total)}
                 </span>{" "}
-                of <span className="font-medium">{total}</span> results
+                {t("reviews.of")} <span className="font-medium">{total}</span> {t("reviews.results")}
               </div>
               <div className="flex space-x-2">
                 <button
@@ -853,7 +853,7 @@ const CustomerReviewsPage: React.FC = () => {
                   disabled={currentPage === 1}
                   className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  {t("reviews.previous")}
                 </button>
                 {Array.from({ length: Math.min(5, pages) }, (_, i) => {
                   const pageNum =
@@ -879,7 +879,7 @@ const CustomerReviewsPage: React.FC = () => {
                   disabled={currentPage === pages}
                   className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {t("reviews.next")}
                 </button>
               </div>
             </div>
@@ -903,7 +903,7 @@ const CustomerReviewsPage: React.FC = () => {
                   : "bg-gray-100 text-gray-700 border border-gray-300"
               }`}
             >
-              Pending
+              {t("reviews.pending")}
             </button>
             <button
               onClick={() => {
@@ -916,7 +916,7 @@ const CustomerReviewsPage: React.FC = () => {
                   : "bg-gray-100 text-gray-700 border border-gray-300"
               }`}
             >
-              Approved
+              {t("reviews.approved")}
             </button>
             <button
               onClick={() => {
@@ -929,7 +929,7 @@ const CustomerReviewsPage: React.FC = () => {
                   : "bg-gray-100 text-gray-700 border border-gray-300"
               }`}
             >
-              Rejected
+              {t("reviews.rejected")}
             </button>
           </div>
 
@@ -948,25 +948,25 @@ const CustomerReviewsPage: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Request Type
+                        {t("reviews.colRequestType")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Vendor
+                        {t("reviews.colVendor")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Product & Review
+                        {t("reviews.colProductReview")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Reviewer
+                        {t("reviews.colReviewer")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
+                        {t("reviews.colStatus")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
+                        {t("reviews.colDate")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Actions
+                        {t("reviews.colActions")}
                       </th>
                     </tr>
                   </thead>
@@ -984,10 +984,10 @@ const CustomerReviewsPage: React.FC = () => {
                             }`}
                           >
                             {request.requestType === "hide"
-                              ? "Hide Review"
+                              ? t("reviews.hideReview")
                               : request.requestType === "unhide"
-                              ? "Unhide Review"
-                              : "Delete Review"}
+                              ? t("reviews.unhideReview")
+                              : t("reviews.deleteReview")}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1006,7 +1006,7 @@ const CustomerReviewsPage: React.FC = () => {
                               {request.productName}
                             </div>
                             <div className="text-xs text-gray-500 line-clamp-1">
-                              {request.reviewComment || "No comment"}
+                              {request.reviewComment || t("reviews.noComment")}
                             </div>
                           </div>
                         </td>
@@ -1068,7 +1068,7 @@ const CustomerReviewsPage: React.FC = () => {
                           )}
                           {request.status === "rejected" && (
                             <div className="text-xs text-gray-600">
-                              {request.rejectionReason || "No reason provided"}
+                              {request.rejectionReason || t("reviews.noReasonProvided")}
                             </div>
                           )}
                         </td>
@@ -1105,7 +1105,7 @@ const CustomerReviewsPage: React.FC = () => {
                   : "bg-gray-100 text-gray-700 border border-gray-300"
               }`}
             >
-              Pending
+              {t("reviews.pending")}
             </button>
             <button
               onClick={() => {
@@ -1118,7 +1118,7 @@ const CustomerReviewsPage: React.FC = () => {
                   : "bg-gray-100 text-gray-700 border border-gray-300"
               }`}
             >
-              Approved
+              {t("reviews.approved")}
             </button>
             <button
               onClick={() => {
@@ -1131,7 +1131,7 @@ const CustomerReviewsPage: React.FC = () => {
                   : "bg-gray-100 text-gray-700 border border-gray-300"
               }`}
             >
-              Rejected
+              {t("reviews.rejected")}
             </button>
           </div>
 
@@ -1183,10 +1183,10 @@ const CustomerReviewsPage: React.FC = () => {
                             }`}
                           >
                             {request.requestType === "hide"
-                              ? "Hide Review"
+                              ? t("reviews.hideReview")
                               : request.requestType === "unhide"
-                              ? "Unhide Review"
-                              : "Delete Review"}
+                              ? t("reviews.unhideReview")
+                              : t("reviews.deleteReview")}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -1195,7 +1195,7 @@ const CustomerReviewsPage: React.FC = () => {
                               {request.productName}
                             </div>
                             <div className="text-xs text-gray-500 line-clamp-1">
-                              {request.reviewComment || "No comment"}
+                              {request.reviewComment || t("reviews.noComment")}
                             </div>
                           </div>
                         </td>

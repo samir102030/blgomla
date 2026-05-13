@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -11,6 +12,7 @@ import BrandModal from "../../components/BrandModal";
 import ViewBrandModal from "../../components/ViewBrandModal";
 
 const BrandsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -37,7 +39,7 @@ const BrandsPage: React.FC = () => {
   ) || [];
 
   const handleDelete = async (brandId: string) => {
-    if (window.confirm("Are you sure you want to delete this brand?")) {
+    if (window.confirm(t("brands.confirmDelete"))) {
       await safeDeleteBrand(brandId);
       fetchBrands(); // Refresh the list
     }
@@ -76,7 +78,7 @@ const BrandsPage: React.FC = () => {
 
   if (loading && (!brands || brands.length === 0)) {
     return (
-      <div className="flex justify-center items-center h-64">Loading...</div>
+      <div className="flex justify-center items-center h-64">{t("brands.loading")}</div>
     );
   }
 
@@ -86,16 +88,16 @@ const BrandsPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            Brands Management
+            {t("brands.title")}
           </h1>
-          <p className="text-[#9E9E9E]">Organize your products into brands</p>
+          <p className="text-[#9E9E9E]">{t("brands.subtitle")}</p>
         </div>
         <button
           onClick={handleAddBrand}
           className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
         >
           <PlusIcon className="h-4 w-4" />
-          Add Brand
+          {t("brands.addBrand")}
         </button>
       </div>
 
@@ -104,7 +106,7 @@ const BrandsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Brands</p>
+              <p className="text-sm text-gray-600">{t("brands.totalBrands")}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {brands?.length || 0}
               </p>
@@ -117,7 +119,7 @@ const BrandsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Active Brands</p>
+              <p className="text-sm text-gray-600">{t("brands.activeBrands")}</p>
               <p className="text-2xl font-bold text-green-600">
                 {(brands?.filter((b) => b.isActive) || []).length}
               </p>
@@ -130,7 +132,7 @@ const BrandsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Inactive Brands</p>
+              <p className="text-sm text-gray-600">{t("brands.inactiveBrands")}</p>
               <p className="text-2xl font-bold text-orange-600">
                 {(brands?.filter((b) => !b.isActive) || []).length}
               </p>
@@ -143,7 +145,7 @@ const BrandsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Brands with Logo</p>
+              <p className="text-sm text-gray-600">{t("brands.brandsWithLogo")}</p>
               <p className="text-2xl font-bold text-[var(--brand-primary)]">
                 {(brands?.filter((b) => b.logo) || []).length}
               </p>
@@ -161,7 +163,7 @@ const BrandsPage: React.FC = () => {
           <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search brands..."
+            placeholder={t("brands.searchPlaceholder")}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -176,19 +178,19 @@ const BrandsPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Brand
+                  {t("brands.colBrand")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Description
+                  {t("brands.colDescription")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Logo
+                  {t("brands.colLogo")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t("brands.colStatus")}
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
+                  {t("brands.colActions")}
                 </th>
               </tr>
             </thead>
@@ -211,7 +213,7 @@ const BrandsPage: React.FC = () => {
                         alt={brand.name}
                       />
                     ) : (
-                      <span className="text-gray-400">No logo</span>
+                      <span className="text-gray-400">{t("brands.noLogo")}</span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -220,7 +222,7 @@ const BrandsPage: React.FC = () => {
                         brand.isActive
                       )}`}
                     >
-                      {brand.isActive ? "Active" : "Inactive"}
+                      {brand.isActive ? t("brands.active") : t("brands.inactive")}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -235,7 +237,7 @@ const BrandsPage: React.FC = () => {
                         onClick={() => handleToggleStatus(brand)}
                         className={`hover:text-gray-900 ${brand.isActive ? "text-green-600" : "text-gray-600"
                           }`}
-                        title={brand.isActive ? "Deactivate" : "Activate"}
+                        title={brand.isActive ? t("brands.deactivate") : t("brands.activate")}
                       >
                         {brand.isActive ? "✓" : "✗"}
                       </button>
@@ -263,16 +265,16 @@ const BrandsPage: React.FC = () => {
       {/* Pagination */}
       <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
         <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">{filteredBrands.length}</span> of{" "}
-          <span className="font-medium">{filteredBrands.length}</span> results
+          {t("brands.showing")} <span className="font-medium">1</span> {t("brands.to")}{" "}
+          <span className="font-medium">{filteredBrands.length}</span> {t("brands.of")}{" "}
+          <span className="font-medium">{filteredBrands.length}</span> {t("brands.results")}
         </div>
         <div className="flex space-x-2">
           <button
             className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
             disabled
           >
-            Previous
+            {t("brands.previous")}
           </button>
           <button className="px-3 py-1 bg-[var(--brand-accent)] text-white rounded text-sm">
             1
@@ -281,7 +283,7 @@ const BrandsPage: React.FC = () => {
             className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
             disabled
           >
-            Next
+            {t("brands.next")}
           </button>
         </div>
       </div>

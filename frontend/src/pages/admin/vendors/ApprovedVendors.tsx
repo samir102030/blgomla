@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { useVendorStore } from '../../../stores/vendor.store';
 
 const ApprovedVendors: React.FC = () => {
+  const { t } = useTranslation();
   const {
     vendors,
     loading,
@@ -25,12 +27,12 @@ const ApprovedVendors: React.FC = () => {
   );
 
   const handleSuspendVendor = async (vendorId: string) => {
-    if (window.confirm('Are you sure you want to suspend this vendor?')) {
+    if (window.confirm(t('approvedVendors.confirmSuspend'))) {
       try {
         await updateVendorStatus(vendorId, 'suspended');
-        toast.success('Vendor suspended successfully');
+        toast.success(t('approvedVendors.suspendSuccess'));
       } catch (error) {
-        toast.error('Failed to suspend vendor');
+        toast.error(t('approvedVendors.suspendFailed'));
       }
     }
   };
@@ -53,11 +55,11 @@ const ApprovedVendors: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Approved Vendors</h1>
-          <p className="text-gray-600">Active vendors in the marketplace</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('approvedVendors.title')}</h1>
+          <p className="text-gray-600">{t('approvedVendors.subtitle')}</p>
         </div>
         <div className="text-sm text-green-600 font-medium">
-          {approvedVendors.length} Active Vendors
+          {approvedVendors.length} {t('approvedVendors.activeVendors')}
         </div>
       </div>
 
@@ -65,7 +67,7 @@ const ApprovedVendors: React.FC = () => {
       <div className="bg-white p-4 rounded-lg shadow-sm">
         <input
           type="text"
-          placeholder="Search approved vendors..."
+          placeholder={t('approvedVendors.searchPlaceholder')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -76,25 +78,25 @@ const ApprovedVendors: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-green-600">{approvedVendors.length}</div>
-          <div className="text-sm text-gray-600">Total Approved</div>
+          <div className="text-sm text-gray-600">{t('approvedVendors.totalApproved')}</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-[var(--brand-primary)]">
             {approvedVendors.filter(v => new Date(v.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
           </div>
-          <div className="text-sm text-gray-600">New This Month</div>
+          <div className="text-sm text-gray-600">{t('approvedVendors.newThisMonth')}</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-[var(--brand-primary)]">
             {approvedVendors.filter(v => v.store?.isActive).length}
           </div>
-          <div className="text-sm text-gray-600">Active Stores</div>
+          <div className="text-sm text-gray-600">{t('approvedVendors.activeStores')}</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-orange-600">
             {approvedVendors.reduce((sum, v) => sum + (v.store?.productCount || 0), 0)}
           </div>
-          <div className="text-sm text-gray-600">Total Products</div>
+          <div className="text-sm text-gray-600">{t('approvedVendors.totalProducts')}</div>
         </div>
       </div>
 
@@ -116,21 +118,21 @@ const ApprovedVendors: React.FC = () => {
                   </div>
                 </div>
                 <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                  Active
+                  {t('approvedVendors.active')}
                 </span>
               </div>
 
               <div className="space-y-2 mb-4">
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-medium">Email:</span>
+                  <span className="font-medium">{t('approvedVendors.email')}:</span>
                   <span className="ml-2">{vendor.contactEmail}</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-medium">Phone:</span>
+                  <span className="font-medium">{t('approvedVendors.phone')}:</span>
                   <span className="ml-2">{vendor.contactPhone}</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-medium">Joined:</span>
+                  <span className="font-medium">{t('approvedVendors.joined')}:</span>
                   <span className="ml-2">{new Date(vendor.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
@@ -152,13 +154,13 @@ const ApprovedVendors: React.FC = () => {
                   onClick={() => openDetailsModal(vendor)}
                   className="flex-1 px-3 py-2 text-sm bg-[var(--brand-accent)] text-white rounded-md hover:bg-[var(--brand-accent)]"
                 >
-                  View Details
+                  {t('approvedVendors.viewDetails')}
                 </button>
                 <button
                   onClick={() => handleSuspendVendor(vendor._id)}
                   className="px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
                 >
-                  Suspend
+                  {t('approvedVendors.suspend')}
                 </button>
               </div>
             </div>
@@ -169,8 +171,8 @@ const ApprovedVendors: React.FC = () => {
       {approvedVendors.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🏪</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No approved vendors found</h3>
-          <p className="text-gray-500">No vendors match your search criteria</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('approvedVendors.noVendors')}</h3>
+          <p className="text-gray-500">{t('approvedVendors.noMatch')}</p>
         </div>
       )}
 
@@ -179,7 +181,7 @@ const ApprovedVendors: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-96 overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Vendor Details</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t('approvedVendors.vendorDetails')}</h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -259,7 +261,7 @@ const ApprovedVendors: React.FC = () => {
                 onClick={() => setShowDetailsModal(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
               >
-                Close
+                {t('approvedVendors.close')}
               </button>
               <button
                 onClick={() => {
@@ -268,7 +270,7 @@ const ApprovedVendors: React.FC = () => {
                 }}
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
-                Suspend Vendor
+                {t('approvedVendors.suspendVendor')}
               </button>
             </div>
           </div>

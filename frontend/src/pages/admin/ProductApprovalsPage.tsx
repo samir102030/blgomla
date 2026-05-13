@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import {
   CheckIcon,
@@ -24,6 +25,7 @@ const statusOptions = [
 ];
 
 const ProductApprovalsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<ApprovalProduct[]>([]);
   const [statusFilter, setStatusFilter] = useState("pending");
   const [search, setSearch] = useState("");
@@ -38,7 +40,7 @@ const ProductApprovalsPage: React.FC = () => {
       setProducts(data.data || data || []);
     } catch (error) {
       console.error("Failed to load product approvals", error);
-      toast.error("Unable to load product approvals");
+      toast.error(t("productApprovals.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -51,23 +53,23 @@ const ProductApprovalsPage: React.FC = () => {
   const handleApprove = async (productId: string) => {
     try {
       await axiosInstance.post(`/products/${productId}/approve`);
-      toast.success("Product approved and published");
+      toast.success(t("productApprovals.approvedSuccess"));
       await fetchApprovals();
     } catch (error) {
       console.error("Approve failed", error);
-      toast.error("Failed to approve product");
+      toast.error(t("productApprovals.approveFailed"));
     }
   };
 
   const handleReject = async (productId: string) => {
-    const reason = prompt("Provide a rejection reason (optional):") ?? "";
+    const reason = prompt(t("productApprovals.rejectionReasonPrompt")) ?? "";
     try {
       await axiosInstance.post(`/products/${productId}/reject`, { reason });
-      toast.success("Product rejected");
+      toast.success(t("productApprovals.rejectedSuccess"));
       await fetchApprovals();
     } catch (error) {
       console.error("Reject failed", error);
-      toast.error("Failed to reject product");
+      toast.error(t("productApprovals.rejectFailed"));
     }
   };
 
@@ -110,10 +112,10 @@ const ProductApprovalsPage: React.FC = () => {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[#333333]">
-            Product Approvals
+            {t("productApprovals.title")}
           </h1>
           <p className="text-[#9E9E9E]">
-            Review vendor submissions before they go live.
+            {t("productApprovals.subtitle")}
           </p>
         </div>
         <button
@@ -124,23 +126,23 @@ const ProductApprovalsPage: React.FC = () => {
           <ArrowPathIcon
             className={`h-5 w-5 ${loading ? "animate-spin" : ""}`}
           />
-          Refresh
+          {t("productApprovals.refresh")}
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border rounded-xl p-4 shadow-sm">
-          <p className="text-sm text-gray-600">Pending products</p>
+          <p className="text-sm text-gray-600">{t("productApprovals.pendingProducts")}</p>
           <p className="text-3xl font-bold text-yellow-600">{pendingCount}</p>
         </div>
         <div className="bg-white border rounded-xl p-4 shadow-sm">
-          <p className="text-sm text-gray-600">Approved today</p>
+          <p className="text-sm text-gray-600">{t("productApprovals.approvedToday")}</p>
           <p className="text-3xl font-bold text-green-600">
             {approvedToday}
           </p>
         </div>
         <div className="bg-white border rounded-xl p-4 shadow-sm">
-          <p className="text-sm text-gray-600">Queue size</p>
+          <p className="text-sm text-gray-600">{t("productApprovals.queueSize")}</p>
           <p className="text-3xl font-bold text-[var(--brand-primary)]">
             {products.length}
           </p>
@@ -154,7 +156,7 @@ const ProductApprovalsPage: React.FC = () => {
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search by name, store, or ID"
+                placeholder={t("productApprovals.searchPlaceholder")}
                 className="w-full border rounded-lg pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -179,22 +181,22 @@ const ProductApprovalsPage: React.FC = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                  Product
+                  {t("productApprovals.colProduct")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                  Store
+                  {t("productApprovals.colStore")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                  Submitted By
+                  {t("productApprovals.colSubmittedBy")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                  Status
+                  {t("productApprovals.colStatus")}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
-                  Created
+                  {t("productApprovals.colCreated")}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600">
-                  Actions
+                  {t("productApprovals.colActions")}
                 </th>
               </tr>
             </thead>
@@ -205,7 +207,7 @@ const ProductApprovalsPage: React.FC = () => {
                     colSpan={6}
                     className="py-10 text-center text-gray-500 text-sm"
                   >
-                    No products found for this filter.
+                    {t("productApprovals.noProducts")}
                   </td>
                 </tr>
               )}
@@ -215,7 +217,7 @@ const ProductApprovalsPage: React.FC = () => {
                     colSpan={6}
                     className="py-10 text-center text-gray-500 text-sm"
                   >
-                    Loading approvals...
+                    {t("productApprovals.loading")}
                   </td>
                 </tr>
               )}
@@ -271,7 +273,7 @@ const ProductApprovalsPage: React.FC = () => {
                           className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50"
                         >
                           <CheckIcon className="h-4 w-4" />
-                          Approve
+                          {t("productApprovals.approve")}
                         </button>
                         <button
                           onClick={() => handleReject(product._id)}
@@ -279,7 +281,7 @@ const ProductApprovalsPage: React.FC = () => {
                           className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
                         >
                           <XMarkIcon className="h-4 w-4" />
-                          Reject
+                          {t("productApprovals.reject")}
                         </button>
                       </div>
                     </td>

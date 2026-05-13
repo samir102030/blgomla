@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAdvertisementStore } from "../../stores/advertisement.store";
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import AdvertisementModal from "../../components/admin/AdvertisementModal";
 
 const AdvertisementsPage: React.FC = () => {
+  const { t } = useTranslation();
   const {
     advertisements,
     loading,
@@ -30,13 +32,13 @@ const AdvertisementsPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this advertisement?")) {
+    if (window.confirm(t("ads.confirmDelete"))) {
       const success = await deleteAdvertisement(id);
       if (success) {
-        toast.success("Advertisement deleted successfully");
+        toast.success(t("ads.deleteSuccess"));
         fetchAdvertisements();
       } else {
-        toast.error("Failed to delete advertisement");
+        toast.error(t("ads.deleteFailed"));
       }
     }
   };
@@ -62,15 +64,15 @@ const AdvertisementsPage: React.FC = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Advertisements</h1>
-          <p className="text-gray-600">Manage homepage advertisements</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("ads.title")}</h1>
+          <p className="text-gray-600">{t("ads.subtitle")}</p>
         </div>
         <button
           onClick={handleCreate}
           className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
         >
           <PlusIcon className="h-5 w-5" />
-          Add Advertisement
+          {t("ads.addAdvertisement")}
         </button>
       </div>
 
@@ -81,12 +83,12 @@ const AdvertisementsPage: React.FC = () => {
         </div>
       ) : advertisements.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-          <p className="text-gray-500 mb-4">No advertisements yet</p>
+          <p className="text-gray-500 mb-4">{t("ads.empty")}</p>
           <button
             onClick={handleCreate}
             className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors"
           >
-            Create First Advertisement
+            {t("ads.createFirst")}
           </button>
         </div>
       ) : (
@@ -104,7 +106,7 @@ const AdvertisementsPage: React.FC = () => {
                 />
                 {!ad.isActive && (
                   <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                    Inactive
+                    {t("ads.inactive")}
                   </div>
                 )}
               </div>
@@ -128,7 +130,7 @@ const AdvertisementsPage: React.FC = () => {
                       <EyeIcon className="h-4 w-4" />
                       {ad.viewCount}
                     </span>
-                    <span>Clicks: {ad.clickCount}</span>
+                    <span>{t("ads.clicks")}: {ad.clickCount}</span>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -137,14 +139,14 @@ const AdvertisementsPage: React.FC = () => {
                     className="flex-1 bg-[var(--brand-primary)] text-white px-3 py-2 rounded-lg hover:bg-[var(--brand-accent)] transition-colors flex items-center justify-center gap-1"
                   >
                     <PencilIcon className="h-4 w-4" />
-                    Edit
+                    {t("ads.edit")}
                   </button>
                   <button
                     onClick={() => handleDelete(ad._id)}
                     className="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-1"
                   >
                     <TrashIcon className="h-4 w-4" />
-                    Delete
+                    {t("ads.delete")}
                   </button>
                 </div>
               </div>

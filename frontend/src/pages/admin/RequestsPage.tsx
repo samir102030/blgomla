@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
 import {
@@ -33,6 +34,7 @@ interface CategoryRequest {
 }
 
 const RequestsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"brands" | "categories">("brands");
   const [brandRequests, setBrandRequests] = useState<BrandRequest[]>([]);
   const [categoryRequests, setCategoryRequests] = useState<CategoryRequest[]>(
@@ -59,7 +61,7 @@ const RequestsPage: React.FC = () => {
       setCategoryRequests(categoriesRes.data.data || []);
     } catch (error) {
       console.error("Failed to fetch requests:", error);
-      toast.error("Failed to load requests");
+      toast.error(t("requests.loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -68,46 +70,46 @@ const RequestsPage: React.FC = () => {
   const handleApproveBrand = async (requestId: string) => {
     try {
       await axiosInstance.post(`/brand-requests/${requestId}/approve`);
-      toast.success("Brand request approved!");
+      toast.success(t("requests.brandApproved"));
       fetchRequests();
     } catch (error) {
-      toast.error("Failed to approve brand request");
+      toast.error(t("requests.brandApproveFailed"));
     }
   };
 
   const handleRejectBrand = async (requestId: string) => {
-    const reason = prompt("Enter rejection reason (optional):");
+    const reason = prompt(t("requests.rejectionReasonPrompt"));
     try {
       await axiosInstance.post(`/brand-requests/${requestId}/reject`, {
-        reason: reason || "Not specified",
+        reason: reason || t("requests.notSpecified"),
       });
-      toast.success("Brand request rejected");
+      toast.success(t("requests.brandRejected"));
       fetchRequests();
     } catch (error) {
-      toast.error("Failed to reject brand request");
+      toast.error(t("requests.brandRejectFailed"));
     }
   };
 
   const handleApproveCategory = async (requestId: string) => {
     try {
       await axiosInstance.post(`/category-requests/${requestId}/approve`);
-      toast.success("Category request approved!");
+      toast.success(t("requests.categoryApproved"));
       fetchRequests();
     } catch (error) {
-      toast.error("Failed to approve category request");
+      toast.error(t("requests.categoryApproveFailed"));
     }
   };
 
   const handleRejectCategory = async (requestId: string) => {
-    const reason = prompt("Enter rejection reason (optional):");
+    const reason = prompt(t("requests.rejectionReasonPrompt"));
     try {
       await axiosInstance.post(`/category-requests/${requestId}/reject`, {
-        reason: reason || "Not specified",
+        reason: reason || t("requests.notSpecified"),
       });
-      toast.success("Category request rejected");
+      toast.success(t("requests.categoryRejected"));
       fetchRequests();
     } catch (error) {
-      toast.error("Failed to reject category request");
+      toast.error(t("requests.categoryRejectFailed"));
     }
   };
 
@@ -153,9 +155,9 @@ const RequestsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#333333]">Vendor Requests</h1>
+        <h1 className="text-2xl font-bold text-[#333333]">{t("requests.title")}</h1>
         <p className="text-[#9E9E9E]">
-          Review and manage brand and category creation requests from vendors
+          {t("requests.subtitle")}
         </p>
       </div>
 
@@ -164,7 +166,7 @@ const RequestsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Pending Brands</p>
+              <p className="text-sm text-gray-600">{t("requests.pendingBrands")}</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {pendingBrands}
               </p>
@@ -177,7 +179,7 @@ const RequestsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Pending Categories</p>
+              <p className="text-sm text-gray-600">{t("requests.pendingCategories")}</p>
               <p className="text-2xl font-bold text-yellow-600">
                 {pendingCategories}
               </p>
@@ -190,7 +192,7 @@ const RequestsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Brand Requests</p>
+              <p className="text-sm text-gray-600">{t("requests.totalBrandRequests")}</p>
               <p className="text-2xl font-bold text-[var(--brand-primary)]">
                 {brandRequests.length}
               </p>
@@ -203,7 +205,7 @@ const RequestsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Category Requests</p>
+              <p className="text-sm text-gray-600">{t("requests.totalCategoryRequests")}</p>
               <p className="text-2xl font-bold text-[var(--brand-primary)]">
                 {categoryRequests.length}
               </p>
@@ -227,7 +229,7 @@ const RequestsPage: React.FC = () => {
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              Brand Requests ({pendingBrands} pending)
+              {t("requests.brandRequests")} ({pendingBrands} {t("requests.pending")})
             </button>
             <button
               onClick={() => setActiveTab("categories")}
@@ -237,7 +239,7 @@ const RequestsPage: React.FC = () => {
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
-              Category Requests ({pendingCategories} pending)
+              {t("requests.categoryRequests")} ({pendingCategories} {t("requests.pending")})
             </button>
           </div>
         </div>
@@ -249,7 +251,7 @@ const RequestsPage: React.FC = () => {
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by name, vendor, or store..."
+                placeholder={t("requests.searchPlaceholder")}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFD600] focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -260,10 +262,10 @@ const RequestsPage: React.FC = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
             >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
+              <option value="all">{t("requests.allStatuses")}</option>
+              <option value="pending">{t("requests.pending")}</option>
+              <option value="approved">{t("requests.approved")}</option>
+              <option value="rejected">{t("requests.rejected")}</option>
             </select>
           </div>
         </div>
@@ -271,12 +273,12 @@ const RequestsPage: React.FC = () => {
         {/* Content */}
         <div className="p-6">
           {loading ? (
-            <div className="text-center py-12">Loading requests...</div>
+            <div className="text-center py-12">{t("requests.loading")}</div>
           ) : activeTab === "brands" ? (
             <div className="space-y-4">
               {filteredBrandRequests.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  No brand requests found
+                  {t("requests.noBrandRequests")}
                 </div>
               ) : (
                 filteredBrandRequests.map((request) => (
@@ -363,7 +365,7 @@ const RequestsPage: React.FC = () => {
             <div className="space-y-4">
               {filteredCategoryRequests.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  No category requests found
+                  {t("requests.noCategoryRequests")}
                 </div>
               ) : (
                 filteredCategoryRequests.map((request) => (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FiUsers,
   FiEye,
@@ -39,6 +40,7 @@ interface TopPagesData {
 }
 
 const VisitorAnalyticsPage: React.FC = () => {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState("30d");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<VisitorStatsData | null>(null);
@@ -107,10 +109,10 @@ const VisitorAnalyticsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Visitor Analytics
+            {t("visitorAnalytics.title")}
           </h1>
           <p className="text-gray-500 dark:text-gray-400">
-            Track visitors, devices, and locations
+            {t("visitorAnalytics.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -119,10 +121,10 @@ const VisitorAnalyticsPage: React.FC = () => {
             onChange={(e) => setPeriod(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)]"
           >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-            <option value="1y">Last year</option>
+            <option value="7d">{t("visitorAnalytics.last7days")}</option>
+            <option value="30d">{t("visitorAnalytics.last30days")}</option>
+            <option value="90d">{t("visitorAnalytics.last90days")}</option>
+            <option value="1y">{t("visitorAnalytics.lastYear")}</option>
           </select>
           <button
             onClick={fetchData}
@@ -137,25 +139,25 @@ const VisitorAnalyticsPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<FiUsers />}
-          label="Total Visitors"
+          label={t("visitorAnalytics.totalVisitors")}
           value={stats?.totalVisitors || 0}
           color="#3B82F6"
         />
         <StatCard
           icon={<FiEye />}
-          label="Page Views"
+          label={t("visitorAnalytics.pageViews")}
           value={stats?.totalPageViews || 0}
           color="#10B981"
         />
         <StatCard
           icon={<FiClock />}
-          label="Today's Visitors"
+          label={t("visitorAnalytics.todaysVisitors")}
           value={stats?.todayVisitors || 0}
           color="#F59E0B"
         />
         <StatCard
           icon={<FiTrendingUp />}
-          label="Avg Pages/Visit"
+          label={t("visitorAnalytics.avgPagesPerVisit")}
           value={stats?.avgPagesPerVisit || 0}
           color="#8B5CF6"
         />
@@ -164,7 +166,7 @@ const VisitorAnalyticsPage: React.FC = () => {
       {/* Visitors Over Time Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <FiBarChart2 /> Visitors Over Time
+          <FiBarChart2 /> {t("visitorAnalytics.visitorsOverTime")}
         </h2>
         {stats?.visitorsOverTime && stats.visitorsOverTime.length > 0 ? (
           <div className="h-64 flex items-end gap-1 overflow-x-auto pb-6 relative">
@@ -210,7 +212,7 @@ const VisitorAnalyticsPage: React.FC = () => {
             </div>
           </div>
         ) : (
-          <EmptyState message="No visitor data yet. Data will appear as visitors browse the store." />
+          <EmptyState message={t("visitorAnalytics.noVisitorData")} />
         )}
       </div>
 
@@ -219,7 +221,7 @@ const VisitorAnalyticsPage: React.FC = () => {
         {/* Device Breakdown */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <FiMonitor /> Devices
+            <FiMonitor /> {t("visitorAnalytics.devices")}
           </h2>
           {devices?.devices && devices.devices.length > 0 ? (
             <div className="space-y-4">
@@ -250,14 +252,14 @@ const VisitorAnalyticsPage: React.FC = () => {
               })}
             </div>
           ) : (
-            <EmptyState message="No device data yet" />
+            <EmptyState message={t("visitorAnalytics.noDeviceData")} />
           )}
         </div>
 
         {/* Browser Breakdown */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Browsers
+            {t("visitorAnalytics.browsers")}
           </h2>
           {devices?.browsers && devices.browsers.length > 0 ? (
             <div className="space-y-3">
@@ -276,14 +278,14 @@ const VisitorAnalyticsPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <EmptyState message="No browser data yet" />
+            <EmptyState message={t("visitorAnalytics.noBrowserData")} />
           )}
         </div>
 
         {/* OS Breakdown */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Operating Systems
+            {t("visitorAnalytics.operatingSystems")}
           </h2>
           {devices?.operatingSystems && devices.operatingSystems.length > 0 ? (
             <div className="space-y-3">
@@ -302,7 +304,7 @@ const VisitorAnalyticsPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <EmptyState message="No OS data yet" />
+            <EmptyState message={t("visitorAnalytics.noOSData")} />
           )}
         </div>
       </div>
@@ -312,7 +314,7 @@ const VisitorAnalyticsPage: React.FC = () => {
         {/* Countries */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <FiGlobe /> Countries
+            <FiGlobe /> {t("visitorAnalytics.countries")}
           </h2>
           {locations?.countries && locations.countries.length > 0 ? (
             <div className="space-y-3">
@@ -331,14 +333,14 @@ const VisitorAnalyticsPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <EmptyState message="No location data yet" />
+            <EmptyState message={t("visitorAnalytics.noLocationData")} />
           )}
         </div>
 
         {/* Egyptian Governorates */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <FiMapPin /> Egyptian Governorates
+            <FiMapPin /> {t("visitorAnalytics.egyptianGovernorates")}
           </h2>
           {locations?.governorates && locations.governorates.length > 0 ? (
             <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -357,7 +359,7 @@ const VisitorAnalyticsPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <EmptyState message="No Egyptian visitor data yet. Governorate data appears when visitors from Egypt browse your store." />
+            <EmptyState message={t("visitorAnalytics.noEgyptianData")} />
           )}
         </div>
       </div>
@@ -365,17 +367,17 @@ const VisitorAnalyticsPage: React.FC = () => {
       {/* Top Pages */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Top Pages
+          {t("visitorAnalytics.topPages")}
         </h2>
         {topPages?.topPages && topPages.topPages.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                  <th className="pb-3 font-medium">Page</th>
-                  <th className="pb-3 font-medium text-right">Views</th>
+                  <th className="pb-3 font-medium">{t("visitorAnalytics.colPage")}</th>
+                  <th className="pb-3 font-medium text-right">{t("visitorAnalytics.colViews")}</th>
                   <th className="pb-3 font-medium text-right">
-                    Unique Visitors
+                    {t("visitorAnalytics.colUniqueVisitors")}
                   </th>
                 </tr>
               </thead>
@@ -397,7 +399,7 @@ const VisitorAnalyticsPage: React.FC = () => {
             </table>
           </div>
         ) : (
-          <EmptyState message="No page view data yet" />
+          <EmptyState message={t("visitorAnalytics.noPageData")} />
         )}
       </div>
     </div>
