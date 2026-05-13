@@ -191,11 +191,11 @@ const RequestsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Brand Requests</p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-[var(--brand-primary)]">
                 {brandRequests.length}
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
+            <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
               <span className="text-2xl">🏷️</span>
             </div>
           </div>
@@ -204,11 +204,11 @@ const RequestsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Category Requests</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-2xl font-bold text-[var(--brand-primary)]">
                 {categoryRequests.length}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
+            <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
               <span className="text-2xl">📁</span>
             </div>
           </div>

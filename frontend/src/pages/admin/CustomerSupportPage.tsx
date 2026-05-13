@@ -164,13 +164,13 @@ const CustomerSupportPage: React.FC = () => {
                 onClick={() => selectConversation(conversation)}
                 className={`p-4 border-b border-gray-100 dark:border-slate-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/60 ${
                   selectedConversation?._id === conversation._id
-                    ? "bg-blue-50 border-l-4 border-l-blue-500 dark:bg-blue-500/10 dark:border-l-blue-400"
+                    ? "bg-[var(--brand-primary)]/10 border-l-4 border-l-blue-500 dark:bg-[var(--brand-primary)]/10 dark:border-l-blue-400"
                     : ""
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                    <div className="w-8 h-8 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white text-sm font-medium">
                       {conversation.participants
                         .find((p) => p.role === "customer")
                         ?.user.name.charAt(0)}
@@ -214,7 +214,7 @@ const CustomerSupportPage: React.FC = () => {
             {/* Chat Header */}
             <div className="p-4 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                <div className="w-10 h-10 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-medium">
                   {selectedConversation.participants
                     .find((p) => p.role === "customer")
                     ?.user.name.charAt(0)}
@@ -249,15 +249,15 @@ const CustomerSupportPage: React.FC = () => {
                 // Determine message styling based on sender role
                 const getMessageStyle = () => {
                   if (isCurrentUser) {
-                    return "bg-blue-500 text-white dark:bg-blue-600"; // Admin messages (current user)
+                    return "bg-[var(--brand-primary)] text-white dark:bg-[var(--brand-accent)]"; // Admin messages (current user)
                   }
                   switch (senderRole) {
                     case "customer":
                       return "bg-green-100 text-gray-900 border-l-4 border-green-500 dark:bg-emerald-500/15 dark:text-emerald-100 dark:border-emerald-400";
                     case "vendor":
-                      return "bg-purple-100 text-gray-900 border-l-4 border-purple-500 dark:bg-purple-500/15 dark:text-purple-100 dark:border-purple-400";
+                      return "bg-[var(--brand-primary)]/10 text-gray-900 border-l-4 border-[var(--brand-primary)] dark:bg-[var(--brand-primary)]/15 dark:text-white/90 dark:border-[var(--brand-primary)]";
                     case "admin":
-                      return "bg-blue-100 text-gray-900 border-l-4 border-blue-500 dark:bg-blue-500/15 dark:text-blue-100 dark:border-blue-400";
+                      return "bg-[var(--brand-primary)]/10 text-gray-900 border-l-4 border-[var(--brand-primary)] dark:bg-[var(--brand-primary)]/15 dark:text-white/90 dark:border-[var(--brand-primary)]";
                     default:
                       return "bg-gray-200 text-gray-900 dark:bg-slate-800 dark:text-slate-100";
                   }
@@ -297,7 +297,7 @@ const CustomerSupportPage: React.FC = () => {
                       <p
                         className={`text-xs mt-1 ${
                           isCurrentUser
-                            ? "text-blue-100"
+                            ? "text-white/90"
                             : "text-gray-500 dark:text-slate-400"
                         }`}
                       >
@@ -318,12 +318,12 @@ const CustomerSupportPage: React.FC = () => {
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                   placeholder="Type your message..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:border-slate-700"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] bg-white dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:border-slate-700"
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim() || sending}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-500"
+                  className="px-4 py-2 bg-[var(--brand-primary)] text-white rounded-md hover:bg-[var(--brand-accent)] disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[var(--brand-accent)] dark:hover:bg-[var(--brand-primary)]"
                 >
                   {sending ? "Sending..." : "Send"}
                 </button>

@@ -79,13 +79,13 @@ const ApprovedVendors: React.FC = () => {
           <div className="text-sm text-gray-600">Total Approved</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold text-[var(--brand-primary)]">
             {approvedVendors.filter(v => new Date(v.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}
           </div>
           <div className="text-sm text-gray-600">New This Month</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
-          <div className="text-2xl font-bold text-purple-600">
+          <div className="text-2xl font-bold text-[var(--brand-primary)]">
             {approvedVendors.filter(v => v.store?.isActive).length}
           </div>
           <div className="text-sm text-gray-600">Active Stores</div>
@@ -150,7 +150,7 @@ const ApprovedVendors: React.FC = () => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => openDetailsModal(vendor)}
-                  className="flex-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="flex-1 px-3 py-2 text-sm bg-[var(--brand-accent)] text-white rounded-md hover:bg-[var(--brand-accent)]"
                 >
                   View Details
                 </button>

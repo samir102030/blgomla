@@ -67,7 +67,7 @@ const AllVendors: React.FC = () => {
   if (loading && (!vendors || vendors.length === 0)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -94,14 +94,14 @@ const AllVendors: React.FC = () => {
               placeholder={t("allVendors.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
             />
           </div>
           <div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
             >
               <option value="all">{t("vendorManagement.filters.allStatus")}</option>
               <option value="pending">{t("vendorManagement.filters.pending")}</option>
@@ -142,7 +142,7 @@ const AllVendors: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-full bg-[var(--brand-primary)] flex items-center justify-center">
                           <span className="text-white font-medium">
                             {vendor.businessName.charAt(0).toUpperCase()}
                           </span>
@@ -174,7 +174,7 @@ const AllVendors: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => openDetailsModal(vendor)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                       >
                         {t("vendorManagement.table.view")}
                       </button>

@@ -267,7 +267,7 @@ const CustomerReviewsPage: React.FC = () => {
             onClick={() => setActiveTab("reviews")}
             className={`px-4 py-2 font-medium ${
               activeTab === "reviews"
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -277,7 +277,7 @@ const CustomerReviewsPage: React.FC = () => {
             onClick={() => setActiveTab("requests")}
             className={`px-4 py-2 font-medium ${
               activeTab === "requests"
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -293,7 +293,7 @@ const CustomerReviewsPage: React.FC = () => {
             onClick={() => setActiveTab("reviews")}
             className={`px-4 py-2 font-medium ${
               activeTab === "reviews"
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -303,7 +303,7 @@ const CustomerReviewsPage: React.FC = () => {
             onClick={() => setActiveTab("requests")}
             className={`px-4 py-2 font-medium ${
               activeTab === "requests"
-                ? "text-blue-600 border-b-2 border-blue-600"
+                ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
             }`}
           >
@@ -352,7 +352,7 @@ const CustomerReviewsPage: React.FC = () => {
                     {stats?.totalReviews || 0}
                   </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
+                <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
                   <span className="text-2xl">💬</span>
                 </div>
               </div>
@@ -409,7 +409,7 @@ const CustomerReviewsPage: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Search reviews by product, customer, or content..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -417,7 +417,7 @@ const CustomerReviewsPage: React.FC = () => {
               </div>
               <div className="flex gap-4">
                 <select
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   value={visibilityFilter}
                   onChange={(e) =>
                     setVisibilityFilter(
@@ -430,7 +430,7 @@ const CustomerReviewsPage: React.FC = () => {
                   <option value="hidden">Hidden Only</option>
                 </select>
                 <select
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   value={ratingFilter}
                   onChange={(e) =>
                     setRatingFilter(
@@ -453,7 +453,7 @@ const CustomerReviewsPage: React.FC = () => {
                     storeFilter ||
                     productFilter ||
                     userEmailFilter
-                      ? "border-blue-500 text-blue-600 bg-blue-50"
+                      ? "border-[var(--brand-primary)] text-[var(--brand-primary)] bg-[var(--brand-primary)]/10"
                       : "border-gray-300 text-gray-700"
                   }`}
                 >
@@ -464,7 +464,7 @@ const CustomerReviewsPage: React.FC = () => {
                     storeFilter ||
                     productFilter ||
                     userEmailFilter) && (
-                    <span className="bg-blue-600 text-white text-xs rounded-full px-2 py-0.5">
+                    <span className="bg-[var(--brand-accent)] text-white text-xs rounded-full px-2 py-0.5">
                       {
                         [
                           dateFrom,
@@ -513,7 +513,7 @@ const CustomerReviewsPage: React.FC = () => {
                         type="date"
                         value={dateFrom}
                         onChange={(e) => setDateFrom(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       />
                     </div>
                     <div>
@@ -524,7 +524,7 @@ const CustomerReviewsPage: React.FC = () => {
                         type="date"
                         value={dateTo}
                         onChange={(e) => setDateTo(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -540,7 +540,7 @@ const CustomerReviewsPage: React.FC = () => {
                         placeholder="Enter store ID"
                         value={storeFilter}
                         onChange={(e) => setStoreFilter(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       />
                     </div>
                   )}
@@ -555,7 +555,7 @@ const CustomerReviewsPage: React.FC = () => {
                       placeholder="Enter product ID"
                       value={productFilter}
                       onChange={(e) => setProductFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     />
                   </div>
 
@@ -569,7 +569,7 @@ const CustomerReviewsPage: React.FC = () => {
                       placeholder="Enter customer email"
                       value={userEmailFilter}
                       onChange={(e) => setUserEmailFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -589,7 +589,7 @@ const CustomerReviewsPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setShowMoreFilters(false)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 bg-[var(--brand-accent)] text-white rounded-md hover:bg-[var(--brand-accent)]"
                   >
                     Apply Filters
                   </button>
@@ -977,7 +977,7 @@ const CustomerReviewsPage: React.FC = () => {
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               request.requestType === "hide"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]"
                                 : request.requestType === "unhide"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
@@ -1176,7 +1176,7 @@ const CustomerReviewsPage: React.FC = () => {
                           <span
                             className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               request.requestType === "hide"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]"
                                 : request.requestType === "unhide"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"

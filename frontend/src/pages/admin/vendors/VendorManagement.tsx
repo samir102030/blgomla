@@ -150,7 +150,7 @@ const VendorManagement: React.FC = () => {
       approved: "bg-green-100 text-green-800",
       rejected: "bg-red-100 text-red-800",
       suspended: "bg-gray-100 text-gray-800",
-      active: "bg-blue-100 text-blue-800",
+      active: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
     };
     return (
       statusStyles[status as keyof typeof statusStyles] ||
@@ -208,7 +208,7 @@ const VendorManagement: React.FC = () => {
   if (loading && (!vendors || vendors.length === 0)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
         <p className="mt-4 text-gray-600">{t("vendorManagement.table.loading")}</p>
       </div>
     );
@@ -239,7 +239,7 @@ const VendorManagement: React.FC = () => {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
+                    ? "border-[var(--brand-primary)] text-[var(--brand-primary)]"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     }`}
                 >
@@ -247,7 +247,7 @@ const VendorManagement: React.FC = () => {
                   {tab.count !== null && (
                     <span
                       className={`ml-2 py-0.5 px-2 rounded-full text-xs ${activeTab === tab.id
-                        ? "bg-blue-100 text-blue-600"
+                        ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]"
                         : "bg-gray-100 text-gray-600"
                         }`}
                     >
@@ -270,14 +270,14 @@ const VendorManagement: React.FC = () => {
                     placeholder={t("vendorManagement.filters.searchPlaceholder")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
                   />
                 </div>
                 <div>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
                   >
                     <option value="all">{t("vendorManagement.filters.allStatus")}</option>
                     <option value="pending">{t("vendorManagement.filters.pending")}</option>
@@ -318,7 +318,7 @@ const VendorManagement: React.FC = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-10 w-10">
-                                <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                <div className="h-10 w-10 rounded-full bg-[var(--brand-primary)] flex items-center justify-center">
                                   <span className="text-white font-medium">
                                     {vendor.businessName
                                       ?.charAt(0)
@@ -365,7 +365,7 @@ const VendorManagement: React.FC = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleViewDetails(vendor)}
-                                className="text-blue-600 hover:text-blue-900"
+                                className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                               >
                                 {t("vendorManagement.table.view")}
                               </button>
@@ -452,7 +452,7 @@ const VendorManagement: React.FC = () => {
                   <div key={vendor._id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                        <div className="h-10 w-10 rounded-full bg-[var(--brand-primary)] flex items-center justify-center">
                           <span className="text-white font-medium">
                             {vendor.businessName?.charAt(0).toUpperCase() || "?"}
                           </span>
@@ -501,7 +501,7 @@ const VendorManagement: React.FC = () => {
                     <div className="flex items-center flex-wrap gap-2">
                       <button
                         onClick={() => handleViewDetails(vendor)}
-                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                        className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)] text-sm font-medium"
                       >
                         {t("vendorManagement.table.view")}
                       </button>
@@ -578,7 +578,7 @@ const VendorManagement: React.FC = () => {
                 <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
                 >
                   <option value="7d">{t("vendorManagement.analytics.timeRange.7d")}</option>
                   <option value="30d">{t("vendorManagement.analytics.timeRange.30d")}</option>
@@ -590,7 +590,7 @@ const VendorManagement: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
-                    <div className="p-2 bg-blue-100 rounded-lg">
+                    <div className="p-2 bg-[var(--brand-primary)]/10 rounded-lg">
                       <span className="text-2xl">🏪</span>
                     </div>
                     <div className="ml-4">
@@ -754,7 +754,7 @@ const VendorManagement: React.FC = () => {
                       <span className="text-sm text-gray-600">
                         {t("vendorManagement.analytics.charts.newRegistrations")}
                       </span>
-                      <span className="text-lg font-bold text-blue-600">
+                      <span className="text-lg font-bold text-[var(--brand-primary)]">
                         {recentRegistrations.length}
                       </span>
                     </div>
@@ -1068,7 +1068,7 @@ const VendorManagement: React.FC = () => {
                           (category: string, index: number) => (
                             <span
                               key={index}
-                              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                              className="px-2 py-1 bg-[var(--brand-primary)]/10 text-[var(--brand-accent)] text-xs rounded-full"
                             >
                               {category}
                             </span>

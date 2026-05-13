@@ -69,7 +69,7 @@ const CustomerAnalyticsPage: React.FC = () => {
   if (loading && !summary) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--brand-primary)] border-t-transparent" />
       </div>
     );
   }
@@ -88,7 +88,7 @@ const CustomerAnalyticsPage: React.FC = () => {
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         >
           <option value="7days">Last 7 days</option>
           <option value="30days">Last 30 days</option>
@@ -99,15 +99,15 @@ const CustomerAnalyticsPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-purple-100 text-sm font-medium">Total Customers</p>
+        <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
+          <p className="text-white/90 text-sm font-medium">Total Customers</p>
           <p className="text-2xl font-bold mt-1">{(summary?.totalUsers || 0).toLocaleString()}</p>
-          <p className="text-purple-200 text-xs mt-2">{summary?.verificationRate || 0}% verified</p>
+          <p className="text-white/90 text-xs mt-2">{summary?.verificationRate || 0}% verified</p>
         </div>
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-blue-100 text-sm font-medium">New Customers</p>
+        <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
+          <p className="text-white/90 text-sm font-medium">New Customers</p>
           <p className="text-2xl font-bold mt-1">{summary?.newUsers || 0}</p>
-          <p className="text-blue-200 text-xs mt-2">In selected period</p>
+          <p className="text-white/90 text-xs mt-2">In selected period</p>
         </div>
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg">
           <p className="text-green-100 text-sm font-medium">Repeat Buyers</p>
@@ -170,7 +170,7 @@ const CustomerAnalyticsPage: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
+                <div className="w-3 h-3 rounded-full bg-[var(--brand-primary)]" />
                 <span className="text-sm text-gray-700">
                   Total buyers: <strong>{retention?.totalBuyers || 0}</strong>
                 </span>
@@ -193,7 +193,7 @@ const CustomerAnalyticsPage: React.FC = () => {
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-3">
                     <div
-                      className="bg-gradient-to-r from-purple-500 to-indigo-500 h-3 rounded-full transition-all"
+                      className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] h-3 rounded-full transition-all"
                       style={{ width: `${Math.max(percent, 3)}%` }}
                     />
                   </div>
@@ -218,7 +218,7 @@ const CustomerAnalyticsPage: React.FC = () => {
                 <div key={i} className="flex-1 flex flex-col items-center justify-end h-full group">
                   <div className="relative w-full flex items-end justify-center">
                     <div
-                      className="rounded-t w-full bg-gradient-to-t from-purple-500 to-purple-400 hover:from-purple-600 hover:to-purple-500 transition-all"
+                      className="rounded-t w-full bg-gradient-to-t from-[var(--brand-primary)] to-[var(--brand-accent)] hover:from-[var(--brand-primary)] hover:to-[var(--brand-accent)] transition-all"
                       style={{ height: `${Math.max(height, 3)}%` }}
                     >
                       <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-gray-900 text-white px-2 py-1 rounded shadow whitespace-nowrap z-10">
@@ -267,13 +267,13 @@ const CustomerAnalyticsPage: React.FC = () => {
                   customer.totalSpent >= 10000 ? "bg-yellow-100 text-yellow-800" :
                   customer.totalSpent >= 5000 ? "bg-gray-100 text-gray-700" :
                   customer.totalSpent >= 1000 ? "bg-orange-100 text-orange-700" :
-                  "bg-blue-50 text-blue-700";
+                  "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]";
 
                 return (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
                       <span className={`w-6 h-6 inline-flex items-center justify-center rounded-full text-xs font-bold ${
-                        index < 3 ? "bg-purple-100 text-purple-700" : "text-gray-500"
+                        index < 3 ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)]" : "text-gray-500"
                       }`}>
                         {index + 1}
                       </span>

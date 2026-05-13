@@ -91,7 +91,7 @@ const VisitorAnalyticsPage: React.FC = () => {
   if (loading && !stats) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin text-4xl text-blue-500">
+        <div className="animate-spin text-4xl text-[var(--brand-primary)]">
           <FiRefreshCw />
         </div>
       </div>
@@ -117,7 +117,7 @@ const VisitorAnalyticsPage: React.FC = () => {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)]"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -189,7 +189,7 @@ const VisitorAnalyticsPage: React.FC = () => {
                   >
                     <div className="relative w-full">
                       <div
-                        className="bg-blue-500 hover:bg-blue-600 rounded-t-sm w-full transition-all cursor-pointer"
+                        className="bg-[var(--brand-primary)] hover:bg-[var(--brand-accent)] rounded-t-sm w-full transition-all cursor-pointer"
                         style={{ height: `${Math.max(height * 2, 2)}px` }}
                         title={`${day._id}: ${day.count} visitors, ${day.pageViews} views`}
                       />
@@ -324,7 +324,7 @@ const VisitorAnalyticsPage: React.FC = () => {
                   <span className="text-gray-700 dark:text-gray-300">
                     {c._id || "Unknown"}
                   </span>
-                  <span className="font-medium text-gray-900 dark:text-white bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
+                  <span className="font-medium text-gray-900 dark:text-white bg-[var(--brand-primary)]/10 dark:bg-[var(--brand-accent)]/30 text-[var(--brand-primary)] dark:text-white/90 px-2 py-0.5 rounded">
                     {c.count}
                   </span>
                 </div>

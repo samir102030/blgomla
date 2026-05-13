@@ -106,7 +106,7 @@ const InventoryAlertsPage: React.FC = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 shadow-lg border-l-4 border-blue-500">
+        <div className="bg-white rounded-xl p-5 shadow-lg border-l-4 border-[var(--brand-primary)]">
           <p className="text-sm font-medium text-gray-600">Total Products</p>
           <p className="text-2xl font-bold text-gray-900 mt-1">{summary?.totalProducts || 0}</p>
           <p className="text-xs text-gray-500 mt-1">{(summary?.totalUnits || 0).toLocaleString()} total units</p>
@@ -136,10 +136,10 @@ const InventoryAlertsPage: React.FC = () => {
       </div>
 
       {/* Inventory Value */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-6 text-white shadow-lg">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-blue-100 text-sm font-medium">Total Inventory Value</p>
+            <p className="text-white/90 text-sm font-medium">Total Inventory Value</p>
             <p className="text-3xl font-bold mt-1">
               {(summary?.totalValue || 0).toLocaleString()} <span className="text-lg font-normal">EGP</span>
             </p>
@@ -157,7 +157,7 @@ const InventoryAlertsPage: React.FC = () => {
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? "border-b-2 border-blue-500 text-blue-600 bg-blue-50"
+                  ? "border-b-2 border-[var(--brand-primary)] text-[var(--brand-primary)] bg-[var(--brand-primary)]/10"
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >

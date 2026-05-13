@@ -49,8 +49,8 @@ const AdvertisementsPage: React.FC = () => {
 
   const getPositionBadge = (position: string) => {
     const colors: Record<string, string> = {
-      hero: "bg-purple-100 text-purple-800",
-      banner: "bg-blue-100 text-blue-800",
+      hero: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
+      banner: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
       sidebar: "bg-green-100 text-green-800",
       popup: "bg-orange-100 text-orange-800",
     };
@@ -134,7 +134,7 @@ const AdvertisementsPage: React.FC = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEdit(ad)}
-                    className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-1"
+                    className="flex-1 bg-[var(--brand-primary)] text-white px-3 py-2 rounded-lg hover:bg-[var(--brand-accent)] transition-colors flex items-center justify-center gap-1"
                   >
                     <PencilIcon className="h-4 w-4" />
                     Edit

@@ -47,7 +47,7 @@ const VendorAnalytics: React.FC = () => {
   if (loading && vendors.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -64,7 +64,7 @@ const VendorAnalytics: React.FC = () => {
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -77,7 +77,7 @@ const VendorAnalytics: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-[var(--brand-primary)]/10 rounded-lg">
               <span className="text-2xl">🏪</span>
             </div>
             <div className="ml-4">
@@ -187,7 +187,7 @@ const VendorAnalytics: React.FC = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">New registrations</span>
-              <span className="text-lg font-bold text-blue-600">{recentRegistrations.length}</span>
+              <span className="text-lg font-bold text-[var(--brand-primary)]">{recentRegistrations.length}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Approval rate</span>
@@ -199,7 +199,7 @@ const VendorAnalytics: React.FC = () => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Avg. processing time</span>
-              <span className="text-lg font-bold text-purple-600">2.3 days</span>
+              <span className="text-lg font-bold text-[var(--brand-primary)]">2.3 days</span>
             </div>
           </div>
         </div>
@@ -220,7 +220,7 @@ const VendorAnalytics: React.FC = () => {
                     <span className="text-sm font-medium text-gray-500 mr-3">#{index + 1}</span>
                     <span className="text-sm text-gray-900">{vendor.businessName}</span>
                   </div>
-                  <span className="text-sm font-medium text-blue-600">
+                  <span className="text-sm font-medium text-[var(--brand-primary)]">
                     {vendor.store?.orderCount || 0} orders
                   </span>
                 </div>
@@ -269,7 +269,7 @@ const VendorAnalytics: React.FC = () => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Total products</span>
-              <span className="text-sm font-medium text-blue-600">
+              <span className="text-sm font-medium text-[var(--brand-primary)]">
                 {vendors.reduce((sum, v) => sum + (v.store?.productCount || 0), 0)}
               </span>
             </div>
@@ -279,7 +279,7 @@ const VendorAnalytics: React.FC = () => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Response time</span>
-              <span className="text-sm font-medium text-purple-600">1.8 days</span>
+              <span className="text-sm font-medium text-[var(--brand-primary)]">1.8 days</span>
             </div>
           </div>
         </div>

@@ -126,7 +126,7 @@ const AdminDashboard: React.FC = () => {
   if (loading && !dashboardStats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-4 border-[var(--brand-primary)] border-t-transparent"></div>
       </div>
     );
   }
@@ -207,23 +207,23 @@ const AdminDashboard: React.FC = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-blue-100 text-xs sm:text-sm font-medium">
+                <p className="text-white/90 text-xs sm:text-sm font-medium">
                   {t("admin.totalRevenue")}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold mt-1 truncate">
                   ${dashboardStats?.totalRevenue?.toLocaleString() || "0"}
                 </p>
               </div>
-              <div className="bg-blue-400 bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
+              <div className="bg-[var(--brand-primary)] bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
                 <CurrencyDollarIcon className="w-5 sm:w-6 h-5 sm:h-6" />
               </div>
             </div>
             <div className="flex items-center mt-3 sm:mt-4">
               <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
-              <span className="text-xs sm:text-sm text-blue-100 truncate">
+              <span className="text-xs sm:text-sm text-white/90 truncate">
                 {dashboardStats?.salesChange || "0%"} {t("admin.fromLastMonth")}
               </span>
             </div>
@@ -251,23 +251,23 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+          <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-4 sm:p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-purple-100 text-xs sm:text-sm font-medium">
+                <p className="text-white/90 text-xs sm:text-sm font-medium">
                   {t("admin.totalCustomers")}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold mt-1">
                   {dashboardStats?.totalUsers || 0}
                 </p>
               </div>
-              <div className="bg-purple-400 bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
+              <div className="bg-[var(--brand-primary)] bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
                 <UsersIcon className="w-5 sm:w-6 h-5 sm:h-6" />
               </div>
             </div>
             <div className="flex items-center mt-3 sm:mt-4">
               <ArrowUpIcon className="w-3 sm:w-4 h-3 sm:h-4 text-green-300 mr-1 flex-shrink-0" />
-              <span className="text-xs sm:text-sm text-purple-100">
+              <span className="text-xs sm:text-sm text-white/90">
                 {t("admin.newThisMonth")}
               </span>
             </div>
@@ -310,7 +310,7 @@ const AdminDashboard: React.FC = () => {
                 </p>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full"></div>
                 <span className="text-sm text-gray-600">
                   {t("admin.revenue")}
                 </span>
@@ -337,7 +337,7 @@ const AdminDashboard: React.FC = () => {
                           <div
                             className={`rounded-t w-full transition-all group ${
                               point.sales > 0
-                                ? "bg-gradient-to-t from-blue-500 to-blue-400 hover:from-blue-600 hover:to-blue-500"
+                                ? "bg-gradient-to-t from-[var(--brand-primary)] to-[var(--brand-accent)] hover:from-[var(--brand-primary)] hover:to-[var(--brand-accent)]"
                                 : "bg-gray-200 hover:bg-gray-300"
                             }`}
                             style={{ height: `${Math.max(height, 5)}%` }}
@@ -380,7 +380,7 @@ const AdminDashboard: React.FC = () => {
                   >
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <ShoppingBagIcon className="w-5 h-5 text-blue-600" />
+                        <ShoppingBagIcon className="w-5 h-5 text-[var(--brand-primary)]" />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
@@ -492,8 +492,8 @@ const AdminDashboard: React.FC = () => {
                         className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center">
-                            <ShoppingBagIcon className="w-5 h-5 text-purple-600" />
+                          <div className="w-10 h-10 bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-lg flex items-center justify-center">
+                            <ShoppingBagIcon className="w-5 h-5 text-[var(--brand-primary)]" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-900">
@@ -570,7 +570,7 @@ const AdminDashboard: React.FC = () => {
                     type="checkbox"
                     checked={selectedPageIds.includes(page.id)}
                     onChange={() => toggleSelectedPage(page.id)}
-                    className="h-4 w-4 text-blue-600"
+                    className="h-4 w-4 text-[var(--brand-primary)]"
                   />
                   <span className="text-sm text-gray-800">{page.label}</span>
                 </label>
@@ -583,7 +583,7 @@ const AdminDashboard: React.FC = () => {
                   type="checkbox"
                   checked={combineFiles}
                   onChange={(e) => setCombineFiles(e.target.checked)}
-                  className="h-4 w-4 text-blue-600"
+                  className="h-4 w-4 text-[var(--brand-primary)]"
                 />
                 Combine into single CSV
               </label>

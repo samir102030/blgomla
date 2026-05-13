@@ -168,7 +168,7 @@ const UsersPage: React.FC = () => {
                 {paginated?.total || 0}
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
+            <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
               <span className="text-2xl">👥</span>
             </div>
           </div>
@@ -223,7 +223,7 @@ const UsersPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search users by name or email..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -231,7 +231,7 @@ const UsersPage: React.FC = () => {
           </div>
           <div className="flex gap-4">
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
@@ -241,7 +241,7 @@ const UsersPage: React.FC = () => {
               <option value="customer">Customer</option>
             </select>
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -258,7 +258,7 @@ const UsersPage: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-accent)] mx-auto"></div>
             <p className="mt-2 text-gray-600">Loading users...</p>
           </div>
         ) : error ? (
@@ -266,7 +266,7 @@ const UsersPage: React.FC = () => {
             <p className="text-red-600">Error loading users: {error}</p>
             <button
               onClick={() => fetchUsers({ page: currentPage, limit: 10 })}
-              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className="mt-2 px-4 py-2 bg-[var(--brand-accent)] text-white rounded hover:bg-[var(--brand-accent)]"
             >
               Retry
             </button>
@@ -368,7 +368,7 @@ const UsersPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                             onClick={() => handleViewUser(user)}
                           >
                             <EyeIcon className="h-4 w-4" />
@@ -442,7 +442,7 @@ const UsersPage: React.FC = () => {
                   key={pageNum}
                   className={`px-3 py-1 rounded text-sm ${
                     pageNum === (paginated?.page || 1)
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[var(--brand-accent)] text-white"
                       : "border border-gray-300 hover:bg-gray-50"
                   }`}
                   onClick={() => setCurrentPage(pageNum)}
@@ -562,7 +562,7 @@ const UsersPage: React.FC = () => {
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-4 py-2 bg-[var(--brand-accent)] text-white rounded hover:bg-[var(--brand-accent)]"
                 onClick={handleSaveEdit}
               >
                 Save

@@ -30,8 +30,8 @@ interface Quotation {
 
 const statusColors: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
-  reviewed: "bg-blue-100 text-blue-800",
-  quoted: "bg-purple-100 text-purple-800",
+  reviewed: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
+  quoted: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
   accepted: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
   expired: "bg-gray-100 text-gray-800",
@@ -160,7 +160,7 @@ const QuotationsPage: React.FC = () => {
             onClick={() => setStatusFilter(s === statusFilter ? "all" : s)}
             className={`p-3 rounded-xl border text-center transition-all ${
               statusFilter === s
-                ? "border-blue-500 bg-blue-50 shadow-sm"
+                ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/10 shadow-sm"
                 : "border-gray-200 bg-white hover:border-gray-300"
             }`}
           >
@@ -232,7 +232,7 @@ const QuotationsPage: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => openDetail(q)}
-                          className="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] rounded-lg hover:bg-[var(--brand-primary)]/10 transition-colors"
                         >
                           {t("Review")}
                         </button>
@@ -280,7 +280,7 @@ const QuotationsPage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border">
             {/* Header */}
-            <div className="px-6 py-5 border-b bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-between">
+            <div className="px-6 py-5 border-b bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
                   Quotation #{selectedQuotation._id.slice(-8)}
@@ -356,7 +356,7 @@ const QuotationsPage: React.FC = () => {
               )}
 
               {/* Pricing */}
-              <div className="flex gap-4 bg-blue-50 p-4 rounded-xl">
+              <div className="flex gap-4 bg-[var(--brand-primary)]/10 p-4 rounded-xl">
                 <div className="flex-1">
                   <p className="text-xs text-gray-500">Estimated Total</p>
                   <p className="text-lg font-bold text-gray-900">
@@ -378,7 +378,7 @@ const QuotationsPage: React.FC = () => {
                     <select
                       value={editForm.status}
                       onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
                     >
                       <option value="pending">Pending</option>
                       <option value="reviewed">Reviewed</option>
@@ -394,7 +394,7 @@ const QuotationsPage: React.FC = () => {
                       type="number"
                       value={editForm.finalTotal}
                       onChange={(e) => setEditForm({ ...editForm, finalTotal: e.target.value })}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
                       placeholder="Set final price"
                     />
                   </div>
@@ -405,7 +405,7 @@ const QuotationsPage: React.FC = () => {
                     type="date"
                     value={editForm.validUntil}
                     onChange={(e) => setEditForm({ ...editForm, validUntil: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
                   />
                 </div>
                 <div>
@@ -414,7 +414,7 @@ const QuotationsPage: React.FC = () => {
                     value={editForm.adminNotes}
                     onChange={(e) => setEditForm({ ...editForm, adminNotes: e.target.value })}
                     rows={3}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-400 resize-none"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)] resize-none"
                     placeholder="Internal notes or response to customer..."
                   />
                 </div>
@@ -431,7 +431,7 @@ const QuotationsPage: React.FC = () => {
                 <button
                   onClick={handleUpdate}
                   disabled={updating}
-                  className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60"
+                  className="flex-1 px-4 py-2.5 bg-[var(--brand-accent)] text-white rounded-xl text-sm font-semibold hover:bg-[var(--brand-accent)] transition-colors disabled:opacity-60"
                 >
                   {updating ? "Saving..." : "Save Changes"}
                 </button>

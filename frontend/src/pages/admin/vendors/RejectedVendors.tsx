@@ -97,7 +97,7 @@ const RejectedVendors: React.FC = () => {
           <div className="text-sm text-gray-600">Rejected This Month</div>
         </div>
         <div className="bg-white p-4 rounded-lg shadow-sm">
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-2xl font-bold text-[var(--brand-primary)]">
             {rejectedVendors.filter(v => v.rejectionReason?.includes('documentation')).length}
           </div>
           <div className="text-sm text-gray-600">Documentation Issues</div>
@@ -165,7 +165,7 @@ const RejectedVendors: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => openDetailsModal(vendor)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                       >
                         View
                       </button>

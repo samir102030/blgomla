@@ -66,16 +66,16 @@ const PaymentManagementPage: React.FC = () => {
 
   const methodLabels: Record<string, { label: string; icon: string; color: string }> = {
     cod: { label: "Cash on Delivery", icon: "💵", color: "from-emerald-500 to-emerald-600" },
-    stripe: { label: "Stripe", icon: "💳", color: "from-indigo-500 to-indigo-600" },
-    paymob: { label: "Paymob", icon: "🏦", color: "from-blue-500 to-blue-600" },
+    stripe: { label: "Stripe", icon: "💳", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
+    paymob: { label: "Paymob", icon: "🏦", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
     unknown: { label: "Unknown", icon: "❓", color: "from-gray-400 to-gray-500" },
   };
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
-    confirmed: "bg-blue-100 text-blue-800",
-    processing: "bg-indigo-100 text-indigo-800",
-    shipped: "bg-purple-100 text-purple-800",
+    confirmed: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
+    processing: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
+    shipped: "bg-[var(--brand-primary)]/10 text-[var(--brand-accent)]",
     delivered: "bg-green-100 text-green-800",
     cancelled: "bg-red-100 text-red-800",
   };
@@ -83,7 +83,7 @@ const PaymentManagementPage: React.FC = () => {
   if (loading && !summary) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[var(--brand-primary)] border-t-transparent" />
       </div>
     );
   }
@@ -101,7 +101,7 @@ const PaymentManagementPage: React.FC = () => {
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         >
           <option value="7days">Last 7 days</option>
           <option value="30days">Last 30 days</option>
@@ -125,20 +125,20 @@ const PaymentManagementPage: React.FC = () => {
           </p>
           <p className="text-yellow-200 text-xs mt-2">{summary?.pendingOrders || 0} awaiting payment</p>
         </div>
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-blue-100 text-sm font-medium">Payment Methods</p>
+        <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
+          <p className="text-white/90 text-sm font-medium">Payment Methods</p>
           <p className="text-2xl font-bold mt-1">{methods.length}</p>
-          <p className="text-blue-200 text-xs mt-2">Active gateways</p>
+          <p className="text-white/90 text-xs mt-2">Active gateways</p>
         </div>
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
-          <p className="text-purple-100 text-sm font-medium">Avg Success Rate</p>
+        <div className="bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-xl p-5 text-white shadow-lg">
+          <p className="text-white/90 text-sm font-medium">Avg Success Rate</p>
           <p className="text-2xl font-bold mt-1">
             {methods.length > 0
               ? Math.round(methods.reduce((a, m) => a + m.successRate, 0) / methods.length)
               : 0}
             %
           </p>
-          <p className="text-purple-200 text-xs mt-2">Across all methods</p>
+          <p className="text-white/90 text-xs mt-2">Across all methods</p>
         </div>
       </div>
 

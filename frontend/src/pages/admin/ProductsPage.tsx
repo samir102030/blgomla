@@ -380,7 +380,7 @@ const ProductsPage: React.FC = () => {
           {(user?.role === "store" || isAdminLike) && (
             <button
               onClick={() => setShowBulkUpload(!showBulkUpload)}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-medium"
+              className="bg-[var(--brand-primary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--brand-accent)] transition-colors flex items-center gap-2 font-medium"
             >
               📊 {t("product.bulkUpload")}
             </button>
@@ -462,7 +462,7 @@ const ProductsPage: React.FC = () => {
                 {paginated?.total ?? products.length}
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
+            <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
               <span className="text-2xl">📦</span>
             </div>
           </div>
@@ -522,7 +522,7 @@ const ProductsPage: React.FC = () => {
               <input
                 type="text"
                 placeholder={t("product.searchPlaceholder")}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -530,7 +530,7 @@ const ProductsPage: React.FC = () => {
           </div>
           <div className="flex gap-4">
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
@@ -554,14 +554,14 @@ const ProductsPage: React.FC = () => {
 
       {/* Bulk Actions Bar */}
       {showBulkActions && (
-        <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg flex flex-wrap items-center gap-4">
-          <span className="text-sm font-medium text-blue-800">
+        <div className="bg-[var(--brand-primary)]/10 border border-[var(--brand-primary)] p-4 rounded-lg flex flex-wrap items-center gap-4">
+          <span className="text-sm font-medium text-[var(--brand-accent)]">
             {selectedIds.size} product{selectedIds.size !== 1 ? "s" : ""} selected
           </span>
           <select
             value={bulkAction}
             onChange={(e) => { setBulkAction(e.target.value); setBulkValue(""); }}
-            className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-400"
+            className="px-3 py-1.5 border border-[var(--brand-primary)] rounded-lg text-sm bg-white focus:ring-2 focus:ring-[var(--brand-primary)]"
           >
             <option value="">Select action...</option>
             <option value="activate">✅ Activate</option>
@@ -579,19 +579,19 @@ const ProductsPage: React.FC = () => {
               placeholder={bulkAction === "set_price" ? "Price" : bulkAction === "set_stock" ? "Stock qty" : "Sale %"}
               value={bulkValue}
               onChange={(e) => setBulkValue(e.target.value)}
-              className="px-3 py-1.5 border border-blue-300 rounded-lg text-sm w-32 focus:ring-2 focus:ring-blue-400"
+              className="px-3 py-1.5 border border-[var(--brand-primary)] rounded-lg text-sm w-32 focus:ring-2 focus:ring-[var(--brand-primary)]"
             />
           )}
           <button
             onClick={handleBulkUpdate}
             disabled={!bulkAction || bulkUpdating}
-            className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-1.5 bg-[var(--brand-accent)] text-white rounded-lg text-sm font-medium hover:bg-[var(--brand-accent)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {bulkUpdating ? "Updating..." : "Apply"}
           </button>
           <button
             onClick={() => { setSelectedIds(new Set()); setShowBulkActions(false); }}
-            className="px-3 py-1.5 text-sm text-blue-600 hover:text-blue-800"
+            className="px-3 py-1.5 text-sm text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
           >
             Clear Selection
           </button>
@@ -609,7 +609,7 @@ const ProductsPage: React.FC = () => {
                     type="checkbox"
                     checked={filteredProducts.length > 0 && selectedIds.size === filteredProducts.length}
                     onChange={toggleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
                   />
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -643,13 +643,13 @@ const ProductsPage: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredProducts.map((product) => (
-                <tr key={product._id} className={`hover:bg-gray-50 ${selectedIds.has(product._id) ? "bg-blue-50" : ""}`}>
+                <tr key={product._id} className={`hover:bg-gray-50 ${selectedIds.has(product._id) ? "bg-[var(--brand-primary)]/10" : ""}`}>
                   <td className="px-4 py-4">
                     <input
                       type="checkbox"
                       checked={selectedIds.has(product._id)}
                       onChange={() => toggleSelect(product._id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -749,7 +749,7 @@ const ProductsPage: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleViewProduct(product)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                         title={t("product.view")}
                       >
                         <EyeIcon className="h-4 w-4" />
@@ -810,7 +810,7 @@ const ProductsPage: React.FC = () => {
                   onClick={() => goToPage(page)}
                   className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                     page === currentPage
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[var(--brand-accent)] text-white"
                       : "border border-gray-300 hover:bg-gray-50 text-gray-700"
                   }`}
                 >

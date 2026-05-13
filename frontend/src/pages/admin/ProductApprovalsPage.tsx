@@ -141,7 +141,7 @@ const ProductApprovalsPage: React.FC = () => {
         </div>
         <div className="bg-white border rounded-xl p-4 shadow-sm">
           <p className="text-sm text-gray-600">Queue size</p>
-          <p className="text-3xl font-bold text-blue-600">
+          <p className="text-3xl font-bold text-[var(--brand-primary)]">
             {products.length}
           </p>
         </div>
@@ -155,7 +155,7 @@ const ProductApprovalsPage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search by name, store, or ID"
-                className="w-full border rounded-lg pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                className="w-full border rounded-lg pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -163,7 +163,7 @@ const ProductApprovalsPage: React.FC = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+              className="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
             >
               {statusOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>

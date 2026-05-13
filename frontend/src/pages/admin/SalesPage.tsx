@@ -509,7 +509,7 @@ const SalesPage: React.FC = () => {
                   setModalType("sales");
                   setShowModal(true);
                 }}
-                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                className="px-3 py-1 bg-[var(--brand-primary)] text-white rounded text-sm hover:bg-[var(--brand-accent)]"
               >
                 {t("sales.viewAll")}
               </button>
@@ -532,7 +532,7 @@ const SalesPage: React.FC = () => {
                           className="flex flex-col items-center flex-1 group"
                         >
                           <div
-                            className="bg-blue-500 rounded-t w-full min-h-[10px] transition-all duration-300 hover:bg-blue-600 cursor-pointer"
+                            className="bg-[var(--brand-primary)] rounded-t w-full min-h-[10px] transition-all duration-300 hover:bg-[var(--brand-accent)] cursor-pointer"
                             style={{ height: `${Math.max(height, 3)}%` }}
                           >
                             <div className="opacity-0 group-hover:opacity-100 bg-black text-white text-xs rounded px-2 py-1 absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10">
@@ -589,7 +589,7 @@ const SalesPage: React.FC = () => {
                 setModalType("revenue");
                 setShowModal(true);
               }}
-              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              className="px-3 py-1 bg-[var(--brand-primary)] text-white rounded text-sm hover:bg-[var(--brand-accent)]"
             >
               {t("sales.viewDetails")}
             </button>
@@ -597,7 +597,7 @@ const SalesPage: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full mr-3"></div>
                 <span className="text-sm text-gray-700">
                   {t("sales.productSales")}
                 </span>
@@ -687,7 +687,7 @@ const SalesPage: React.FC = () => {
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full mr-3"></div>
                 <span className="text-sm text-gray-700">
                   {t("sales.other")}
                 </span>
@@ -731,7 +731,7 @@ const SalesPage: React.FC = () => {
                   setModalType("products");
                   setShowModal(true);
                 }}
-                className="text-blue-600 hover:text-blue-800 text-sm"
+                className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)] text-sm"
               >
                 {t("sales.viewAll")}
               </button>
@@ -770,7 +770,7 @@ const SalesPage: React.FC = () => {
                 setModalType("transactions");
                 setShowModal(true);
               }}
-              className="text-blue-600 hover:text-blue-800 text-sm"
+              className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)] text-sm"
             >
               {t("sales.viewAll")}
             </button>
@@ -816,14 +816,14 @@ const SalesPage: React.FC = () => {
               setModalType("metrics");
               setShowModal(true);
             }}
-            className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            className="px-3 py-1 bg-[var(--brand-primary)] text-white rounded text-sm hover:bg-[var(--brand-accent)]"
           >
             {t("sales.viewAll")}
           </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-[var(--brand-primary)]">
               {performanceMetrics
                 ? performanceMetrics.conversionRate.toFixed(1)
                 : "0.0"}
@@ -845,7 +845,7 @@ const SalesPage: React.FC = () => {
             </div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">
+            <div className="text-2xl font-bold text-[var(--brand-primary)]">
               {performanceMetrics
                 ? performanceMetrics.itemsPerOrder.toFixed(1)
                 : "0.0"}
@@ -1130,7 +1130,7 @@ const SalesPage: React.FC = () => {
                         <h4 className="font-medium mb-2">
                           {t("sales.conversionRate")}
                         </h4>
-                        <p className="text-2xl font-bold text-blue-600">
+                        <p className="text-2xl font-bold text-[var(--brand-primary)]">
                           {performanceMetrics.conversionRate.toFixed(1)}%
                         </p>
                         <p className="text-sm text-gray-600">
@@ -1152,7 +1152,7 @@ const SalesPage: React.FC = () => {
                         <h4 className="font-medium mb-2">
                           {t("sales.itemsPerOrder")}
                         </h4>
-                        <p className="text-2xl font-bold text-purple-600">
+                        <p className="text-2xl font-bold text-[var(--brand-primary)]">
                           {performanceMetrics.itemsPerOrder.toFixed(1)}
                         </p>
                         <p className="text-sm text-gray-600">

@@ -352,11 +352,11 @@ const OrdersPage: React.FC = () => {
               <p className="text-sm text-gray-600">
                 {t("order.filteredResults")}
               </p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-2xl font-bold text-[var(--brand-primary)]">
                 {filteredOrders.length}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
+            <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
               <span className="text-2xl">�</span>
             </div>
           </div>
@@ -372,7 +372,7 @@ const OrdersPage: React.FC = () => {
               <input
                 type="text"
                 placeholder={t("order.searchPlaceholder")}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -380,7 +380,7 @@ const OrdersPage: React.FC = () => {
           </div>
           <div className="flex gap-4">
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -442,7 +442,7 @@ const OrdersPage: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.map((order) => (
                 <tr key={order._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--brand-primary)]">
                     #{order._id.slice(-8).toUpperCase()}
                   </td>
                   {user?.role === "admin" && (
@@ -486,7 +486,7 @@ const OrdersPage: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleViewOrder(order)}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
+                        className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)] p-1 rounded hover:bg-[var(--brand-primary)]/10 transition-colors"
                         title={t("order.view")}
                       >
                         <EyeIcon className="h-4 w-4" />
@@ -531,7 +531,7 @@ const OrdersPage: React.FC = () => {
           >
             Previous
           </button>
-          <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+          <button className="px-3 py-1 bg-[var(--brand-accent)] text-white rounded text-sm">
             1
           </button>
           <button

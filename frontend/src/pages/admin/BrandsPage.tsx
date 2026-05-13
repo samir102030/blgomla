@@ -109,7 +109,7 @@ const BrandsPage: React.FC = () => {
                 {brands?.length || 0}
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
+            <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
               <span className="text-2xl">🏷️</span>
             </div>
           </div>
@@ -144,11 +144,11 @@ const BrandsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Brands with Logo</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-2xl font-bold text-[var(--brand-primary)]">
                 {(brands?.filter((b) => b.logo) || []).length}
               </p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
+            <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
               <span className="text-2xl">🖼️</span>
             </div>
           </div>
@@ -162,7 +162,7 @@ const BrandsPage: React.FC = () => {
           <input
             type="text"
             placeholder="Search brands..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -227,7 +227,7 @@ const BrandsPage: React.FC = () => {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => handleViewBrand(brand)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
                       >
                         <EyeIcon className="h-4 w-4" />
                       </button>
@@ -274,7 +274,7 @@ const BrandsPage: React.FC = () => {
           >
             Previous
           </button>
-          <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+          <button className="px-3 py-1 bg-[var(--brand-accent)] text-white rounded text-sm">
             1
           </button>
           <button
