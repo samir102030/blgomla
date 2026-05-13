@@ -284,6 +284,17 @@ body {
   100% { transform: translateX(-50%); }
 }
 
+/* Brand strip uses a JS-measured distance to wrap exactly on a
+   track boundary regardless of viewport / number of brands.
+   --track-distance is set inline from BrandLogos.tsx. */
+@keyframes brand-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-1 * var(--track-distance, 100%))); }
+}
+.brand-marquee-track:hover {
+  animation-play-state: paused;
+}
+
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
