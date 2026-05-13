@@ -1134,7 +1134,8 @@
       "postalCode": "Postal Code",
       "postalCodePlaceholder": "Enter postal code",
       "businessDescription": "Business Description",
-      "businessDescriptionPlaceholder": "Describe your business"
+      "businessDescriptionPlaceholder": "Describe your business",
+      "fullAddress": "Full Address"
     },
     "step3": {
       "title": "Product Categories & Store Setup",
@@ -1168,7 +1169,11 @@
       "terms": "Terms and Conditions",
       "privacy": "Privacy Policy",
       "acceptTerms": "I accept the Terms and Conditions",
-      "acceptPrivacy": "I accept the Privacy Policy"
+      "acceptPrivacy": "I accept the Privacy Policy",
+      "uploadTaxCard": "Upload Tax Card",
+      "uploadNationalId": "Upload National ID",
+      "bankStatement": "Bank Statement (Optional)",
+      "uploadBankStatement": "Upload Bank Statement"
     },
     "step5": {
       "title": "Account Setup",
@@ -1190,7 +1195,9 @@
       "securityNote": {
         "title": "Your data is safe",
         "content": "All information is encrypted and used only for verifying your business and processing your application. We will never share it with third parties."
-      }
+      },
+      "accountEmailHint": "This email will be used to log into your vendor dashboard",
+      "passwordHint": "Must be at least 8 characters long"
     },
     "securityNote": {
       "title": "Important Security Note",
@@ -1284,6 +1291,53 @@
       "Qena": "Qena",
       "Red Sea": "Red Sea",
       "New Valley": "New Valley"
+    },
+    "stepOf": "Step {{current}} of {{total}}",
+    "heroBadge": "Now Accepting New Vendors",
+    "heroTitle": "Grow Your Business",
+    "heroTitleAccent": "with Belgomla",
+    "heroSubtitle": "Join hundreds of vendors reaching thousands of IT & networking buyers across Egypt.",
+    "heroBenefit1": "No Listing Fees",
+    "heroBenefit2": "Dedicated Support",
+    "heroBenefit3": "Fast Payouts",
+    "heroStat1": "Active Vendors",
+    "heroStat2": "Products Listed",
+    "heroStat3": "Orders Processed",
+    "sidebar": {
+      "whySell": "Why Sell on Belgomla?",
+      "benefit1": "Access to thousands of B2B buyers",
+      "benefit2": "Real-time analytics dashboard",
+      "benefit3": "Secure, on-time payments",
+      "benefit4": "Easy inventory management",
+      "benefit5": "Marketing tools to boost sales",
+      "tips": "Tips for this step",
+      "trust1": "SSL Secured",
+      "trust2": "Data Protected",
+      "trust3": "Verified Platform",
+      "trust4": "24/7 Support",
+      "needHelp": "Need help?"
+    },
+    "tips": {
+      "license1Title": "Valid License",
+      "license1": "Make sure your commercial registration is up-to-date and not expired.",
+      "license2Title": "Clear Scans",
+      "license2": "Upload high-quality, color scans of all document pages.",
+      "business1Title": "Business Email",
+      "business1": "Use your official business email for faster verification.",
+      "business2Title": "Phone Number",
+      "business2": "Provide a phone number where we can reach you during business hours.",
+      "store1Title": "Store Name",
+      "store1": "Choose a unique, memorable store name that reflects your brand.",
+      "store2Title": "Categories",
+      "store2": "Select all categories that match your product range for better visibility.",
+      "docs1Title": "Required Docs",
+      "docs1": "Tax card and national ID are required. Bank statement is optional but speeds up verification.",
+      "docs2Title": "Review Summary",
+      "docs2": "Double-check all your details in the summary section before proceeding.",
+      "account1Title": "Strong Password",
+      "account1": "Use a mix of uppercase, lowercase, numbers, and symbols.",
+      "account2Title": "Confirmation Email",
+      "account2": "You'll receive login credentials at the email address you provide here."
     }
   },
   "adminCollections.accessDenied": "Access Denied",
