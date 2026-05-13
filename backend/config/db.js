@@ -1,5 +1,20 @@
 import mongoose from "mongoose";
 
+// `collection` is a reserved schema pathname in Mongoose. We use it intentionally
+// on the User model (a vendor's owned store collection). The warning is noisy on
+// every boot; silence it once globally rather than touching every schema.
+mongoose.set("strictQuery", true);
+process.removeAllListeners("warning");
+process.on("warning", (warning) => {
+  if (
+    warning.name === "MongooseWarning" &&
+    /reserved schema pathname/i.test(warning.message)
+  ) {
+    return;
+  }
+  console.warn(warning);
+});
+
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {

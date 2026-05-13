@@ -1,0 +1,11 @@
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, "../.env") });
+import User from "../models/user.model.js";
+await mongoose.connect(process.env.MONGO_URI);
+const u = await User.findOne({ email: process.argv[2].toLowerCase() }).lean();
+console.log({ email: u?.email, role: u?.role, active: u?.active, _id: u?._id });
+await mongoose.disconnect();

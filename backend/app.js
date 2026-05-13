@@ -75,6 +75,22 @@ app.get("/api/_ping", (req, res) => {
   res.json({ ok: true, ts: Date.now() });
 });
 
+// Health endpoint — DB-aware, suitable for uptime monitors.
+// Returns 503 if Mongo isn't connected so a monitor can page on it.
+app.get("/api/v1/health", async (req, res) => {
+  // mongoose imported lazily so this still works before connectDB resolves
+  const { default: mongoose } = await import("mongoose");
+  const dbState = mongoose.connection.readyState; // 0 disconnected, 1 connected
+  const ok = dbState === 1;
+  res.status(ok ? 200 : 503).json({
+    ok,
+    service: "halafawyStore-backend",
+    uptime: Math.round(process.uptime()),
+    db: ["disconnected", "connected", "connecting", "disconnecting"][dbState] ?? "unknown",
+    ts: new Date().toISOString(),
+  });
+});
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,

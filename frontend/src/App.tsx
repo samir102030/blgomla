@@ -150,7 +150,26 @@ function App() {
       </ErrorBoundary>
       <GeneralSupportChat />
       <InstallPrompt />
-      <Toaster />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "var(--surface)",
+            color: "var(--text)",
+            border: "1px solid var(--border)",
+            borderRadius: "10px",
+            padding: "10px 14px",
+            fontSize: "14px",
+            boxShadow: "var(--shadow-lg)",
+          },
+          success: {
+            iconTheme: { primary: "#FF6A1A", secondary: "#FFFFFF" },
+          },
+          error: {
+            iconTheme: { primary: "#ef4444", secondary: "#FFFFFF" },
+          },
+        }}
+      />
     </Router>
   );
 }
