@@ -100,7 +100,7 @@ const LoginRegisterPage: React.FC = () => {
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold text-white text-lg">B</div>
-                    <span className="text-white font-bold text-xl">Belgomla</span>
+                    <span className="text-white font-bold text-xl">{t("brand.wordmark", "Belgomla")}</span>
                   </div>
                   <h2 className="text-3xl font-extrabold text-white leading-tight mb-3">
                     {t("login.welcomeTitle", "Your Tech Marketplace Awaits")}
