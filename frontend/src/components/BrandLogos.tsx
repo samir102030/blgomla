@@ -38,78 +38,71 @@ const BrandLogos: React.FC = () => {
         }))
       : Object.entries(brandLogos).map(([name, logo]) => ({ name, logo }));
 
-  // Measure one track's width and animate exactly by that distance so the
-  // wrap is pixel-perfect regardless of viewport. We render at least 2
-  // copies, and as many more as needed to overflow the viewport — so even
-  // a small brand list keeps the strip visually full.
-  const trackRef = useRef<HTMLDivElement | null>(null);
+  // Approach: render every card with an explicit margin-right (no flex gap,
+  // no logical padding). Then the cycle distance is just N * (card_width
+  // + margin_right). We render enough copies to overflow the viewport,
+  // and animate by exactly one cycle's pixel width — measured from the
+  // first card's offsetLeft to the (N+1)-th card's offsetLeft after mount.
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [copies, setCopies] = useState(2);
-  const [trackWidth, setTrackWidth] = useState<number | null>(null);
+  const [copies, setCopies] = useState(3);
+  const [cycleDistance, setCycleDistance] = useState<number | null>(null);
 
   useLayoutEffect(() => {
+    if (brandItems.length === 0) return;
     const measure = () => {
-      const tw = trackRef.current?.getBoundingClientRect().width ?? 0;
-      const vw = containerRef.current?.getBoundingClientRect().width ?? 0;
-      if (!tw) return;
-      setTrackWidth(tw);
-      // Need at least enough copies that 1 track width + 1 viewport width
-      // fits inside the rendered total — so the wrap point is always offscreen.
-      const minCopies = Math.max(2, Math.ceil((tw + vw) / tw) + 1);
-      setCopies(minCopies);
+      const card = cardRef.current;
+      const container = containerRef.current;
+      if (!card || !container) return;
+      // One cycle's full width: card width + right margin, times N items.
+      const rect = card.getBoundingClientRect();
+      const styles = window.getComputedStyle(card);
+      const marginRight = parseFloat(styles.marginRight) || 0;
+      const cycle = (rect.width + marginRight) * brandItems.length;
+      setCycleDistance(cycle);
+      const vw = container.getBoundingClientRect().width;
+      // 1 cycle behind the viewport + 1 cycle visible + 1 cycle ahead = 3 minimum.
+      // Add one more if the viewport is wider than one cycle.
+      const needed = Math.max(3, Math.ceil(vw / cycle) + 2);
+      setCopies(needed);
     };
+    // Measure now, then again after image loads stabilize.
     measure();
+    const raf = requestAnimationFrame(measure);
+    const t1 = setTimeout(measure, 300);
+    const t2 = setTimeout(measure, 1500);
     const ro = new ResizeObserver(measure);
-    if (trackRef.current) ro.observe(trackRef.current);
+    if (cardRef.current) ro.observe(cardRef.current);
     if (containerRef.current) ro.observe(containerRef.current);
     window.addEventListener("resize", measure);
     return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
       ro.disconnect();
       window.removeEventListener("resize", measure);
     };
   }, [brandItems.length]);
 
-  // Pixel-accurate keyframe distance: animate by exactly one track width.
-  const animationStyle: React.CSSProperties | undefined = trackWidth
+  const animationStyle: React.CSSProperties | undefined = cycleDistance
     ? {
         animation: "brand-marquee 30s linear infinite",
-        // The keyframes below shift by --track-distance, which is exactly
-        // one track's width + one inter-track gap (so the join is invisible).
-        ["--track-distance" as any]: `${trackWidth}px`,
+        ["--track-distance" as any]: `${cycleDistance}px`,
       }
     : undefined;
 
-  const Card: React.FC<{
-    brand: { name: string; logo: string };
-    keyPrefix: string;
-  }> = ({ brand, keyPrefix }) => (
-    <div className="flex-shrink-0 group cursor-pointer">
-      <div className="flex flex-col items-center justify-center gap-2 w-44 h-24 sm:w-52 sm:h-28 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-5 hover:border-[var(--brand-primary)]/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-        {brand.logo ? (
-          <img
-            src={brand.logo}
-            alt={brand.name}
-            className="h-8 sm:h-10 w-auto object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = "none";
-              const fallback = target.parentElement?.querySelector(
-                ".brand-fallback",
-              ) as HTMLElement;
-              if (fallback) fallback.style.display = "block";
-            }}
-          />
-        ) : null}
-        <span
-          className={`text-xs font-semibold text-[var(--text-subtle)] group-hover:text-[var(--brand-primary)] transition-colors duration-300 tracking-wide uppercase ${
-            brand.logo ? "" : "brand-fallback text-base"
-          }`}
-        >
-          {brand.name}
-        </span>
-      </div>
-    </div>
-  );
+  // Flatten N copies of the brand list into a single list. Each card has
+  // its own right margin (set inline so the JS measurement is exact).
+  const cardMargin = 32; // matches gap-8 visually, no rtl/ltr surprises
+  const repeated: { brand: typeof brandItems[number]; key: string }[] = [];
+  for (let i = 0; i < copies; i++) {
+    for (let j = 0; j < brandItems.length; j++) {
+      repeated.push({
+        brand: brandItems[j],
+        key: `${i}-${brandItems[j].name}-${j}`,
+      });
+    }
+  }
 
   return (
     <section className="py-10 sm:py-14 overflow-hidden">
@@ -124,27 +117,44 @@ const BrandLogos: React.FC = () => {
         </div>
       </div>
 
-      {/* Infinite marquee — measure-and-animate. */}
       <div className="relative" ref={containerRef}>
         {/* Fade edges */}
         <div className="absolute inset-y-0 left-0 w-24 sm:w-40 bg-gradient-to-r from-[var(--bg)] to-transparent z-10 pointer-events-none" />
         <div className="absolute inset-y-0 right-0 w-24 sm:w-40 bg-gradient-to-l from-[var(--bg)] to-transparent z-10 pointer-events-none" />
 
         <div className="flex w-max brand-marquee-track" style={animationStyle}>
-          {Array.from({ length: copies }, (_, trackIndex) => (
+          {repeated.map(({ brand, key }, index) => (
             <div
-              key={trackIndex}
-              ref={trackIndex === 0 ? trackRef : undefined}
-              aria-hidden={trackIndex !== 0}
-              className="flex gap-6 sm:gap-10 pe-6 sm:pe-10"
+              key={key}
+              ref={index === 0 ? cardRef : undefined}
+              aria-hidden={index >= brandItems.length}
+              className="flex-shrink-0 group cursor-pointer"
+              style={{ marginRight: `${cardMargin}px` }}
             >
-              {brandItems.map((brand) => (
-                <Card
-                  key={`${trackIndex}-${brand.name}`}
-                  brand={brand}
-                  keyPrefix={String(trackIndex)}
-                />
-              ))}
+              <div className="flex flex-col items-center justify-center gap-2 w-44 h-24 sm:w-52 sm:h-28 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-5 hover:border-[var(--brand-primary)]/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                {brand.logo ? (
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="h-8 sm:h-10 w-auto object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
+                      const fallback = target.parentElement?.querySelector(
+                        ".brand-fallback",
+                      ) as HTMLElement;
+                      if (fallback) fallback.style.display = "block";
+                    }}
+                  />
+                ) : null}
+                <span
+                  className={`text-xs font-semibold text-[var(--text-subtle)] group-hover:text-[var(--brand-primary)] transition-colors duration-300 tracking-wide uppercase ${
+                    brand.logo ? "" : "brand-fallback text-base"
+                  }`}
+                >
+                  {brand.name}
+                </span>
+              </div>
             </div>
           ))}
         </div>
