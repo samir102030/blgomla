@@ -565,11 +565,11 @@ const ShoppingCartPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-8 sm:py-12 lg:py-16">
+      <div className="relative bg-[var(--surface-2)] py-8 sm:py-12 lg:py-16">
         <div className="absolute inset-0">
           <img
             src="net1.jpeg"
@@ -578,11 +578,11 @@ const ShoppingCartPage: React.FC = () => {
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">
             Shopping Cart
           </h1>
-          <nav className="text-xs sm:text-sm text-gray-600">
-            <Link to="/" className="hover:text-gray-900">
+          <nav className="text-xs sm:text-sm text-[var(--text-muted)]">
+            <Link to="/" className="hover:text-[var(--text)]">
               Home
             </Link>
             <span className="mx-2">/</span>
@@ -602,38 +602,38 @@ const ShoppingCartPage: React.FC = () => {
       <main className="py-8 sm:py-10 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Cart Items Table - Responsive */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden mb-6 sm:mb-8">
+          <div className="bg-[var(--surface)] rounded-lg shadow-sm overflow-hidden mb-6 sm:mb-8">
             {/* Desktop view - table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-[var(--bg)]">
                   <tr>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
                       Image
                     </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
                       Product
                     </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
                       Price
                     </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
                       Quantity
                     </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
                       Total
                     </th>
-                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-gray-900">
+                    <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-medium text-[var(--text)]">
                       Remove
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-[var(--border)]">
                   {cartItems.map((item) => (
                     <tr key={`${item.type}-${item.product || item.collection}`}>
                       <td className="px-4 sm:px-6 py-4">
                         {item.type === "collection" ? (
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[var(--surface-2)] rounded-lg flex items-center justify-center overflow-hidden">
                             <img
                               src={
                                 item.collectionDetails?.items?.[0]?.product
@@ -664,13 +664,13 @@ const ShoppingCartPage: React.FC = () => {
                       <td className="px-4 sm:px-6 py-4">
                         {item.type === "collection" ? (
                           <div className="space-y-1">
-                            <div className="text-xs sm:text-sm font-medium text-gray-900">
+                            <div className="text-xs sm:text-sm font-medium text-[var(--text)]">
                               {item.collectionDetails?.name || "Bundle"}
                               <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-[#FFD600]/20 text-[#333333]">
                                 Bundle
                               </span>
                             </div>
-                            <div className="text-[10px] sm:text-xs text-gray-500">
+                            <div className="text-[10px] sm:text-xs text-[var(--text-subtle)]">
                               {item.collectionDetails?.items
                                 ?.map(
                                   (bundleItem) =>
@@ -680,17 +680,17 @@ const ShoppingCartPage: React.FC = () => {
                             </div>
                           </div>
                         ) : (
-                          <div className="text-xs sm:text-sm font-medium text-gray-900">
+                          <div className="text-xs sm:text-sm font-medium text-[var(--text)]">
                             {item.productDetails?.name ||
                               "Product Name Not Available"}
                           </div>
                         )}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
-                        <div className="text-xs sm:text-sm text-gray-900">
+                        <div className="text-xs sm:text-sm text-[var(--text)]">
                           {item.type === "collection" ? (
                             <div className="flex flex-col">
-                              <span className="line-through text-gray-500 text-xs">
+                              <span className="line-through text-[var(--text-subtle)] text-xs">
                                 $
                                 {item.collectionDetails
                                   ? getCollectionOriginalTotal(
@@ -711,7 +711,7 @@ const ShoppingCartPage: React.FC = () => {
                               return (
                                 <div className="flex flex-col">
                                   {display.showStrike && (
-                                    <span className="line-through text-gray-500 text-xs">
+                                    <span className="line-through text-[var(--text-subtle)] text-xs">
                                       {(display.strikePrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                                     </span>
                                   )}
@@ -719,7 +719,7 @@ const ShoppingCartPage: React.FC = () => {
                                     className={`font-medium ${
                                       display.showStrike
                                         ? "text-red-600"
-                                        : "text-gray-900"
+                                        : "text-[var(--text)]"
                                     }`}
                                   >
                                     {(display.unitPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
@@ -758,11 +758,11 @@ const ShoppingCartPage: React.FC = () => {
                                 ? item.collection
                                 : item.product)
                             }
-                            className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
+                            className="px-2 py-1 border border-[var(--border)] rounded-l-md hover:bg-[var(--surface-2)] disabled:opacity-50 text-xs sm:text-sm"
                           >
                             -
                           </button>
-                          <span className="px-3 sm:px-4 py-1 border-t border-b border-gray-300 bg-white text-xs sm:text-sm">
+                          <span className="px-3 sm:px-4 py-1 border-t border-b border-[var(--border)] bg-[var(--surface)] text-xs sm:text-sm">
                             {updatingItem ===
                             (item.type === "collection"
                               ? item.collection
@@ -788,14 +788,14 @@ const ShoppingCartPage: React.FC = () => {
                                 ? item.collection
                                 : item.product)
                             }
-                            className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 text-xs sm:text-sm"
+                            className="px-2 py-1 border border-[var(--border)] rounded-r-md hover:bg-[var(--surface-2)] disabled:opacity-50 text-xs sm:text-sm"
                           >
                             +
                           </button>
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4">
-                        <div className="text-xs sm:text-sm font-medium text-gray-900">
+                        <div className="text-xs sm:text-sm font-medium text-[var(--text)]">
                           {(getItemTotal(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                         </div>
                       </td>
@@ -843,11 +843,11 @@ const ShoppingCartPage: React.FC = () => {
               {cartItems.map((item) => (
                 <div
                   key={`${item.type}-${item.product || item.collection}`}
-                  className="border border-gray-200 rounded-lg p-4 space-y-3"
+                  className="border border-[var(--border)] rounded-lg p-4 space-y-3"
                 >
                   <div className="flex items-start gap-3">
                     {item.type === "collection" ? (
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                      <div className="w-16 h-16 bg-[var(--surface-2)] rounded-lg flex items-center justify-center overflow-hidden">
                         <img
                           src={
                             item.collectionDetails?.items?.[0]?.product
@@ -875,16 +875,16 @@ const ShoppingCartPage: React.FC = () => {
                       </button>
                     )}
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-gray-900">
+                      <h3 className="text-sm font-medium text-[var(--text)]">
                         {item.type === "collection"
                           ? item.collectionDetails?.name || "Bundle"
                           : item.productDetails?.name ||
                             "Product Name Not Available"}
                       </h3>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-[var(--text-muted)] mt-1">
                         {item.type === "collection" ? (
                           <>
-                            <span className="line-through text-gray-500">
+                            <span className="line-through text-[var(--text-subtle)]">
                               $
                               {item.collectionDetails
                                 ? getCollectionOriginalTotal(
@@ -905,7 +905,7 @@ const ShoppingCartPage: React.FC = () => {
                             return (
                               <>
                                 {display.showStrike && (
-                                  <span className="line-through text-gray-500">
+                                  <span className="line-through text-[var(--text-subtle)]">
                                     {(display.strikePrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                                   </span>
                                 )}
@@ -913,7 +913,7 @@ const ShoppingCartPage: React.FC = () => {
                                   className={`ml-2 font-medium ${
                                     display.showStrike
                                       ? "text-red-600"
-                                      : "text-gray-900"
+                                      : "text-[var(--text)]"
                                   }`}
                                 >
                                   {(display.unitPrice).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
@@ -959,7 +959,7 @@ const ShoppingCartPage: React.FC = () => {
                     </button>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Quantity:</span>
+                    <span className="text-xs text-[var(--text-muted)]">Quantity:</span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() =>
@@ -977,11 +977,11 @@ const ShoppingCartPage: React.FC = () => {
                             ? item.collection
                             : item.product)
                         }
-                        className="px-2 py-1 border border-gray-300 rounded-l-md hover:bg-gray-50 disabled:opacity-50 text-xs"
+                        className="px-2 py-1 border border-[var(--border)] rounded-l-md hover:bg-[var(--surface-2)] disabled:opacity-50 text-xs"
                       >
                         -
                       </button>
-                      <span className="px-3 py-1 border-t border-b border-gray-300 bg-white text-xs">
+                      <span className="px-3 py-1 border-t border-b border-[var(--border)] bg-[var(--surface)] text-xs">
                         {updatingItem ===
                         (item.type === "collection"
                           ? item.collection
@@ -1005,17 +1005,17 @@ const ShoppingCartPage: React.FC = () => {
                             ? item.collection
                             : item.product)
                         }
-                        className="px-2 py-1 border border-gray-300 rounded-r-md hover:bg-gray-50 disabled:opacity-50 text-xs"
+                        className="px-2 py-1 border border-[var(--border)] rounded-r-md hover:bg-[var(--surface-2)] disabled:opacity-50 text-xs"
                       >
                         +
                       </button>
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t">
-                    <span className="text-xs font-medium text-gray-900">
+                    <span className="text-xs font-medium text-[var(--text)]">
                       Total:
                     </span>
-                    <span className="text-sm font-bold text-gray-900">
+                    <span className="text-sm font-bold text-[var(--text)]">
                       {(getItemTotal(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                     </span>
                   </div>
@@ -1028,8 +1028,8 @@ const ShoppingCartPage: React.FC = () => {
             {/* Left Column - Shipping & Coupon */}
             <div className="space-y-4 sm:space-y-6">
               {/* Calculate Shipping */}
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
+              <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
+                <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
                   Calculate Shipping
                 </h3>
                 <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4">
@@ -1041,7 +1041,7 @@ const ShoppingCartPage: React.FC = () => {
                         country: e.target.value,
                       })
                     }
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   >
                     <option value="Egypt">Egypt</option>
                   </select>
@@ -1050,7 +1050,7 @@ const ShoppingCartPage: React.FC = () => {
                     onChange={(e) =>
                       setShippingInfo({ ...shippingInfo, city: e.target.value })
                     }
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   >
                     <option value="Cairo">Cairo</option>
                   </select>
@@ -1065,7 +1065,7 @@ const ShoppingCartPage: React.FC = () => {
                       postcode: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4 text-xs sm:text-sm"
+                  className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4 text-xs sm:text-sm"
                 />
                 <button className="w-full bg-[#002B5B] text-white py-2 px-4 rounded-lg hover:bg-[#001a3d] transition-colors text-xs sm:text-sm font-medium">
                   ESTIMATE
@@ -1122,18 +1122,18 @@ const ShoppingCartPage: React.FC = () => {
             </div>
 
             {/* Right Column - Cart Summary */}
-            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">
+            <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-4 sm:mb-6">
                 Cart Summary
               </h3>
 
               <div className="space-y-3 sm:space-y-4 mb-6">
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Sub Total</span>
+                  <span className="text-[var(--text-muted)]">Sub Total</span>
                   <span className="font-medium">{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP</span>
                 </div>
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Shipping Cost</span>
+                  <span className="text-[var(--text-muted)]">Shipping Cost</span>
                   <span className="font-medium">
                     {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                   </span>

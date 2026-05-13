@@ -256,22 +256,22 @@ const ProductDetailPage: React.FC = () => {
 
   if (loading && !product) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <span className="text-lg text-gray-600">Loading...</span>
+      <div className="min-h-screen bg-[var(--surface)] flex items-center justify-center">
+        <span className="text-lg text-[var(--text-muted)]">Loading...</span>
       </div>
     );
   }
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[var(--surface)]">
         <Header />
         <main className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-bold text-[var(--text)] mb-4">
               Product Not Found
             </h1>
-            <p className="text-gray-600 mb-8">
+            <p className="text-[var(--text-muted)] mb-8">
               The product you're looking for doesn't exist.
             </p>
             <Link
@@ -364,7 +364,7 @@ const ProductDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--surface)]">
       <SEO
         title={product.name}
         description={
@@ -382,25 +382,25 @@ const ProductDetailPage: React.FC = () => {
           <nav className="flex mb-8" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-4">
               <li>
-                <Link to="/" className="text-gray-500 hover:text-gray-700">
+                <Link to="/" className="text-[var(--text-subtle)] hover:text-[var(--text)]">
                   Home
                 </Link>
               </li>
               <li>
-                <span className="text-gray-500">/</span>
+                <span className="text-[var(--text-subtle)]">/</span>
               </li>
               <li>
                 <Link
                   to="/brands"
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-[var(--text-subtle)] hover:text-[var(--text)]"
                 >
                   Products
                 </Link>
               </li>
               <li>
-                <span className="text-gray-500">/</span>
+                <span className="text-[var(--text-subtle)]">/</span>
               </li>
-              <li className="text-gray-900 font-medium">{product.name}</li>
+              <li className="text-[var(--text)] font-medium">{product.name}</li>
             </ol>
           </nav>
 
@@ -408,7 +408,7 @@ const ProductDetailPage: React.FC = () => {
             {/* Product Images */}
             <div>
               {/* Main Image */}
-              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+              <div className="aspect-square bg-[var(--surface-2)] rounded-lg overflow-hidden mb-4">
                 <img
                   src={productImages[selectedImage]}
                   alt={product.name}
@@ -422,7 +422,7 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 bg-gray-100 rounded-lg overflow-hidden border-2 ${selectedImage === index
+                    className={`w-20 h-20 bg-[var(--surface-2)] rounded-lg overflow-hidden border-2 ${selectedImage === index
                         ? "border-blue-500"
                         : "border-transparent"
                       }`}
@@ -439,7 +439,7 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Product Info */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              <h1 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {product.name}
               </h1>
 
@@ -448,7 +448,7 @@ const ProductDetailPage: React.FC = () => {
                 <div className="flex items-center">
                   {renderStars(Math.floor(product.rating))}
                 </div>
-                <span className="ml-2 text-gray-600">
+                <span className="ml-2 text-[var(--text-muted)]">
                   ({getVisibleReviewCount()} reviews)
                 </span>
               </div>
@@ -456,15 +456,15 @@ const ProductDetailPage: React.FC = () => {
               {/* Price */}
               <div className="mb-6">
                 <div className="flex items-center space-x-3 flex-wrap">
-                  <span className="text-3xl font-bold text-gray-900">
+                  <span className="text-3xl font-bold text-[var(--text)]">
                     {(unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })}
-                    <span className="text-base font-medium text-gray-500 ml-1">EGP</span>
+                    <span className="text-base font-medium text-[var(--text-subtle)] ml-1">EGP</span>
                   </span>
                   {product.saleActive &&
                     product.salePercentage &&
                     product.salePercentage > 0 && (
                     <>
-                      <span className="text-xl text-gray-500 line-through">
+                      <span className="text-xl text-[var(--text-subtle)] line-through">
                         {(product.price ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                       </span>
                       <span className="bg-red-100 text-red-800 text-sm font-medium px-2.5 py-0.5 rounded">
@@ -475,7 +475,7 @@ const ProductDetailPage: React.FC = () => {
                   {!product.saleActive &&
                     applicableRule &&
                     unitPrice < baseUnitPrice && (
-                      <span className="text-xl text-gray-500 line-through">
+                      <span className="text-xl text-[var(--text-subtle)] line-through">
                         {(baseUnitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                       </span>
                     )}
@@ -502,7 +502,7 @@ const ProductDetailPage: React.FC = () => {
                   {specifications.map((spec, index) => (
                     <li key={index} className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-                      <span className="text-gray-700">{spec}</span>
+                      <span className="text-[var(--text-muted)]">{spec}</span>
                     </li>
                   ))}
                 </ul>
@@ -516,7 +516,7 @@ const ProductDetailPage: React.FC = () => {
                     {product.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
+                        className="bg-[var(--surface-2)] text-[var(--text)] px-3 py-1 rounded-full text-sm"
                       >
                         {tag}
                       </span>
@@ -529,9 +529,9 @@ const ProductDetailPage: React.FC = () => {
               {rules.length > 0 && (
                 <div className="mb-8">
                   <h3 className="text-lg font-semibold mb-4">Bulk Pricing</h3>
-                  <div className="overflow-hidden border border-gray-200 rounded-lg">
+                  <div className="overflow-hidden border border-[var(--border)] rounded-lg">
                     <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50 text-gray-700">
+                      <thead className="bg-[var(--bg)] text-[var(--text-muted)]">
                         <tr>
                           <th className="px-4 py-2 text-left">
                             Buy At Least
@@ -539,7 +539,7 @@ const ProductDetailPage: React.FC = () => {
                           <th className="px-4 py-2 text-left">Unit Price</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-[var(--border)]">
                         {rules.map((rule) => (
                           <tr
                             key={`bulk-${rule.minQty}`}
@@ -563,14 +563,14 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Quantity */}
               <div className="mb-8">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
                   Quantity:
                 </label>
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => handleQuantityChange(-1)}
                     disabled={isProductInCart()}
-                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
+                    className={`w-10 h-10 border border-[var(--border)] rounded-md flex items-center justify-center hover:bg-[var(--surface-2)] ${isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                   >
                     -
@@ -581,13 +581,13 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     onClick={() => handleQuantityChange(1)}
                     disabled={isProductInCart()}
-                    className={`w-10 h-10 border border-gray-300 rounded-md flex items-center justify-center hover:bg-gray-50 ${isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
+                    className={`w-10 h-10 border border-[var(--border)] rounded-md flex items-center justify-center hover:bg-[var(--surface-2)] ${isProductInCart() ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                   >
                     +
                   </button>
                   {isProductInCart() && (
-                    <span className="text-sm text-gray-500 ml-2">
+                    <span className="text-sm text-[var(--text-subtle)] ml-2">
                       Go to cart to change quantity
                     </span>
                   )}
@@ -620,7 +620,7 @@ const ProductDetailPage: React.FC = () => {
                   disabled={loading}
                   className={`flex-1 py-3 px-6 rounded-md transition-colors ${isProductLoved()
                       ? "bg-red-600 text-white hover:bg-red-700"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                      : "border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
                     } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isProductLoved()
@@ -643,20 +643,20 @@ const ProductDetailPage: React.FC = () => {
 
           {/* Product Description & Reviews Tabs */}
           <div className="mt-16">
-            <div className="border-b border-gray-200 flex space-x-8">
+            <div className="border-b border-[var(--border)] flex space-x-8">
               <button
-                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${tab === "description"
+                className={`pb-4 text-2xl font-bold text-[var(--text)] border-b-2 transition-colors ${tab === "description"
                     ? "border-blue-600"
-                    : "border-transparent text-gray-500"
+                    : "border-transparent text-[var(--text-subtle)]"
                   }`}
                 onClick={() => setTab("description")}
               >
                 Description
               </button>
               <button
-                className={`pb-4 text-2xl font-bold text-gray-900 border-b-2 transition-colors ${tab === "reviews"
+                className={`pb-4 text-2xl font-bold text-[var(--text)] border-b-2 transition-colors ${tab === "reviews"
                     ? "border-blue-600"
-                    : "border-transparent text-gray-500"
+                    : "border-transparent text-[var(--text-subtle)]"
                   }`}
                 onClick={() => setTab("reviews")}
               >
@@ -665,7 +665,7 @@ const ProductDetailPage: React.FC = () => {
             </div>
             <div className="py-8">
               {tab === "description" && (
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-[var(--text-muted)] leading-relaxed">
                   {product.description}
                 </p>
               )}
@@ -689,15 +689,15 @@ const ProductDetailPage: React.FC = () => {
                               : "Write a Review"}
                           </button>
                           {!canReview && !checkingEligibility && (
-                            <span className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2">
+                            <span className="text-sm text-[var(--text-muted)] bg-yellow-50 border border-yellow-200 rounded-md px-3 py-2">
                               Only customers who purchased this product can
                               leave a review.
                             </span>
                           )}
                         </div>
                       ) : (
-                        <div className="mb-6 p-4 bg-gray-50 rounded-md">
-                          <p className="text-gray-600 mb-2">
+                        <div className="mb-6 p-4 bg-[var(--bg)] rounded-md">
+                          <p className="text-[var(--text-muted)] mb-2">
                             You have already reviewed this product.
                           </p>
                           <button
@@ -716,14 +716,14 @@ const ProductDetailPage: React.FC = () => {
                       )}
 
                       {showReviewForm && (
-                        <div className="bg-gray-50 p-6 rounded-md mb-6">
+                        <div className="bg-[var(--bg)] p-6 rounded-md mb-6">
                           <h3 className="text-lg font-semibold mb-4">
                             {editingReview ? "Edit Review" : "Write a Review"}
                           </h3>
 
                           {/* Rating */}
                           <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
                               Rating:
                             </label>
                             <div className="flex space-x-1">
@@ -744,13 +744,13 @@ const ProductDetailPage: React.FC = () => {
 
                           {/* Comment */}
                           <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-[var(--text-muted)] mb-2">
                               Comment:
                             </label>
                             <textarea
                               value={reviewComment}
                               onChange={(e) => setReviewComment(e.target.value)}
-                              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full p-3 border border-[var(--border)] rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               rows={4}
                               placeholder="Share your experience with this product..."
                             />
@@ -805,7 +805,7 @@ const ProductDetailPage: React.FC = () => {
                                 alt={review.user.name || "User Avatar"}
                                 className="w-10 h-10 rounded-full mr-3"
                               />
-                              <span className="font-semibold text-gray-900 mr-2">
+                              <span className="font-semibold text-[var(--text)] mr-2">
                                 {review.user.name || "Anonymous"}
                               </span>
                               <span className="text-yellow-400">
@@ -840,9 +840,9 @@ const ProductDetailPage: React.FC = () => {
                               </div>
                             )}
                           </div>
-                          <p className="text-gray-700">{review.comment}</p>
+                          <p className="text-[var(--text-muted)]">{review.comment}</p>
                           {review.createdAt && (
-                            <div className="text-xs text-gray-400 mt-1">
+                            <div className="text-xs text-[var(--text-subtle)] mt-1">
                               {new Date(review.createdAt).toLocaleDateString()}
                             </div>
                           )}
@@ -850,7 +850,7 @@ const ProductDetailPage: React.FC = () => {
                       ))}
                     </ul>
                   ) : (
-                    <div className="text-gray-500">No reviews yet.</div>
+                    <div className="text-[var(--text-subtle)]">No reviews yet.</div>
                   )}
                 </div>
               )}

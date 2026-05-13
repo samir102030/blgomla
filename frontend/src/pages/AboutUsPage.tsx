@@ -75,7 +75,7 @@ const AboutUsPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--surface)]">
       <SEO
         title="About Us"
         description="Learn about Belgomla — Egypt's marketplace for IT, networking, and technology. Our story, mission, and the team behind the platform."
@@ -83,7 +83,7 @@ const AboutUsPage: React.FC = () => {
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-20">
+      <div className="relative bg-[var(--surface-2)] py-20">
         <div className="absolute inset-0">
           <img
             src="net1.jpeg"
@@ -92,16 +92,16 @@ const AboutUsPage: React.FC = () => {
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl font-bold text-[var(--text)] mb-6">
             {t("About Belgomla")}
           </h1>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto mb-8">
+          <p className="text-xl text-[var(--text-muted)] max-w-3xl mx-auto mb-8">
             {t(
               "Your trusted partner in building seamless connections. For over 15 years, we've supported IT professionals and businesses with top-tier networking equipment and expert guidance to keep you connected and secure."
             )}
           </p>
-          <nav className="text-sm text-gray-600">
-            <Link to="/" className="hover:text-gray-900">
+          <nav className="text-sm text-[var(--text-muted)]">
+            <Link to="/" className="hover:text-[var(--text)]">
               {t("Home")}
             </Link>
             <span className="mx-2">/</span>
@@ -116,10 +116,10 @@ const AboutUsPage: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                <h2 className="text-3xl font-bold text-[var(--text)] mb-6">
                   {t("Our Story")}
                 </h2>
-                <div className="space-y-4 text-gray-600">
+                <div className="space-y-4 text-[var(--text-muted)]">
                   <p>
                     {t(
                       "Founded in 2009, Belgomla began as a small networking gear provider with a bold vision: to make high-quality network infrastructure accessible to everyone. What started as a passion project by tech enthusiasts has grown into one of the region's most trusted names in networking solutions, serving professionals, businesses, and IT teams with reliable equipment and expert support."
@@ -143,10 +143,10 @@ const AboutUsPage: React.FC = () => {
                   alt="Camera Store Interior"
                   className="rounded-lg shadow-lg"
                 />
-                <div className="absolute -bottom-6 -right-6 bg-white p-6 rounded-lg shadow-lg">
+                <div className="absolute -bottom-6 -right-6 bg-[var(--surface)] p-6 rounded-lg shadow-lg">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600">15+</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-[var(--text-muted)]">
                       {t("Years of Excellence")}
                     </div>
                   </div>
@@ -157,13 +157,13 @@ const AboutUsPage: React.FC = () => {
         </section>
 
         {/* Stats Section */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-[var(--bg)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Our Achievements")}
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-[var(--text-muted)]">
                 {t("Numbers that speak for our commitment to excellence")}
               </p>
             </div>
@@ -173,7 +173,7 @@ const AboutUsPage: React.FC = () => {
                   <div className="text-4xl font-bold text-blue-600 mb-2">
                     {stat.number}
                   </div>
-                  <div className="text-gray-600">{stat.label}</div>
+                  <div className="text-[var(--text-muted)]">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -184,10 +184,10 @@ const AboutUsPage: React.FC = () => {
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Our Values")}
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-[var(--text-muted)]">
                 {t("What drives us to serve you better every day")}
               </p>
             </div>
@@ -195,10 +195,10 @@ const AboutUsPage: React.FC = () => {
               {values.map((value, index) => (
                 <div key={index} className="text-center">
                   <div className="text-4xl mb-4">{value.icon}</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  <h3 className="text-xl font-semibold text-[var(--text)] mb-3">
                     {value.title}
                   </h3>
-                  <p className="text-gray-600">{value.description}</p>
+                  <p className="text-[var(--text-muted)]">{value.description}</p>
                 </div>
               ))}
             </div>
@@ -206,13 +206,13 @@ const AboutUsPage: React.FC = () => {
         </section>
 
         {/* Team Section */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-[var(--bg)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Meet Our Team")}
               </h2>
-              <p className="text-xl text-gray-600">
+              <p className="text-xl text-[var(--text-muted)]">
                 {t("The passionate people behind Belgomla")}
               </p>
             </div>
@@ -220,7 +220,7 @@ const AboutUsPage: React.FC = () => {
               {teamMembers.map((member, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-lg shadow-sm overflow-hidden"
+                  className="bg-[var(--surface)] rounded-lg shadow-sm overflow-hidden"
                 >
                   <img
                     src={member.image}
@@ -228,13 +228,13 @@ const AboutUsPage: React.FC = () => {
                     className="w-full h-64 object-cover"
                   />
                   <div className="p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    <h3 className="text-xl font-semibold text-[var(--text)] mb-1">
                       {member.name}
                     </h3>
                     <p className="text-blue-600 font-medium mb-3">
                       {member.position}
                     </p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-[var(--text-muted)] text-sm">
                       {member.description}
                     </p>
                   </div>
@@ -257,13 +257,13 @@ const AboutUsPage: React.FC = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link
                   to="/brands"
-                  className="bg-white text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                  className="bg-[var(--surface)] text-blue-600 px-8 py-3 rounded-lg font-medium hover:bg-[var(--surface-2)] transition-colors"
                 >
                   {t("Shop Now")}
                 </Link>
                 <Link
                   to="/contact"
-                  className="border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition-colors"
+                  className="border border-white text-white px-8 py-3 rounded-lg font-medium hover:bg-[var(--surface)] hover:text-blue-600 transition-colors"
                 >
                   {t("Contact Us")}
                 </Link>
@@ -273,10 +273,10 @@ const AboutUsPage: React.FC = () => {
         </section>
 
         {/* Why Choose Us Section */}
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-[var(--bg)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Why Choose Belgomla?")}
               </h2>
             </div>
@@ -298,10 +298,10 @@ const AboutUsPage: React.FC = () => {
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-[var(--text)]">
                         {t("Authentic Products Only")}
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-[var(--text-muted)]">
                         {t(
                           "All our cameras and accessories are 100% genuine and come with official warranties."
                         )}
@@ -323,10 +323,10 @@ const AboutUsPage: React.FC = () => {
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-[var(--text)]">
                         {t("Expert Support")}
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-[var(--text-muted)]">
                         {t(
                           "Our knowledgeable team provides personalized recommendations and technical support."
                         )}
@@ -348,10 +348,10 @@ const AboutUsPage: React.FC = () => {
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-[var(--text)]">
                         {t("Competitive Pricing")}
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-[var(--text-muted)]">
                         {t(
                           "We offer the best prices in the market without compromising on quality or service."
                         )}
@@ -373,10 +373,10 @@ const AboutUsPage: React.FC = () => {
                       </svg>
                     </div>
                     <div className="ml-4">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-[var(--text)]">
                         {t("Hassle-Free Returns")}
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-[var(--text-muted)]">
                         {t(
                           "30-day return policy with no questions asked if you're not completely satisfied."
                         )}
