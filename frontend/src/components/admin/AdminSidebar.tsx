@@ -19,6 +19,7 @@ import {
   ShieldCheckIcon,
   // StarIcon,
 } from "@heroicons/react/24/outline";
+import Logo, { BRAND } from "../Logo";
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -227,32 +228,36 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
 
   return (
     <div
-      className={`bg-gradient-to-b from-white to-gray-50 dark:from-[#001F3F] dark:to-[#002B5B] shadow-2xl transition-all duration-500 ease-in-out ${
+      className={`bg-[var(--surface)] transition-all duration-300 ease-in-out ${
         collapsed ? "w-16 sm:w-20" : "w-48 sm:w-56 md:w-72"
-      } flex flex-col border-r border-gray-200 dark:border-[#FFD600]/20 backdrop-blur-sm`}
+      } flex flex-col border-r border-[var(--border)]`}
     >
-      {/* Logo */}
-      <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-[#FFD600]/30 bg-gradient-to-r from-gray-50 to-white dark:from-[#FFD600]/10 dark:to-transparent">
-        <div className="flex items-center">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-[#FFD600] to-[#FFA500] rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
-            <span className="text-[#333333] font-bold text-xs sm:text-sm lg:text-lg">
-              B
-            </span>
-          </div>
+      {/* Brand */}
+      <div className="px-3 sm:px-4 py-4 sm:py-5 border-b border-[var(--border)]">
+        <Link to="/" className="flex items-center gap-2.5">
+          <Logo size={28} color={BRAND.orange} />
           {!collapsed && (
-            <span className="ml-2 sm:ml-3 md:ml-4 text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-[#FFD600] tracking-wide">
-              <Link to="/">ELGOMLA</Link>
-            </span>
+            <>
+              <span
+                className="text-xl font-semibold lowercase text-[var(--text)]"
+                style={{ letterSpacing: "-0.045em", lineHeight: 0.9 }}
+              >
+                belgomla
+              </span>
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--brand-primary)]/15 text-[var(--brand-primary)]">
+                Admin
+              </span>
+            </>
           )}
-        </div>
+        </Link>
       </div>
 
-      {/* Active Page Icon (when collapsed) */}
+      {/* Active page icon when collapsed */}
       {collapsed && activeItem && (
-        <div className="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-[#FFD600]/20">
+        <div className="px-3 py-3 border-b border-[var(--border)]">
           <div className="flex justify-center">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#FFD600]/30 dark:to-[#FFD600]/10 rounded-xl flex items-center justify-center shadow-lg border border-gray-300 dark:border-[#FFD600]/50">
-              <activeItem.icon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 dark:text-[#FFD600]" />
+            <div className="w-10 h-10 rounded-lg bg-[var(--brand-primary)]/10 flex items-center justify-center">
+              <activeItem.icon className="w-5 h-5 text-[var(--brand-primary)]" />
             </div>
           </div>
         </div>
@@ -301,17 +306,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               {item.children ? (
                 <div className="group">
                   <div
-                    className="flex items-center px-3 sm:px-4 py-2 sm:py-3 text-gray-700 dark:text-[#E0E0E0] hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-[#FFD600]/20 dark:hover:to-[#FFD600]/10 hover:text-gray-900 dark:hover:text-[#FFD600] rounded-xl cursor-pointer transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-gray-300 dark:hover:border-[#FFD600]/30"
+                    className="flex items-center gap-3 px-3 py-2.5 text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] rounded-lg cursor-pointer transition-colors"
                     onClick={() => toggleExpanded(item.name)}
                   >
-                    <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
                     {!collapsed && (
                       <>
-                        <span className="ml-2 sm:ml-3 md:ml-4 text-xs sm:text-sm font-semibold">
+                        <span className="text-sm font-medium">
                           {item.name}
                         </span>
                         <svg
-                          className={`ml-auto w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-300 ${
+                          className={`ml-auto w-4 h-4 transition-transform duration-200 ${
                             expandedItems.has(item.name) ? "rotate-180" : ""
                           }`}
                           fill="none"
@@ -329,19 +334,17 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                     )}
                   </div>
                   {!collapsed && expandedItems.has(item.name) && (
-                    <div className="ml-6 sm:ml-8 md:ml-10 mt-1 sm:mt-2 space-y-1 sm:space-y-2">
+                    <div className="ml-7 mt-1 mb-1 space-y-0.5 border-l border-[var(--border)] pl-3">
                       {item.children
-                        .filter(
-                          (child) => hasAccess(child.roles),
-                        )
+                        .filter((child) => hasAccess(child.roles))
                         .map((child, childIndex) => (
                           <Link
                             key={childIndex}
                             to={child.href}
-                            className={`block px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-1 ${
+                            className={`block px-2 py-1.5 text-[13px] rounded-md transition-colors ${
                               isActive(child.href)
-                                ? "bg-gradient-to-r from-blue-100 to-blue-50 dark:from-[#FFD600]/30 dark:to-[#FFD600]/20 text-blue-900 dark:text-[#FFD600] font-semibold shadow-lg border border-blue-300 dark:border-[#FFD600]/50"
-                                : "text-gray-600 dark:text-[#B0B0B0] hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-25 dark:hover:from-[#FFD600]/15 dark:hover:to-[#FFD600]/5 hover:text-gray-900 dark:hover:text-[#FFD600] border border-transparent hover:border-gray-200 dark:hover:border-[#FFD600]/20"
+                                ? "text-[var(--brand-primary)] font-medium"
+                                : "text-[var(--text-muted)] hover:text-[var(--text)]"
                             }`}
                           >
                             {child.name}
@@ -353,17 +356,18 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               ) : (
                 <Link
                   to={item.href}
-                  className={`flex items-center px-3 sm:px-4 py-2 sm:py-3 rounded-xl transition-all duration-300 ease-in-out transform hover:translate-x-1 hover:shadow-md border border-transparent hover:border-gray-300 dark:hover:border-[#FFD600]/30 ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                     isActive(item.href)
-                      ? "bg-gradient-to-r from-blue-100 to-blue-50 dark:from-[#FFD600]/30 dark:to-[#FFD600]/20 text-blue-900 dark:text-[#FFD600] font-semibold shadow-lg border-blue-300 dark:border-[#FFD600]/50"
-                      : "text-gray-700 dark:text-[#E0E0E0] hover:bg-gradient-to-r hover:from-gray-100 hover:to-gray-50 dark:hover:from-[#FFD600]/20 dark:hover:to-[#FFD600]/10 hover:text-gray-900 dark:hover:text-[#FFD600]"
+                      ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-medium"
+                      : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
                   }`}
                 >
-                  <item.icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
                   {!collapsed && (
-                    <span className="ml-2 sm:ml-3 md:ml-4 text-xs sm:text-sm font-semibold">
-                      {item.name}
-                    </span>
+                    <span className="text-sm">{item.name}</span>
+                  )}
+                  {!collapsed && isActive(item.href) && (
+                    <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--brand-primary)]" />
                   )}
                 </Link>
               )}

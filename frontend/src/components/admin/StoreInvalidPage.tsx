@@ -27,20 +27,22 @@ const StoreInvalidPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--bg)] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div className="bg-[var(--surface)] border border-[var(--border)] py-8 px-4 shadow-lg rounded-xl sm:px-10">
           <div className="text-center">
-            <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-yellow-400" />
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            <div className="mx-auto h-14 w-14 rounded-full bg-[var(--brand-primary)]/15 flex items-center justify-center">
+              <ExclamationTriangleIcon className="h-7 w-7 text-[var(--brand-primary)]" />
+            </div>
+            <h2 className="mt-5 text-2xl font-bold text-[var(--text)]">
               Store Not Approved
             </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
               Your store account is not approved yet. Please contact the
               administrator for approval.
             </p>
             {checked && (
-              <p className="mt-2 text-center text-sm text-green-600">
+              <p className="mt-2 text-sm text-emerald-500">
                 Status checked. If approved, you'll be redirected automatically.
               </p>
             )}
@@ -48,7 +50,7 @@ const StoreInvalidPage: React.FC = () => {
               <button
                 onClick={handleCheckStatus}
                 disabled={checking}
-                className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center py-2.5 px-4 border border-[var(--border)] rounded-lg text-sm font-medium text-[var(--text)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {checking ? (
                   <>
@@ -66,7 +68,8 @@ const StoreInvalidPage: React.FC = () => {
               </button>
               <Link
                 to="/account"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                className="w-full flex justify-center py-2.5 px-4 rounded-lg shadow-sm text-sm font-semibold text-white hover:opacity-95 transition"
+                style={{ background: "var(--brand-gradient)" }}
               >
                 Go to Account
               </Link>
