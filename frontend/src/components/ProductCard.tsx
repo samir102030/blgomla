@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { cldImg, cldSrcSet } from "../lib/cldImage";
 
 interface ProductCardProps {
   id: string;
@@ -170,7 +171,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
         <Link to={`/product/${id}`} className="flex items-center justify-center w-full py-2">
           <img
-            src={image}
+            src={cldImg(image, { w: 400 })}
+            srcSet={cldSrcSet(image, 200)}
+            sizes="(min-width: 1024px) 176px, (min-width: 640px) 144px, 112px"
             alt={name}
             loading="lazy"
             decoding="async"

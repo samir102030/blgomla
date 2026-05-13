@@ -7,6 +7,7 @@ import { axiosInstance } from "../lib/axios";
 import { useCollectionStore } from "../stores/collection.store";
 import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
+import { cldImg } from "../lib/cldImage";
 
 const CollectionDetailPage: React.FC = () => {
   const { t } = useTranslation();
@@ -212,8 +213,10 @@ const CollectionDetailPage: React.FC = () => {
               >
                 <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-[var(--bg)] border border-[var(--border)] shrink-0">
                   <img
-                    src={item.product?.images?.[0]?.url || "/placeholder.png"}
+                    src={cldImg(item.product?.images?.[0]?.url, { w: 200 })}
                     alt={item.product?.name || "Product"}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-1 right-1 bg-black/60 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">

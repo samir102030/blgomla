@@ -6,6 +6,7 @@ import OrderTimeline from "../components/OrderTimeline";
 import { useOrderStore } from "../stores/order.store";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { cldImg } from "../lib/cldImage";
 
 interface OrderItem {
   product: {
@@ -193,10 +194,10 @@ const OrderConfirmationPage: React.FC = () => {
                   {order!.orderItems.map((item, index) => (
                     <div key={index} className="flex items-center space-x-4">
                       <img
-                        src={
-                          item.product.images?.[0]?.url || "/placeholder.png"
-                        }
+                        src={cldImg(item.product.images?.[0]?.url, { w: 160 })}
                         alt={item.product.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-16 h-16 object-cover rounded-lg"
                       />
                       <div className="flex-1">

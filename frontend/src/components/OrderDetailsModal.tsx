@@ -2,6 +2,7 @@ import React from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import OrderTimeline from "./OrderTimeline";
+import { cldImg } from "../lib/cldImage";
 
 interface TimelineEvent {
   status: string;
@@ -317,11 +318,13 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                             {item.product?.images &&
                             item.product.images.length > 0 ? (
                               <img
-                                src={item.product.images?.[0]?.url || "/placeholder.png"}
+                                src={cldImg(item.product.images?.[0]?.url, { w: 120 })}
                                 alt={
                                   item.product.images?.[0]?.alt ||
                                   item.product.name
                                 }
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
                                 className="w-full h-full object-cover"
                               />

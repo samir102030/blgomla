@@ -3,6 +3,7 @@ import { useOrderStore } from "../stores/order.store";
 import { useReturnStore } from "../stores/return.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { cldImg } from "../lib/cldImage";
 
 const AccountOrders: React.FC = () => {
   const { t } = useTranslation();
@@ -175,8 +176,10 @@ const AccountOrders: React.FC = () => {
                           <div className="w-12 h-12 bg-[var(--surface-2)] rounded-lg flex items-center justify-center overflow-hidden shrink-0">
                             {product.images && product.images.length > 0 ? (
                               <img
-                                src={product.images?.[0]?.url || "/placeholder.png"}
+                                src={cldImg(product.images?.[0]?.url, { w: 120 })}
                                 alt={product.name}
+                                loading="lazy"
+                                decoding="async"
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
                                 className="w-full h-full object-cover"
                               />

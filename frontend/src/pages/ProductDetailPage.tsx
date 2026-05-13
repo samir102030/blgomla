@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import type { ProductReview } from "../types/product.type";
 import { getBulkPricing } from "../lib/pricing";
+import { cldImg, cldSrcSet } from "../lib/cldImage";
 
 const ProductDetailPage: React.FC = () => {
   const [tab, setTab] = useState("description");
@@ -410,8 +411,12 @@ const ProductDetailPage: React.FC = () => {
               {/* Main Image */}
               <div className="aspect-square bg-[var(--surface-2)] rounded-lg overflow-hidden mb-4">
                 <img
-                  src={productImages[selectedImage]}
+                  src={cldImg(productImages[selectedImage], { w: 800 })}
+                  srcSet={cldSrcSet(productImages[selectedImage], 400)}
+                  sizes="(min-width: 1024px) 600px, 100vw"
                   alt={product.name}
+                  fetchPriority="high"
+                  decoding="async"
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -428,8 +433,10 @@ const ProductDetailPage: React.FC = () => {
                       }`}
                   >
                     <img
-                      src={image}
+                      src={cldImg(image, { w: 160 })}
                       alt={`${product.name} ${index + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-contain"
                     />
                   </button>

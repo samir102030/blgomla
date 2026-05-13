@@ -13,6 +13,7 @@ import type { Coupon } from "../types/coupon.type";
 import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 import { getBaseUnitPrice, getBulkPricing } from "../lib/pricing";
+import { cldImg } from "../lib/cldImage";
 import FeaturedProducts from "../components/FeaturedProducts";
 // import LoadingComp from "../components/LoadingComp";
 
@@ -635,11 +636,14 @@ const ShoppingCartPage: React.FC = () => {
                         {item.type === "collection" ? (
                           <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[var(--surface-2)] rounded-lg flex items-center justify-center overflow-hidden">
                             <img
-                              src={
+                              src={cldImg(
                                 item.collectionDetails?.items?.[0]?.product
-                                  ?.images?.[0]?.url || "/placeholder.png"
-                              }
+                                  ?.images?.[0]?.url,
+                                { w: 160 }
+                              )}
                               alt={item.collectionDetails?.name || "Bundle"}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -651,11 +655,10 @@ const ShoppingCartPage: React.FC = () => {
                             className="cursor-pointer hover:opacity-80 transition-opacity"
                           >
                             <img
-                              src={
-                                item.productDetails?.images?.[0]?.url ||
-                                "/placeholder.png"
-                              }
+                              src={cldImg(item.productDetails?.images?.[0]?.url, { w: 160 })}
                               alt={item.productDetails?.name || "Product"}
+                              loading="lazy"
+                              decoding="async"
                               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
                             />
                           </button>
@@ -849,11 +852,14 @@ const ShoppingCartPage: React.FC = () => {
                     {item.type === "collection" ? (
                       <div className="w-16 h-16 bg-[var(--surface-2)] rounded-lg flex items-center justify-center overflow-hidden">
                         <img
-                          src={
+                          src={cldImg(
                             item.collectionDetails?.items?.[0]?.product
-                              ?.images?.[0]?.url || "/placeholder.png"
-                          }
+                              ?.images?.[0]?.url,
+                            { w: 160 }
+                          )}
                           alt={item.collectionDetails?.name || "Bundle"}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -865,11 +871,10 @@ const ShoppingCartPage: React.FC = () => {
                         className="cursor-pointer hover:opacity-80 transition-opacity"
                       >
                         <img
-                          src={
-                            item.productDetails?.images?.[0]?.url ||
-                            "/placeholder.png"
-                          }
+                          src={cldImg(item.productDetails?.images?.[0]?.url, { w: 160 })}
                           alt={item.productDetails?.name || "Product"}
+                          loading="lazy"
+                          decoding="async"
                           className="w-16 h-16 object-cover rounded-lg"
                         />
                       </button>

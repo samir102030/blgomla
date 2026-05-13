@@ -6,6 +6,7 @@ import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import type { Product } from "../types/product.type";
 import { getBaseUnitPrice } from "../lib/pricing";
+import { cldImg, cldSrcSet } from "../lib/cldImage";
 import PleaseLogin from "../components/PleaseLogin";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -122,7 +123,7 @@ const WishlistPage: React.FC = () => {
       return (
         <div key={item._id} className={`group bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 flex gap-4 items-center transition-all hover:shadow-md hover:border-[var(--brand-primary)]/30 ${isRemoving ? "opacity-50 scale-95" : ""} ${outOfStock ? "opacity-70" : ""}`}>
           <Link to={`/product/${item._id}`} className="shrink-0 relative">
-            <img src={item.images?.[0]?.url || "/net3.jpeg"} alt={item.name} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }} className="w-24 h-24 object-cover rounded-xl group-hover:scale-105 transition-transform" />
+            <img src={item.images?.[0]?.url ? cldImg(item.images[0].url, { w: 200 }) : "/net3.jpeg"} alt={item.name} loading="lazy" decoding="async" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }} className="w-24 h-24 object-cover rounded-xl group-hover:scale-105 transition-transform" />
             {discount > 0 && <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">-{discount}%</span>}
             {outOfStock && <div className="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center"><span className="text-white text-xs font-bold">{t("wishlist.outOfStock", "Out of Stock")}</span></div>}
           </Link>
@@ -154,7 +155,7 @@ const WishlistPage: React.FC = () => {
       <div key={item._id} className={`group bg-[var(--surface)] border border-[var(--border)] rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-[var(--brand-primary)]/5 hover:border-[var(--brand-primary)]/30 hover:-translate-y-1 ${isRemoving ? "opacity-50 scale-95" : ""}`}>
         <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)]">
           <Link to={`/product/${item._id}`}>
-            <img src={item.images?.[0]?.url || "/net3.jpeg"} alt={item.name} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            <img src={item.images?.[0]?.url ? cldImg(item.images[0].url, { w: 500 }) : "/net3.jpeg"} srcSet={cldSrcSet(item.images?.[0]?.url, 250)} sizes="(min-width: 1024px) 250px, (min-width: 640px) 33vw, 50vw" alt={item.name} loading="lazy" decoding="async" onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
           </Link>
           {discount > 0 && <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg">-{discount}%</div>}
           {outOfStock && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">{t("wishlist.outOfStock", "Out of Stock")}</span></div>}

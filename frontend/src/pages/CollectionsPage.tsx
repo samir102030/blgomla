@@ -7,6 +7,7 @@ import SEO from "../components/SEO";
 import { useCollectionStore } from "../stores/collection.store";
 import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
+import { cldImg } from "../lib/cldImage";
 
 /* ─── gradient accents per bundle ─── */
 // Belgomla orange spectrum — keep all tiles on-brand instead of a rainbow.
@@ -194,8 +195,10 @@ const CollectionsPage: React.FC = () => {
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-11 h-11 rounded-lg overflow-hidden bg-[var(--surface)] border border-[var(--border)] shrink-0">
                               <img
-                                src={item.product?.images?.[0]?.url || "/placeholder.png"}
+                                src={cldImg(item.product?.images?.[0]?.url, { w: 120 })}
                                 alt={item.product?.name || "Product"}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover"
                               />
                             </div>

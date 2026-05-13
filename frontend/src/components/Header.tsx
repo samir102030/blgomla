@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
+import { cldImg } from "../lib/cldImage";
 import ThemeToggle from "./ThemeToggle";
 import Logo, { BRAND } from "./Logo";
 
@@ -202,8 +203,10 @@ const Header: React.FC = () => {
                 onClick={() => goToProduct(product._id)}
               >
                 <img
-                  src={product.images[0]?.url || "/placeholder.png"}
+                  src={cldImg(product.images[0]?.url, { w: 120 })}
                   alt={product.name}
+                  loading="lazy"
+                  decoding="async"
                   className="w-12 h-12 object-cover rounded-lg bg-[var(--surface-2)]"
                 />
                 <div className="flex-1 min-w-0">

@@ -18,6 +18,7 @@ import { useCollectionStore } from "../stores/collection.store";
 import { useTranslation } from "react-i18next";
 import AdvertisementBanner from "../components/AdvertisementBanner";
 import { Link } from "react-router-dom";
+import { cldImg } from "../lib/cldImage";
 import { axiosInstance } from "../lib/axios";
 import type { Product } from "../types/product.type";
 import type { Category } from "../types/category.type";
@@ -438,7 +439,7 @@ const HomePage: React.FC = () => {
                                 className="w-8 h-8 rounded-lg bg-white border border-[var(--border)] overflow-hidden"
                               >
                                 <img
-                                  src={item.product?.images?.[0]?.url || "/placeholder.png"}
+                                  src={cldImg(item.product?.images?.[0]?.url, { w: 80 })}
                                   alt=""
                                   loading="lazy"
                                   decoding="async"
