@@ -61,3 +61,4 @@ Thumbs.db
 products/*.pdf
 products/products_data.json
 
+.vercel
