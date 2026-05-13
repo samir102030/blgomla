@@ -4,8 +4,10 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 const ResetPasswordPage: React.FC = () => {
+  const { t } = useTranslation();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -18,31 +20,31 @@ const ResetPasswordPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) {
-      setError("Invalid reset token");
+      setError(t("Invalid reset token"));
     }
-  }, [token]);
+  }, [token, t]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!password.trim()) {
-      setError("Password is required");
+      setError(t("Password is required"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError(t("Password must be at least 6 characters long"));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("Passwords do not match"));
       return;
     }
 
     if (!token) {
-      setError("Invalid reset token");
+      setError(t("Invalid reset token"));
       return;
     }
 
@@ -50,15 +52,15 @@ const ResetPasswordPage: React.FC = () => {
       const success = await resetPassword(token, password);
       if (success) {
         setIsSuccess(true);
-        toast.success("Password reset successfully!");
+        toast.success(t("Password reset successfully!"));
         setTimeout(() => {
           navigate("/login");
         }, 2000);
       } else {
-        setError("Failed to reset password. Please try again.");
+        setError(t("Failed to reset password. Please try again."));
       }
     } catch (err: any) {
-      setError(err?.response?.data?.message || "An error occurred");
+      setError(err?.response?.data?.message || t("An error occurred"));
     }
   };
 
@@ -85,16 +87,16 @@ const ResetPasswordPage: React.FC = () => {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Invalid Reset Link
+                {t("Invalid Reset Link")}
               </h2>
               <p className="text-gray-600 mb-6">
-                The password reset link is invalid or has expired.
+                {t("The password reset link is invalid or has expired.")}
               </p>
               <Link
                 to="/forgot-password"
                 className="inline-block bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
-                Request New Reset Link
+                {t("Request New Reset Link")}
               </Link>
             </div>
           </div>
@@ -113,20 +115,20 @@ const ResetPasswordPage: React.FC = () => {
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=400&fit=crop"
-            alt="Password Reset"
+            alt={t("Reset Password")}
             className="w-full h-full object-cover opacity-20"
           />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Reset Password
+            {t("Reset Password")}
           </h1>
           <nav className="text-sm text-gray-600">
             <Link to="/" className="hover:text-gray-900">
-              Home
+              {t("Home")}
             </Link>
             <span className="mx-2">/</span>
-            <span>Reset Password</span>
+            <span>{t("Reset Password")}</span>
           </nav>
         </div>
       </div>
@@ -137,10 +139,10 @@ const ResetPasswordPage: React.FC = () => {
             {!isSuccess ? (
               <>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                  Set New Password
+                  {t("Set New Password")}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Enter your new password below.
+                  {t("Enter your new password below.")}
                 </p>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -149,7 +151,7 @@ const ResetPasswordPage: React.FC = () => {
                       htmlFor="password"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      New Password
+                      {t("New Password")}
                     </label>
                     <input
                       type="password"
@@ -157,7 +159,7 @@ const ResetPasswordPage: React.FC = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Enter new password"
+                      placeholder={t("Enter new password")}
                       required
                       minLength={6}
                     />
@@ -168,7 +170,7 @@ const ResetPasswordPage: React.FC = () => {
                       htmlFor="confirmPassword"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Confirm New Password
+                      {t("Confirm New Password")}
                     </label>
                     <input
                       type="password"
@@ -176,7 +178,7 @@ const ResetPasswordPage: React.FC = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Confirm new password"
+                      placeholder={t("Confirm new password")}
                       required
                       minLength={6}
                     />
@@ -189,7 +191,7 @@ const ResetPasswordPage: React.FC = () => {
                     className="w-full bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-60"
                     disabled={loading}
                   >
-                    {loading ? "Resetting..." : "Reset Password"}
+                    {loading ? t("Resetting...") : t("Reset Password")}
                   </button>
                 </form>
 
@@ -198,7 +200,7 @@ const ResetPasswordPage: React.FC = () => {
                     to="/login"
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
-                    Back to Login
+                    {t("Back to Login")}
                   </Link>
                 </div>
               </>
@@ -221,18 +223,19 @@ const ResetPasswordPage: React.FC = () => {
                     </svg>
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                    Password Reset Successful!
+                    {t("Password Reset Successful!")}
                   </h2>
                   <p className="text-gray-600 mb-6">
-                    Your password has been successfully reset. You will be
-                    redirected to the login page shortly.
+                    {t(
+                      "Your password has been successfully reset. You will be redirected to the login page shortly."
+                    )}
                   </p>
 
                   <Link
                     to="/login"
                     className="inline-block bg-black text-white py-3 px-6 rounded-lg font-medium hover:bg-gray-800 transition-colors"
                   >
-                    Go to Login
+                    {t("Go to Login")}
                   </Link>
                 </div>
               </>
