@@ -433,7 +433,7 @@ const HomePage: React.FC = () => {
                             </div>
                             {savingsPercent > 0 && (
                               <span className={`shrink-0 text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-gradient-to-r ${theme.gradient}`}>
-                                {savingsPercent}% OFF
+                                {savingsPercent}% {t("OFF")}
                               </span>
                             )}
                           </div>
@@ -472,11 +472,11 @@ const HomePage: React.FC = () => {
                           <div className="flex items-end justify-between gap-2 pt-3 border-t border-[var(--border)]">
                             <div>
                               <span className="text-base font-black text-[var(--text)]">
-                                EGP {collection.bundlePrice.toLocaleString()}
+                                {t("EGP")} {collection.bundlePrice.toLocaleString()}
                               </span>
                               {savings > 0 && (
                                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                  💰 {t("Save")} {savings.toLocaleString()}
+                                  💰 {t("Save")} {t("EGP")} {savings.toLocaleString()}
                                 </p>
                               )}
                             </div>
