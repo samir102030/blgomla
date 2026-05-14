@@ -1,4 +1,5 @@
 import express from "express";
+import { rateLimit } from "express-rate-limit";
 
 import {
   adminRoute,
@@ -6,6 +7,21 @@ import {
   superAdminRoute,
 } from "../middleware/auth.middleware.js";
 import { verifyRefreshToken } from "../middleware/token.js";
+
+// Strict limiter for credential-handling endpoints. The global limiter in
+// app.js is 1000/15min — far too permissive for brute-force protection on
+// login/signup/forgot/reset. Keyed by IP.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: "Too many attempts. Please try again in 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+});
 import { translateResponse } from "../middleware/translation.middleware.js";
 import {
   activateUser,
@@ -46,8 +62,8 @@ const router = express.Router();
 
 // Tested
 // users
-router.post("/signup", validateSignup, signup);
-router.post("/login", validateLogin, login);
+router.post("/signup", authLimiter, validateSignup, signup);
+router.post("/login", authLimiter, validateLogin, login);
 router.post("/logout", logout);
 router.post("/refresh", verifyRefreshToken, refreshToken);
 
@@ -65,8 +81,8 @@ router.put("/changePassword", protectRoute, changePassword);
 // not tested
 router.put("/verifyEmail", verifyEmail);
 router.post("/generateVerificationCode", reSendVerificationEmail);
-router.post("/forgotPassword", validateForgotPassword, forgotPassword);
-router.post("/resetPassword/:token", validateResetPassword, resetPassword);
+router.post("/forgotPassword", authLimiter, validateForgotPassword, forgotPassword);
+router.post("/resetPassword/:token", authLimiter, validateResetPassword, resetPassword);
 
 router
   .route("/")
