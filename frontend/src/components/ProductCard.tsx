@@ -20,6 +20,8 @@ interface ProductCardProps {
   salePercentage?: number;
   stock?: number;
   isInStock?: boolean;
+  // First card on a page sets the LCP; skip lazy-load + boost fetch priority.
+  priority?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -37,6 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   salePercentage,
   stock,
   isInStock,
+  priority = false,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -175,7 +178,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
             srcSet={cldSrcSet(image, 200)}
             sizes="(min-width: 1024px) 176px, (min-width: 640px) 144px, 112px"
             alt={name}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : "auto"}
             decoding="async"
             width={176}
             height={176}

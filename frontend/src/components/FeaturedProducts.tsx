@@ -62,7 +62,7 @@ const FeaturedProducts: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 stagger-children">
-            {products.map((product) => (
+            {products.map((product, idx) => (
               <ProductCard
                 key={product._id}
                 id={product._id}
@@ -78,6 +78,7 @@ const FeaturedProducts: React.FC = () => {
                 salePercentage={product.salePercentage}
                 isInStock={product.stock > 0}
                 stock={product.stock}
+                priority={idx === 0}
               />
             ))}
           </div>

@@ -29,6 +29,11 @@
     <link rel="preconnect" href="https://halafawystore-backend.vercel.app" crossorigin />
     <link rel="dns-prefetch" href="https://halafawystore-backend.vercel.app" />
 
+    <!-- Preconnect to Cloudinary so the first product-image TLS handshake starts before
+         any <img> tag is parsed. Saves ~50-100ms on slow mobile. -->
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
     <!-- Google Fonts (Inter) — load asynchronously to avoid 650ms of render-blocking.
          The "print" trick: stylesheet downloads in background; onload swaps media back to "all". -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

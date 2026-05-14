@@ -144,7 +144,7 @@ const HomePage: React.FC = () => {
       </div>
     ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 stagger-children">
-        {(products || []).slice(0, count).map((product) => {
+        {(products || []).slice(0, count).map((product, idx) => {
           const discounted = getBaseUnitPrice(product);
           return (
           <ProductCard
@@ -167,6 +167,7 @@ const HomePage: React.FC = () => {
             salePercentage={product.salePercentage}
             isInStock={product.stock > 0}
             stock={product.stock}
+            priority={idx === 0}
           />
         );})}
       </div>
