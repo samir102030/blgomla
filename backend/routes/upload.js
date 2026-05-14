@@ -22,12 +22,12 @@ const upload = multer({
   },
 });
 
-// Configure Cloudinary once at startup
+// Configure Cloudinary once at startup. No hardcoded fallbacks — the
+// previous fallback values were a committed secret.
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dlommecfr",
-  api_key: process.env.CLOUDINARY_API_KEY || "249541578961879",
-  api_secret:
-    process.env.CLOUDINARY_API_SECRET || "lwU-kzA0H1yGvZ1KqPrhILZlRa8",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // Test route to check if the route is working

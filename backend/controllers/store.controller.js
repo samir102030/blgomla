@@ -11,12 +11,12 @@ import { controllerWrapper } from "../utils/wrappers.js";
 const isAdminUser = (user) =>
   user && ["admin", "super_admin"].includes(user.role);
 
-// Configure Cloudinary
+// Configure Cloudinary. No hardcoded fallbacks — the previous fallback
+// values were a committed secret. Missing env throws at first upload.
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || "dlommecfr",
-  api_key: process.env.CLOUDINARY_API_KEY || "249541578961879",
-  api_secret:
-    process.env.CLOUDINARY_API_SECRET || "lwU-kzA0H1yGvZ1KqPrhILZlRa8",
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // Helper function to upload file to Cloudinary
