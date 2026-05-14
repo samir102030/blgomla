@@ -181,7 +181,7 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
                 src={formData.image}
                 alt="Preview"
                 className="mt-2 h-32 object-cover rounded-lg"
-              />
+               loading="lazy" decoding="async"/>
             )}
           </div>
 

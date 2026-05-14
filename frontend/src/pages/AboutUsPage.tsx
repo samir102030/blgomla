@@ -89,7 +89,7 @@ const AboutUsPage: React.FC = () => {
             src="net1.jpeg"
             alt="Camera Store"
             className="w-full h-full object-cover opacity-30"
-          />
+           loading="lazy" decoding="async"/>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-5xl font-bold text-[var(--text)] mb-6">
@@ -142,7 +142,7 @@ const AboutUsPage: React.FC = () => {
                   src="net2.jpeg"
                   alt="Camera Store Interior"
                   className="rounded-lg shadow-lg"
-                />
+                 loading="lazy" decoding="async"/>
                 <div className="absolute -bottom-6 -right-6 bg-[var(--surface)] p-6 rounded-lg shadow-lg">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-blue-600">15+</div>
@@ -226,7 +226,7 @@ const AboutUsPage: React.FC = () => {
                     src={member.image}
                     alt={member.name}
                     className="w-full h-64 object-cover"
-                  />
+                   loading="lazy" decoding="async"/>
                   <div className="p-6">
                     <h3 className="text-xl font-semibold text-[var(--text)] mb-1">
                       {member.name}
@@ -390,7 +390,7 @@ const AboutUsPage: React.FC = () => {
                   src="net3.jpeg"
                   alt="Customer Service"
                   className="rounded-lg shadow-lg"
-                />
+                 loading="lazy" decoding="async"/>
               </div>
             </div>
           </div>

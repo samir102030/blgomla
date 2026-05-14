@@ -265,7 +265,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       src={src}
                       alt={`preview-${idx}`}
                       className="h-16 sm:h-20 w-full object-cover rounded"
-                    />
+                     loading="lazy" decoding="async"/>
                     <button
                       type="button"
                       onClick={() => removeFile(idx)}

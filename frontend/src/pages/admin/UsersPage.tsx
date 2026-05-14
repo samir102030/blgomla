@@ -318,7 +318,7 @@ const UsersPage: React.FC = () => {
                               className="h-10 w-10 rounded-full object-cover"
                               src={user.profilePicture}
                               alt={user.name || "User"}
-                            />
+                             loading="lazy" decoding="async"/>
                           ) : (
                             <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
                               <UserIcon className="h-6 w-6 text-gray-500" />

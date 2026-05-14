@@ -232,7 +232,7 @@ const AccountStore: React.FC = () => {
                     src={vendorStore.logo}
                     alt="Store Logo"
                     className="w-full h-full object-cover"
-                  />
+                   loading="lazy" decoding="async"/>
                 ) : (
                   <svg
                     className="w-12 h-12 text-gray-400"
@@ -969,7 +969,7 @@ const AccountStore: React.FC = () => {
                           src={slide.image}
                           alt={slide.title}
                           className="w-full h-32 object-cover rounded-lg mb-3"
-                        />
+                         loading="lazy" decoding="async"/>
                       )}
                       <h4 className="font-medium text-gray-900 mb-1">
                         {slide.title}

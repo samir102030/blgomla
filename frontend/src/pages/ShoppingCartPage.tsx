@@ -578,7 +578,7 @@ const ShoppingCartPage: React.FC = () => {
             src="net1.jpeg"
             alt={t("Camera")}
             className="w-full h-full object-cover opacity-20"
-          />
+           loading="lazy" decoding="async"/>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">
@@ -598,7 +598,7 @@ const ShoppingCartPage: React.FC = () => {
             src="net2.jpeg"
             alt={t("Professional Camera")}
             className="h-full w-full object-contain"
-          />
+           loading="lazy" decoding="async"/>
         </div>
       </div>
 

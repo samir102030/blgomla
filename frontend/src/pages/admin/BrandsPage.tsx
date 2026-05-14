@@ -211,7 +211,7 @@ const BrandsPage: React.FC = () => {
                         className="h-10 w-10 rounded-lg object-cover"
                         src={brand.logo}
                         alt={brand.name}
-                      />
+                       loading="lazy" decoding="async"/>
                     ) : (
                       <span className="text-gray-400">{t("brands.noLogo")}</span>
                     )}

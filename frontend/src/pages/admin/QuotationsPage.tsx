@@ -330,6 +330,8 @@ const QuotationsPage: React.FC = () => {
                         <img
                           src={item.product.images[0].url}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
                           className="w-10 h-10 rounded object-cover"
                         />

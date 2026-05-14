@@ -225,7 +225,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
                   src={logoPreview}
                   alt="Logo Preview"
                   className="h-16 w-16 object-cover rounded-lg"
-                />
+                 loading="lazy" decoding="async"/>
               )}
             </div>
           </div>

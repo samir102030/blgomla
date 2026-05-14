@@ -74,7 +74,7 @@ const MyAccountPage: React.FC = () => {
             <div className="relative group">
               <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden shadow-xl">
                 {user?.profilePicture ? (
-                  <img src={user.profilePicture} alt="Profile" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
+                  <img loading="lazy" decoding="async" src={user.profilePicture} alt="Profile" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-4xl">{user?.name?.[0]?.toUpperCase() || "👤"}</span>
                 )}

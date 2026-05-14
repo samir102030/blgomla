@@ -659,7 +659,7 @@ const ProductsPage: React.FC = () => {
                           className="h-10 w-10 rounded-lg object-cover"
                           src={product.images?.[0]?.url}
                           alt={product.name}
-                        />
+                         loading="lazy" decoding="async"/>
                       ) : (
                         <div className="h-10 w-10 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center border border-gray-200">
                           <svg

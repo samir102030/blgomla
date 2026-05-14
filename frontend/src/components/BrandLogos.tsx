@@ -131,6 +131,10 @@ const BrandLogos: React.FC = () => {
                   <img
                     src={brand.logo}
                     alt={brand.name}
+                    loading="lazy"
+                    decoding="async"
+                    width={120}
+                    height={40}
                     className="h-8 sm:h-10 w-auto object-contain opacity-50 group-hover:opacity-100 transition-opacity duration-300 grayscale group-hover:grayscale-0"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;

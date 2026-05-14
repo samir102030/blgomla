@@ -117,7 +117,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
           <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0 px-4">
-              <img className="h-8 w-auto" src="/logo.png" alt="Belgomla" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+              <img loading="lazy" decoding="async" className="h-8 w-auto" src="/logo.png" alt="Belgomla" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
               <span className="ml-2 text-xl font-bold text-gray-900">Vendor</span>
             </div>
 
@@ -199,7 +199,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
           {/* Mobile Header */}
           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
             <div className="flex items-center">
-              <img className="h-8 w-auto" src="/logo.png" alt="Belgomla" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+              <img loading="lazy" decoding="async" className="h-8 w-auto" src="/logo.png" alt="Belgomla" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
               <span className="ml-2 text-xl font-bold text-gray-900">Vendor</span>
             </div>
             <button

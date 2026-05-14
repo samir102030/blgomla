@@ -274,7 +274,7 @@ const AdminCollectionsPage: React.FC = () => {
                       src={product.images[0]?.url || "/placeholder.png"}
                       alt={product.name}
                       className="w-12 h-12 object-cover rounded"
-                    />
+                     loading="lazy" decoding="async"/>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{product.name}</p>
                       <p className="text-xs text-gray-500">

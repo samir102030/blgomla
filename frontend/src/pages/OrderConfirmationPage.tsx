@@ -121,7 +121,7 @@ const OrderConfirmationPage: React.FC = () => {
             src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&h=400&fit=crop"
             alt={t("Order Confirmed!")}
             className="w-full h-full object-cover opacity-20"
-          />
+           loading="lazy" decoding="async"/>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center mb-4">

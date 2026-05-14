@@ -111,7 +111,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
                   src={product.images?.[0]?.url}
                   alt={productName}
                   className="h-16 w-16 rounded-lg object-cover border border-gray-200 dark:border-slate-700"
-                />
+                 loading="lazy" decoding="async"/>
               ) : (
                 <div className="h-16 w-16 rounded-lg bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-400 dark:text-gray-500">
                   <svg

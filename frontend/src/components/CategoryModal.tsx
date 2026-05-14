@@ -320,7 +320,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                   src={imagePreview}
                   alt="Preview"
                   className="h-16 w-16 object-cover rounded-lg"
-                />
+                 loading="lazy" decoding="async"/>
               )}
             </div>
           </div>

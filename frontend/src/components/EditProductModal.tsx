@@ -219,7 +219,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         src={img.url}
                         alt={`existing-${idx}`}
                         className="h-20 w-full object-cover rounded-lg border"
-                      />
+                       loading="lazy" decoding="async"/>
                       <button
                         type="button"
                         onClick={() => removeExistingImage(idx)}
@@ -276,7 +276,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         src={src}
                         alt={`new-preview-${idx}`}
                         className="h-20 w-full object-cover rounded-lg border"
-                      />
+                       loading="lazy" decoding="async"/>
                       <button
                         type="button"
                         onClick={() => removeFile(idx)}

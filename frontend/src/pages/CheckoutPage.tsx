@@ -609,7 +609,7 @@ const CheckoutPage: React.FC = () => {
             src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=400&fit=crop"
             alt={t("Camera")}
             className="w-full h-full object-cover opacity-20"
-          />
+           loading="lazy" decoding="async"/>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">{t("Checkout")}</h1>
@@ -627,7 +627,7 @@ const CheckoutPage: React.FC = () => {
             src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=400&fit=crop"
             alt={t("Professional Camera")}
             className="h-full w-full object-contain"
-          />
+           loading="lazy" decoding="async"/>
         </div>
       </div>
 

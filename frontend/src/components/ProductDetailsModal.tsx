@@ -152,7 +152,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                     src={productImages[selectedImage]}
                     alt={productName}
                     className="w-full h-full object-contain p-4"
-                  />
+                   loading="lazy" decoding="async"/>
                 ) : (
                   <div className="text-gray-400 dark:text-gray-600 flex flex-col items-center">
                     <svg
@@ -186,7 +186,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                         src={image}
                         alt={`${productName} ${index + 1}`}
                         className="w-full h-full object-contain p-1"
-                      />
+                       loading="lazy" decoding="async"/>
                     </button>
                   ))}
                 </div>
@@ -391,7 +391,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                                 }
                                 alt={review.user?.name || "User"}
                                 className="w-8 h-8 rounded-full mr-3"
-                              />
+                               loading="lazy" decoding="async"/>
                               <span className="font-medium text-gray-900 text-sm">
                                 {review.user?.name || "Anonymous"}
                               </span>

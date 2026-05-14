@@ -214,7 +214,7 @@ const CategoriesPage: React.FC = () => {
                           className="h-10 w-10 rounded-lg object-cover mr-4"
                           src={category.image}
                           alt={category.name}
-                        />
+                         loading="lazy" decoding="async"/>
                       )}
                       <div>
                         <div className="text-sm font-medium text-gray-900">

@@ -272,7 +272,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                   />
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {brand.logo && (
-                      <img src={brand.logo} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-5 h-5 object-contain" />
+                      <img loading="lazy" decoding="async" src={brand.logo} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-5 h-5 object-contain" />
                     )}
                     <span className="text-sm text-[var(--text)] truncate">{brand.name}</span>
                   </div>

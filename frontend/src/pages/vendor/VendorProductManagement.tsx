@@ -266,7 +266,7 @@ const VendorProductManagement: React.FC = () => {
                 src={product.images[0]?.url || "/placeholder-product.jpg"}
                 alt={product.name}
                 className="w-full h-48 object-cover"
-              />
+               loading="lazy" decoding="async"/>
             </div>
             <div className="p-4">
               <h3 className="font-semibold text-gray-900 mb-2">

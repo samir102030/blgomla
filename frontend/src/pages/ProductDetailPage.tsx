@@ -423,7 +423,7 @@ const ProductDetailPage: React.FC = () => {
                   fetchPriority="high"
                   decoding="async"
                   className="w-full h-full object-contain"
-                />
+                 loading="lazy" decoding="async"/>
               </div>
 
               {/* Thumbnail Images */}
@@ -816,7 +816,7 @@ const ProductDetailPage: React.FC = () => {
                                 }
                                 alt={review.user.name || t("User Avatar")}
                                 className="w-10 h-10 rounded-full mr-3"
-                              />
+                               loading="lazy" decoding="async"/>
                               <span className="font-semibold text-[var(--text)] mr-2">
                                 {review.user.name || t("Anonymous")}
                               </span>

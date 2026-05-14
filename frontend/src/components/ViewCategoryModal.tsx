@@ -36,7 +36,7 @@ const ViewCategoryModal: React.FC<ViewCategoryModalProps> = ({
                 src={category.image}
                 alt={category.name}
                 className="h-32 w-32 object-cover rounded-lg border"
-              />
+               loading="lazy" decoding="async"/>
             ) : (
               <div className="h-32 w-32 bg-gray-100 rounded-lg flex items-center justify-center border">
                 <span className="text-gray-400 text-sm">No Image</span>

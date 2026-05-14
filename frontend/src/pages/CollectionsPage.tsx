@@ -33,6 +33,7 @@ const CollectionsPage: React.FC = () => {
   const getOriginalTotal = (collection: any) =>
     collection.items.reduce((sum: number, item: any) => {
       const product = item.product;
+      if (!product) return sum;
       const unitPrice = product.saleActive
         ? product.price * (1 - product.salePercentage / 100)
         : product.price;

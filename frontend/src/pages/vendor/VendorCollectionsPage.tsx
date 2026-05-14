@@ -564,7 +564,7 @@ const VendorCollectionsPage: React.FC = () => {
                           }
                           alt={item.product?.name || "Product"}
                           className="w-full h-full object-cover"
-                        />
+                         loading="lazy" decoding="async"/>
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-900">
