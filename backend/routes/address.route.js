@@ -32,9 +32,9 @@ router.get("/:id", protectRoute, getAddressById);
 router.put("/:id", protectRoute, validateUpdateAddress, updateAddress);
 
 // Delete an address
-router.delete("/:id", deleteAddress);
+router.delete("/:id", protectRoute, deleteAddress);
 
 // Set default address for user
-router.put("/:id/default", setDefaultAddress);
+router.put("/:id/default", protectRoute, setDefaultAddress);
 
 export default router;

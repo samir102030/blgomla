@@ -2,6 +2,29 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
+const cartItemSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["product", "collection"],
+      default: "product",
+    },
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+    collection: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Collection",
+    },
+    quantity: {
+      type: Number,
+      default: 1,
+    },
+  },
+  { _id: true, suppressReservedKeysWarning: true },
+);
+
 const userSchema = new mongoose.Schema(
   {
     email: {
@@ -33,27 +56,7 @@ const userSchema = new mongoose.Schema(
     profilePicture: {
       type: String,
     },
-    cart: [
-      {
-        type: {
-          type: String,
-          enum: ["product", "collection"],
-          default: "product",
-        },
-        product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Product",
-        },
-        collection: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Collection",
-        },
-        quantity: {
-          type: Number,
-          default: 1,
-        },
-      },
-    ],
+    cart: [cartItemSchema],
     love: [
       {
         type: mongoose.Schema.Types.ObjectId,
