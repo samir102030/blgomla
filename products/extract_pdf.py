@@ -232,21 +232,28 @@ def extract_racks(filepath):
                 model_match = re.search(r'(OM-[\w\-]+)', description)
                 model = model_match.group(1) if model_match else rack_type
 
-                name = f"Megatop {rack_type}"
-                if size:
-                    name += f" ({size})"
+                # Build a unique name. Rack model codes can repeat for the
+                # same (type, size) — e.g. OM-RK12U-MT (wall, 4730) and
+                # OM-RK12U-OUT (outdoor cooling, 10450) both render as
+                # "Rack 12U / 60x45". Always include the OM- code so the
+                # name uniquely identifies the SKU.
+                clean_size = re.sub(r"\s+", " ", size).strip() if size else ""
+                name = rack_type
+                if clean_size:
+                    name += f" ({clean_size})"
+                name += f" [{model}]"
 
                 products.append({
                     "name": name,
                     "model": model,
                     "description": description,
                     "price": price,
-                    "brand": "Megatop",
+                    "brand": "Hikvision",
                     "category": "Server Racks",
                     "parentCategory": "Networking",
                     "features": [f"Size: {size}"] if size else [],
                     "stock": 15,
-                    "tags": ["megatop", "rack", "server", "networking"],
+                    "tags": ["hikvision", "rack", "server", "networking"],
                 })
 
     doc.close()

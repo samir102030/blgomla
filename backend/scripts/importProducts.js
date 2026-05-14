@@ -143,13 +143,10 @@ async function importProducts() {
 
     for (const item of rawData) {
       try {
-        // Check if product with same model already exists
-        const existing = await Product.findOne({
-          $or: [
-            { name: item.name },
-            { "attributes.name": "Model", "attributes.value": item.model },
-          ],
-        });
+        // Match by name only — model codes are not unique in the source
+        // PDFs (e.g. OM-RK6U-MT exists as both wall-mount and floor-standing
+        // with different prices), but names already disambiguate by size.
+        const existing = await Product.findOne({ name: item.name });
 
         if (existing) {
           // Update price and stock
