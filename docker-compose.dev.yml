@@ -1,0 +1,15 @@
+# Optional dev-time local MongoDB to eliminate ~80ms Atlas RTT per query.
+# Start:  docker compose -f docker-compose.dev.yml up -d
+# Stop:   docker compose -f docker-compose.dev.yml down
+# Wipe:   docker compose -f docker-compose.dev.yml down -v
+services:
+  mongo:
+    image: mongo:7
+    container_name: halafawy-mongo-dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+volumes:
+  mongo-data:

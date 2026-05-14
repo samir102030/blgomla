@@ -6,6 +6,7 @@ import { axiosInstance } from "../lib/axios";
 import type { Product } from "../types/product.type";
 import {
   ArrowRightOnRectangleIcon,
+  GlobeAltIcon,
   HeartIcon,
   MagnifyingGlassIcon,
   ShoppingCartIcon,
@@ -308,18 +309,20 @@ const Header: React.FC = () => {
           {/* Header actions */}
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Language */}
-            <select
-              aria-label={t("Language")}
-              value={language}
-              onChange={(e) => {
-                i18n.changeLanguage(e.target.value);
-                setLanguage(e.target.value);
+            <button
+              type="button"
+              onClick={() => {
+                const next = language === "en" ? "ar" : "en";
+                i18n.changeLanguage(next);
+                setLanguage(next);
               }}
-              className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-2 py-1.5 text-xs text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-colors cursor-pointer"
+              aria-label={t("Language")}
+              title={language === "en" ? "العربية" : "English"}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-3,var(--surface-2))] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/30 transition-colors"
             >
-              <option value="en">EN</option>
-              <option value="ar">AR</option>
-            </select>
+              <GlobeAltIcon className="w-4 h-4" />
+              <span>{language === "en" ? "EN" : "ع"}</span>
+            </button>
 
             <ThemeToggle showLabel={false} className="ml-0.5" />
 

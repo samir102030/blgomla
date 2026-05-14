@@ -376,6 +376,11 @@ productSchema.index({ price: 1, rating: -1 }); // For sorting/filtering
 productSchema.index({ isActive: 1, deleted: 1, approvalStatus: 1 }); // Storefront filter
 productSchema.index({ soldCount: -1 }); // Best sellers
 productSchema.index({ createdAt: -1 }); // Newest
+productSchema.index({ brand: 1, createdAt: -1 }); // Brand-filtered listings
+productSchema.index({ category: 1, createdAt: -1 }); // Category-filtered listings
+productSchema.index({ featured: 1, createdAt: -1 }); // Featured strip
+productSchema.index({ saleActive: 1, createdAt: -1 }); // Sale strip
+productSchema.index({ rating: -1 }); // Most-rated
 
 // ── Slug auto-generation ──
 productSchema.pre("save", function (next) {

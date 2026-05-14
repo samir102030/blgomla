@@ -1,6 +1,7 @@
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
+import { paginateProducts } from "../utils/productPagination.js";
 import User from "../models/user.model.js";
 import Notification from "../models/notification.model.js";
 import BrandRequest from "../models/brandRequest.model.js";
@@ -150,41 +151,38 @@ export const getAllProducts = controllerWrapper(
   "getAllProducts",
   async (req, res) => {
     const { page = 1, limit = 20, search, ...filters } = req.query;
-    let query = {};
+    const filter = {};
     if (search) {
-      // Use case-insensitive partial (regex) matching on name, description and tags
-      // to support prefix/substring searches (e.g. "ca" -> "cat golden").
       const regex = new RegExp(
         search.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&"),
         "i"
       );
-      query.$or = [
+      filter.$or = [
         { name: { $regex: regex } },
         { description: { $regex: regex } },
         { tags: { $in: [regex] } },
       ];
     }
-    // Add filters (category, brand, etc.)
-    if (filters.categoryId) query.category = filters.categoryId;
-    if (filters.brandId) query.brand = filters.brandId;
-    if (filters.storeId) query.store = filters.storeId;
-    if (filters.isActive !== undefined) query.isActive = filters.isActive;
-    if (filters.featured !== undefined) query.featured = filters.featured;
-    if (filters.saleActive !== undefined) query.saleActive = filters.saleActive;
-    if (filters.deleted !== undefined) query.deleted = filters.deleted;
-    if (filters.approvalStatus) query.approvalStatus = filters.approvalStatus;
-    // Price range
+    if (filters.categoryId) filter.category = filters.categoryId;
+    if (filters.brandId) filter.brand = filters.brandId;
+    if (filters.storeId) filter.store = filters.storeId;
+    if (filters.isActive !== undefined) filter.isActive = filters.isActive;
+    if (filters.featured !== undefined) filter.featured = filters.featured;
+    if (filters.saleActive !== undefined) filter.saleActive = filters.saleActive;
+    if (filters.deleted !== undefined) filter.deleted = filters.deleted;
+    if (filters.approvalStatus) filter.approvalStatus = filters.approvalStatus;
     if (filters.minPrice || filters.maxPrice) {
-      query.price = {};
-      if (filters.minPrice) query.price.$gte = Number(filters.minPrice);
-      if (filters.maxPrice) query.price.$lte = Number(filters.maxPrice);
+      filter.price = {};
+      if (filters.minPrice) filter.price.$gte = Number(filters.minPrice);
+      if (filters.maxPrice) filter.price.$lte = Number(filters.maxPrice);
     }
-    const mongooseQuery = Product.find(query)
-      .populate("brand", "name slug logo")
-      .populate("category", "name slug")
-      .populate("store", "storeName logo")
-      .sort({ createdAt: -1 });
-    const result = await paginateQuery(page, limit, mongooseQuery);
+
+    const result = await paginateProducts({
+      filter,
+      sort: { createdAt: -1 },
+      page,
+      limit,
+    });
     res.status(200).json(result);
   }
 );
@@ -194,16 +192,12 @@ export const getSaleProducts = controllerWrapper(
   "getsaleProducts",
   async (req, res) => {
     const { page = 1, limit = 20 } = req.query;
-    const query = {
-      saleActive: true,
-      isActive: true,
-      deleted: false,
-    };
-    const mongooseQuery = Product.find(query)
-      .populate("brand", "name slug logo")
-      .populate("category", "name slug")
-      .populate("store", "storeName logo");
-    const result = await paginateQuery(page, limit, mongooseQuery);
+    const result = await paginateProducts({
+      filter: { saleActive: true, isActive: true, deleted: false },
+      sort: { createdAt: -1 },
+      page,
+      limit,
+    });
     res.status(200).json(result);
   }
 );
@@ -661,16 +655,12 @@ export const getFeaturedProducts = controllerWrapper(
   "getFeaturedProducts",
   async (req, res) => {
     const { page = 1, limit = 20 } = req.query;
-    const query = {
-      featured: true,
-      isActive: true,
-      deleted: false,
-    };
-    const mongooseQuery = Product.find(query)
-      .populate("brand", "name slug logo")
-      .populate("category", "name slug")
-      .populate("store", "storeName logo");
-    const result = await paginateQuery(page, limit, mongooseQuery);
+    const result = await paginateProducts({
+      filter: { featured: true, isActive: true, deleted: false },
+      sort: { createdAt: -1 },
+      page,
+      limit,
+    });
     res.status(200).json(result);
   }
 );
@@ -1100,16 +1090,12 @@ export const getBestSellers = controllerWrapper(
   "getBestSellers",
   async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-    const query = {
-      isActive: true,
-      deleted: false,
-    };
-    const mongooseQuery = Product.find(query)
-      .populate("brand", "name slug logo")
-      .populate("category", "name slug")
-      .populate("store", "storeName logo")
-      .sort({ soldCount: -1 });
-    const result = await paginateQuery(page, limit, mongooseQuery);
+    const result = await paginateProducts({
+      filter: { isActive: true, deleted: false },
+      sort: { soldCount: -1 },
+      page,
+      limit,
+    });
     res.status(200).json(result);
   }
 );
@@ -1119,16 +1105,12 @@ export const getNewestProducts = controllerWrapper(
   "getNewestProducts",
   async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-    const query = {
-      isActive: true,
-      deleted: false,
-    };
-    const mongooseQuery = Product.find(query)
-      .populate("brand", "name slug logo")
-      .populate("category", "name slug")
-      .populate("store", "storeName logo")
-      .sort({ createdAt: -1 });
-    const result = await paginateQuery(page, limit, mongooseQuery);
+    const result = await paginateProducts({
+      filter: { isActive: true, deleted: false },
+      sort: { createdAt: -1 },
+      page,
+      limit,
+    });
     res.status(200).json(result);
   }
 );
@@ -1136,16 +1118,12 @@ export const getMostRatedProducts = controllerWrapper(
   "getMostRatedProducts",
   async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
-    const query = {
-      isActive: true,
-      deleted: false,
-    };
-    const mongooseQuery = Product.find(query)
-      .populate("brand", "name slug logo")
-      .populate("category", "name slug")
-      .populate("store", "storeName logo")
-      .sort({ rating: -1 });
-    const result = await paginateQuery(page, limit, mongooseQuery);
+    const result = await paginateProducts({
+      filter: { isActive: true, deleted: false },
+      sort: { rating: -1 },
+      page,
+      limit,
+    });
     res.status(200).json(result);
   }
 );

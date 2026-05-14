@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, lazy, Suspense } from "react";
+import React, { useMemo, lazy, Suspense } from "react";
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
 import HeroSlider from "../components/HeroSlider";
@@ -8,19 +8,18 @@ import { getBaseUnitPrice } from "../lib/pricing";
 import CountdownTimer from "../components/CountdownTimer";
 import ScrollReveal from "../components/ScrollReveal";
 import { getCategoryIcon } from "../lib/categoryIcon";
-import { useCategoryStore } from "../stores";
-import { useUserStore } from "../stores/user.store";
 import { useCollectionStore } from "../stores/collection.store";
+import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { cldImg } from "../lib/cldImage";
+import { useHomeFeed } from "../lib/queries";
 
 const FeaturedProducts = lazy(() => import("../components/FeaturedProducts"));
 const Newsletter = lazy(() => import("../components/Newsletter"));
 const Services = lazy(() => import("../components/Services"));
 const BrandLogos = lazy(() => import("../components/BrandLogos"));
 const AdvertisementBanner = lazy(() => import("../components/AdvertisementBanner"));
-import { axiosInstance } from "../lib/axios";
 import type { Product } from "../types/product.type";
 import type { Category } from "../types/category.type";
 import toast from "react-hot-toast";
@@ -103,16 +102,20 @@ const HomePage: React.FC = () => {
   const { t } = useTranslation();
   useUserStore((s) => s.user);
 
-  const { categories, fetchCategories, loading: categoriesLoading } = useCategoryStore();
-  const { collections, fetchCollections, addCollectionToCart } = useCollectionStore();
+  const { addCollectionToCart } = useCollectionStore();
   const fetchCart = useUserStore((state) => state.fetchCart);
 
-  const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [saleProducts, setSaleProducts] = useState<Product[]>([]);
-  const [newestProducts, setNewestProducts] = useState<Product[]>([]);
-  const [loadingAll, setLoadingAll] = useState(true);
-  const [loadingSale, setLoadingSale] = useState(true);
-  const [loadingNewest, setLoadingNewest] = useState(true);
+  // Single batched fetch (cached + deduped by React Query).
+  const { data: feed, isLoading: feedLoading } = useHomeFeed();
+  const allProducts: Product[] = feed?.products ?? [];
+  const saleProducts: Product[] = feed?.saleProducts ?? [];
+  const newestProducts: Product[] = feed?.newestProducts ?? [];
+  const categories: Category[] = feed?.categories ?? [];
+  const collections: any[] = feed?.collections ?? [];
+  const loadingAll = feedLoading;
+  const loadingSale = feedLoading;
+  const loadingNewest = feedLoading;
+  const categoriesLoading = feedLoading;
 
   // Flash deal countdown — end of today
   const dealEndDate = useMemo(() => {
@@ -120,52 +123,6 @@ const HomePage: React.FC = () => {
     d.setHours(23, 59, 59, 999);
     return d;
   }, []);
-
-  /* ── Single batched fetch — see /api/home-feed ── */
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const { data } = await axiosInstance.get("/home-feed");
-        if (cancelled) return;
-        const feed = data?.data || {};
-        setAllProducts(feed.products || []);
-        setSaleProducts(feed.saleProducts || []);
-        setNewestProducts(feed.newestProducts || []);
-        useCategoryStore.setState({ categories: feed.categories || [], loading: false });
-        useCollectionStore.setState({ collections: feed.collections || [], loading: false });
-      } catch (err) {
-        console.error("Home feed failed, falling back to per-section fetches:", err);
-        // Fallback: hit each endpoint individually so a partial outage doesn't blank the page.
-        fetchCategories();
-        fetchCollections({ activeOnly: true });
-        try {
-          const { data: p } = await axiosInstance.get("/products", {
-            params: { limit: 12, isActive: true, deleted: false, approvalStatus: "approved" },
-          });
-          if (!cancelled) setAllProducts(p.data || []);
-        } catch {}
-        try {
-          const { data: s } = await axiosInstance.get("/products/saleProducts");
-          if (!cancelled) setSaleProducts(s.data || []);
-        } catch {}
-        try {
-          const { data: n } = await axiosInstance.get("/products/newest");
-          if (!cancelled) setNewestProducts(n.data || []);
-        } catch {}
-      } finally {
-        if (!cancelled) {
-          setLoadingAll(false);
-          setLoadingSale(false);
-          setLoadingNewest(false);
-        }
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [fetchCategories, fetchCollections]);
 
   const handleAddBundleToCart = async (collectionId: string) => {
     const success = await addCollectionToCart(collectionId, 1);

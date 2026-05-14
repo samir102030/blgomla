@@ -291,6 +291,13 @@ body {
   0% { transform: translateX(0); }
   100% { transform: translateX(calc(-1 * var(--track-distance, 100%))); }
 }
+/* Force LTR ordering on the track so the JS-measured cycle distance
+   stays consistent regardless of document direction. Brand logos are
+   direction-agnostic, so this has no visual cost. Without this, RTL
+   reverses the flex axis and the marquee loops with a visible gap. */
+.brand-marquee-track {
+  direction: ltr;
+}
 .brand-marquee-track:hover {
   animation-play-state: paused;
 }

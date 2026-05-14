@@ -14,6 +14,7 @@
   "dependencies": {
     "@chakra-ui/react": "^3.24.0",
     "@heroicons/react": "^2.2.0",
+    "@tanstack/react-query": "^5.100.10",
     "axios": "^1.11.0",
     "belgomla": "file:..",
     "i18next": "^25.7.1",

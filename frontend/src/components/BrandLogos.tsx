@@ -1,15 +1,10 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useBrandStore } from "../stores/brand.store";
+import { useBrands } from "../lib/queries";
 
 const BrandLogos: React.FC = () => {
   const { t } = useTranslation();
-  const fetchBrands = useBrandStore((state) => state.fetchBrands);
-  const brands = useBrandStore((state) => state.brands);
-
-  useEffect(() => {
-    fetchBrands();
-  }, [fetchBrands]);
+  const { data: brands = [] } = useBrands();
 
   // Fallback brand data with logos
   const brandLogos: Record<string, string> = {

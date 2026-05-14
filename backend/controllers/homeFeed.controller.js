@@ -3,58 +3,124 @@ import Category from "../models/category.model.js";
 import Collection from "../models/collection.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 
-const populateProduct = (q) =>
-  q
-    .populate("brand", "name slug logo")
-    .populate("category", "name slug")
-    .populate("store", "storeName logo");
+// Single aggregation that pulls `brand`/`category`/`store` inline. Replaces
+// three sequential `.populate()` calls — saves ~2 round-trips per section.
+const LIST_PROJECTION = {
+  reviews: 0,
+  reviewRequests: 0,
+  suggestedPrices: 0,
+  competitorPrices: 0,
+  bulkPricing: 0,
+};
+
+const productListPipeline = (filter, sort, limit) => [
+  { $match: filter },
+  { $sort: sort },
+  { $limit: limit },
+  { $project: LIST_PROJECTION },
+  {
+    $lookup: {
+      from: "brands",
+      localField: "brand",
+      foreignField: "_id",
+      pipeline: [{ $project: { name: 1, slug: 1, logo: 1 } }],
+      as: "brand",
+    },
+  },
+  { $unwind: { path: "$brand", preserveNullAndEmptyArrays: true } },
+  {
+    $lookup: {
+      from: "categories",
+      localField: "category",
+      foreignField: "_id",
+      pipeline: [{ $project: { name: 1, slug: 1 } }],
+      as: "category",
+    },
+  },
+  { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+  {
+    $lookup: {
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      pipeline: [{ $project: { storeName: 1, logo: 1 } }],
+      as: "store",
+    },
+  },
+  { $unwind: { path: "$store", preserveNullAndEmptyArrays: true } },
+];
 
 const queries = {
   products: () =>
-    populateProduct(
-      Product.find({
-        isActive: true,
-        deleted: false,
-        approvalStatus: "approved",
-      })
-        .sort({ createdAt: -1 })
-        .limit(12)
-    ).lean(),
+    Product.aggregate(
+      productListPipeline(
+        { isActive: true, deleted: false, approvalStatus: "approved" },
+        { createdAt: -1 },
+        12
+      )
+    ),
 
   saleProducts: () =>
-    populateProduct(
-      Product.find({
-        saleActive: true,
-        isActive: true,
-        deleted: false,
-      }).limit(20)
-    ).lean(),
+    Product.aggregate(
+      productListPipeline(
+        { saleActive: true, isActive: true, deleted: false },
+        { createdAt: -1 },
+        20
+      )
+    ),
 
   newestProducts: () =>
-    populateProduct(
-      Product.find({
-        isActive: true,
-        deleted: false,
-      })
-        .sort({ createdAt: -1 })
-        .limit(10)
-    ).lean(),
+    Product.aggregate(
+      productListPipeline(
+        { isActive: true, deleted: false },
+        { createdAt: -1 },
+        10
+      )
+    ),
 
   categories: async () => {
-    const cats = await Category.find({ deleted: { $ne: true } })
-      .populate("parentCategory", "name slug")
-      .populate("subCategories", "name slug")
-      .sort({ sortOrder: 1, name: 1 })
-      .lean();
-    const counts = await Product.aggregate([
+    // Categories + per-category counts in one round-trip via $lookup.
+    const cats = await Category.aggregate([
       { $match: { deleted: { $ne: true } } },
-      { $group: { _id: "$category", count: { $sum: 1 } } },
+      { $sort: { sortOrder: 1, name: 1 } },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "parentCategory",
+          foreignField: "_id",
+          pipeline: [{ $project: { name: 1, slug: 1 } }],
+          as: "parentCategory",
+        },
+      },
+      { $unwind: { path: "$parentCategory", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "subCategories",
+          foreignField: "_id",
+          pipeline: [{ $project: { name: 1, slug: 1 } }],
+          as: "subCategories",
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          let: { catId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $eq: ["$category", "$$catId"] }, deleted: { $ne: true } } },
+            { $count: "n" },
+          ],
+          as: "_counts",
+        },
+      },
+      {
+        $addFields: {
+          productCount: { $ifNull: [{ $arrayElemAt: ["$_counts.n", 0] }, 0] },
+        },
+      },
+      { $project: { _counts: 0 } },
     ]);
-    const countMap = new Map(counts.map((c) => [c._id?.toString(), c.count]));
-    return cats.map((c) => ({
-      ...c,
-      productCount: countMap.get(c._id.toString()) || 0,
-    }));
+    return cats;
   },
 
   collections: () =>

@@ -1,0 +1,95 @@
+import Product from "../models/product.model.js";
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+
+// Fields excluded from list responses — heavy arrays we never render on cards.
+const LIST_PROJECTION = {
+  reviews: 0,
+  reviewRequests: 0,
+  suggestedPrices: 0,
+  competitorPrices: 0,
+  bulkPricing: 0,
+};
+
+// Build $lookup stages that flatten brand/category/store into the same shape
+// `.populate()` would produce, but in a single round trip via aggregation.
+const lookupStages = (extra = []) => [
+  {
+    $lookup: {
+      from: "brands",
+      localField: "brand",
+      foreignField: "_id",
+      pipeline: [{ $project: { name: 1, slug: 1, logo: 1 } }],
+      as: "brand",
+    },
+  },
+  { $unwind: { path: "$brand", preserveNullAndEmptyArrays: true } },
+  {
+    $lookup: {
+      from: "categories",
+      localField: "category",
+      foreignField: "_id",
+      pipeline: [{ $project: { name: 1, slug: 1 } }],
+      as: "category",
+    },
+  },
+  { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
+  {
+    $lookup: {
+      from: "stores",
+      localField: "store",
+      foreignField: "_id",
+      pipeline: [{ $project: { storeName: 1, logo: 1 } }],
+      as: "store",
+    },
+  },
+  { $unwind: { path: "$store", preserveNullAndEmptyArrays: true } },
+  ...extra,
+];
+
+/**
+ * Paginate Product documents with brand/category/store flattened in a single
+ * aggregation. Replaces `Product.find().populate(...).populate(...).populate(...)`
+ * piped through paginateQuery — that pattern fires 4 round-trips to MongoDB;
+ * this one fires 1 via `$facet`.
+ */
+export async function paginateProducts({
+  filter = {},
+  sort = { createdAt: -1 },
+  page = DEFAULT_PAGE,
+  limit = DEFAULT_LIMIT,
+} = {}) {
+  page = Math.max(Number(page) || DEFAULT_PAGE, 1);
+  limit = Math.max(Number(limit) || DEFAULT_LIMIT, 1);
+  const skip = (page - 1) * limit;
+
+  const [result] = await Product.aggregate([
+    { $match: filter },
+    {
+      $facet: {
+        data: [
+          { $sort: sort },
+          { $skip: skip },
+          { $limit: limit },
+          { $project: LIST_PROJECTION },
+          ...lookupStages(),
+        ],
+        meta: [{ $count: "total" }],
+      },
+    },
+  ]);
+
+  const data = result?.data ?? [];
+  const total = result?.meta?.[0]?.total ?? 0;
+  const pages = Math.max(1, Math.ceil(total / limit));
+
+  return {
+    success: true,
+    data,
+    total,
+    limit,
+    page: Math.min(page, pages),
+    pages,
+  };
+}
