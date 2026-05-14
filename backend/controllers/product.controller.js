@@ -166,10 +166,13 @@ export const getAllProducts = controllerWrapper(
     if (filters.categoryId) filter.category = filters.categoryId;
     if (filters.brandId) filter.brand = filters.brandId;
     if (filters.storeId) filter.store = filters.storeId;
-    if (filters.isActive !== undefined) filter.isActive = filters.isActive;
-    if (filters.featured !== undefined) filter.featured = filters.featured;
-    if (filters.saleActive !== undefined) filter.saleActive = filters.saleActive;
-    if (filters.deleted !== undefined) filter.deleted = filters.deleted;
+    // Booleans arrive as the strings "true"/"false" via query params; coerce
+    // so Mongo matches the actual Boolean field type.
+    const toBool = (v) => (v === true || v === "true");
+    if (filters.isActive !== undefined) filter.isActive = toBool(filters.isActive);
+    if (filters.featured !== undefined) filter.featured = toBool(filters.featured);
+    if (filters.saleActive !== undefined) filter.saleActive = toBool(filters.saleActive);
+    if (filters.deleted !== undefined) filter.deleted = toBool(filters.deleted);
     if (filters.approvalStatus) filter.approvalStatus = filters.approvalStatus;
     if (filters.minPrice || filters.maxPrice) {
       filter.price = {};
