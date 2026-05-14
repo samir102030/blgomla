@@ -653,29 +653,26 @@ export const toggleLoveProduct = controllerWrapper(
       });
     }
 
-    // Check current love status
-    const user = await User.findById(userId);
-    if (!user) {
+    // Compare as strings — `user.love` stores ObjectIds, productId arrives
+    // as a string from req.params, and Array.indexOf uses strict equality,
+    // so the naive comparison never matched and toggle always re-added.
+    const existing = await User.findById(userId).select("love");
+    if (!existing) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
+    const isLoved = existing.love.some((id) => id.toString() === productId);
 
-    const productIndex = user.love.indexOf(productId);
-    let message;
+    const update = isLoved
+      ? { $pull: { love: productId } }
+      : { $addToSet: { love: productId } };
+    const message = isLoved
+      ? "Product removed from favorites"
+      : "Product added to favorites";
 
-    if (productIndex > -1) {
-      // Product is in favorites - remove it
-      user.love.splice(productIndex, 1);
-      message = "Product removed from favorites";
-    } else {
-      // Product is not in favorites - add it
-      user.love.push(productId);
-      message = "Product added to favorites";
-    }
-
-    await user.save();
+    const user = await User.findByIdAndUpdate(userId, update, { new: true });
 
     return res.status(200).json({
       success: true,
