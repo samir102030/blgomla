@@ -43,16 +43,19 @@ export const protectRoute = async (req, res, next) => {
         });
       }
 
-      // If user is a store, check if store is approved
+      // If user is a store, check if store is approved.
+      // The Store schema enum allows both "approved" and "active" — treat
+      // them as equivalent here so an admin toggling activateStore (which
+      // sets status="active") doesn't lock the vendor out.
       if (user.role === "store") {
         const store = await Store.findOne({ owner: user._id });
-        if (!store || store.status !== "approved" || store.deleted) {
+        const allowed = store && ["approved", "active"].includes(store.status) && !store.deleted;
+        if (!allowed) {
           return res.status(403).json({
             success: false,
             message: "Store is not approved or inactive",
           });
         }
-        // Attach store to req for later use
         req.store = store;
       }
 
