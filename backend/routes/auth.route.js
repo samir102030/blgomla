@@ -50,6 +50,9 @@ import {
   verifyEmail,
   setAdminTime,
   endAdminTimeNow,
+  setup2FA,
+  enable2FA,
+  disable2FA,
 } from "../controllers/auth.controller.js";
 
 import {
@@ -77,6 +80,12 @@ router.put("/profile", protectRoute, updateProfile);
 
 // Password change route for authenticated users
 router.put("/changePassword", protectRoute, changePassword);
+
+// Optional TOTP 2FA (Google Authenticator / Authy / 1Password). All three
+// endpoints require the user to already be logged in via session cookie.
+router.post("/2fa/setup", protectRoute, setup2FA);
+router.post("/2fa/enable", protectRoute, enable2FA);
+router.post("/2fa/disable", protectRoute, disable2FA);
 
 // not tested
 router.put("/verifyEmail", verifyEmail);

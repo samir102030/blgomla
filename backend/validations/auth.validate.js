@@ -34,12 +34,22 @@ const validate = (validations) => {
   };
 };
 
+// Egyptian E.164: +20, then leading 1 (mobile prefix), then 9 digits.
+// Examples: +201012345678, +201234567890. Landlines (which start with
+// 2, 3, 8…) are not accepted — phone here is for SMS/WhatsApp reach.
+const EG_PHONE_RE = /^\+201\d{9}$/;
+
 export const validateSignup = validate([
   body("name").notEmpty().trim().withMessage("Name is required"),
   body("email").isEmail().withMessage("Invalid email").bail().normalizeEmail(emailNormalizeOptions),
   body("password")
     .isLength({ min: minPassword })
     .withMessage(`Password must be at least ${minPassword} characters`),
+  body("phoneNumber")
+    .notEmpty().withMessage("Phone number is required")
+    .bail()
+    .matches(EG_PHONE_RE)
+    .withMessage("Phone number must be a valid Egyptian mobile in +201XXXXXXXXX format"),
 ]);
 
 export const validateLogin = validate([

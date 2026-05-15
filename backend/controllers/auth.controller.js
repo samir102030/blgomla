@@ -168,13 +168,13 @@ export const verifyEmail = controllerWrapper(
 );
 
 export const login = controllerWrapper("login", async (req, res) => {
-  const { email, phone, password } = req.body;
+  const { email, phone, password, totpCode } = req.body;
   let user;
   if (email)
     user = await User.findOne({
       email: new RegExp(`^${email}$`, "i"),
-    }).populate("love");
-  if (phone) user = await User.findOne({ phones: { $in: [phone] } });
+    }).select("+totpSecret").populate("love");
+  if (phone) user = await User.findOne({ phoneNumber: phone }).select("+totpSecret");
   if (!user) {
     return res.status(400).json({
       success: false,
@@ -188,6 +188,38 @@ export const login = controllerWrapper("login", async (req, res) => {
       .status(400)
       .json({ success: false, message: "Invalid credentials" });
 
+  // Require verified email before issuing a session. Existing rows where
+  // isVerified is undefined are treated as not-yet-verified.
+  if (!user.isVerified) {
+    return res.status(403).json({
+      success: false,
+      code: "EMAIL_NOT_VERIFIED",
+      message: "Please verify your email before logging in. We sent a code to your inbox.",
+    });
+  }
+
+  // Optional second factor. If the user has enrolled in TOTP, require a
+  // valid code before issuing cookies. Front-end signals enrollment by
+  // first POSTing without totpCode (gets a 401 + code:"TOTP_REQUIRED"),
+  // then re-posting with the 6-digit code from the authenticator app.
+  if (user.twoFactorEnabled) {
+    if (!totpCode) {
+      return res.status(401).json({
+        success: false,
+        code: "TOTP_REQUIRED",
+        message: "Enter the 6-digit code from your authenticator app.",
+      });
+    }
+    const { verifyTOTP } = await import("../utils/totp.js");
+    if (!verifyTOTP(user.totpSecret, totpCode)) {
+      return res.status(401).json({
+        success: false,
+        code: "TOTP_INVALID",
+        message: "Invalid authenticator code.",
+      });
+    }
+  }
+
   generateTokensAndSetCookies(res, user._id);
 
   user.lastLogin = new Date();
@@ -199,6 +231,7 @@ export const login = controllerWrapper("login", async (req, res) => {
     user: {
       ...user._doc,
       password: undefined,
+      totpSecret: undefined,
       store:
         user.role === "store"
           ? await Store.findOne({ owner: user._id })
@@ -836,3 +869,100 @@ export const updateProfile = controllerWrapper(
     });
   },
 );
+
+// ── TOTP 2FA ───────────────────────────────────────────────────────────
+// Flow:
+//   1. Authenticated user calls POST /users/2fa/setup -> we generate a
+//      fresh secret, store it (but leave twoFactorEnabled=false), and
+//      return a QR code data URL + the base32 secret for manual entry.
+//   2. User scans QR with Google Authenticator (or similar), then POSTs
+//      the 6-digit code to /users/2fa/enable. On verify success we flip
+//      twoFactorEnabled=true.
+//   3. To disable, user POSTs current password + current TOTP code to
+//      /users/2fa/disable.
+
+export const setup2FA = controllerWrapper("setup2FA", async (req, res) => {
+  const userId = req.user._id;
+  const user = await User.findById(userId).select("+totpSecret");
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+  if (user.twoFactorEnabled) {
+    return res.status(400).json({
+      success: false,
+      message: "Two-factor authentication is already enabled. Disable it first to reset.",
+    });
+  }
+
+  const { generateTOTPSecret, buildOtpAuthUrl, buildQRCodeDataUrl } =
+    await import("../utils/totp.js");
+
+  const secret = generateTOTPSecret();
+  user.totpSecret = secret;
+  await user.save();
+
+  const otpauthUrl = buildOtpAuthUrl(secret, user.email);
+  const qrCodeDataUrl = await buildQRCodeDataUrl(otpauthUrl);
+
+  return res.status(200).json({
+    success: true,
+    message: "Scan the QR code with your authenticator app, then submit the 6-digit code to /2fa/enable.",
+    qrCodeDataUrl,
+    secret, // Shown for manual entry; never returned again after enable.
+  });
+});
+
+export const enable2FA = controllerWrapper("enable2FA", async (req, res) => {
+  const userId = req.user._id;
+  const { code } = req.body;
+  if (!code) {
+    return res.status(400).json({ success: false, message: "Code is required" });
+  }
+  const user = await User.findById(userId).select("+totpSecret");
+  if (!user || !user.totpSecret) {
+    return res.status(400).json({
+      success: false,
+      message: "No 2FA setup in progress. Call /2fa/setup first.",
+    });
+  }
+  const { verifyTOTP } = await import("../utils/totp.js");
+  if (!verifyTOTP(user.totpSecret, code)) {
+    return res.status(400).json({ success: false, message: "Invalid code" });
+  }
+  user.twoFactorEnabled = true;
+  await user.save();
+  return res.status(200).json({
+    success: true,
+    message: "Two-factor authentication enabled.",
+  });
+});
+
+export const disable2FA = controllerWrapper("disable2FA", async (req, res) => {
+  const userId = req.user._id;
+  const { password, code } = req.body;
+  if (!password || !code) {
+    return res.status(400).json({
+      success: false,
+      message: "Current password and current authenticator code are both required.",
+    });
+  }
+  const user = await User.findById(userId).select("+totpSecret");
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+  const passwordOk = await user.comparePassword(password);
+  if (!passwordOk) {
+    return res.status(400).json({ success: false, message: "Invalid password" });
+  }
+  const { verifyTOTP } = await import("../utils/totp.js");
+  if (!verifyTOTP(user.totpSecret, code)) {
+    return res.status(400).json({ success: false, message: "Invalid code" });
+  }
+  user.twoFactorEnabled = false;
+  user.totpSecret = undefined;
+  await user.save();
+  return res.status(200).json({
+    success: true,
+    message: "Two-factor authentication disabled.",
+  });
+});

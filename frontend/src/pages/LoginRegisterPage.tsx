@@ -12,7 +12,7 @@ const LoginRegisterPage: React.FC = () => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<AuthMode>("login");
   const [loginData, setLoginData] = useState({ email: "", password: "" });
-  const [registerData, setRegisterData] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [registerData, setRegisterData] = useState({ name: "", email: "", phoneNumber: "", password: "", confirmPassword: "" });
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
@@ -51,6 +51,17 @@ const LoginRegisterPage: React.FC = () => {
       setRegisterError(t("login.nameRequired", "Please enter your full name."));
       return;
     }
+    // Egyptian mobile in E.164: +201 followed by 9 digits. Accept the
+    // common local forms ("01012345678", "1012345678") in the UI and
+    // normalize to E.164 before sending — backend rejects anything else.
+    const phoneDigits = registerData.phoneNumber.replace(/[^\d+]/g, "");
+    let normalizedPhone = phoneDigits;
+    if (/^01\d{9}$/.test(phoneDigits)) normalizedPhone = "+2" + phoneDigits;
+    else if (/^1\d{9}$/.test(phoneDigits)) normalizedPhone = "+20" + phoneDigits;
+    if (!/^\+201\d{9}$/.test(normalizedPhone)) {
+      setRegisterError(t("login.phoneInvalid", "Enter a valid Egyptian mobile number (e.g. 01012345678)."));
+      return;
+    }
     if (registerData.password.length < 6) {
       setRegisterError(t("login.passwordTooShort", "Password must be at least 6 characters."));
       return;
@@ -63,6 +74,7 @@ const LoginRegisterPage: React.FC = () => {
       const user = await signup({
         name: registerData.name.trim(),
         email: registerData.email.trim().toLowerCase(),
+        phoneNumber: normalizedPhone,
         password: registerData.password,
       });
       if (user) navigate("/");
@@ -197,6 +209,23 @@ const LoginRegisterPage: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">{t("login.email", "Email Address")}</label>
                       <input type="email" placeholder={t("login.emailPlaceholder", "you@example.com")} value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} className={inputClass} required />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-[var(--text-muted)] mb-1.5">{t("login.phone", "Phone Number (Egypt)")}</label>
+                      <div className="relative">
+                        <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-[var(--text-subtle)] text-sm pointer-events-none select-none">+20</span>
+                        <input
+                          type="tel"
+                          inputMode="numeric"
+                          placeholder="1012345678"
+                          value={registerData.phoneNumber}
+                          onChange={(e) => setRegisterData({ ...registerData, phoneNumber: e.target.value })}
+                          className={inputClass + " pl-14"}
+                          required
+                          autoComplete="tel-national"
+                        />
+                      </div>
+                      <p className="text-[11px] text-[var(--text-subtle)] mt-1">{t("login.phoneHint", "Enter your Egyptian mobile number, e.g. 01012345678")}</p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>

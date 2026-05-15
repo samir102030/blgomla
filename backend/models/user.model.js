@@ -52,6 +52,14 @@ const userSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
+      // Egyptian E.164 only: +20 followed by 10 digits starting with 1.
+      // E.g. +201012345678. Optional at the schema level so admin/seeded
+      // users without phone numbers still validate; enforced at the
+      // signup validation layer for new customer/store registrations.
+      validate: {
+        validator: (v) => v == null || v === "" || /^\+201\d{9}$/.test(v),
+        message: "phoneNumber must be a valid Egyptian E.164 number (+201XXXXXXXXX)",
+      },
     },
     profilePicture: {
       type: String,
@@ -79,6 +87,12 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    // ── TOTP 2FA (Google Authenticator / Authy / 1Password) ──
+    // totpSecret is the base32 shared secret. It is only populated while
+    // the user is mid-enrollment; once `twoFactorEnabled` flips to true
+    // the secret stays so we can verify codes on future logins.
+    twoFactorEnabled: { type: Boolean, default: false },
+    totpSecret: { type: String, select: false },
   },
   { timestamps: true, suppressReservedKeysWarning: true },
 );
