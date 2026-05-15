@@ -39,7 +39,12 @@ export const cache = ({ namespace, ttl = 60_000, max = 200, cacheControl } = {})
     // user-specific fields (e.g. wishlist counts) in the future.
     if (req.user) return next();
 
-    const key = req.originalUrl;
+    // Include Accept-Language in the cache key: translateResponse swaps
+    // name→nameAr for AR requests, so AR and EN must have distinct cache
+    // entries. Otherwise the first request wins and subsequent requests in
+    // the other language receive the wrong language until TTL expires.
+    const lang = (req.headers["accept-language"] || "").toLowerCase().startsWith("ar") ? "ar" : "en";
+    const key = `${lang}:${req.originalUrl}`;
     const now = Date.now();
     const hit = store.entries.get(key);
 
