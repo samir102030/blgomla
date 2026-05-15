@@ -36,8 +36,9 @@ const LoginRegisterPage: React.FC = () => {
     setLoginError(null);
     setLoginLoading(true);
     try {
+      const emailLower = loginData.email.trim().toLowerCase();
       const result = await login({
-        email: loginData.email,
+        email: emailLower,
         password: loginData.password,
         totpCode: totpRequired ? totpCode : undefined,
       });
@@ -48,6 +49,11 @@ const LoginRegisterPage: React.FC = () => {
       } else if (result.totpRequired) {
         setTotpRequired(true);
         setLoginError(null);
+      } else if (result.emailNotVerified) {
+        // Pre-emptively trigger a fresh code so the user lands on /verify-email
+        // with something current in their inbox; fire-and-forget.
+        useUserStore.getState().resendVerificationCode(emailLower);
+        navigate(`/verify-email?email=${encodeURIComponent(emailLower)}`);
       } else {
         const latest = useUserStore.getState().error;
         setLoginError(latest || t("login.failed", "Login failed."));
@@ -86,14 +92,19 @@ const LoginRegisterPage: React.FC = () => {
       return;
     }
     try {
+      const emailLower = registerData.email.trim().toLowerCase();
       const user = await signup({
         name: registerData.name.trim(),
-        email: registerData.email.trim().toLowerCase(),
+        email: emailLower,
         phoneNumber: normalizedPhone,
         password: registerData.password,
       });
-      if (user) navigate("/");
-      else {
+      if (user) {
+        // Backend no longer issues a session cookie at signup — user must
+        // verify the emailed code. Send them straight to the verify page
+        // with the email pre-filled.
+        navigate(`/verify-email?email=${encodeURIComponent(emailLower)}`);
+      } else {
         const latest = useUserStore.getState().error;
         setRegisterError(latest || t("login.registerFailed", "Registration failed."));
       }

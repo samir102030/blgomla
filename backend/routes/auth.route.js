@@ -87,9 +87,11 @@ router.post("/2fa/setup", protectRoute, setup2FA);
 router.post("/2fa/enable", protectRoute, enable2FA);
 router.post("/2fa/disable", protectRoute, disable2FA);
 
-// not tested
-router.put("/verifyEmail", verifyEmail);
-router.post("/generateVerificationCode", reSendVerificationEmail);
+// Verify-email endpoints. /verifyEmail is rate-limited to slow code
+// brute force; /generateVerificationCode is rate-limited so attackers
+// can't spam a victim's inbox or rapidly invalidate live codes.
+router.put("/verifyEmail", authLimiter, verifyEmail);
+router.post("/generateVerificationCode", authLimiter, reSendVerificationEmail);
 router.post("/forgotPassword", authLimiter, validateForgotPassword, forgotPassword);
 router.post("/resetPassword/:token", authLimiter, validateResetPassword, resetPassword);
 

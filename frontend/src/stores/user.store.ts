@@ -30,7 +30,7 @@ interface UserStore {
     email: string;
     password: string;
     totpCode?: string;
-  }) => Promise<{ user?: User; totpRequired?: boolean }>;
+  }) => Promise<{ user?: User; totpRequired?: boolean; emailNotVerified?: boolean }>;
   logout: () => Promise<void>;
   updateUser: (
     userId: string,
@@ -49,6 +49,9 @@ interface UserStore {
   restoreUser: (userId: string) => Promise<boolean>;
   forgotPassword: (email: string) => Promise<boolean>;
   resetPassword: (token: string, password: string) => Promise<boolean>;
+  // ── Email verification ──
+  verifyEmail: (email: string, code: string) => Promise<User | undefined>;
+  resendVerificationCode: (email: string) => Promise<boolean>;
   loveProduct: (productId: string) => Promise<boolean>;
   toggleLoveProduct: (productId: string) => Promise<boolean>;
   fetchCart: () => Promise<void>;
@@ -165,10 +168,16 @@ export const useUserStore = create<UserStore>()(
           // Backend returns code:"TOTP_REQUIRED" when the user has 2FA on
           // and submitted no code. Bubble that up so the UI can prompt
           // for the 6-digit code instead of showing a generic error.
+          // Same idea for EMAIL_NOT_VERIFIED — the UI redirects to the
+          // verify-email page rather than just printing the message.
           const code = error?.response?.data?.code;
           if (code === "TOTP_REQUIRED") {
             set({ error: undefined, loading: false });
             return { totpRequired: true };
+          }
+          if (code === "EMAIL_NOT_VERIFIED") {
+            set({ error: undefined, loading: false });
+            return { emailNotVerified: true };
           }
           const errorMessage = error?.response?.data?.message || error.message || 'Login failed';
           set({
@@ -377,6 +386,42 @@ export const useUserStore = create<UserStore>()(
           return false;
         }
       },
+
+      verifyEmail: async (email, code) => {
+        set({ loading: true, error: undefined });
+        try {
+          // Backend sets accessToken/refreshToken cookies on success, so
+          // the returned user is already logged in — store it in `user`.
+          const res = await axiosInstance.put<{ success: boolean; user: User }>(
+            "/users/verifyEmail",
+            { email, code }
+          );
+          set({ user: res.data.user, loading: false });
+          return res.data.user;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return undefined;
+        }
+      },
+
+      resendVerificationCode: async (email) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.post("/users/generateVerificationCode", { email });
+          set({ loading: false });
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+
       loveProduct: async (productId) => {
         set({ loading: true, error: undefined });
         try {

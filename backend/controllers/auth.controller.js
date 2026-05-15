@@ -61,19 +61,25 @@ export const signup = controllerWrapper("signup", async (req, res) => {
 
   await user.save();
 
-  // Send welcome email with verification code (non-blocking)
+  // Send welcome email with verification code (non-blocking).
   sendWelcomeEmail(user).catch((err) =>
     console.error("Failed to send welcome email:", err)
   );
 
-  generateTokensAndSetCookies(res, user._id);
+  // Do NOT issue cookies here. The user must verify their email before a
+  // session is created — the /verifyEmail endpoint sets cookies on success.
+  // This prevents the half-state where a fresh signup is briefly logged in
+  // but every protected request 403s with EMAIL_NOT_VERIFIED.
 
   res.status(201).json({
     success: true,
-    message: "User created successfully",
+    message: "User created. Check your email for a verification code.",
+    requiresVerification: true,
     user: {
       ...user._doc,
       password: undefined,
+      verificationToken: undefined,
+      verificationTokenExpiresAt: undefined,
       store: role === "store" ? store : undefined,
     },
   });
@@ -83,26 +89,30 @@ export const reSendVerificationEmail = controllerWrapper(
   "reSendVerificationEmail",
   async (req, res) => {
     const { email } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) {
+    if (!email) {
       return res
         .status(400)
-        .json({ success: false, message: "User not found" });
+        .json({ success: false, message: "Email is required" });
+    }
+    const user = await User.findOne({
+      email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+    });
+
+    // Don't reveal whether the email exists — return the same response
+    // either way to prevent account enumeration via this endpoint.
+    if (!user || user.isVerified) {
+      return res.status(200).json({
+        success: true,
+        message: "If the email is registered and unverified, a code has been sent.",
+      });
     }
 
-    if (user.isVerified) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User already verified" });
-    }
-
-    const verificationToken = Math.floor(
-      100000 + Math.random() * 900000,
-    ).toString();
+    // Match the signup code shape (6 uppercase hex chars) so verifyEmail's
+    // toUpperCase() normalization works uniformly across both paths.
+    const verificationToken = crypto.randomBytes(3).toString("hex").toUpperCase();
 
     user.verificationToken = verificationToken;
-    user.verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    user.verificationTokenExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
 
     await user.save();
 
@@ -113,7 +123,7 @@ export const reSendVerificationEmail = controllerWrapper(
 
     res.status(200).json({
       success: true,
-      message: "Verification email sent successfully",
+      message: "If the email is registered and unverified, a code has been sent.",
     });
   },
 );
@@ -122,17 +132,33 @@ export const verifyEmail = controllerWrapper(
   "verifyEmail",
   async (req, res) => {
     const { code, email } = req.body;
+    if (!code || !email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and code are required",
+      });
+    }
+    // Signup generates the code with .toUpperCase() but the resend path
+    // emits a numeric code; accept either by normalising the comparison.
+    // Email lookup is also case-insensitive since the DB pre-save hook
+    // lowercases new emails but we can't assume that's true of legacy rows.
+    const normalizedCode = String(code).trim().toUpperCase();
     const user = await User.findOne({
-      verificationToken: code,
-      email,
+      email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
     });
-    if (!user) {
+    if (!user || !user.verificationToken) {
       return res.status(400).json({
         success: false,
         message: "Invalid verification code or User not found",
       });
     }
-    if (user.verificationTokenExpiresAt < Date.now()) {
+    if (String(user.verificationToken).toUpperCase() !== normalizedCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification code",
+      });
+    }
+    if (user.verificationTokenExpiresAt && user.verificationTokenExpiresAt < Date.now()) {
       return res.status(400).json({
         success: false,
         message: "Expired verification code",
@@ -144,7 +170,6 @@ export const verifyEmail = controllerWrapper(
     user.verificationTokenExpiresAt = undefined;
     await user.save();
 
-    // Create account verification notification
     try {
       await Notification.create({
         user: user._id,
@@ -156,12 +181,24 @@ export const verifyEmail = controllerWrapper(
       console.error("Error creating verification notification:", error);
     }
 
+    // Issue cookies so the user lands already logged in. Skipped only if
+    // 2FA is enabled — those users must complete the second factor flow
+    // through /login, not via this endpoint.
+    if (!user.twoFactorEnabled) {
+      generateTokensAndSetCookies(res, user._id);
+    }
+
     res.status(200).json({
       success: true,
       message: "Email verified successfully",
       user: {
         ...user._doc,
         password: undefined,
+        totpSecret: undefined,
+        store:
+          user.role === "store"
+            ? await Store.findOne({ owner: user._id })
+            : undefined,
       },
     });
   },

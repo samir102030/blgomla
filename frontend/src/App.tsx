@@ -80,6 +80,7 @@ const VendorRegistrationPage = lazy(() => import("./pages/VendorRegistrationPage
 const VendorRegistrationSuccess = lazy(() => import("./pages/VendorRegistrationSuccess"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const AdminRoutes = lazy(() => import("./routes/AdminRoutes"));
@@ -132,6 +133,7 @@ function App() {
           <Route path="/login" element={<LoginRegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/cart" element={<ShoppingCartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route
