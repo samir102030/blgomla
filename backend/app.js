@@ -17,6 +17,12 @@ const ensureDB = () => {
   return dbConnectionPromise;
 };
 
+// Kick off the DB connection at module load so /api/v1/health reports
+// "connected" without needing a prior request to warm it up. Errors are
+// caught to avoid an unhandled rejection — the ensureDB middleware will
+// surface them on the next request.
+ensureDB().catch((err) => console.error("Initial DB connect failed:", err.message));
+
 const app = express();
 
 app.use(

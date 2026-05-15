@@ -1,7 +1,7 @@
 import express from "express";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { verifyToken } from "../middleware/auth.middleware.js";
-import { createPayment, verifyStripeWebhook, getStripePaymentIntent } from "../utils/payment.js";
+import { createPayment, verifyStripeWebhook, getStripePaymentIntent, verifyPaymobHmac } from "../utils/payment.js";
 import Order from "../models/order.model.js";
 import User from "../models/user.model.js";
 import { sendOrderConfirmationEmail } from "../utils/email.js";
@@ -134,10 +134,24 @@ router.post(
 router.post(
   "/webhook/paymob",
   controllerWrapper("paymobWebhook", async (req, res) => {
-    const { obj, hmac } = req.body;
+    const { obj } = req.body;
+    const hmac = req.query.hmac || req.body.hmac;
 
-    // Verify HMAC (optional but recommended)
-    // const isValid = verifyPaymobHmac(obj, hmac);
+    // HMAC verification is enforced only when PAYMOB_HMAC_SECRET is set.
+    // While the Paymob integration is still being provisioned the secret
+    // is absent, so we accept the callback but warn loudly so the gap is
+    // visible in logs. Once the secret is added in Vercel env, this branch
+    // automatically starts rejecting forged/missing-signature callbacks.
+    if (process.env.PAYMOB_HMAC_SECRET) {
+      if (!obj || !hmac || !verifyPaymobHmac(obj, hmac)) {
+        console.warn("[Paymob Webhook] Rejected: invalid or missing HMAC");
+        return res.status(401).json({ received: false, error: "Invalid HMAC" });
+      }
+    } else {
+      console.warn(
+        "[Paymob Webhook] PAYMOB_HMAC_SECRET not set — accepting callback WITHOUT signature verification. Set this env var before going live."
+      );
+    }
 
     if (obj?.success === true) {
       const merchantOrderId = obj?.order?.merchant_order_id;

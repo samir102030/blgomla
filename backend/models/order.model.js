@@ -1,26 +1,28 @@
 import mongoose from "mongoose";
 
-const orderItemSchema = new mongoose.Schema({
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Product",
-    required: [true, "Product ID is required"],
+const orderItemSchema = new mongoose.Schema(
+  {
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: [true, "Product ID is required"],
+    },
+    collection: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Collection",
+    },
+    collectionName: { type: String },
+    quantity: { type: Number, required: [true, "Quantity is required"] },
+    price: { type: Number, required: true }, // Price at time of purchase
+    salePercentage: { type: Number, default: 0 }, // Sale percentage at time of purchase
+    couponDiscount: { type: Number, default: 0 }, // Coupon discount applied to this item
+    variant: {
+      label: { type: String },
+      sku: { type: String },
+    },
   },
-  collection: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Collection",
-  },
-  collectionName: { type: String },
-  quantity: { type: Number, required: [true, "Quantity is required"] },
-  price: { type: Number, required: true }, // Price at time of purchase
-  salePercentage: { type: Number, default: 0 }, // Sale percentage at time of purchase
-  couponDiscount: { type: Number, default: 0 }, // Coupon discount applied to this item
-  // ── Variant support ──
-  variant: {
-    label: { type: String }, // e.g. "Color: Red, Size: L"
-    sku: { type: String },
-  },
-});
+  { suppressReservedKeysWarning: true },
+);
 
 const statusTimelineSchema = new mongoose.Schema(
   {
