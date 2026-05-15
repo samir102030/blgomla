@@ -87,16 +87,16 @@ const VendorsList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             {t("admin.vendorManagement")}
           </h1>
           <p className="text-gray-600">
             Manage and monitor all vendors in your marketplace
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
             + {t("admin.addBrand")}
           </button>
@@ -107,8 +107,8 @@ const VendorsList: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white text-xl">
               ✅
@@ -121,7 +121,7 @@ const VendorsList: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-xl">
               ⏳
@@ -134,7 +134,7 @@ const VendorsList: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-white text-xl">
               ⛔
@@ -147,7 +147,7 @@ const VendorsList: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-xl">
               💰
@@ -163,16 +163,16 @@ const VendorsList: React.FC = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="relative w-full sm:w-auto">
               <input
                 type="text"
                 placeholder={t("vendorRequests.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               />
               <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
             </div>
@@ -187,7 +187,7 @@ const VendorsList: React.FC = () => {
               {/* <option value="suspended">{t('admin.suspended')}</option> */}
             </select>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -380,8 +380,8 @@ const VendorsList: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-gray-700">
             {t("admin.itemsPerPage")} <span className="font-medium">1</span>{" "}
             {t("coupon.to")} <span className="font-medium">10</span>{" "}
@@ -389,7 +389,7 @@ const VendorsList: React.FC = () => {
             <span className="font-medium">{filteredVendors.length}</span>{" "}
             {t("coupon.results")}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button className="px-3 py-2 border border-gray-300 text-gray-500 rounded-md hover:bg-gray-50">
               {t("admin.previous")}
             </button>

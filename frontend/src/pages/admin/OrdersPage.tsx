@@ -270,9 +270,9 @@ const OrdersPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
             {user?.role === "store"
               ? t("order.myStoreOrders")
               : t("order.ordersManagement")}
@@ -291,7 +291,7 @@ const OrdersPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="bg-[#FAFAFA] p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
           <div className="flex items-center justify-between">
             <div>
@@ -364,7 +364,7 @@ const OrdersPage: React.FC = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -378,7 +378,7 @@ const OrdersPage: React.FC = () => {
               />
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <select
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={statusFilter}
@@ -518,7 +518,7 @@ const OrdersPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
+      <div className="bg-white px-4 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="text-sm text-gray-700">
           Showing <span className="font-medium">1</span> to{" "}
           <span className="font-medium">{filteredOrders.length}</span> of{" "}

@@ -188,9 +188,9 @@ const AdminCollectionsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
             {t("adminCollections.title")}
           </h1>
           <p className="text-[#9E9E9E]">
@@ -199,7 +199,7 @@ const AdminCollectionsPage: React.FC = () => {
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors"
+          className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors w-full sm:w-auto"
         >
           {t("adminCollections.createCollection")}
         </button>
@@ -334,7 +334,7 @@ const AdminCollectionsPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex space-x-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               <button
                 type="submit"
                 className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors"

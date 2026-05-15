@@ -151,17 +151,17 @@ const VendorProductManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             Product Management
           </h1>
-          <p className="text-gray-600">Manage your store products</p>
+          <p className="text-sm sm:text-base text-gray-600">Manage your store products</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
             onClick={() => setShowBulkUpload(!showBulkUpload)}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 flex items-center gap-2"
+            className="bg-blue-500 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md hover:bg-blue-600 flex items-center gap-2"
           >
             📊 Bulk Upload
           </button>
@@ -170,7 +170,7 @@ const VendorProductManagement: React.FC = () => {
               resetForm();
               setShowCreateModal(true);
             }}
-            className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
+            className="bg-yellow-500 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md hover:bg-yellow-600"
           >
             Add New Product
           </button>
@@ -189,10 +189,10 @@ const VendorProductManagement: React.FC = () => {
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="border-b">
-          <div className="flex">
+          <div className="flex overflow-x-auto">
             <button
               onClick={() => setActiveTab("all")}
-              className={`px-6 py-3 font-medium text-sm transition-colors ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm transition-colors flex-shrink-0 whitespace-nowrap ${
                 activeTab === "all"
                   ? "border-b-2 border-yellow-500 text-gray-900 bg-yellow-50"
                   : "text-gray-600 hover:text-gray-900"
@@ -202,7 +202,7 @@ const VendorProductManagement: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab("pending")}
-              className={`px-6 py-3 font-medium text-sm transition-colors ${
+              className={`px-4 sm:px-6 py-3 font-medium text-sm transition-colors flex-shrink-0 whitespace-nowrap ${
                 activeTab === "pending"
                   ? "border-b-2 border-yellow-500 text-gray-900 bg-yellow-50"
                   : "text-gray-600 hover:text-gray-900"
@@ -215,8 +215,8 @@ const VendorProductManagement: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="flex-1">
             <input
               type="text"
@@ -244,7 +244,7 @@ const VendorProductManagement: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredProducts.map((product) => (
           <div
             key={product._id}
@@ -340,11 +340,11 @@ const VendorProductManagement: React.FC = () => {
 
       {/* Create/Edit Product Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-2">
+            <div className="p-4 sm:p-6">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900">
                   {editingProduct ? "Edit Product" : "Add New Product"}
                 </h3>
                 <button

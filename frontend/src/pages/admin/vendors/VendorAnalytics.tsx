@@ -57,9 +57,9 @@ const VendorAnalytics: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('vendorAnalytics.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('vendorAnalytics.title')}</h1>
           <p className="text-gray-600">{t('vendorAnalytics.subtitle')}</p>
         </div>
         <div>
@@ -76,7 +76,7 @@ const VendorAnalytics: React.FC = () => {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <div className="flex items-center">
             <div className="p-2 bg-[var(--brand-primary)]/10 rounded-lg">
@@ -208,7 +208,7 @@ const VendorAnalytics: React.FC = () => {
       </div>
 
       {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorAnalytics.topPerforming')}</h3>
           <div className="space-y-3">

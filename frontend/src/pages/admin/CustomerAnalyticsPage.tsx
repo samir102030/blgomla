@@ -84,7 +84,7 @@ const CustomerAnalyticsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("customerAnalytics.title")}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("customerAnalytics.title")}</h1>
           <p className="text-sm text-gray-600">{t("customerAnalytics.subtitle")}</p>
         </div>
         <select
@@ -130,7 +130,7 @@ const CustomerAnalyticsPage: React.FC = () => {
         {/* Retention Visual */}
         <div className="bg-white rounded-xl p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-6">{t("customerAnalytics.customerRetention")}</h3>
-          <div className="flex items-center justify-center gap-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
             {/* Ring Chart */}
             <div className="relative w-40 h-40">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">

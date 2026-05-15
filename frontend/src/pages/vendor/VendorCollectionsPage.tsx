@@ -253,10 +253,10 @@ const VendorCollectionsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#333333]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
           Bulk Buy Collections
         </h1>
-        <p className="text-[#9E9E9E]">
+        <p className="text-sm sm:text-base text-[#9E9E9E]">
           Create bundle deals that customers can purchase together at a discount.
         </p>
       </div>
@@ -264,14 +264,14 @@ const VendorCollectionsPage: React.FC = () => {
       <div className="flex justify-end">
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-[#002B5B] text-white px-6 py-2 rounded-lg hover:bg-[#001a3d]"
+          className="bg-[#002B5B] text-white px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg hover:bg-[#001a3d] w-full sm:w-auto"
         >
           Create Collection
         </button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
           Your Collections
         </h3>
         {loading && collections.length === 0 ? (
@@ -291,12 +291,12 @@ const VendorCollectionsPage: React.FC = () => {
                 key={collection._id}
                 className="border border-gray-200 rounded-lg p-4"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-semibold text-gray-900 break-words">
                       {collection.name}
                     </h4>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-1 break-words">
                       {collection.items
                         .map(
                           (item) =>
@@ -308,7 +308,7 @@ const VendorCollectionsPage: React.FC = () => {
                       Bundle price: EGP {collection.bundlePrice.toFixed(2)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => openViewModal(collection)}
                       className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700"
@@ -348,8 +348,8 @@ const VendorCollectionsPage: React.FC = () => {
       </div>
 
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto relative mx-2">
             <button
               onClick={() => setShowCreateModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -371,7 +371,7 @@ const VendorCollectionsPage: React.FC = () => {
             </button>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Create Collection
               </h2>
               <p className="text-sm text-gray-600">
@@ -542,7 +542,7 @@ const VendorCollectionsPage: React.FC = () => {
               </svg>
             </button>
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 {selectedCollection.name}
               </h2>
               <p className="text-sm text-gray-600">
@@ -624,7 +624,7 @@ const VendorCollectionsPage: React.FC = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-6 flex items-center justify-between border-t pt-4">
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t pt-4">
               <div>
                 <p className="text-xs text-gray-500">Bundle price</p>
                 <p className="text-lg font-semibold text-[#002B5B]">
@@ -633,7 +633,7 @@ const VendorCollectionsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 self-end sm:self-auto"
               >
                 Close
               </button>
@@ -643,8 +643,8 @@ const VendorCollectionsPage: React.FC = () => {
       )}
 
       {showEditModal && selectedCollection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto relative mx-2">
             <button
               onClick={() => setShowEditModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -666,7 +666,7 @@ const VendorCollectionsPage: React.FC = () => {
             </button>
 
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                 Edit Collection
               </h2>
               <p className="text-sm text-gray-600">
@@ -804,8 +804,8 @@ const VendorCollectionsPage: React.FC = () => {
       )}
 
       {showDeleteModal && selectedCollection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-md relative mx-2">
             <button
               onClick={() => setShowDeleteModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"

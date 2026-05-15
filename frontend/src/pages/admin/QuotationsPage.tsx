@@ -137,23 +137,23 @@ const QuotationsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             📋 {t("Quotation Management")}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {t("Review and respond to customer quotation requests")}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-gray-900">{stats?.total || 0}</p>
+        <div className="text-left sm:text-right">
+          <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats?.total || 0}</p>
           <p className="text-xs text-gray-500">{t("Total Quotations")}</p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {["pending", "reviewed", "quoted", "accepted", "rejected", "expired"].map((s) => (
           <button
             key={s}
@@ -278,9 +278,9 @@ const QuotationsPage: React.FC = () => {
       {/* Detail/Edit Modal */}
       {selectedQuotation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border mx-4">
             {/* Header */}
-            <div className="px-6 py-5 border-b bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-between">
+            <div className="px-4 sm:px-6 py-5 border-b bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
                   Quotation #{selectedQuotation._id.slice(-8)}
@@ -297,9 +297,9 @@ const QuotationsPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
               {/* Customer Info */}
-              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
                 <div>
                   <p className="text-xs text-gray-500 font-medium">Customer</p>
                   <p className="text-sm font-semibold text-gray-900">{selectedQuotation.customer.name}</p>
@@ -374,7 +374,7 @@ const QuotationsPage: React.FC = () => {
               {/* Admin Response Form */}
               <div className="border-t pt-4 space-y-3">
                 <h3 className="text-sm font-bold text-gray-700">Admin Response</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
                     <select

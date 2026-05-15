@@ -59,7 +59,7 @@ const ReturnsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#333333]">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
           {t("returns.title")}
         </h1>
         <p className="text-[#9E9E9E]">

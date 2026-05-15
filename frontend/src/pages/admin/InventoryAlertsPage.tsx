@@ -88,7 +88,7 @@ const InventoryAlertsPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("inventory.title")}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("inventory.title")}</h1>
           <p className="text-sm text-gray-600">{t("inventory.subtitle")}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -152,12 +152,12 @@ const InventoryAlertsPage: React.FC = () => {
 
       {/* Tabs */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+              className={`flex-1 flex-shrink-0 min-w-[120px] px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? "border-b-2 border-[var(--brand-primary)] text-[var(--brand-primary)] bg-[var(--brand-primary)]/10"
                   : "text-gray-600 hover:bg-gray-50"

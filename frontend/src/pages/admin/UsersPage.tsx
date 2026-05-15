@@ -149,9 +149,9 @@ const UsersPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
             {t("users.title")}
           </h1>
           <p className="text-[#9E9E9E]">
@@ -161,7 +161,7 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
@@ -217,7 +217,7 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -231,7 +231,7 @@ const UsersPage: React.FC = () => {
               />
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <select
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={roleFilter}
@@ -410,7 +410,7 @@ const UsersPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
+      <div className="bg-white px-3 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="text-sm text-gray-700">
           Showing{" "}
           <span className="font-medium">
@@ -426,7 +426,7 @@ const UsersPage: React.FC = () => {
           of <span className="font-medium">{paginated?.total || 0}</span>{" "}
           results
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <button
             className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50"
             disabled={(paginated?.page || 1) <= 1}
@@ -470,8 +470,8 @@ const UsersPage: React.FC = () => {
 
       {/* View User Modal */}
       {showViewModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold mb-4">{t("users.userDetails")}</h3>
             <div className="space-y-2">
               <p>
@@ -521,8 +521,8 @@ const UsersPage: React.FC = () => {
 
       {/* Edit User Modal */}
       {showEditModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold mb-4">{t("users.editUser")}</h3>
             <div className="space-y-4">
               <div>
@@ -576,8 +576,8 @@ const UsersPage: React.FC = () => {
 
       {/* Delete User Modal */}
       {showDeleteModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold mb-4">{t("users.deleteUser")}</h3>
             <p>
               Are you sure you want to{" "}
@@ -609,8 +609,8 @@ const UsersPage: React.FC = () => {
 
       {/* Restore User Modal */}
       {showRestoreModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold mb-4">{t("users.restoreUser")}</h3>
             <p>
               Are you sure you want to restore user "

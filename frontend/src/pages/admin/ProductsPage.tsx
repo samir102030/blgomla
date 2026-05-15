@@ -368,14 +368,14 @@ const ProductsPage: React.FC = () => {
       {/* Header */}
       {/* make this to be row instead of column */}
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
             {t("product.productsManagement")}
           </h1>
           <p className="text-[#9E9E9E]">{t("product.manageInventory")}</p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
           {/* Bulk Upload for admin and vendors */}
           {(user?.role === "store" || isAdminLike) && (
             <button
@@ -451,14 +451,14 @@ const ProductsPage: React.FC = () => {
       )}
 
       {/* Stats Cards (basic) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">
                 {t("product.totalProducts")}
               </p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">
                 {paginated?.total ?? products.length}
               </p>
             </div>
@@ -467,13 +467,13 @@ const ProductsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">
                 {t("product.activeProducts")}
               </p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-xl sm:text-2xl font-bold text-green-600">
                 {products.filter((p) => p.isActive).length}
               </p>
             </div>
@@ -482,11 +482,11 @@ const ProductsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{t("product.lowStock")}</p>
-              <p className="text-2xl font-bold text-yellow-600">
+              <p className="text-xl sm:text-2xl font-bold text-yellow-600">
                 {
                   products.filter((p) => p.stock && p.stock < 30 && p.stock > 0)
                     .length
@@ -498,11 +498,11 @@ const ProductsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{t("product.outOfStock")}</p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-xl sm:text-2xl font-bold text-red-600">
                 {products.filter((p) => !p.stock || p.stock === 0).length}
               </p>
             </div>
@@ -514,7 +514,7 @@ const ProductsPage: React.FC = () => {
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -528,9 +528,9 @@ const ProductsPage: React.FC = () => {
               />
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <select
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+              className="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
@@ -779,13 +779,13 @@ const ProductsPage: React.FC = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
+        <div className="bg-white px-4 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-gray-700">
             Showing <span className="font-medium">{startItem}</span> to{" "}
             <span className="font-medium">{endItem}</span> of{" "}
             <span className="font-medium">{totalProducts.toLocaleString()}</span> results
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage <= 1}

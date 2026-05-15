@@ -23,10 +23,15 @@ import Logo, { BRAND } from "../Logo";
 
 interface AdminSidebarProps {
   collapsed: boolean;
-  onToggle: () => void;
+  mobileOpen?: boolean;
+  onCloseMobile?: () => void;
 }
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
+const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  collapsed,
+  mobileOpen = false,
+  onCloseMobile,
+}) => {
   const { t } = useTranslation();
   const location = useLocation();
   const user = useUserStore((s) => s.user);
@@ -171,17 +176,30 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
 
   const activeItem = getActiveItem();
 
+  // On mobile (<lg) the sidebar always renders fully expanded inside a drawer,
+  // so we ignore `collapsed` there. On desktop (>=lg) we honor `collapsed`.
+  const showLabels = !collapsed || mobileOpen;
+
   return (
-    <div
-      className={`bg-[var(--surface)] transition-all duration-300 ease-in-out ${
-        collapsed ? "w-16 sm:w-20" : "w-48 sm:w-56 md:w-72"
-      } flex flex-col border-r border-[var(--border)]`}
+    <aside
+      className={`
+        bg-[var(--surface)] border-r border-[var(--border)] flex flex-col
+        transition-all duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-50 w-64
+        ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+        lg:static lg:translate-x-0
+        ${collapsed ? "lg:w-20" : "lg:w-72"}
+      `}
     >
       {/* Brand */}
-      <div className="px-3 sm:px-4 py-4 sm:py-5 border-b border-[var(--border)]">
-        <Link to="/" className="flex items-center gap-2.5">
+      <div className="px-3 sm:px-4 py-4 sm:py-5 border-b border-[var(--border)] flex items-center justify-between">
+        <Link
+          to="/"
+          className="flex items-center gap-2.5"
+          onClick={onCloseMobile}
+        >
           <Logo size={28} color={BRAND.orange} />
-          {!collapsed && (
+          {showLabels && (
             <>
               <span
                 className="text-xl font-semibold lowercase text-[var(--text)]"
@@ -195,11 +213,22 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
             </>
           )}
         </Link>
+        {onCloseMobile && (
+          <button
+            onClick={onCloseMobile}
+            className="lg:hidden p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {/* Active page icon when collapsed */}
-      {collapsed && activeItem && (
-        <div className="px-3 py-3 border-b border-[var(--border)]">
+      {/* Active page icon when collapsed (desktop only) */}
+      {!showLabels && activeItem && (
+        <div className="px-3 py-3 border-b border-[var(--border)] hidden lg:block">
           <div className="flex justify-center">
             <div className="w-10 h-10 rounded-lg bg-[var(--brand-primary)]/10 flex items-center justify-center">
               <activeItem.icon className="w-5 h-5 text-[var(--brand-primary)]" />
@@ -254,7 +283,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                     onClick={() => toggleExpanded(item.name)}
                   >
                     <item.icon className="w-5 h-5 flex-shrink-0" />
-                    {!collapsed && (
+                    {showLabels && (
                       <>
                         <span className="text-sm font-medium">
                           {item.name}
@@ -277,7 +306,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                       </>
                     )}
                   </div>
-                  {!collapsed && expandedItems.has(item.name) && (
+                  {showLabels && expandedItems.has(item.name) && (
                     <div className="ml-7 mt-1 mb-1 space-y-0.5 border-l border-[var(--border)] pl-3">
                       {item.children
                         .filter((child) => hasAccess(child.roles))
@@ -285,6 +314,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                           <Link
                             key={childIndex}
                             to={child.href}
+                            onClick={onCloseMobile}
                             className={`block px-2 py-1.5 text-[13px] rounded-md transition-colors ${
                               isActive(child.href)
                                 ? "text-[var(--brand-primary)] font-medium"
@@ -300,6 +330,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
               ) : (
                 <Link
                   to={item.href}
+                  onClick={onCloseMobile}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                     isActive(item.href)
                       ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-medium"
@@ -307,10 +338,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
                   }`}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {!collapsed && (
+                  {showLabels && (
                     <span className="text-sm">{item.name}</span>
                   )}
-                  {!collapsed && isActive(item.href) && (
+                  {showLabels && isActive(item.href) && (
                     <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--brand-primary)]" />
                   )}
                 </Link>
@@ -318,7 +349,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ collapsed }) => {
             </div>
           ))}
       </nav>
-    </div>
+    </aside>
   );
 };
 

@@ -11,11 +11,12 @@ interface AdminLayoutProps {
 }
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+  // Desktop: collapsed (narrow icon-only) vs expanded
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Mobile: open (drawer visible) vs closed
+  const [mobileOpen, setMobileOpen] = useState(false);
   const user = useUserStore((s) => s.user);
 
-  // Admins and super_admins skip the store-approval gate entirely.
-  // Only store-role users go through StoreInvalidPage.
   const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isUserValid = user?.active && !user?.deleted;
   const adminExpired =
@@ -59,20 +60,34 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     return <StoreInvalidPage />;
   }
 
+  const handleMenuClick = () => {
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      setSidebarCollapsed((c) => !c);
+    } else {
+      setMobileOpen((o) => !o);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[var(--bg)] text-[var(--text)]">
       <AdminSidebar
         collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        mobileOpen={mobileOpen}
+        onCloseMobile={() => setMobileOpen(false)}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminHeader
-          onMenuClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[var(--surface-2)] p-4 sm:p-6">
+        <AdminHeader onMenuClick={handleMenuClick} />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-[var(--surface-2)] p-3 sm:p-4 md:p-6">
           {children}
         </main>
       </div>
+
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -181,17 +181,17 @@ const VendorDashboard: React.FC = () => {
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-green-600 text-sm font-medium">#002</span>
+            <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-green-600 text-xs sm:text-sm font-medium">#002</span>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">{t('vendor.order')} #12344</p>
-                  <p className="text-sm text-gray-500">1 {t('vendor.item')} • $29.99</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-xs sm:text-sm text-gray-900">{t('vendor.order')} #12344</p>
+                  <p className="text-xs text-gray-500">1 {t('vendor.item')} • $29.99</p>
                 </div>
               </div>
-              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full flex-shrink-0">
                 {t('vendor.completed')}
               </span>
             </div>
@@ -203,8 +203,8 @@ const VendorDashboard: React.FC = () => {
         </div>
 
         {/* Store Performance */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('vendor.storePerformance')}</h2>
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t('vendor.storePerformance')}</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-600">{t('vendor.activeProducts')}</span>
@@ -266,9 +266,9 @@ const VendorDashboard: React.FC = () => {
 
       {/* Store Status */}
       {vendorStore && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('vendor.storeInformation')}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t('vendor.storeInformation')}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <h3 className="font-medium text-gray-900 mb-2">{t('vendor.storeDetails')}</h3>
               <div className="space-y-2 text-sm">

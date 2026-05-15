@@ -134,9 +134,9 @@ const CustomerSupportPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-slate-950">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-8rem)] md:h-screen bg-gray-50 dark:bg-slate-950">
       {/* Conversations List */}
-      <div className="w-1/3 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 flex flex-col">
+      <div className={`w-full md:w-1/3 bg-white dark:bg-slate-900 border-b md:border-b-0 md:border-r border-gray-200 dark:border-slate-800 flex flex-col ${selectedConversation ? "hidden md:flex" : "flex"}`}>
         <div className="p-4 border-b border-gray-200 dark:border-slate-800">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {t("customerSupport.title")}
@@ -210,12 +210,19 @@ const CustomerSupportPage: React.FC = () => {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col ${selectedConversation ? "flex" : "hidden md:flex"}`}>
         {selectedConversation ? (
           <>
             {/* Chat Header */}
             <div className="p-4 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800">
               <div className="flex items-center">
+                <button
+                  onClick={() => setSelectedConversation(null)}
+                  className="md:hidden mr-2 p-1 text-gray-600 dark:text-slate-400"
+                  aria-label="Back"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
                 <div className="w-10 h-10 bg-[var(--brand-primary)] rounded-full flex items-center justify-center text-white font-medium">
                   {selectedConversation.participants
                     .find((p) => p.role === "customer")

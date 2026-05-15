@@ -98,14 +98,14 @@ const AdminsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">{t("admins.title")}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">{t("admins.title")}</h1>
           <p className="text-[#9E9E9E]">
             {t("admins.subtitle")}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="number"
             min="0"
@@ -193,36 +193,38 @@ const AdminsPage: React.FC = () => {
                       {formatRemaining(admin.adminExpiresAt)}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() =>
-                          grantTime(
-                            admin._id!,
-                            Number(duration.days) || 0,
-                            Number(duration.hours) || 0
-                          )
-                        }
-                        className="px-3 py-2 rounded-lg bg-[#002B5B] text-white text-sm font-semibold hover:bg-[#001a3d]"
-                      >
-                        {t("admins.grantDefault")}
-                      </button>
-                      <button
-                        onClick={() =>
-                          setCustomModal({
-                            open: true,
-                            userId: admin._id,
-                            name: admin.name || admin.email,
-                          })
-                        }
-                        className="ml-2 px-3 py-2 rounded-lg bg-gray-100 border text-sm font-semibold hover:bg-gray-200"
-                      >
-                        {t("admins.grantCustomDuration")}
-                      </button>
-                      <button
-                        onClick={() => endNow(admin._id!)}
-                        className="ml-2 px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200"
-                      >
-                        {t("admins.endNow")}
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() =>
+                            grantTime(
+                              admin._id!,
+                              Number(duration.days) || 0,
+                              Number(duration.hours) || 0
+                            )
+                          }
+                          className="px-3 py-2 rounded-lg bg-[#002B5B] text-white text-sm font-semibold hover:bg-[#001a3d]"
+                        >
+                          {t("admins.grantDefault")}
+                        </button>
+                        <button
+                          onClick={() =>
+                            setCustomModal({
+                              open: true,
+                              userId: admin._id,
+                              name: admin.name || admin.email,
+                            })
+                          }
+                          className="px-3 py-2 rounded-lg bg-gray-100 border text-sm font-semibold hover:bg-gray-200"
+                        >
+                          {t("admins.grantCustomDuration")}
+                        </button>
+                        <button
+                          onClick={() => endNow(admin._id!)}
+                          className="px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200"
+                        >
+                          {t("admins.endNow")}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -231,8 +233,8 @@ const AdminsPage: React.FC = () => {
       </div>
 
       {customModal.open && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white w-full max-w-md rounded-xl shadow-lg border">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-md mx-4 rounded-xl shadow-lg border max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <h3 className="text-lg font-semibold text-gray-900">
                 {t("admins.grantCustomDuration")} {customModal.name ? `${t("admins.to")} ${customModal.name}` : ""}

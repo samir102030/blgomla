@@ -75,9 +75,9 @@ const AllVendors: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("allVendors.title")}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("allVendors.title")}</h1>
           <p className="text-gray-600">{t("allVendors.subtitle")}</p>
         </div>
         <div className="text-sm text-gray-500">
@@ -171,7 +171,7 @@ const AllVendors: React.FC = () => {
                     {new Date(vendor.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => openDetailsModal(vendor)}
                         className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
@@ -211,8 +211,8 @@ const AllVendors: React.FC = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedVendor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-900">{t("vendorManagement.modal.title")}</h2>
               <button
@@ -224,7 +224,7 @@ const AllVendors: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">{t("vendorManagement.modal.businessName")}</label>
                   <p className="text-sm text-gray-900">{selectedVendor.businessName}</p>

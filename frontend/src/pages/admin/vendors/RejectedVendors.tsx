@@ -65,9 +65,9 @@ const RejectedVendors: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('rejectedVendors.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('rejectedVendors.title')}</h1>
           <p className="text-gray-600">{t('rejectedVendors.subtitle')}</p>
         </div>
         <div className="text-sm text-red-600 font-medium">
@@ -87,7 +87,7 @@ const RejectedVendors: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-red-600">{rejectedVendors.length}</div>
           <div className="text-sm text-gray-600">{t('rejectedVendors.totalRejected')}</div>
@@ -164,7 +164,7 @@ const RejectedVendors: React.FC = () => {
                     {new Date(vendor.updatedAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => openDetailsModal(vendor)}
                         className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)]"
@@ -202,8 +202,8 @@ const RejectedVendors: React.FC = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedVendor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-gray-900">{t('rejectedVendors.vendorDetails')}</h2>
               <button
@@ -215,7 +215,7 @@ const RejectedVendors: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Business Name</label>
                   <p className="text-sm text-gray-900">{selectedVendor.businessName}</p>
@@ -264,7 +264,7 @@ const RejectedVendors: React.FC = () => {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-wrap justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"

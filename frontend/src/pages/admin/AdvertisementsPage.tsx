@@ -62,14 +62,14 @@ const AdvertisementsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("ads.title")}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t("ads.title")}</h1>
           <p className="text-gray-600">{t("ads.subtitle")}</p>
         </div>
         <button
           onClick={handleCreate}
-          className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
+          className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center justify-center gap-2 font-medium w-full sm:w-auto"
         >
           <PlusIcon className="h-5 w-5" />
           {t("ads.addAdvertisement")}

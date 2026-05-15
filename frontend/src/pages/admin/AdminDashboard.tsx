@@ -297,10 +297,10 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Charts and Analytics */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Sales Chart */}
-          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-6">
+          <div className="lg:col-span-2 bg-white rounded-xl p-3 sm:p-6 shadow-lg">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
                   {t("admin.revenueOverview")}
@@ -359,7 +359,7 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Top Products */}
-          <div className="bg-white rounded-xl p-6 shadow-lg">
+          <div className="bg-white rounded-xl p-3 sm:p-6 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -412,9 +412,9 @@ const AdminDashboard: React.FC = () => {
 
         {/* Admin-only sections */}
         {isAdminLike && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Best Sellers for Admin */}
-            <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="bg-white rounded-xl p-3 sm:p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -469,7 +469,7 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Product Overview for Admin */}
-            <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="bg-white rounded-xl p-3 sm:p-6 shadow-lg">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">

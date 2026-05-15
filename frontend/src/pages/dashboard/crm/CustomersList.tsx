@@ -108,12 +108,12 @@ const CustomersList: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customer Management</h1>
           <p className="text-gray-600">Manage customer relationships and track engagement</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
             + Add Customer
           </button>
@@ -124,8 +124,8 @@ const CustomersList: React.FC = () => {
       </div>
 
       {/* CRM Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-xl">
               👥
@@ -136,7 +136,7 @@ const CustomersList: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white text-xl">
               ✅
@@ -147,7 +147,7 @@ const CustomersList: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white text-xl">
               👑
@@ -158,7 +158,7 @@ const CustomersList: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
           <div className="flex items-center">
             <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-xl">
               💰
@@ -172,16 +172,16 @@ const CustomersList: React.FC = () => {
       </div>
 
       {/* Filters and Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+            <div className="relative w-full sm:w-auto">
               <input
                 type="text"
                 placeholder="Search customers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
               />
               <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
             </div>
@@ -196,9 +196,9 @@ const CustomersList: React.FC = () => {
               <option value="blocked">Blocked</option>
             </select>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {selectedCustomers.length > 0 && (
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm text-gray-600">{selectedCustomers.length} selected</span>
                 <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200">
                   📧 Email
@@ -369,13 +369,13 @@ const CustomersList: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-gray-700">
             Showing <span className="font-medium">1</span> to <span className="font-medium">10</span> of{' '}
             <span className="font-medium">{filteredCustomers.length}</span> results
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button className="px-3 py-2 border border-gray-300 text-gray-500 rounded-md hover:bg-gray-50">
               Previous
             </button>

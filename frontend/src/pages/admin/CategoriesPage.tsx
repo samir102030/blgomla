@@ -90,9 +90,9 @@ const CategoriesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
             {t("categories.title")}
           </h1>
           <p className="text-[#9E9E9E]">
@@ -101,7 +101,7 @@ const CategoriesPage: React.FC = () => {
         </div>
         <button
           onClick={handleAddCategory}
-          className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
+          className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center justify-center gap-2 font-medium w-full sm:w-auto"
         >
           <PlusIcon className="h-4 w-4" />
           {t("categories.addCategory")}
@@ -109,7 +109,7 @@ const CategoriesPage: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
@@ -285,7 +285,7 @@ const CategoriesPage: React.FC = () => {
       </div>
 
       {/* Pagination */}
-      <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
+      <div className="bg-white px-4 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="text-sm text-gray-700">
           {t("categories.showing")} <span className="font-medium">1</span> {t("categories.to")}{" "}
           <span className="font-medium">{filteredCategories.length}</span> {t("categories.of")}{" "}

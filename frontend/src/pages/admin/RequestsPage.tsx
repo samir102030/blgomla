@@ -155,15 +155,15 @@ const RequestsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#333333]">{t("requests.title")}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">{t("requests.title")}</h1>
         <p className="text-[#9E9E9E]">
           {t("requests.subtitle")}
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{t("requests.pendingBrands")}</p>
@@ -176,7 +176,7 @@ const RequestsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{t("requests.pendingCategories")}</p>
@@ -189,7 +189,7 @@ const RequestsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{t("requests.totalBrandRequests")}</p>
@@ -202,7 +202,7 @@ const RequestsPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{t("requests.totalCategoryRequests")}</p>
@@ -219,11 +219,11 @@ const RequestsPage: React.FC = () => {
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="border-b">
+        <div className="border-b overflow-x-auto">
           <div className="flex">
             <button
               onClick={() => setActiveTab("brands")}
-              className={`px-6 py-3 font-medium text-sm transition-colors ${
+              className={`flex-shrink-0 px-4 sm:px-6 py-3 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeTab === "brands"
                   ? "border-b-2 border-[#FFD600] text-[#333333] bg-[#FFD600]/10"
                   : "text-gray-600 hover:text-gray-900"
@@ -233,7 +233,7 @@ const RequestsPage: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab("categories")}
-              className={`px-6 py-3 font-medium text-sm transition-colors ${
+              className={`flex-shrink-0 px-4 sm:px-6 py-3 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeTab === "categories"
                   ? "border-b-2 border-[#FFD600] text-[#333333] bg-[#FFD600]/10"
                   : "text-gray-600 hover:text-gray-900"
@@ -245,7 +245,7 @@ const RequestsPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <div className="p-6 border-b bg-gray-50">
+        <div className="p-3 sm:p-6 border-b bg-gray-50">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -271,7 +271,7 @@ const RequestsPage: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {loading ? (
             <div className="text-center py-12">{t("requests.loading")}</div>
           ) : activeTab === "brands" ? (
@@ -286,8 +286,8 @@ const RequestsPage: React.FC = () => {
                     key={request._id}
                     className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                      <div className="flex-1 w-full">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {request.name}
@@ -339,7 +339,7 @@ const RequestsPage: React.FC = () => {
                           )}
                       </div>
                       {request.status === "pending" && (
-                        <div className="flex gap-2 ml-4">
+                        <div className="flex gap-2 sm:ml-4">
                           <button
                             onClick={() => handleApproveBrand(request._id)}
                             className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors"
@@ -373,8 +373,8 @@ const RequestsPage: React.FC = () => {
                     key={request._id}
                     className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+                      <div className="flex-1 w-full">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {request.name}
@@ -426,7 +426,7 @@ const RequestsPage: React.FC = () => {
                           )}
                       </div>
                       {request.status === "pending" && (
-                        <div className="flex gap-2 ml-4">
+                        <div className="flex gap-2 sm:ml-4">
                           <button
                             onClick={() => handleApproveCategory(request._id)}
                             className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors"

@@ -127,17 +127,17 @@ const CouponsPage: React.FC = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
             {t("coupon.management")}
           </h1>
-          <p className="text-[#9E9E9E]">{t("coupon.createManage")}</p>
+          <p className="text-sm sm:text-base text-[#9E9E9E]">{t("coupon.createManage")}</p>
         </div>
         <div className="flex items-center gap-4">
           <button
             onClick={() => setIsCreating(true)}
-            className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium"
+            className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center gap-2 font-medium w-full sm:w-auto justify-center"
           >
             <PlusIcon className="h-4 w-4" />
             {t("coupon.createButton")}
@@ -180,14 +180,14 @@ const CouponsPage: React.FC = () => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">
                 {t("coupon.totalCoupons")}
               </p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-lg sm:text-2xl font-bold text-gray-900">
                 {paginated?.total ?? coupons.length}
               </p>
             </div>
@@ -202,7 +202,7 @@ const CouponsPage: React.FC = () => {
               <p className="text-sm text-gray-600">
                 {t("coupon.activeCoupons")}
               </p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-lg sm:text-2xl font-bold text-green-600">
                 {
                   coupons.filter((c) => {
                     const now = new Date();
@@ -226,7 +226,7 @@ const CouponsPage: React.FC = () => {
               <p className="text-sm text-gray-600">
                 {t("coupon.expiredCoupons")}
               </p>
-              <p className="text-2xl font-bold text-red-600">
+              <p className="text-lg sm:text-2xl font-bold text-red-600">
                 {coupons.filter((c) => new Date() > new Date(c.endDate)).length}
               </p>
             </div>
@@ -239,7 +239,7 @@ const CouponsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{t("coupon.totalUsage")}</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <p className="text-lg sm:text-2xl font-bold text-purple-600">
                 {coupons.reduce((acc, c) => acc + (c.usageCount || 0), 0)}
               </p>
             </div>
@@ -251,7 +251,7 @@ const CouponsPage: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="bg-white p-3 sm:p-6 rounded-lg shadow-sm border">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">

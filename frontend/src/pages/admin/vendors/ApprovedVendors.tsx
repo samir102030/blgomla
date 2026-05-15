@@ -53,9 +53,9 @@ const ApprovedVendors: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('approvedVendors.title')}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('approvedVendors.title')}</h1>
           <p className="text-gray-600">{t('approvedVendors.subtitle')}</p>
         </div>
         <div className="text-sm text-green-600 font-medium">
@@ -75,7 +75,7 @@ const ApprovedVendors: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-lg shadow-sm">
           <div className="text-2xl font-bold text-green-600">{approvedVendors.length}</div>
           <div className="text-sm text-gray-600">{t('approvedVendors.totalApproved')}</div>
@@ -101,7 +101,7 @@ const ApprovedVendors: React.FC = () => {
       </div>
 
       {/* Vendors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {approvedVendors.map((vendor) => (
           <div key={vendor._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-6">
@@ -178,8 +178,8 @@ const ApprovedVendors: React.FC = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedVendor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-900">{t('approvedVendors.vendorDetails')}</h2>
               <button
@@ -256,7 +256,7 @@ const ApprovedVendors: React.FC = () => {
               </div>
             )}
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-wrap justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setShowDetailsModal(false)}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"

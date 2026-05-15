@@ -109,9 +109,9 @@ const ProductApprovalsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-start sm:items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-[#333333]">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
             {t("productApprovals.title")}
           </h1>
           <p className="text-[#9E9E9E]">
@@ -130,20 +130,20 @@ const ProductApprovalsPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-white border rounded-xl p-4 shadow-sm">
           <p className="text-sm text-gray-600">{t("productApprovals.pendingProducts")}</p>
-          <p className="text-3xl font-bold text-yellow-600">{pendingCount}</p>
+          <p className="text-2xl sm:text-3xl font-bold text-yellow-600">{pendingCount}</p>
         </div>
         <div className="bg-white border rounded-xl p-4 shadow-sm">
           <p className="text-sm text-gray-600">{t("productApprovals.approvedToday")}</p>
-          <p className="text-3xl font-bold text-green-600">
+          <p className="text-2xl sm:text-3xl font-bold text-green-600">
             {approvedToday}
           </p>
         </div>
         <div className="bg-white border rounded-xl p-4 shadow-sm">
           <p className="text-sm text-gray-600">{t("productApprovals.queueSize")}</p>
-          <p className="text-3xl font-bold text-[var(--brand-primary)]">
+          <p className="text-2xl sm:text-3xl font-bold text-[var(--brand-primary)]">
             {products.length}
           </p>
         </div>
@@ -151,8 +151,8 @@ const ProductApprovalsPage: React.FC = () => {
 
       <div className="bg-white border rounded-xl shadow-sm">
         <div className="flex flex-wrap gap-3 items-center justify-between p-4 border-b">
-          <div className="flex gap-3 items-center flex-1">
-            <div className="relative flex-1 min-w-[220px]">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center flex-1 w-full">
+            <div className="relative flex-1 sm:min-w-[220px]">
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
               <input
                 type="text"

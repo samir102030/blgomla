@@ -262,10 +262,10 @@ const CustomerReviewsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Tabs for Admin */}
       {isAdminLike && (
-        <div className="flex gap-4 border-b">
+        <div className="flex gap-4 border-b overflow-x-auto">
           <button
             onClick={() => setActiveTab("reviews")}
-            className={`px-4 py-2 font-medium ${
+            className={`px-4 py-2 font-medium flex-shrink-0 ${
               activeTab === "reviews"
                 ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
@@ -275,7 +275,7 @@ const CustomerReviewsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab("requests")}
-            className={`px-4 py-2 font-medium ${
+            className={`px-4 py-2 font-medium flex-shrink-0 ${
               activeTab === "requests"
                 ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
@@ -288,10 +288,10 @@ const CustomerReviewsPage: React.FC = () => {
 
       {/* Tabs for Vendor */}
       {user?.role === "store" && (
-        <div className="flex gap-4 border-b">
+        <div className="flex gap-4 border-b overflow-x-auto">
           <button
             onClick={() => setActiveTab("reviews")}
-            className={`px-4 py-2 font-medium ${
+            className={`px-4 py-2 font-medium flex-shrink-0 ${
               activeTab === "reviews"
                 ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
@@ -301,7 +301,7 @@ const CustomerReviewsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab("requests")}
-            className={`px-4 py-2 font-medium ${
+            className={`px-4 py-2 font-medium flex-shrink-0 ${
               activeTab === "requests"
                 ? "text-[var(--brand-primary)] border-b-2 border-[var(--brand-accent)]"
                 : "text-gray-600 hover:text-gray-800"
@@ -315,9 +315,9 @@ const CustomerReviewsPage: React.FC = () => {
       {activeTab === "reviews" && (
         <>
           {/* Header */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <div>
-              <h1 className="text-2xl font-bold text-[#333333]">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
                 {t("reviews.title")}
               </h1>
               <p className="text-[#9E9E9E]">
@@ -343,7 +343,7 @@ const CustomerReviewsPage: React.FC = () => {
           )}
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <div className="bg-white p-6 rounded-lg shadow-sm border">
               <div className="flex items-center justify-between">
                 <div>
@@ -401,7 +401,7 @@ const CustomerReviewsPage: React.FC = () => {
           </div>
 
           {/* Filters and Search */}
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
@@ -415,7 +415,7 @@ const CustomerReviewsPage: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-2 sm:gap-4">
                 <select
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   value={visibilityFilter}
@@ -489,8 +489,8 @@ const CustomerReviewsPage: React.FC = () => {
 
           {/* More Filters Modal */}
           {showMoreFilters && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between p-6 border-b">
                   <h3 className="text-lg font-semibold text-gray-900">
                     {t("reviews.moreFilters")}
@@ -838,7 +838,7 @@ const CustomerReviewsPage: React.FC = () => {
 
           {/* Pagination */}
           {pages > 1 && (
-            <div className="bg-white px-6 py-3 rounded-lg shadow-sm border flex items-center justify-between">
+            <div className="bg-white px-4 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="text-sm text-gray-700">
                 {t("reviews.showing")}{" "}
                 <span className="font-medium">{(page - 1) * limit + 1}</span> {t("reviews.to")}{" "}
@@ -891,7 +891,7 @@ const CustomerReviewsPage: React.FC = () => {
       {isAdminLike && activeTab === "requests" && (
         <>
           {/* Request Status Filter */}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <button
               onClick={() => {
                 setRequestStatus("pending");
@@ -1093,7 +1093,7 @@ const CustomerReviewsPage: React.FC = () => {
       {user?.role === "store" && activeTab === "requests" && (
         <>
           {/* Request Status Filter */}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-2 sm:gap-4">
             <button
               onClick={() => {
                 setRequestStatus("pending");
