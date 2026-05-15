@@ -8,22 +8,38 @@
     <title>Belgomla — IT & Networking Marketplace</title>
     <meta name="description" content="Egypt's premier marketplace for IT, networking, and technology products. Shop routers, switches, cables, servers, and more at the best prices." />
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <!-- Favicon: multi-size ICO for legacy browsers + PNG fallbacks for modern -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
 
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#FF6A1A" />
+    <!-- Apple touch icon: 180×180 on solid background so iOS doesn't apply
+         its rounded-rect mask over transparent corners -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+
+    <!-- PWA manifest. The runtime i18n layer swaps href to /manifest.ar.json
+         when the user toggles Arabic, so install dialogs in AR show the
+         localized name + direction. -->
+    <link id="webmanifest" rel="manifest" href="/manifest.json" />
+    <!-- theme-color drives the Android status bar + iOS PWA standalone bar;
+         keep this in sync with manifest.json -->
+    <meta name="theme-color" content="#002B5B" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Belgomla" />
+    <meta name="application-name" content="Belgomla" />
 
-    <!-- Open Graph -->
+    <!-- Open Graph: landscape 1200×630 image renders properly on FB/LinkedIn/etc. -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Belgomla — IT & Networking Marketplace" />
     <meta property="og:description" content="Egypt's premier marketplace for IT, networking, and technology products." />
-    <meta property="og:image" content="/logo.png" />
+    <meta property="og:image" content="/icons/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="/icons/og-image.png" />
 
     <!-- Preconnect to backend so the TLS handshake happens in parallel with HTML parsing -->
     <link rel="preconnect" href="https://halafawystore-backend.vercel.app" crossorigin />

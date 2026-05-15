@@ -15,7 +15,7 @@ export default defineConfig({
       workbox: {
         // Workbox precaches the hashed build output and versions per build,
         // so the "stale chunk" bug from the hand-rolled SW can't recur.
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,json,webmanifest}"],
         // /api/* never gets intercepted — that was the source of the auth-hang bug.
         navigateFallbackDenylist: [/^\/api\//],
         navigateFallback: "/index.html",

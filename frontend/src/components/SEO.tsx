@@ -13,7 +13,7 @@ interface SEOProps {
 const DEFAULT_TITLE = "Belgomla — IT & Networking Marketplace";
 const DEFAULT_DESCRIPTION =
   "Egypt's premier marketplace for IT, networking, and technology products. Shop routers, switches, cables, servers, and more at the best prices.";
-const DEFAULT_IMAGE = "/logo.png";
+const DEFAULT_IMAGE = "/icons/og-image.png";
 const SITE_NAME = "Belgomla";
 
 const SEO: React.FC<SEOProps> = ({

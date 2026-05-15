@@ -1,15 +1,15 @@
 {
-  "name": "Belgomla — IT & Networking Marketplace",
-  "short_name": "Belgomla",
-  "description": "Egypt's premier marketplace for IT, networking, and technology products.",
+  "name": "بلجملة — سوق تكنولوجيا المعلومات والشبكات",
+  "short_name": "بلجملة",
+  "description": "السوق الأول في مصر لمنتجات تكنولوجيا المعلومات والشبكات والإلكترونيات.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#002B5B",
   "theme_color": "#002B5B",
   "orientation": "portrait-primary",
-  "lang": "en",
-  "dir": "ltr",
+  "lang": "ar",
+  "dir": "rtl",
   "categories": ["shopping", "business"],
   "icons": [
     { "src": "/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
@@ -24,7 +24,7 @@
     { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "All Products", "short_name": "Products", "url": "/products", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Collections",  "short_name": "Collections", "url": "/collections", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "جميع المنتجات", "short_name": "المنتجات", "url": "/products", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "المجموعات",     "short_name": "المجموعات", "url": "/collections", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
