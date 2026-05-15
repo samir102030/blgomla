@@ -598,9 +598,90 @@ const ProductsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Products Table */}
+      {/* Products Table (desktop) / Card list (mobile) */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile cards */}
+        <ul className="md:hidden divide-y divide-gray-200">
+          {filteredProducts.map((product) => {
+            const status = getStockStatus(product.stock);
+            return (
+              <li key={product._id} className={`p-3 ${selectedIds.has(product._id) ? "bg-[var(--brand-primary)]/10" : ""}`}>
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(product._id)}
+                    onChange={() => toggleSelect(product._id)}
+                    className="mt-1 rounded border-gray-300 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]"
+                  />
+                  {product.images?.[0]?.url ? (
+                    <img
+                      className="h-14 w-14 rounded-lg object-cover flex-shrink-0"
+                      src={product.images?.[0]?.url}
+                      alt={product.name}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <div className="h-14 w-14 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center border border-gray-200 flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                        <path d="M6.75 4.5a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 17.25 4.5H6.75Zm0-1.5h10.5A3.75 3.75 0 0 1 21 6.75v10.5A3.75 3.75 0 0 1 17.25 21H6.75A3.75 3.75 0 0 1 3 17.25V6.75A3.75 3.75 0 0 1 6.75 3Z" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium text-gray-900 break-words">{product.name}</p>
+                      <span className="text-xs text-gray-500 flex-shrink-0">#{product._id?.slice(-6)}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-0.5 truncate">{getCategoryName(product)}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      <span className="font-medium text-gray-900">
+                        {typeof product.price === "number" ? `$${product.price.toFixed(2)}` : product.price}
+                      </span>
+                      <span className={product.stock < 30 ? "text-red-600" : "text-gray-700"}>
+                        Stock: {product.stock}
+                        {product.stock === 0 ? " ❌" : product.stock < 30 ? " ⚠️" : ""}
+                      </span>
+                      <span className="text-gray-700">Sold: {product.soldCount ?? 0}</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${getStatusColor(status)}`}>
+                        {status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </span>
+                      <span
+                        className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                          product.approvalStatus === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : product.approvalStatus === "rejected"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {product.approvalStatus
+                          ? product.approvalStatus.charAt(0).toUpperCase() + product.approvalStatus.slice(1)
+                          : "Unknown"}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-3">
+                      <button onClick={() => handleViewProduct(product)} className="text-[var(--brand-primary)] hover:text-[var(--brand-accent)] flex items-center gap-1 text-xs">
+                        <EyeIcon className="h-4 w-4" /> View
+                      </button>
+                      <button onClick={() => handleEditProduct(product)} className="text-green-600 hover:text-green-900 flex items-center gap-1 text-xs">
+                        <PencilIcon className="h-4 w-4" /> Edit
+                      </button>
+                      <button onClick={() => handleDeleteProduct(product)} className="text-red-600 hover:text-red-900 flex items-center gap-1 text-xs">
+                        <TrashIcon className="h-4 w-4" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+
+        {/* Desktop table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
