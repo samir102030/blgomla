@@ -87,6 +87,11 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    // Preferred UI language — used to localise transactional emails.
+    // Set from the Accept-Language header at signup; updatable from the
+    // profile page later. Only two values currently supported.
+    lang: { type: String, enum: ["en", "ar"], default: "en" },
+
     // ── TOTP 2FA (Google Authenticator / Authy / 1Password) ──
     // totpSecret is the base32 shared secret. It is only populated while
     // the user is mid-enrollment; once `twoFactorEnabled` flips to true

@@ -39,11 +39,18 @@ export const signup = controllerWrapper("signup", async (req, res) => {
 
   const verificationToken = crypto.randomBytes(3).toString("hex").toUpperCase();
 
+  // Capture the user's preferred language from the Accept-Language header
+  // so transactional emails go out in the right locale. Front-end's axios
+  // client already sends "Accept-Language: en" or "ar" on every request.
+  const acceptLang = String(req.headers["accept-language"] || "").toLowerCase();
+  const lang = acceptLang.startsWith("ar") ? "ar" : "en";
+
   const user = new User({
     email,
     password,
     name,
     phoneNumber,
+    lang,
     verificationToken,
     verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     role: role !== "admin" ? role || "customer" : "customer", // default to customer
