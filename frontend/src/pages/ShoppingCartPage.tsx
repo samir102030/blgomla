@@ -571,36 +571,41 @@ const ShoppingCartPage: React.FC = () => {
     <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative bg-[var(--surface-2)] py-8 sm:py-12 lg:py-16">
-        <div className="absolute inset-0">
-          <img
-            src="net1.jpeg"
-            alt={t("Camera")}
-            className="w-full h-full object-cover opacity-20"
-           loading="lazy" decoding="async"/>
-        </div>
+      {/* Hero Section — matches Contact page styling */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] py-10 sm:py-16 lg:py-20">
+        <div className="absolute top-10 left-10 w-72 h-72 bg-[var(--brand-primary)]/10 rounded-full blur-3xl animate-pulse" />
+        <div
+          className="absolute bottom-10 right-10 w-96 h-96 bg-[var(--brand-accent)]/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+        />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">
-            {t("Shopping Cart")}
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 text-xs sm:text-sm text-white/80 mb-4">
+            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            {t("Your Cart")}
+          </div>
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight">
+            {t("Shopping")}{" "}
+            <span className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] bg-clip-text text-transparent">
+              {t("Cart")}
+            </span>
           </h1>
-          <nav className="text-xs sm:text-sm text-[var(--text-muted)]">
-            <Link to="/" className="hover:text-[var(--text)]">
+          <nav className="text-xs sm:text-sm text-white/60">
+            <Link to="/" className="hover:text-white transition-colors">
               {t("Home")}
             </Link>
             <span className="mx-2">/</span>
             <span>{t("Shopping Cart")}</span>
           </nav>
         </div>
-        {/* Camera Image positioned on the right */}
-        <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
-          <img
-            src="net2.jpeg"
-            alt={t("Professional Camera")}
-            className="h-full w-full object-contain"
-           loading="lazy" decoding="async"/>
-        </div>
-      </div>
+      </section>
 
       <main className="py-8 sm:py-10 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -671,7 +676,7 @@ const ShoppingCartPage: React.FC = () => {
                           <div className="space-y-1">
                             <div className="text-xs sm:text-sm font-medium text-[var(--text)]">
                               {item.collectionDetails?.name || t("Bundle")}
-                              <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-[#FFD600]/20 text-[#333333]">
+                              <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-[var(--brand-primary)]/15 text-[var(--brand-primary)] font-semibold">
                                 {t("Bundle")}
                               </span>
                             </div>
@@ -703,7 +708,7 @@ const ShoppingCartPage: React.FC = () => {
                                     ).toFixed(2)
                                   : "0.00"}
                               </span>
-                              <span className="font-medium text-[#002B5B]">
+                              <span className="font-medium text-[var(--brand-primary)]">
                                 {(getItemPrice(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                               </span>
                             </div>
@@ -899,7 +904,7 @@ const ShoppingCartPage: React.FC = () => {
                                   ).toFixed(2)
                                 : "0.00"}
                             </span>
-                            <span className="ml-2 font-medium text-[#002B5B]">
+                            <span className="ml-2 font-medium text-[var(--brand-primary)]">
                               {(getItemPrice(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
                             </span>
                           </>
@@ -1048,7 +1053,7 @@ const ShoppingCartPage: React.FC = () => {
                         country: e.target.value,
                       })
                     }
-                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm"
                   >
                     <option value="Egypt">{t("Egypt")}</option>
                   </select>
@@ -1057,7 +1062,7 @@ const ShoppingCartPage: React.FC = () => {
                     onChange={(e) =>
                       setShippingInfo({ ...shippingInfo, city: e.target.value })
                     }
-                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm"
                   >
                     <option value="Cairo">{t("Cairo")}</option>
                   </select>
@@ -1072,9 +1077,9 @@ const ShoppingCartPage: React.FC = () => {
                       postcode: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4 text-xs sm:text-sm"
+                  className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent mb-4 text-xs sm:text-sm"
                 />
-                <button className="w-full bg-[#002B5B] text-white py-2 px-4 rounded-lg hover:bg-[#001a3d] transition-colors text-xs sm:text-sm font-medium">
+                <button className="w-full bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all duration-300">
                   {t("ESTIMATE")}
                 </button>
               </div>
@@ -1119,7 +1124,7 @@ const ShoppingCartPage: React.FC = () => {
                     <button
                       onClick={handleApplyCoupon}
                       disabled={couponLoading || !couponCode.trim()}
-                      className="bg-[#D32F2F] text-white px-4 sm:px-6 py-2 rounded-lg hover:bg-[#b71c1c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm font-medium whitespace-nowrap"
+                      className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white px-4 sm:px-6 py-2.5 rounded-xl hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none text-xs sm:text-sm font-semibold whitespace-nowrap"
                     >
                       {couponLoading ? t("APPLYING...") : t("APPLY CODE")}
                     </button>
@@ -1164,9 +1169,12 @@ const ShoppingCartPage: React.FC = () => {
               <div className="space-y-3">
                 <button
                   onClick={handleCheckout}
-                  className="w-full bg-[#FFD600] text-[#333333] py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-[#e6c100] transition-colors text-center text-xs sm:text-sm"
+                  className="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white py-3 sm:py-3.5 px-6 rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all duration-300"
                 >
                   {t("CHECKOUT")}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
                 </button>
               </div>
             </div>
