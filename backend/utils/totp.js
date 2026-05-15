@@ -1,28 +1,36 @@
 // TOTP (RFC 6238) helpers for optional second-factor auth.
-// Uses otplib's default 30-second step and SHA1 digest, which is what
-// Google Authenticator / Authy / 1Password / Microsoft Authenticator
-// expect. Tolerate ±1 step of clock skew (90s window total) so users
-// with slightly drifted phones can still get in.
+//
+// otplib v13 removed the `authenticator` convenience export from the ESM
+// build — we use the lower-level functional exports directly. Defaults
+// (30-second step, SHA1, 6 digits) match what Google Authenticator /
+// Authy / 1Password / Microsoft Authenticator expect.
+//
+// epochTolerance: 1 step on either side gives a ~90-second window total,
+// so a user with slightly drifted phone time can still verify.
 
-import { authenticator } from "otplib";
+import { generateSecret, generateURI, verifySync } from "otplib";
 import QRCode from "qrcode";
-
-authenticator.options = { window: 1 };
 
 const ISSUER = "Belgomla";
 
-export const generateTOTPSecret = () => authenticator.generateSecret();
+export const generateTOTPSecret = () => generateSecret({ length: 20 });
 
 export const buildOtpAuthUrl = (secret, accountLabel) =>
-  authenticator.keyuri(accountLabel, ISSUER, secret);
+  generateURI({ secret, label: accountLabel, issuer: ISSUER });
 
-export const buildQRCodeDataUrl = (otpauthUrl) =>
-  QRCode.toDataURL(otpauthUrl);
+export const buildQRCodeDataUrl = (otpauthUrl) => QRCode.toDataURL(otpauthUrl);
 
 export const verifyTOTP = (secret, code) => {
   if (!secret || !code) return false;
   try {
-    return authenticator.check(String(code).trim(), secret);
+    // verifySync returns { valid, delta, epoch, timeStep } — pull out .valid
+    // explicitly so the caller gets a plain boolean.
+    const result = verifySync({
+      secret,
+      token: String(code).trim(),
+      epochTolerance: 1,
+    });
+    return result?.valid === true;
   } catch {
     return false;
   }
