@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { Category } from "../types/category.type";
 import type { Brand } from "../types/brand.type";
 import { useTranslation } from "react-i18next";
@@ -41,6 +41,16 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
   });
 
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
   const toggleSection = (section: string) => {
     setExpandedSections((prev) => ({
@@ -395,21 +405,55 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <div className="absolute right-0 top-0 bottom-0 w-80 max-w-[85vw] bg-[var(--surface)] overflow-y-auto shadow-2xl">
-            <div className="p-3 border-b border-[var(--border)] flex items-center justify-between sticky top-0 bg-[var(--surface)] z-10">
-              <span className="font-bold text-[var(--text)]">{t("Filters")}</span>
+        <div className="fixed inset-0 z-[60] md:hidden">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <div className="absolute right-0 top-0 bottom-0 w-full sm:w-96 sm:max-w-[90vw] bg-[var(--surface)] shadow-2xl flex flex-col">
+            {/* Sticky close bar (filterContent has its own Filters heading) */}
+            <div className="px-3 py-2 border-b border-[var(--border)] flex items-center justify-end bg-[var(--surface)] flex-shrink-0">
               <button
                 onClick={() => setMobileOpen(false)}
                 className="p-2 hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+                aria-label={t("Close")}
               >
                 <svg className="w-5 h-5 text-[var(--text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            {filterContent}
+
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto">
+              {filterContent}
+            </div>
+
+            {/* Sticky footer */}
+            <div className="p-3 border-t border-[var(--border)] bg-[var(--surface)] flex gap-2 flex-shrink-0">
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => {
+                    onFilterChange?.({
+                      categories: [],
+                      brands: [],
+                      minPrice: "",
+                      maxPrice: "",
+                      rating: "",
+                      featured: false,
+                      onSale: false,
+                      inStock: false,
+                    });
+                  }}
+                  className="px-4 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text)] text-sm font-medium hover:bg-[var(--surface-2)] transition-colors"
+                >
+                  {t("Clear")}
+                </button>
+              )}
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="flex-1 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white py-2.5 px-4 rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all duration-300"
+              >
+                {t("Show Results")}
+              </button>
+            </div>
           </div>
         </div>
       )}
