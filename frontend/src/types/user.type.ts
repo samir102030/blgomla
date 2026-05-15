@@ -22,6 +22,7 @@ export interface User {
   isVerified: boolean;
   phoneVerified: boolean;
   phoneNumber?: string;
+  twoFactorEnabled?: boolean;
   profilePicture?: string;
   cart: UserCartItem[];
   love: Product[];

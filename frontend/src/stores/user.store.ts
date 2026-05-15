@@ -29,7 +29,8 @@ interface UserStore {
   login: (data: {
     email: string;
     password: string;
-  }) => Promise<User | undefined>;
+    totpCode?: string;
+  }) => Promise<{ user?: User; totpRequired?: boolean }>;
   logout: () => Promise<void>;
   updateUser: (
     userId: string,
@@ -52,6 +53,10 @@ interface UserStore {
   toggleLoveProduct: (productId: string) => Promise<boolean>;
   fetchCart: () => Promise<void>;
   getLovedProducts: () => Promise<void>;
+  // ── TOTP 2FA ──
+  setup2FA: () => Promise<{ qrCodeDataUrl: string; secret: string } | undefined>;
+  enable2FA: (code: string) => Promise<boolean>;
+  disable2FA: (password: string, code: string) => Promise<boolean>;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -146,23 +151,31 @@ export const useUserStore = create<UserStore>()(
         }
       },
 
-      login: async ({ email, password }) => {
+      login: async ({ email, password, totpCode }) => {
         set({ loading: true, error: undefined });
         try {
           const res = await axiosInstance.post<{
             success: boolean;
             user: User;
-          }>(`/users/login`, { email, password });
+          }>(`/users/login`, { email, password, totpCode });
           set({ user: res.data.user, loading: false });
-          return res.data.user;
+          return { user: res.data.user };
         } catch (error: any) {
           console.error('Login error:', error);
+          // Backend returns code:"TOTP_REQUIRED" when the user has 2FA on
+          // and submitted no code. Bubble that up so the UI can prompt
+          // for the 6-digit code instead of showing a generic error.
+          const code = error?.response?.data?.code;
+          if (code === "TOTP_REQUIRED") {
+            set({ error: undefined, loading: false });
+            return { totpRequired: true };
+          }
           const errorMessage = error?.response?.data?.message || error.message || 'Login failed';
           set({
             error: errorMessage,
             loading: false,
           });
-          return undefined;
+          return {};
         }
       },
 
@@ -443,6 +456,65 @@ export const useUserStore = create<UserStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+        }
+      },
+
+      setup2FA: async () => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.post<{
+            success: boolean;
+            qrCodeDataUrl: string;
+            secret: string;
+          }>("/users/2fa/setup");
+          set({ loading: false });
+          return { qrCodeDataUrl: data.qrCodeDataUrl, secret: data.secret };
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return undefined;
+        }
+      },
+
+      enable2FA: async (code) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.post("/users/2fa/enable", { code });
+          const currentUser = get().user;
+          if (currentUser) {
+            set({ user: { ...currentUser, twoFactorEnabled: true }, loading: false });
+          } else {
+            set({ loading: false });
+          }
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
+        }
+      },
+
+      disable2FA: async (password, code) => {
+        set({ loading: true, error: undefined });
+        try {
+          await axiosInstance.post("/users/2fa/disable", { password, code });
+          const currentUser = get().user;
+          if (currentUser) {
+            set({ user: { ...currentUser, twoFactorEnabled: false }, loading: false });
+          } else {
+            set({ loading: false });
+          }
+          return true;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return false;
         }
       },
     }),

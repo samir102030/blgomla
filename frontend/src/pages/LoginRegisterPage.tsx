@@ -19,6 +19,11 @@ const LoginRegisterPage: React.FC = () => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showRegPassword, setShowRegPassword] = useState(false);
+  // 2FA: when backend returns TOTP_REQUIRED we surface a second input
+  // and resubmit with the totpCode. The email+password from the first
+  // attempt are still in state.
+  const [totpRequired, setTotpRequired] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
 
   const navigate = useNavigate();
   const login = useUserStore((s) => s.login);
@@ -31,9 +36,19 @@ const LoginRegisterPage: React.FC = () => {
     setLoginError(null);
     setLoginLoading(true);
     try {
-      const user = await login({ email: loginData.email, password: loginData.password });
-      if (user) navigate("/");
-      else {
+      const result = await login({
+        email: loginData.email,
+        password: loginData.password,
+        totpCode: totpRequired ? totpCode : undefined,
+      });
+      if (result.user) {
+        setTotpRequired(false);
+        setTotpCode("");
+        navigate("/");
+      } else if (result.totpRequired) {
+        setTotpRequired(true);
+        setLoginError(null);
+      } else {
         const latest = useUserStore.getState().error;
         setLoginError(latest || t("login.failed", "Login failed."));
       }
@@ -172,6 +187,28 @@ const LoginRegisterPage: React.FC = () => {
                       </div>
                     </div>
 
+                    {totpRequired && (
+                      <div className="p-4 rounded-xl bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/30">
+                        <label className="block text-sm font-semibold text-[var(--text)] mb-1.5">
+                          🛡️ {t("login.totpLabel", "Authenticator code")}
+                        </label>
+                        <p className="text-xs text-[var(--text-muted)] mb-2.5">
+                          {t("login.totpDesc", "Enter the 6-digit code from your authenticator app to finish signing in.")}
+                        </p>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          autoFocus
+                          value={totpCode}
+                          onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                          className={inputClass + " tracking-widest text-center text-lg"}
+                          placeholder="••••••"
+                        />
+                      </div>
+                    )}
+
                     {loginError && (
                       <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/25 text-red-700 dark:text-red-300 text-sm">
                         <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
@@ -179,8 +216,12 @@ const LoginRegisterPage: React.FC = () => {
                       </div>
                     )}
 
-                    <button type="submit" disabled={loginLoading} className="w-full py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] hover:shadow-lg hover:shadow-[var(--brand-primary)]/20 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
-                      {loginLoading ? <><span className="animate-spin">⟳</span> {t("login.signingIn", "Signing in...")}</> : t("login.signInBtn", "Sign In")}
+                    <button type="submit" disabled={loginLoading || (totpRequired && totpCode.length !== 6)} className="w-full py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] hover:shadow-lg hover:shadow-[var(--brand-primary)]/20 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
+                      {loginLoading
+                        ? <><span className="animate-spin">⟳</span> {t("login.signingIn", "Signing in...")}</>
+                        : totpRequired
+                          ? t("login.verifyCode", "Verify Code")
+                          : t("login.signInBtn", "Sign In")}
                     </button>
                   </form>
 
