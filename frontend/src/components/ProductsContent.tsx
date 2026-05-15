@@ -298,8 +298,9 @@ const ProductsContent: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-          {/* Sidebar */}
-          <div className="md:col-span-1 order-2 md:order-1">
+          {/* Sidebar — appears above products on mobile (filter trigger),
+              left-rail on desktop. */}
+          <div className="md:col-span-1">
             <div className="sticky top-24">
               <ProductFilterSidebar
                 filters={{ ...filters, subcategories: [] }}
@@ -312,7 +313,7 @@ const ProductsContent: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className="md:col-span-3 order-1 md:order-2">
+          <div className="md:col-span-3">
             {/* Search + Sort + View Mode Bar */}
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm">
               <div className="flex flex-col gap-3">
