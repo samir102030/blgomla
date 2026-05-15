@@ -1018,7 +1018,7 @@ const ShoppingCartPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="flex items-center justify-between pt-2 border-t border-[var(--border)]">
                     <span className="text-xs font-medium text-[var(--text)]">
                       {t("Total:")}
                     </span>
@@ -1080,19 +1080,19 @@ const ShoppingCartPage: React.FC = () => {
               </div>
 
               {/* Discount Coupon */}
-              <div className="bg-[#FAFAFA] p-4 sm:p-6 rounded-lg shadow-sm border border-[#9E9E9E]/20">
-                <h3 className="text-base sm:text-lg font-semibold text-[#333333] mb-3 sm:mb-4">
+              <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm border border-[var(--border)]">
+                <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
                   {t("Discount Coupon Code")}
                 </h3>
 
                 {appliedCoupon ? (
-                  <div className="mb-4 p-2 sm:p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="mb-4 p-2 sm:p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-xs sm:text-sm font-medium text-green-800">
+                        <p className="text-xs sm:text-sm font-medium text-green-500">
                           {t("Coupon Applied:")} {appliedCoupon.code}
                         </p>
-                        <p className="text-xs text-green-600">
+                        <p className="text-xs text-green-400">
                           {appliedCoupon.discountType === "percentage"
                             ? `${appliedCoupon.discountValue}% ${t("off")}`
                             : `$${appliedCoupon.discountValue} ${t("off")}`}
@@ -1100,7 +1100,7 @@ const ShoppingCartPage: React.FC = () => {
                       </div>
                       <button
                         onClick={handleRemoveCoupon}
-                        className="text-red-600 hover:text-red-800 text-xs underline flex-shrink-0"
+                        className="text-red-500 hover:text-red-400 text-xs underline flex-shrink-0"
                       >
                         {t("Remove")}
                       </button>
@@ -1113,7 +1113,7 @@ const ShoppingCartPage: React.FC = () => {
                       placeholder={t("Coupon Code")}
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-[#9E9E9E]/30 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent text-xs sm:text-sm"
+                      className="flex-1 px-3 py-2 border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm"
                       disabled={couponLoading}
                     />
                     <button
@@ -1129,7 +1129,7 @@ const ShoppingCartPage: React.FC = () => {
             </div>
 
             {/* Right Column - Cart Summary */}
-            <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
+            <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm border border-[var(--border)]">
               <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-4 sm:mb-6">
                 {t("Cart Summary")}
               </h3>
@@ -1137,24 +1137,24 @@ const ShoppingCartPage: React.FC = () => {
               <div className="space-y-3 sm:space-y-4 mb-6">
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-[var(--text-muted)]">{t("Sub Total")}</span>
-                  <span className="font-medium">{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
+                  <span className="font-medium text-[var(--text)]">{(subtotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                 </div>
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-[var(--text-muted)]">{t("Shipping Cost")}</span>
-                  <span className="font-medium">
+                  <span className="font-medium text-[var(--text)]">
                     {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                   </span>
                 </div>
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between text-xs sm:text-sm text-green-600">
+                  <div className="flex justify-between text-xs sm:text-sm text-green-500">
                     <span>{t("Coupon Discount")} ({appliedCoupon?.code})</span>
                     <span className="font-medium">
                       -{(couponDiscount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                     </span>
                   </div>
                 )}
-                <div className="border-t pt-3 sm:pt-4">
-                  <div className="flex justify-between text-base sm:text-lg font-semibold">
+                <div className="border-t border-[var(--border)] pt-3 sm:pt-4">
+                  <div className="flex justify-between text-base sm:text-lg font-semibold text-[var(--text)]">
                     <span>{t("Grand Total")}</span>
                     <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                   </div>
