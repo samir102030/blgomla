@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { GoogleLogin } from "@react-oauth/google";
 
 type AuthMode = "login" | "register";
 
@@ -28,8 +29,27 @@ const LoginRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const login = useUserStore((s) => s.login);
   const signup = useUserStore((s) => s.signup);
+  const googleSignIn = useUserStore((s) => s.googleSignIn);
   const loading = useUserStore((s) => s.loading);
   const error = useUserStore((s) => s.error);
+
+  const handleGoogleSuccess = async (credential?: string) => {
+    setLoginError(null);
+    setRegisterError(null);
+    if (!credential) {
+      setLoginError(t("login.googleFailed", "Google sign-in failed."));
+      return;
+    }
+    const result = await googleSignIn(credential);
+    if (result.user) {
+      navigate("/");
+    } else if (result.totpRequired) {
+      setLoginError(t("login.googleTotpUnsupported", "This account has 2FA enabled. Please sign in with email and password."));
+    } else {
+      const latest = useUserStore.getState().error;
+      setLoginError(latest || t("login.googleFailed", "Google sign-in failed."));
+    }
+  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,6 +256,25 @@ const LoginRegisterPage: React.FC = () => {
                     </button>
                   </form>
 
+                  <div className="my-6 flex items-center gap-3">
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                    <span className="text-xs text-[var(--text-subtle)] uppercase tracking-wider">
+                      {t("login.or", "or")}
+                    </span>
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                  </div>
+
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
+                      onError={() => setLoginError(t("login.googleFailed", "Google sign-in failed."))}
+                      useOneTap={false}
+                      theme="outline"
+                      size="large"
+                      width="320"
+                    />
+                  </div>
+
                   <div className="mt-6 text-center">
                     <p className="text-sm text-[var(--text-muted)]">
                       {t("login.noAccount", "Don't have an account?")}{" "}
@@ -313,6 +352,26 @@ const LoginRegisterPage: React.FC = () => {
                       {loading ? <><span className="animate-spin">⟳</span> {t("login.registering", "Creating account...")}</> : t("login.registerBtn", "Create Account")}
                     </button>
                   </form>
+
+                  <div className="my-6 flex items-center gap-3">
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                    <span className="text-xs text-[var(--text-subtle)] uppercase tracking-wider">
+                      {t("login.or", "or")}
+                    </span>
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                  </div>
+
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
+                      onError={() => setRegisterError(t("login.googleFailed", "Google sign-in failed."))}
+                      useOneTap={false}
+                      theme="outline"
+                      size="large"
+                      text="signup_with"
+                      width="320"
+                    />
+                  </div>
 
                   <div className="mt-5 text-center text-xs text-[var(--text-subtle)] leading-relaxed">
                     {t("login.termsNotice", "By creating an account, you agree to our")}{" "}

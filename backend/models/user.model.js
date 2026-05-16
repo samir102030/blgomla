@@ -64,6 +64,11 @@ const userSchema = new mongoose.Schema(
     profilePicture: {
       type: String,
     },
+    googleId: {
+      type: String,
+      index: true,
+      sparse: true,
+    },
     cart: [cartItemSchema],
     love: [
       {

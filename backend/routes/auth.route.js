@@ -35,6 +35,7 @@ import {
   getDeletedUsers,
   getLovedProducts,
   getProfile,
+  googleSignIn,
   login,
   logout,
   loveProduct,
@@ -67,6 +68,7 @@ const router = express.Router();
 // users
 router.post("/signup", authLimiter, validateSignup, signup);
 router.post("/login", authLimiter, validateLogin, login);
+router.post("/google", authLimiter, googleSignIn);
 router.post("/logout", logout);
 router.post("/refresh", verifyRefreshToken, refreshToken);
 

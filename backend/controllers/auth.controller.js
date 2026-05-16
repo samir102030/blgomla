@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
 import User from "../models/user.model.js";
 import { paginateQuery } from "../utils/pagination.js";
 
@@ -12,6 +13,8 @@ import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const isSuperAdmin = (user) => user?.role === "super_admin";
 
@@ -284,6 +287,101 @@ export const login = controllerWrapper("login", async (req, res) => {
   });
 });
 
+export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) => {
+  const { credential } = req.body;
+  if (!credential) {
+    return res.status(400).json({
+      success: false,
+      message: "Missing Google credential",
+    });
+  }
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return res.status(500).json({
+      success: false,
+      message: "Google Sign-In is not configured on the server",
+    });
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    payload = ticket.getPayload();
+  } catch (err) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid Google credential",
+    });
+  }
+
+  const { sub: googleId, email, name, picture, email_verified } = payload || {};
+  if (!email || !email_verified) {
+    return res.status(400).json({
+      success: false,
+      message: "Google account email is missing or unverified",
+    });
+  }
+
+  const acceptLang = String(req.headers["accept-language"] || "").toLowerCase();
+  const lang = acceptLang.startsWith("ar") ? "ar" : "en";
+
+  let user = await User.findOne({
+    $or: [{ googleId }, { email: new RegExp(`^${email}$`, "i") }],
+  });
+
+  if (user) {
+    let dirty = false;
+    if (!user.googleId) { user.googleId = googleId; dirty = true; }
+    if (!user.isVerified) { user.isVerified = true; dirty = true; }
+    if (!user.profilePicture && picture) { user.profilePicture = picture; dirty = true; }
+    if (!user.name && name) { user.name = name; dirty = true; }
+    user.lastLogin = new Date();
+    if (dirty) await user.save();
+    else await user.save();
+  } else {
+    user = await User.create({
+      email,
+      name,
+      googleId,
+      profilePicture: picture,
+      isVerified: true,
+      role: "customer",
+      active: true,
+      lang,
+      lastLogin: new Date(),
+    });
+    sendWelcomeEmail(user).catch((err) =>
+      console.error("Failed to send welcome email:", err)
+    );
+  }
+
+  if (user.twoFactorEnabled) {
+    return res.status(401).json({
+      success: false,
+      code: "TOTP_REQUIRED",
+      message: "Enter the 6-digit code from your authenticator app.",
+    });
+  }
+
+  generateTokensAndSetCookies(res, user._id);
+
+  return res.status(200).json({
+    success: true,
+    message: "Signed in with Google",
+    user: {
+      ...user._doc,
+      password: undefined,
+      totpSecret: undefined,
+      store:
+        user.role === "store"
+          ? await Store.findOne({ owner: user._id })
+          : undefined,
+    },
+  });
+});
+
 export const logout = controllerWrapper("logout", async (req, res) => {
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
@@ -320,33 +418,33 @@ export const forgotPassword = controllerWrapper(
   "forgotPassword",
   async (req, res) => {
     const { email } = req.body;
-    console.log("Forgot password request for email:", email);
-    const user = await User.findOne({ email: new RegExp(`^${email}$`, "i") });
-    console.log("User found:", user ? user.email : "null");
+    const genericResponse = {
+      success: true,
+      message: "If an account exists for that email, a reset link has been sent.",
+    };
+
+    if (typeof email !== "string" || !email.trim()) {
+      return res.status(200).json(genericResponse);
+    }
+
+    const escaped = email.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const user = await User.findOne({ email: new RegExp(`^${escaped}$`, "i") });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User not found" });
+      console.log("[forgotPassword] no account for:", email);
+      return res.status(200).json(genericResponse);
     }
 
     const resetToken = crypto.randomBytes(20).toString("hex");
-    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
-
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiresAt = resetTokenExpiresAt;
-
+    user.resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
     await user.save();
 
-    // Send password reset email (non-blocking)
     sendPasswordResetEmail(user, resetToken).catch((err) =>
       console.error("Failed to send password reset email:", err)
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Password reset link sent to your email",
-    });
+    return res.status(200).json(genericResponse);
   },
 );
 
