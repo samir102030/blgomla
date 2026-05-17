@@ -21,6 +21,7 @@ import advertisementRoutes from "./advertisement.route.js";
 import paymentRoutes from "./payment.route.js";
 import quotationRoutes from "./quotation.route.js";
 import homeFeedRoutes from "./home.route.js";
+import siteModeRoutes from "./siteMode.route.js";
 
 const router = express.Router();
 
@@ -46,5 +47,6 @@ router.use("/bulk-products", bulkProductRoutes);
 router.use("/advertisements", advertisementRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/quotations", quotationRoutes);
+router.use("/site-mode", siteModeRoutes);
 
 export default router;

@@ -4,6 +4,7 @@ import { useEffect, lazy, Suspense, Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import useNotificationSocket from "./hooks/useNotificationSocket";
+import SiteModeGate from "./components/SiteModeGate";
 
 // ── Eagerly loaded (above-the-fold critical path) ──
 import HomePage from "./pages/HomePage";
@@ -121,6 +122,7 @@ function App() {
       </Suspense>
       <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
+        <SiteModeGate>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
@@ -167,6 +169,7 @@ function App() {
           {/* Vendor Routes */}
           <Route path="/vendor/*" element={<VendorRoutes />} />
         </Routes>
+        </SiteModeGate>
       </Suspense>
       </ErrorBoundary>
       <Suspense fallback={null}>

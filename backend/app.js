@@ -8,6 +8,7 @@ import connectDB from "./config/db.js";
 import systemRoutes from "./routes/system.route.js";
 import { CLIENT_ORIGINS } from "./utils/socket.js";
 import { trackVisitor } from "./middleware/analytics.middleware.js";
+import { comingSoonGate } from "./middleware/comingSoon.middleware.js";
 
 dotenv.config();
 
@@ -114,6 +115,8 @@ app.use(async (req, res, next) => {
     next(err);
   }
 });
+
+app.use(comingSoonGate);
 
 app.use(trackVisitor);
 
