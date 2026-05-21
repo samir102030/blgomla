@@ -8,6 +8,8 @@ interface SEOProps {
   url?: string;
   type?: "website" | "article" | "product";
   noindex?: boolean;
+  /** One or more JSON-LD structured-data objects (schema.org) for rich results. */
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const DEFAULT_TITLE = "Belgomla — IT & Networking Marketplace";
@@ -23,11 +25,17 @@ const SEO: React.FC<SEOProps> = ({
   url,
   type = "website",
   noindex = false,
+  jsonLd,
 }) => {
   const fullTitle = title ? `${title} | ${SITE_NAME}` : DEFAULT_TITLE;
   const canonicalUrl =
     url ||
     (typeof window !== "undefined" ? window.location.href : undefined);
+  const jsonLdBlocks = jsonLd
+    ? Array.isArray(jsonLd)
+      ? jsonLd
+      : [jsonLd]
+    : [];
 
   return (
     <Helmet>
@@ -35,6 +43,13 @@ const SEO: React.FC<SEOProps> = ({
       <meta name="description" content={description} />
       {noindex && <meta name="robots" content="noindex, nofollow" />}
       {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+      {/* JSON-LD structured data for Google rich results / Shopping */}
+      {jsonLdBlocks.map((block, i) => (
+        <script key={i} type="application/ld+json">
+          {JSON.stringify(block)}
+        </script>
+      ))}
 
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />

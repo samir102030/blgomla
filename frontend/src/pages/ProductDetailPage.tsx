@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
+import ShareButtons from "../components/ShareButtons";
 import { useProductStore } from "../stores/product.store";
 import { useUserStore } from "../stores/user.store";
 import { useBrandStore } from "../stores/brand.store";
@@ -334,6 +335,52 @@ const ProductDetailPage: React.FC = () => {
     ...(product.attributes || []).map((a) => `${a.name}: ${a.value}`),
   ].filter(Boolean);
 
+  // Structured data (schema.org) for Google rich results / Shopping.
+  const pageUrl =
+    typeof window !== "undefined" ? window.location.href : undefined;
+  const brandName = getBrandName(product.brand);
+  const reviewCount = Array.isArray(product.reviews)
+    ? product.reviews.filter((r) => r.isVisible !== false).length
+    : 0;
+  const ratingValue = Number(product.rating) || 0;
+  const productJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    image: productImages,
+    description: product.description || product.name,
+    sku: product._id,
+    ...(brandName ? { brand: { "@type": "Brand", name: brandName } } : {}),
+    offers: {
+      "@type": "Offer",
+      url: pageUrl,
+      priceCurrency: "EGP",
+      price: (baseUnitPrice ?? product.price ?? 0).toFixed(2),
+      availability: hasStockAvailability
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      seller: { "@type": "Organization", name: "Belgomla" },
+    },
+    ...(reviewCount > 0 && ratingValue > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: ratingValue.toFixed(1),
+            reviewCount,
+          },
+        }
+      : {}),
+  };
+  const breadcrumbJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: t("Home"), item: "https://halafawystore-frontend.vercel.app/" },
+      { "@type": "ListItem", position: 2, name: t("Products"), item: "https://halafawystore-frontend.vercel.app/products" },
+      { "@type": "ListItem", position: 3, name: product.name, item: pageUrl },
+    ],
+  };
+
   const handleQuantityChange = (change: number) => {
     const newQuantity = quantity + change;
     if (newQuantity >= 1) {
@@ -379,6 +426,7 @@ const ProductDetailPage: React.FC = () => {
         }
         image={product.images?.[0]?.url}
         type="product"
+        jsonLd={[productJsonLd, breadcrumbJsonLd]}
       />
       <Header />
 
@@ -423,7 +471,7 @@ const ProductDetailPage: React.FC = () => {
                   fetchPriority="high"
                   decoding="async"
                   className="w-full h-full object-contain"
-                 loading="lazy" decoding="async"/>
+                />
               </div>
 
               {/* Thumbnail Images */}
@@ -651,6 +699,11 @@ const ProductDetailPage: React.FC = () => {
                   </p>
                 </div>
               )}
+
+              {/* Share */}
+              <div className="mt-4 pt-4 border-t border-[var(--border)]">
+                <ShareButtons title={product.name} />
+              </div>
             </div>
           </div>
 

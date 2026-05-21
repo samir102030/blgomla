@@ -9,6 +9,7 @@ import systemRoutes from "./routes/system.route.js";
 import { CLIENT_ORIGINS } from "./utils/socket.js";
 import { trackVisitor } from "./middleware/analytics.middleware.js";
 import { comingSoonGate } from "./middleware/comingSoon.middleware.js";
+import { captureException } from "./utils/sentry.js";
 
 dotenv.config();
 
@@ -153,6 +154,9 @@ app.get("/", (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err.message);
+  if (!err.status || err.status >= 500) {
+    captureException(err, { path: req.originalUrl, method: req.method });
+  }
   res.status(err.status || 500).json({
     success: false,
     message:

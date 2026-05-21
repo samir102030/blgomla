@@ -7,7 +7,9 @@ import "./index.css";
 import "./lib/i18n";
 import App from "./App.tsx";
 import { applyInitialTheme } from "./lib/theme";
+import { initSentry } from "./lib/sentry";
 
+initSentry();
 applyInitialTheme();
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";

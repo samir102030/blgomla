@@ -5,6 +5,7 @@ import type { ErrorInfo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import useNotificationSocket from "./hooks/useNotificationSocket";
 import SiteModeGate from "./components/SiteModeGate";
+import { captureError } from "./lib/sentry";
 
 // ── Eagerly loaded (above-the-fold critical path) ──
 import HomePage from "./pages/HomePage";
@@ -35,6 +36,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("ErrorBoundary caught:", error, errorInfo);
+    captureError(error, { componentStack: errorInfo.componentStack });
     this.setState({ errorInfo });
   }
   render() {

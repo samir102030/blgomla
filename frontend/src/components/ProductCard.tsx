@@ -31,7 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   currency = "EGP",
   originalPrice,
   image,
-  rating,
+  rating = 0,
   description,
   isNew = false,
   isOnSale = false,

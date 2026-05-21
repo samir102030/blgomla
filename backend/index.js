@@ -6,8 +6,10 @@ import { fileURLToPath } from "url";
 import { existsSync } from "fs";
 import app from "./app.js";
 import { initializeSocket } from "./utils/socket.js";
+import { initSentry } from "./utils/sentry.js";
 
 dotenv.config();
+initSentry();
 
 const port = process.env.PORT || 5000;
 const server = http.createServer(app);
