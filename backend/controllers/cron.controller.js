@@ -1,8 +1,28 @@
 import User from "../models/user.model.js";
+import Product from "../models/product.model.js";
 import { sendAbandonedCartEmail } from "../utils/email.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 
 const HOUR = 60 * 60 * 1000;
+
+// Shared CRON_SECRET check for all cron endpoints. Returns true if it already
+// sent a response (caller should return), false if the request is authorized.
+const rejectIfUnauthorized = (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) {
+    res.status(503).json({ success: false, message: "CRON_SECRET not configured" });
+    return true;
+  }
+  const provided =
+    (req.headers.authorization || "").replace(/^Bearer\s+/i, "") ||
+    req.query.secret ||
+    "";
+  if (provided !== secret) {
+    res.status(401).json({ success: false, message: "Unauthorized" });
+    return true;
+  }
+  return false;
+};
 
 // Recovery sequence: send at 1h, 24h, then 72h of inactivity. Highest stage
 // first so a single run only ever sends one (the most advanced) email per user,
@@ -25,18 +45,7 @@ const BATCH_LIMIT = 200;
 export const recoverAbandonedCarts = controllerWrapper(
   "recoverAbandonedCarts",
   async (req, res) => {
-    const secret = process.env.CRON_SECRET;
-    if (!secret) {
-      return res
-        .status(503)
-        .json({ success: false, message: "CRON_SECRET not configured" });
-    }
-    const auth = req.headers.authorization || "";
-    const provided =
-      auth.replace(/^Bearer\s+/i, "") || req.query.secret || "";
-    if (provided !== secret) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
+    if (rejectIfUnauthorized(req, res)) return;
 
     const now = Date.now();
     const oneHourAgo = new Date(now - 1 * HOUR);
@@ -95,6 +104,44 @@ export const recoverAbandonedCarts = controllerWrapper(
       sent,
       byStage,
       ...(errors.length ? { errors } : {}),
+    });
+  }
+);
+
+/**
+ * GET /api/cron/sale-scheduler
+ * Flips scheduled flash sales on/off based on their window. Only touches
+ * products that have a scheduled start/end — manual (dateless) sales are left
+ * alone. Protected by CRON_SECRET.
+ */
+export const runSaleScheduler = controllerWrapper(
+  "runSaleScheduler",
+  async (req, res) => {
+    if (rejectIfUnauthorized(req, res)) return;
+
+    const now = new Date();
+
+    // Activate sales whose window has started and not yet ended.
+    const activated = await Product.updateMany(
+      {
+        saleActive: false,
+        salePercentage: { $gt: 0 },
+        saleStartsAt: { $ne: null, $lte: now },
+        $or: [{ saleEndsAt: null }, { saleEndsAt: { $gt: now } }],
+      },
+      { $set: { saleActive: true } }
+    );
+
+    // Expire sales whose end time has passed.
+    const expired = await Product.updateMany(
+      { saleActive: true, saleEndsAt: { $ne: null, $lte: now } },
+      { $set: { saleActive: false } }
+    );
+
+    res.status(200).json({
+      success: true,
+      activated: activated.modifiedCount || 0,
+      expired: expired.modifiedCount || 0,
     });
   }
 );

@@ -40,6 +40,15 @@ interface ProductStore {
     productId: string,
     data: Partial<Product>
   ) => Promise<Product | undefined>;
+  scheduleSale: (
+    productId: string,
+    data: {
+      salePercentage: number;
+      saleStartsAt?: string | null;
+      saleEndsAt?: string | null;
+      clear?: boolean;
+    }
+  ) => Promise<Product | undefined>;
   deleteProduct: (productId: string) => Promise<boolean>;
   // Cart actions
   fetchCart: () => Promise<void>;
@@ -291,6 +300,24 @@ export const useProductStore = create<ProductStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+        }
+      },
+
+      scheduleSale: async (productId, data) => {
+        set({ loading: true, error: undefined });
+        try {
+          const res = await axiosInstance.put<{
+            success: boolean;
+            product: Product;
+          }>(`/products/sale-schedule/${productId}`, data);
+          set({ loading: false });
+          return res.data.product;
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+          return undefined;
         }
       },
 

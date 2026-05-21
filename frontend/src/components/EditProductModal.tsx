@@ -1,6 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { axiosInstance } from "../lib/axios";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
+
+// ISO/date string → value for <input type="datetime-local"> (local YYYY-MM-DDTHH:mm)
+const toLocalInput = (iso?: string | null): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 interface EditProductModalProps {
   isOpen: boolean;
@@ -20,6 +30,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   categories,
 }) => {
   const [updating, setUpdating] = useState(false);
+  const [scheduling, setScheduling] = useState(false);
   const { t } = useTranslation();
   const [form, setForm] = useState({
     name: "",
@@ -32,6 +43,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     category: "",
     salePercentage: "",
     saleActive: false,
+    saleStartsAt: "",
+    saleEndsAt: "",
     isActive: true,
     featured: false,
     tags: [] as string[],
@@ -57,6 +70,8 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         category: product.category || "",
         salePercentage: product.salePercentage?.toString() || "",
         saleActive: product.saleActive || false,
+        saleStartsAt: toLocalInput(product.saleStartsAt),
+        saleEndsAt: toLocalInput(product.saleEndsAt),
         isActive: product.isActive ?? true,
         featured: product.featured || false,
         tags: product.tags || [],
@@ -404,6 +419,103 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
                 />
               </div>
+            </div>
+
+            {/* Flash-sale scheduler */}
+            <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-3">
+              <p className="text-sm font-semibold text-amber-800">
+                ⚡ {t("modal.editProduct.scheduleSaleTitle", "Schedule a flash sale")}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600">
+                    {t("modal.editProduct.saleStartsAt", "Starts at")}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.saleStartsAt}
+                    onChange={(e) => setForm({ ...form, saleStartsAt: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600">
+                    {t("modal.editProduct.saleEndsAt", "Ends at")}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={form.saleEndsAt}
+                    onChange={(e) => setForm({ ...form, saleEndsAt: e.target.value })}
+                    className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={scheduling}
+                  onClick={async () => {
+                    const pct = Number(form.salePercentage);
+                    if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
+                      toast.error(t("Enter a sale percentage between 1 and 100"));
+                      return;
+                    }
+                    if (form.saleStartsAt && form.saleEndsAt &&
+                        new Date(form.saleEndsAt) <= new Date(form.saleStartsAt)) {
+                      toast.error(t("End time must be after start time"));
+                      return;
+                    }
+                    setScheduling(true);
+                    const { useProductStore } = await import("../stores/product.store");
+                    const updated = await useProductStore.getState().scheduleSale(product._id, {
+                      salePercentage: pct,
+                      saleStartsAt: form.saleStartsAt ? new Date(form.saleStartsAt).toISOString() : null,
+                      saleEndsAt: form.saleEndsAt ? new Date(form.saleEndsAt).toISOString() : null,
+                    });
+                    setScheduling(false);
+                    if (updated) {
+                      setForm((f) => ({ ...f, saleActive: !!updated.saleActive }));
+                      toast.success(
+                        updated.saleActive
+                          ? t("Sale is now live")
+                          : t("Sale scheduled")
+                      );
+                      onProductUpdated();
+                    } else {
+                      toast.error(useProductStore.getState().error || t("Failed to schedule sale"));
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {scheduling ? t("Saving...") : t("modal.editProduct.scheduleSaleBtn", "Schedule sale")}
+                </button>
+                {(form.saleActive || form.saleStartsAt || form.saleEndsAt) && (
+                  <button
+                    type="button"
+                    disabled={scheduling}
+                    onClick={async () => {
+                      setScheduling(true);
+                      const { useProductStore } = await import("../stores/product.store");
+                      const updated = await useProductStore.getState().scheduleSale(product._id, {
+                        salePercentage: 0,
+                        clear: true,
+                      });
+                      setScheduling(false);
+                      if (updated) {
+                        setForm((f) => ({ ...f, saleActive: false, saleStartsAt: "", saleEndsAt: "" }));
+                        toast.success(t("Sale cleared"));
+                        onProductUpdated();
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    {t("modal.editProduct.clearSaleBtn", "Clear sale")}
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                {t("modal.editProduct.scheduleSaleHint", "Leave times empty for an immediate, open-ended sale. The scheduler activates and expires sales automatically.")}
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-6">

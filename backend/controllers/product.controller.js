@@ -569,6 +569,68 @@ export const toggleSaleProduct = controllerWrapper(
   }
 );
 
+// Schedule a flash sale: set percentage + optional start/end window. The
+// sale-scheduler cron flips saleActive across the window, but we also resolve
+// the current state immediately so the change is visible without waiting.
+export const scheduleSale = controllerWrapper(
+  "scheduleSale",
+  async (req, res) => {
+    const { productId } = req.params;
+    const { salePercentage, saleStartsAt, saleEndsAt, clear } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product)
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+
+    if (clear) {
+      product.saleActive = false;
+      product.salePercentage = 0;
+      product.saleStartsAt = null;
+      product.saleEndsAt = null;
+      await product.save();
+      return res.status(200).json({ success: true, product });
+    }
+
+    const pct = Number(salePercentage);
+    if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "salePercentage must be between 1 and 100",
+      });
+    }
+
+    const start = saleStartsAt ? new Date(saleStartsAt) : null;
+    const end = saleEndsAt ? new Date(saleEndsAt) : null;
+    if (start && isNaN(start.getTime())) {
+      return res.status(400).json({ success: false, message: "Invalid saleStartsAt" });
+    }
+    if (end && isNaN(end.getTime())) {
+      return res.status(400).json({ success: false, message: "Invalid saleEndsAt" });
+    }
+    if (start && end && end <= start) {
+      return res.status(400).json({
+        success: false,
+        message: "saleEndsAt must be after saleStartsAt",
+      });
+    }
+
+    product.salePercentage = pct;
+    product.saleStartsAt = start;
+    product.saleEndsAt = end;
+
+    // Resolve current state: active when now is within [start, end).
+    const now = Date.now();
+    const started = !start || start.getTime() <= now;
+    const notEnded = !end || end.getTime() > now;
+    product.saleActive = started && notEnded;
+
+    await product.save();
+    res.status(200).json({ success: true, product });
+  }
+);
+
 // Toggle Featured Status
 export const toggleFeaturedProduct = controllerWrapper(
   "toggleFeaturedProduct",

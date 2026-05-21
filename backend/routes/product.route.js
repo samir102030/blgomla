@@ -39,6 +39,7 @@ import {
   softDeleteProduct,
   toggleFeaturedProduct,
   toggleSaleProduct,
+  scheduleSale,
   updateCart,
   updateProduct,
   updateProductAttribute,
@@ -113,6 +114,7 @@ router.post("/:productId/approve", protectRoute, adminRoute, approveProduct);
 router.post("/:productId/reject", protectRoute, adminRoute, rejectProduct);
 router.put("/:productId", protectRoute, adminOrStoreRoute, validateUpdateProduct, updateProduct);
 router.put("/sale/:productId", protectRoute, adminOrStoreRoute, toggleSaleProduct);
+router.put("/sale-schedule/:productId", protectRoute, adminOrStoreRoute, scheduleSale);
 router.put("/featured/:productId", protectRoute, adminOrStoreRoute, toggleFeaturedProduct);
 router.put("/stock/:productId", protectRoute, adminOrStoreRoute, validateUpdateStock, updateProductStock);
 router.delete("/delete/:productId", protectRoute, adminOrStoreRoute, softDeleteProduct);

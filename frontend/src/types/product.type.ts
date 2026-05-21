@@ -36,6 +36,8 @@ export interface Product {
   images: ProductImage[];
   salePercentage: number;
   saleActive: boolean;
+  saleStartsAt?: string | null;
+  saleEndsAt?: string | null;
   isActive: boolean;
   deleted: boolean;
   approvalStatus?: "pending" | "approved" | "rejected";

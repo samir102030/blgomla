@@ -226,6 +226,11 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // ── Scheduled (flash) sale window ──
+    // When set, the sale-scheduler cron flips saleActive on at saleStartsAt and
+    // off at saleEndsAt. Either can be null for an open-ended/immediate sale.
+    saleStartsAt: { type: Date, default: null },
+    saleEndsAt: { type: Date, default: null },
 
     // ── Approval ──
     approvalStatus: {

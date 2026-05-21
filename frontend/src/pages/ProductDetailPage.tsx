@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
 import ShareButtons from "../components/ShareButtons";
+import CountdownTimer from "../components/CountdownTimer";
 import { useProductStore } from "../stores/product.store";
 import { useUserStore } from "../stores/user.store";
 import { useBrandStore } from "../stores/brand.store";
@@ -540,6 +541,16 @@ const ProductDetailPage: React.FC = () => {
                       </span>
                     )}
                 </div>
+                {product.saleActive &&
+                  product.saleEndsAt &&
+                  new Date(product.saleEndsAt).getTime() > Date.now() && (
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 px-3 py-2">
+                      <span className="text-sm font-semibold text-red-600">
+                        {t("Sale ends in")}
+                      </span>
+                      <CountdownTimer targetDate={new Date(product.saleEndsAt)} />
+                    </div>
+                  )}
                 {applicableRule && (
                   <p className="mt-2 text-sm text-green-700">
                     {t("Bulk price applied: {{min}}+ units at {{price}} EGP each.", {
