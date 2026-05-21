@@ -38,6 +38,7 @@ const AccountDashboard: React.FC = () => {
     { label: t("account.totalSpent", "Total Spent"), value: `${totalSpent.toLocaleString()} EGP`, icon: "💰", color: "from-emerald-500/10 to-green-500/5 border-emerald-500/15" },
     { label: t("account.delivered", "Delivered"), value: deliveredOrders, icon: "✅", color: "from-violet-500/10 to-purple-500/5 border-violet-500/15" },
     { label: t("account.wishlistItems", "Wishlist"), value: user?.love?.length || 0, icon: "❤️", color: "from-rose-500/10 to-pink-500/5 border-rose-500/15" },
+    { label: t("account.loyaltyPoints", "Loyalty Points"), value: user?.loyaltyPoints || 0, icon: "⭐", color: "from-amber-500/10 to-yellow-500/5 border-amber-500/15" },
   ];
 
   const quickActions = [

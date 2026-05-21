@@ -26,6 +26,7 @@ export interface User {
   profilePicture?: string;
   cart: UserCartItem[];
   love: Product[];
+  loyaltyPoints?: number;
   role: UserRole;
   deleted: boolean;
   active: boolean;

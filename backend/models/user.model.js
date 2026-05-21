@@ -70,6 +70,9 @@ const userSchema = new mongoose.Schema(
       sparse: true,
     },
     cart: [cartItemSchema],
+    // Loyalty points balance. Earned (5%) when orders are delivered, spent at
+    // checkout. 1 point = 1 EGP of redeem value (see utils/loyalty.js).
+    loyaltyPoints: { type: Number, default: 0, min: 0 },
     // Set whenever the cart contents change (see pre-save hook below). Drives
     // abandoned-cart recovery; null when the cart is empty.
     cartUpdatedAt: { type: Date, default: null },

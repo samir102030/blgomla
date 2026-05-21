@@ -9,6 +9,22 @@ import Coupon from "../models/coupon.model.js";
 import Collection from "../models/collection.model.js";
 import { emitNotificationCreated } from "../utils/socket.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
+import { earnedPointsFor, POINT_VALUE_EGP } from "../utils/loyalty.js";
+
+// Award loyalty points once an order is delivered. Idempotent: the conditional
+// update guarantees points are granted at most once even under concurrent calls.
+const awardPointsForDelivery = async (orderId) => {
+  const order = await Order.findById(orderId);
+  if (!order || order.pointsAwarded) return;
+  const pts = earnedPointsFor(order.itemsPrice);
+  const claimed = await Order.updateOne(
+    { _id: orderId, pointsAwarded: { $ne: true } },
+    { $set: { pointsAwarded: true, pointsEarned: pts } }
+  );
+  if (claimed.modifiedCount === 1 && pts > 0) {
+    await User.updateOne({ _id: order.user }, { $inc: { loyaltyPoints: pts } });
+  }
+};
 
 export const createOrder = controllerWrapper(
   "createOrder",
@@ -20,6 +36,7 @@ export const createOrder = controllerWrapper(
       paymentMethod,
       store,
       couponCode,
+      pointsToRedeem = 0,
     } = req.body;
 
     // Validate required fields
@@ -298,6 +315,20 @@ export const createOrder = controllerWrapper(
       const discountPrice = couponDiscount; // Total discount applied
       totalPrice = itemsPrice + shippingPrice + taxPrice - discountPrice;
 
+      // Step 2b: Redeem loyalty points (1 point = POINT_VALUE_EGP). Clamp to the
+      // user's balance and to the order total so it can never go negative.
+      let pointsRedeemed = 0;
+      const requestedPoints = Math.floor(Number(pointsToRedeem) || 0);
+      if (requestedPoints > 0) {
+        const buyer = await User.findById(req.user._id)
+          .select("loyaltyPoints")
+          .session(session);
+        const balance = Math.max(0, buyer?.loyaltyPoints || 0);
+        const maxByTotal = Math.floor(totalPrice / POINT_VALUE_EGP);
+        pointsRedeemed = Math.max(0, Math.min(requestedPoints, balance, maxByTotal));
+        totalPrice = Math.max(0, totalPrice - pointsRedeemed * POINT_VALUE_EGP);
+      }
+
       // Step 3: Create the order
       const order = new Order({
         user: req.user._id,
@@ -312,6 +343,7 @@ export const createOrder = controllerWrapper(
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         couponDiscount,
         discountPrice,
+        pointsRedeemed,
         statusTimeline: [
           { status: "pending", note: "Order placed", updatedBy: req.user._id },
         ],
@@ -352,10 +384,15 @@ export const createOrder = controllerWrapper(
         );
       }
 
-      // Step 6: Clear user's cart
+      // Step 6: Clear user's cart and deduct any redeemed points
       await User.findByIdAndUpdate(
         req.user._id,
-        { $set: { cart: [] } },
+        {
+          $set: { cart: [] },
+          ...(pointsRedeemed > 0
+            ? { $inc: { loyaltyPoints: -pointsRedeemed } }
+            : {}),
+        },
         { session }
       );
 
@@ -514,7 +551,7 @@ export const updateOrderStatus = controllerWrapper(
       {
         status,
         $push: {
-          statusTimeline: { status, note, updatedBy: req.user._id },
+          statusTimeline: { status, note, updatedBy: req.user?._id },
         },
       },
       { new: true }
@@ -523,6 +560,11 @@ export const updateOrderStatus = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+
+    // Award loyalty points the first time an order reaches "delivered".
+    if (status === "delivered") {
+      await awardPointsForDelivery(order._id);
+    }
 
     // Create notification for customer about status change
     const statusMessages = {
@@ -609,6 +651,9 @@ export const markOrderDelivered = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+
+    await awardPointsForDelivery(order._id);
+
     res.status(200).json({ success: true, order });
   }
 );

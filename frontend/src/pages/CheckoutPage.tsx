@@ -42,6 +42,7 @@ const CheckoutPage: React.FC = () => {
 
   const user = useUserStore((state) => state.user);
   const fetchCart = useUserStore((state) => state.fetchCart);
+  const [redeemPoints, setRedeemPoints] = useState(false);
   const { createOrder } = useOrderStore();
   const { addresses, fetchUserAddresses, createAddress } = useAddressStore();
   const { appliedCoupon, validateCoupon, removeCoupon } = useCouponStore();
@@ -170,7 +171,12 @@ const CheckoutPage: React.FC = () => {
   };
 
   const discountAmount = calculateCouponDiscount();
-  const grandTotal = Math.max(0, subtotal + shippingFee - discountAmount);
+  const totalBeforePoints = Math.max(0, subtotal + shippingFee - discountAmount);
+  // Loyalty: 1 point = 1 EGP, capped by balance and the remaining total.
+  const pointsBalance = Math.max(0, user?.loyaltyPoints || 0);
+  const maxRedeemable = Math.min(pointsBalance, Math.floor(totalBeforePoints));
+  const pointsApplied = redeemPoints ? maxRedeemable : 0;
+  const grandTotal = Math.max(0, totalBeforePoints - pointsApplied);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
@@ -482,6 +488,7 @@ const CheckoutPage: React.FC = () => {
         taxPrice: 0, // You can calculate tax if needed
         totalPrice: grandTotal,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
+        pointsToRedeem: pointsApplied,
       };
 
       if (orderItemsPayload.length > 0) {
@@ -1008,11 +1015,36 @@ const CheckoutPage: React.FC = () => {
                         <span>-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                       </div>
                     )}
+                    {pointsApplied > 0 && (
+                      <div className="flex justify-between text-xs sm:text-sm text-amber-600">
+                        <span>{t("Loyalty Points")}</span>
+                        <span>-{(pointsApplied).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-base sm:text-lg font-bold border-t pt-2">
                       <span>{t("Grand Total")}</span>
                       <span>{(grandTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
                   </div>
+
+                  {/* Loyalty points redeem */}
+                  {pointsBalance > 0 && (
+                    <label className="mt-3 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={redeemPoints}
+                        disabled={maxRedeemable <= 0}
+                        onChange={(e) => setRedeemPoints(e.target.checked)}
+                        className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+                      />
+                      <span className="text-xs sm:text-sm text-amber-800">
+                        {t("Use {{points}} loyalty points (−{{value}} EGP)", {
+                          points: pointsBalance,
+                          value: maxRedeemable.toLocaleString("en-EG", { maximumFractionDigits: 2 }),
+                        })}
+                      </span>
+                    </label>
+                  )}
                 </div>
 
                 {/* Coupon Code */}

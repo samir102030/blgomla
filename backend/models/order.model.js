@@ -76,6 +76,10 @@ const orderSchema = new mongoose.Schema(
     couponCode: { type: String }, // Applied coupon code
     couponDiscount: { type: Number, default: 0 }, // Total coupon discount
     discountPrice: { type: Number, default: 0 }, // Total discount (coupon + sale)
+    // ── Loyalty points ──
+    pointsRedeemed: { type: Number, default: 0 }, // points spent on this order
+    pointsEarned: { type: Number, default: 0 }, // points awarded on delivery
+    pointsAwarded: { type: Boolean, default: false }, // guard against double-award
     isPaid: { type: Boolean, default: false },
     paidAt: { type: Date },
     isDelivered: { type: Boolean, default: false },
