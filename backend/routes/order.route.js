@@ -31,7 +31,7 @@ import {
   updateOrderStatus,
   cancelOrder,
 } from "../controllers/order.controller.js";
-import { protectRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, adminOrStoreRoute } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
@@ -57,17 +57,17 @@ router.get("/:id", protectRoute, translateResponse, getOrderById);
 // Get all orders for a user
 // router.get("/user/:userId", getUserOrders);
 
-// Update order status
-router.put("/:id/status", validateUpdateOrderStatus, updateOrderStatus);
+// Update order status (staff only)
+router.put("/:id/status", protectRoute, adminOrStoreRoute, validateUpdateOrderStatus, updateOrderStatus);
 
-// Mark order as paid
-router.put("/:id/pay", validateMarkOrderPaid, markOrderPaid);
+// Mark order as paid (staff only)
+router.put("/:id/pay", protectRoute, adminOrStoreRoute, validateMarkOrderPaid, markOrderPaid);
 
-// Mark order as delivered
-router.put("/:id/deliver", validateMarkOrderDelivered, markOrderDelivered);
+// Mark order as delivered (staff only)
+router.put("/:id/deliver", protectRoute, adminOrStoreRoute, validateMarkOrderDelivered, markOrderDelivered);
 
-// Cancel an order
-router.put("/:id/cancel", validateCancelOrder, cancelOrder);
+// Cancel an order (staff only)
+router.put("/:id/cancel", protectRoute, adminOrStoreRoute, validateCancelOrder, cancelOrder);
 
 // Delete an order
 router.delete("/:id", protectRoute, validateDeleteOrder, deleteOrder);
