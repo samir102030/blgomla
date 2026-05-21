@@ -134,7 +134,13 @@ const getPaymobPaymentKey = async (authToken, orderId, amountCents, billingData,
  * Create a Paymob payment session
  * Returns the payment key + iframe URL
  */
-export const createPaymobPayment = async (amount, orderId, billingData, items = []) => {
+export const createPaymobPayment = async (
+  amount,
+  orderId,
+  billingData,
+  items = [],
+  { integrationId, iframeId } = {}
+) => {
   if (!process.env.PAYMOB_API_KEY) throw new Error("Paymob is not configured");
 
   // Step 1: Auth
@@ -143,17 +149,19 @@ export const createPaymobPayment = async (amount, orderId, billingData, items = 
   // Step 2: Create order
   const paymobOrder = await createPaymobOrder(authToken, amount, orderId, items);
 
-  // Step 3: Payment key
+  // Step 3: Payment key — integrationId selects the gateway (card vs an
+  // installment provider like ValU/Souhoola).
   const amountCents = Math.round(amount * 100);
   const paymentKey = await getPaymobPaymentKey(
     authToken,
     paymobOrder.id,
     amountCents,
     billingData,
-    process.env.PAYMOB_INTEGRATION_ID
+    integrationId || process.env.PAYMOB_INTEGRATION_ID
   );
 
-  const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${process.env.PAYMOB_IFRAME_ID}?payment_token=${paymentKey.token}`;
+  const iframe = iframeId || process.env.PAYMOB_IFRAME_ID;
+  const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframe}?payment_token=${paymentKey.token}`;
 
   return {
     paymentKey: paymentKey.token,
@@ -220,6 +228,16 @@ export const createPayment = async (method, { amount, orderId, billingData, item
       return {
         gateway: "paymob",
         ...(await createPaymobPayment(amount, orderId, billingData, items)),
+      };
+    case "paymob_installment":
+      return {
+        gateway: "paymob_installment",
+        ...(await createPaymobPayment(amount, orderId, billingData, items, {
+          integrationId: process.env.PAYMOB_INSTALLMENT_INTEGRATION_ID,
+          iframeId:
+            process.env.PAYMOB_INSTALLMENT_IFRAME_ID ||
+            process.env.PAYMOB_IFRAME_ID,
+        })),
       };
     case "cod":
       return { gateway: "cod", status: "pending" };

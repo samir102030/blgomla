@@ -522,12 +522,29 @@ const CheckoutPage: React.FC = () => {
       const order = await createOrder(orderData);
 
       if (order) {
-        toast.success(
-          "Order placed successfully! Redirecting to order confirmation..."
-        );
-        // Clear cart after successful order
         await fetchCart();
-        // Navigate to order confirmation or orders page
+
+        // Online payment (Paymob card / installments): get a payment key and
+        // hand off to the hosted iframe. Falls back to confirmation if the
+        // gateway isn't configured, so the order is never lost.
+        if (paymentMethod === "paymob" || paymentMethod === "paymob_installment") {
+          try {
+            const { data } = await axiosInstance.post("/payments/create-intent", {
+              orderId: order._id,
+              paymentMethod,
+            });
+            const iframeUrl = data?.payment?.iframeUrl;
+            if (iframeUrl) {
+              window.location.href = iframeUrl;
+              return;
+            }
+          } catch (payErr) {
+            console.error("Payment init failed:", payErr);
+            toast.error(t("Couldn't start the payment — your order was saved as pending."));
+          }
+        }
+
+        toast.success(t("Order placed successfully!"));
         navigate(`/order-confirmation/${order._id}`);
       } else {
         throw new Error("Order creation returned no data");
@@ -1129,6 +1146,32 @@ const CheckoutPage: React.FC = () => {
                       />
                       <span className="ml-2 text-xs sm:text-sm text-[var(--text-muted)]">
                         {t("Cash On Delivery")}
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="paymob"
+                        checked={paymentMethod === "paymob"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-xs sm:text-sm text-[var(--text-muted)]">
+                        {t("Credit / Debit Card")}
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="paymob_installment"
+                        checked={paymentMethod === "paymob_installment"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-xs sm:text-sm text-[var(--text-muted)]">
+                        {t("Installments (ValU / Souhoola)")}
                       </span>
                     </label>
                   </div>

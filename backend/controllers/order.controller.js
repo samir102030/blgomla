@@ -10,8 +10,10 @@ import Collection from "../models/collection.model.js";
 import Address from "../models/address.model.js";
 import { getShippingSettings } from "../models/shippingSettings.model.js";
 import { resolveShippingFee } from "../utils/shipping.js";
+import { getBostaShippingFee, isBostaEnabled } from "../utils/bosta.js";
 import { emitNotificationCreated } from "../utils/socket.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
+import { sendSMS, orderSmsText } from "../utils/sms.js";
 import {
   earnedPointsFor,
   POINT_VALUE_EGP,
@@ -113,7 +115,7 @@ export const createOrder = controllerWrapper(
     }
 
     // Validate payment method
-    const validPaymentMethods = ["cod", "stripe", "paymob"];
+    const validPaymentMethods = ["cod", "stripe", "paymob", "paymob_installment"];
     if (!validPaymentMethods.includes(paymentMethod.toLowerCase())) {
       return res.status(400).json({
         success: false,
@@ -344,11 +346,20 @@ export const createOrder = controllerWrapper(
       const addressDoc = await Address.findById(shippingAddress)
         .select("city state")
         .session(session);
-      shippingPrice = resolveShippingFee(
-        shippingSettings,
-        addressDoc || {},
-        itemsPrice
-      );
+      // Prefer live Bosta rates when configured; fall back to the zone rates.
+      // Honor a free-shipping threshold regardless of source.
+      const freeByThreshold =
+        shippingSettings?.enabled !== false &&
+        Number(shippingSettings?.freeShippingThreshold) > 0 &&
+        itemsPrice >= Number(shippingSettings.freeShippingThreshold);
+      let liveFee = null;
+      if (!freeByThreshold && isBostaEnabled()) {
+        liveFee = await getBostaShippingFee(addressDoc || {});
+      }
+      shippingPrice =
+        liveFee != null
+          ? liveFee
+          : resolveShippingFee(shippingSettings, addressDoc || {}, itemsPrice);
 
       // Calculate final prices
       const discountPrice = couponDiscount; // Total discount applied
@@ -481,6 +492,10 @@ export const createOrder = controllerWrapper(
         sendOrderConfirmationEmail(customer, populatedOrder).catch((err) =>
           console.error("Failed to send order confirmation email:", err)
         );
+        if (customer.phoneNumber) {
+          const orderNum = savedOrder._id.toString().slice(-8).toUpperCase();
+          sendSMS(customer.phoneNumber, orderSmsText(customer.lang, "confirmed", orderNum));
+        }
       }
     } catch (error) {
       // Abort transaction on any error
@@ -631,6 +646,10 @@ export const updateOrderStatus = controllerWrapper(
         sendOrderStatusEmail(customer, order, status).catch((err) =>
           console.error("Failed to send order status email:", err)
         );
+        if (customer.phoneNumber && (status === "shipped" || status === "delivered")) {
+          const orderNum = order._id.toString().slice(-8).toUpperCase();
+          sendSMS(customer.phoneNumber, orderSmsText(customer.lang, status, orderNum));
+        }
       }
     } catch (error) {
       console.error("Error creating order status notification:", error);
