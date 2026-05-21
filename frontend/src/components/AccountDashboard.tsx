@@ -3,6 +3,7 @@ import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import ReferralCard from "./ReferralCard";
 
 const AccountDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -66,6 +67,9 @@ const AccountDashboard: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* ===== REFERRAL CARD ===== */}
+      <ReferralCard />
 
       {/* ===== ACTIVE ORDERS ALERT ===== */}
       {pendingOrders > 0 && (

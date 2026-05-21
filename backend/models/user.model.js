@@ -73,6 +73,13 @@ const userSchema = new mongoose.Schema(
     // Loyalty points balance. Earned (5%) when orders are delivered, spent at
     // checkout. 1 point = 1 EGP of redeem value (see utils/loyalty.js).
     loyaltyPoints: { type: Number, default: 0, min: 0 },
+    // ── Referrals ──
+    referralCode: { type: String, unique: true, sparse: true, index: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    // Paid out once, when this user's first order is delivered.
+    referralRewarded: { type: Boolean, default: false },
+    // How many of this user's referrals have converted (first order delivered).
+    referralCount: { type: Number, default: 0 },
     // Set whenever the cart contents change (see pre-save hook below). Drives
     // abandoned-cart recovery; null when the cart is empty.
     cartUpdatedAt: { type: Date, default: null },

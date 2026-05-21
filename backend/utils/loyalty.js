@@ -11,3 +11,8 @@ export const earnedPointsFor = (amount) =>
 /** EGP value of a points balance. */
 export const pointsToEgp = (points) =>
   Math.max(0, Math.floor(Number(points) || 0)) * POINT_VALUE_EGP;
+
+// Referral bonuses (in points), paid once when a referred user's first order is
+// delivered: the referrer and the new customer each get a reward.
+export const REFERRER_REWARD = 50;
+export const REFEREE_REWARD = 30;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
@@ -27,6 +27,8 @@ const LoginRegisterPage: React.FC = () => {
   const [totpCode, setTotpCode] = useState("");
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get("ref") || undefined;
   const login = useUserStore((s) => s.login);
   const signup = useUserStore((s) => s.signup);
   const googleSignIn = useUserStore((s) => s.googleSignIn);
@@ -118,6 +120,7 @@ const LoginRegisterPage: React.FC = () => {
         email: emailLower,
         phoneNumber: normalizedPhone,
         password: registerData.password,
+        ...(referralCode ? { referralCode } : {}),
       });
       if (user) {
         // Backend no longer issues a session cookie at signup — user must

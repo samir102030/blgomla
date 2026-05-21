@@ -9,7 +9,28 @@ import Coupon from "../models/coupon.model.js";
 import Collection from "../models/collection.model.js";
 import { emitNotificationCreated } from "../utils/socket.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
-import { earnedPointsFor, POINT_VALUE_EGP } from "../utils/loyalty.js";
+import {
+  earnedPointsFor,
+  POINT_VALUE_EGP,
+  REFERRER_REWARD,
+  REFEREE_REWARD,
+} from "../utils/loyalty.js";
+
+// Pay the referral bonus once, on the referred user's first delivered order.
+// The conditional findOneAndUpdate atomically claims the reward so it can't
+// double-pay even under concurrent deliveries.
+const processReferralReward = async (userId) => {
+  const claimed = await User.findOneAndUpdate(
+    { _id: userId, referredBy: { $ne: null }, referralRewarded: { $ne: true } },
+    { $set: { referralRewarded: true }, $inc: { loyaltyPoints: REFEREE_REWARD } },
+    { new: false }
+  );
+  if (!claimed || !claimed.referredBy) return;
+  await User.updateOne(
+    { _id: claimed.referredBy },
+    { $inc: { loyaltyPoints: REFERRER_REWARD, referralCount: 1 } }
+  );
+};
 
 // Award loyalty points once an order is delivered. Idempotent: the conditional
 // update guarantees points are granted at most once even under concurrent calls.
@@ -21,9 +42,12 @@ const awardPointsForDelivery = async (orderId) => {
     { _id: orderId, pointsAwarded: { $ne: true } },
     { $set: { pointsAwarded: true, pointsEarned: pts } }
   );
-  if (claimed.modifiedCount === 1 && pts > 0) {
+  if (claimed.modifiedCount !== 1) return; // another call already handled it
+  if (pts > 0) {
     await User.updateOne({ _id: order.user }, { $inc: { loyaltyPoints: pts } });
   }
+  // First delivery also unlocks any pending referral bonus for this buyer.
+  await processReferralReward(order.user);
 };
 
 export const createOrder = controllerWrapper(

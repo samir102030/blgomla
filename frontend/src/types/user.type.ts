@@ -27,6 +27,9 @@ export interface User {
   cart: UserCartItem[];
   love: Product[];
   loyaltyPoints?: number;
+  referralCode?: string;
+  referredBy?: string;
+  referralCount?: number;
   role: UserRole;
   deleted: boolean;
   active: boolean;

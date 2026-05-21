@@ -32,13 +32,23 @@ const guardSuperAdminMutation = async (targetUserId, actor) => {
   return { targetUser };
 };
 export const signup = controllerWrapper("signup", async (req, res) => {
-  const { email, password, name, phoneNumber, role, storeDescription } =
+  const { email, password, name, phoneNumber, role, storeDescription, referralCode } =
     req.body;
 
   if (await User.findOne({ email: new RegExp(`^${email}$`, "i") }))
     return res
       .status(400)
       .json({ success: false, message: "User already exists" });
+
+  // Resolve a referral code to the referring user (best-effort — a bad code
+  // never blocks signup).
+  let referredBy;
+  if (referralCode && String(referralCode).trim()) {
+    const referrer = await User.findOne({
+      referralCode: String(referralCode).trim().toUpperCase(),
+    }).select("_id");
+    if (referrer) referredBy = referrer._id;
+  }
 
   const verificationToken = crypto.randomBytes(3).toString("hex").toUpperCase();
 
@@ -57,6 +67,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     verificationToken,
     verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     role: role !== "admin" ? role || "customer" : "customer", // default to customer
+    referredBy,
     lastLogin: new Date(),
     active: true, // Set active to true by default
   });
@@ -94,6 +105,42 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     },
   });
 });
+
+// Generate a short, unique referral code (best-effort retry on collision).
+const generateReferralCode = async () => {
+  for (let i = 0; i < 5; i++) {
+    const code = crypto.randomBytes(4).toString("hex").toUpperCase();
+    if (!(await User.exists({ referralCode: code }))) return code;
+  }
+  return crypto.randomBytes(6).toString("hex").toUpperCase();
+};
+
+// GET /api/users/referral — returns the caller's referral code (lazily created)
+// plus how many referrals have converted.
+export const getReferralInfo = controllerWrapper(
+  "getReferralInfo",
+  async (req, res) => {
+    let user = await User.findById(req.user._id).select(
+      "referralCode referralCount"
+    );
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (!user.referralCode) {
+      const code = await generateReferralCode();
+      user = await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { referralCode: code } },
+        { new: true }
+      ).select("referralCode referralCount");
+    }
+    res.status(200).json({
+      success: true,
+      referralCode: user.referralCode,
+      referralCount: user.referralCount || 0,
+    });
+  }
+);
 
 export const reSendVerificationEmail = controllerWrapper(
   "reSendVerificationEmail",

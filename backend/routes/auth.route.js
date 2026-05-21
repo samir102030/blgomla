@@ -35,6 +35,7 @@ import {
   getDeletedUsers,
   getLovedProducts,
   getProfile,
+  getReferralInfo,
   googleSignIn,
   login,
   logout,
@@ -79,6 +80,9 @@ router.put("/loveProduct/:productId", protectRoute, toggleLoveProduct); // Toggl
 // Profile update route for authenticated users
 router.get("/profile", protectRoute, getProfile);
 router.put("/profile", protectRoute, updateProfile);
+
+// Referral info (lazily creates the caller's code)
+router.get("/referral", protectRoute, getReferralInfo);
 
 // Password change route for authenticated users
 router.put("/changePassword", protectRoute, changePassword);
