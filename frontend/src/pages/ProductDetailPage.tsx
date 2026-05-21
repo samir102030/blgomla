@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import SEO from "../components/SEO";
 import ShareButtons from "../components/ShareButtons";
 import CountdownTimer from "../components/CountdownTimer";
+import ProductQuestions from "../components/ProductQuestions";
 import { useProductStore } from "../stores/product.store";
 import { useUserStore } from "../stores/user.store";
 import { useBrandStore } from "../stores/brand.store";
@@ -739,6 +740,15 @@ const ProductDetailPage: React.FC = () => {
               >
                 {t("Reviews")}
               </button>
+              <button
+                className={`pb-4 text-2xl font-bold text-[var(--text)] border-b-2 transition-colors ${tab === "questions"
+                    ? "border-blue-600"
+                    : "border-transparent text-[var(--text-subtle)]"
+                  }`}
+                onClick={() => setTab("questions")}
+              >
+                {t("Q&A")}
+              </button>
             </div>
             <div className="py-8">
               {tab === "description" && (
@@ -929,6 +939,9 @@ const ProductDetailPage: React.FC = () => {
                     <div className="text-[var(--text-subtle)]">{t("No reviews yet.")}</div>
                   )}
                 </div>
+              )}
+              {tab === "questions" && productId && (
+                <ProductQuestions productId={productId} />
               )}
             </div>
           </div>

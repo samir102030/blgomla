@@ -23,6 +23,7 @@ import quotationRoutes from "./quotation.route.js";
 import homeFeedRoutes from "./home.route.js";
 import siteModeRoutes from "./siteMode.route.js";
 import cronRoutes from "./cron.route.js";
+import questionRoutes from "./question.route.js";
 
 const router = express.Router();
 
@@ -50,5 +51,6 @@ router.use("/payments", paymentRoutes);
 router.use("/quotations", quotationRoutes);
 router.use("/site-mode", siteModeRoutes);
 router.use("/cron", cronRoutes);
+router.use("/questions", questionRoutes);
 
 export default router;
