@@ -10,6 +10,7 @@ import { useCouponStore } from "../stores/coupon.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import type { Coupon } from "../types/coupon.type";
+import { resolveShippingFee, type ShippingSettings } from "../lib/shipping";
 import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 import { getBulkPricing } from "../lib/pricing";
@@ -67,6 +68,15 @@ const CheckoutPage: React.FC = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [couponCode, setCouponCode] = useState("");
+  const [shippingSettings, setShippingSettings] = useState<ShippingSettings | null>(null);
+
+  // Load the store's shipping config once so the summary can show a real fee.
+  useEffect(() => {
+    axiosInstance
+      .get<{ success: boolean; settings: ShippingSettings }>("/shipping")
+      .then((res) => setShippingSettings(res.data.settings))
+      .catch(() => {});
+  }, []);
 
   // Load cart data and addresses on component mount
   useEffect(() => {
@@ -144,7 +154,16 @@ const CheckoutPage: React.FC = () => {
     (sum, item) => sum + getItemPrice(item) * item.quantity,
     0
   );
-  const shippingFee = 0.0;
+  // Shipping fee from the store config, based on the chosen delivery address.
+  const selectedAddress = addresses?.find((a) => a._id === selectedAddressId);
+  const shippingAddressForFee = selectedAddress
+    ? { city: selectedAddress.city, state: selectedAddress.state }
+    : { city: billingData.city, state: billingData.state };
+  const shippingFee = resolveShippingFee(
+    shippingSettings,
+    shippingAddressForFee,
+    subtotal
+  );
 
   // Calculate coupon discount using store's applied coupon
   const calculateCouponDiscount = () => {

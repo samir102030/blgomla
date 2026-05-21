@@ -18,6 +18,7 @@ import {
   ClipboardDocumentCheckIcon,
   ShieldCheckIcon,
   RocketLaunchIcon,
+  TruckIcon,
   // StarIcon,
 } from "@heroicons/react/24/outline";
 import Logo, { BRAND } from "../Logo";
@@ -154,6 +155,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: t("admin.siteMode", "Coming Soon"),
       href: "/dashboard/site-mode",
       icon: RocketLaunchIcon,
+      roles: ["admin", "super_admin"],
+    },
+    {
+      name: t("admin.shipping", "Shipping"),
+      href: "/dashboard/shipping",
+      icon: TruckIcon,
       roles: ["admin", "super_admin"],
     },
     {

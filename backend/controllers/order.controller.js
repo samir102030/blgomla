@@ -7,6 +7,9 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import Notification from "../models/notification.model.js";
 import Coupon from "../models/coupon.model.js";
 import Collection from "../models/collection.model.js";
+import Address from "../models/address.model.js";
+import { getShippingSettings } from "../models/shippingSettings.model.js";
+import { resolveShippingFee } from "../utils/shipping.js";
 import { emitNotificationCreated } from "../utils/socket.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
 import {
@@ -334,6 +337,18 @@ export const createOrder = controllerWrapper(
           }
         }
       }
+
+      // Step 2c: Compute shipping authoritatively from the address governorate
+      // (never trust a client-sent shipping price).
+      const shippingSettings = await getShippingSettings();
+      const addressDoc = await Address.findById(shippingAddress)
+        .select("city state")
+        .session(session);
+      shippingPrice = resolveShippingFee(
+        shippingSettings,
+        addressDoc || {},
+        itemsPrice
+      );
 
       // Calculate final prices
       const discountPrice = couponDiscount; // Total discount applied

@@ -26,6 +26,7 @@ import QuotationsPage from "../pages/admin/QuotationsPage";
 import { useUserStore } from "../stores/user.store";
 import AdminsPage from "../pages/admin/AdminsPage";
 import SiteModePage from "../pages/admin/SiteModePage";
+import ShippingSettingsPage from "../pages/admin/ShippingSettingsPage";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -110,6 +111,9 @@ const AdminRoutes: React.FC = () => {
 
         {/* Site Mode */}
         <Route path="/site-mode" element={<SiteModePage />} />
+
+        {/* Shipping */}
+        <Route path="/shipping" element={<ShippingSettingsPage />} />
 
         {/* Content Management */}
         <Route path="/advertisements" element={<AdvertisementsPage />} />
