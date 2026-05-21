@@ -222,6 +222,7 @@ const BrandsContent: React.FC = () => {
                     isFeatured={product.featured}
                     salePercentage={product.salePercentage}
                     stock={product.stock}
+                    soldCount={product.soldCount}
                   />
                 ))
               )}

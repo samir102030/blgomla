@@ -513,6 +513,13 @@ const ProductDetailPage: React.FC = () => {
                 <span className="ml-2 text-[var(--text-muted)]">
                   {t("({{count}} reviews)", { count: getVisibleReviewCount() })}
                 </span>
+                {(product.soldCount ?? 0) >= 10 && (
+                  <span className="ml-3 text-sm font-medium text-amber-600">
+                    {(product.soldCount ?? 0) >= 50
+                      ? `🔥 ${t("Bestseller")}`
+                      : t("{{count}} sold", { count: product.soldCount })}
+                  </span>
+                )}
               </div>
 
               {/* Price */}

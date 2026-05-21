@@ -167,6 +167,7 @@ const HomePage: React.FC = () => {
             salePercentage={product.salePercentage}
             isInStock={product.stock > 0}
             stock={product.stock}
+            soldCount={product.soldCount}
             priority={idx === 0}
           />
         );})}
@@ -327,6 +328,7 @@ const HomePage: React.FC = () => {
                     salePercentage={product.salePercentage}
                     isInStock={product.stock > 0}
                     stock={product.stock}
+                    soldCount={product.soldCount}
                   />
                 ))}
               </div>

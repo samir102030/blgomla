@@ -19,6 +19,7 @@ interface ProductCardProps {
   isFeatured?: boolean;
   salePercentage?: number;
   stock?: number;
+  soldCount?: number;
   isInStock?: boolean;
   // First card on a page sets the LCP; skip lazy-load + boost fetch priority.
   priority?: boolean;
@@ -38,6 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isFeatured = false,
   salePercentage,
   stock,
+  soldCount = 0,
   isInStock,
   priority = false,
 }) => {
@@ -217,6 +219,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {name}
           </h3>
         </Link>
+        {/* Honest social proof from real data */}
+        {(soldCount >= 10 || (typeof stock === "number" && stock > 0 && stock <= 5)) && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+            {soldCount >= 50 ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                🔥 {t("Bestseller")}
+              </span>
+            ) : soldCount >= 10 ? (
+              <span className="text-[10px] font-medium text-[var(--text-subtle)]">
+                {t("{{count}} sold", { count: soldCount })}
+              </span>
+            ) : null}
+            {typeof stock === "number" && stock > 0 && stock <= 5 && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">
+                {t("Only {{count}} left", { count: stock })}
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex items-center mb-2 gap-0.5">
           {renderStars(rating)}
           <span className="text-[11px] text-[var(--text-subtle)] ml-1.5">
