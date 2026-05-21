@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import Store from "../models/store.model.js";
+import Product from "../models/product.model.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
@@ -99,6 +100,35 @@ export const mixRoute = (roles) => {
         .json({ message: "Access denied - You Are Not Authorized" });
     }
   };
+};
+
+// Ensures a store user can only act on a product belonging to their own store.
+// Admins/super_admins bypass. Must run AFTER protectRoute + adminOrStoreRoute,
+// which populate req.user and (for stores) req.store. Reads :productId or :id.
+export const requireProductAccess = async (req, res, next) => {
+  try {
+    if (["admin", "super_admin"].includes(req.user?.role)) return next();
+    if (req.user?.role !== "store") {
+      return res.status(403).json({ success: false, message: "Access denied" });
+    }
+    const productId = req.params.productId || req.params.id;
+    const product = await Product.findById(productId).select("store");
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+    if (!req.store || String(product.store) !== String(req.store._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "You can only manage your own products",
+      });
+    }
+    return next();
+  } catch (error) {
+    console.log("Error in requireProductAccess middleware", error.message);
+    return res.status(500).json({ success: false, message: "Authorization check failed" });
+  }
 };
 
 // Aliases for compatibility with route imports

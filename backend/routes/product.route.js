@@ -4,6 +4,7 @@ import {
   adminOrStoreRoute,
   adminRoute,
   storeRoute,
+  requireProductAccess,
 } from "../middleware/auth.middleware.js";
 import {
   addProductAttribute,
@@ -112,14 +113,14 @@ router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
 router.get("/approvals", protectRoute, adminRoute, getProductApprovals);
 router.post("/:productId/approve", protectRoute, adminRoute, approveProduct);
 router.post("/:productId/reject", protectRoute, adminRoute, rejectProduct);
-router.put("/:productId", protectRoute, adminOrStoreRoute, validateUpdateProduct, updateProduct);
-router.put("/sale/:productId", protectRoute, adminOrStoreRoute, toggleSaleProduct);
-router.put("/sale-schedule/:productId", protectRoute, adminOrStoreRoute, scheduleSale);
-router.put("/featured/:productId", protectRoute, adminOrStoreRoute, toggleFeaturedProduct);
-router.put("/stock/:productId", protectRoute, adminOrStoreRoute, validateUpdateStock, updateProductStock);
-router.delete("/delete/:productId", protectRoute, adminOrStoreRoute, softDeleteProduct);
-router.put("/restore/:productId", protectRoute, adminOrStoreRoute, restoreProduct);
-router.delete("/:productId", protectRoute, adminOrStoreRoute, deleteProduct);
+router.put("/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, validateUpdateProduct, updateProduct);
+router.put("/sale/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, toggleSaleProduct);
+router.put("/sale-schedule/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, scheduleSale);
+router.put("/featured/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, toggleFeaturedProduct);
+router.put("/stock/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, validateUpdateStock, updateProductStock);
+router.delete("/delete/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, softDeleteProduct);
+router.put("/restore/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, restoreProduct);
+router.delete("/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, deleteProduct);
 
 // ═══════════════════════════════════════════════
 // REVIEWS
