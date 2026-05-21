@@ -70,6 +70,15 @@ const userSchema = new mongoose.Schema(
       sparse: true,
     },
     cart: [cartItemSchema],
+    // Set whenever the cart contents change (see pre-save hook below). Drives
+    // abandoned-cart recovery; null when the cart is empty.
+    cartUpdatedAt: { type: Date, default: null },
+    // Tracks the abandoned-cart email sequence so we never double-send a stage.
+    // stage 0 = none sent, 1 = 1h sent, 2 = 24h sent, 3 = 72h sent (final).
+    cartRecovery: {
+      stage: { type: Number, default: 0 },
+      lastSentAt: { type: Date, default: null },
+    },
     love: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -123,6 +132,18 @@ userSchema.pre("save", async function (next) {
     console.error("Error hashing password:", error);
     next(error);
   }
+});
+
+// Stamp cart-activity time and restart the recovery sequence whenever the cart
+// changes. Separate hook so the password hook's early-return can't skip it.
+userSchema.pre("save", function (next) {
+  if (this.isModified("cart")) {
+    const hasItems = Array.isArray(this.cart) && this.cart.length > 0;
+    this.cartUpdatedAt = hasItems ? new Date() : null;
+    // Fresh activity means any in-flight recovery sequence starts over.
+    this.cartRecovery = { stage: 0, lastSentAt: null };
+  }
+  next();
 });
 
 userSchema.methods.generateVerificationToken = function () {

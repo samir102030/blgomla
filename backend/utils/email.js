@@ -543,4 +543,104 @@ export const sendOrderStatusEmail = async (user, order, status) => {
   return sendEmail({ to: user.email, subject: subjectMap[lang], html, text });
 };
 
+/**
+ * Abandoned-cart recovery — nudges a user who left items in their cart.
+ * `cartItems` is the populated cart array (cart.product / cart.collection).
+ * `stage` (1|2|3) lets the copy escalate gently across the sequence.
+ */
+export const sendAbandonedCartEmail = async (user, cartItems = [], stage = 1) => {
+  const lang = pickLang(user.lang || user.locale);
+  const fmt = (n) => Number(n || 0).toFixed(2);
+  const align = lang === "ar" ? "right" : "left";
+
+  const itemName = (item) => {
+    if (item.type === "collection") {
+      return item.collection?.name || (lang === "ar" ? "مجموعة" : "Bundle");
+    }
+    return item.product?.name || (lang === "ar" ? "منتج" : "Product");
+  };
+  const itemPrice = (item) =>
+    item.type === "collection"
+      ? item.collection?.bundlePrice
+      : item.product?.salePrice || item.product?.price;
+  const itemImage = (item) =>
+    (item.type === "collection"
+      ? item.collection?.image
+      : item.product?.images?.[0]?.url) || "";
+
+  const visible = (cartItems || []).filter(
+    (i) => i.product || i.collection
+  );
+  if (visible.length === 0) return { skipped: true };
+
+  const headers =
+    lang === "ar" ? ["المنتج", "الكمية", "السعر"] : ["Item", "Qty", "Price"];
+
+  const rows = visible
+    .map((item) => `
+      <tr>
+        <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};">
+          ${itemImage(item) ? `<img src="${itemImage(item)}" alt="" width="40" height="40" style="border-radius:6px;vertical-align:middle;margin-${lang === "ar" ? "left" : "right"}:10px;object-fit:cover;" />` : ""}
+          ${itemName(item)}
+        </td>
+        <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};text-align:center;">${item.quantity || 1}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};text-align:${lang === "ar" ? "left" : "right"};">${fmt(itemPrice(item))} EGP</td>
+      </tr>`)
+    .join("");
+
+  // Copy escalates a little across the 3 stages.
+  const copy = lang === "ar"
+    ? {
+        title: stage >= 3 ? "فرصة أخيرة 🛒" : stage === 2 ? "سلتك ما زالت في انتظارك 🛒" : "نسيت شيئًا؟ 🛒",
+        para: stage >= 3
+          ? "هذه آخر فرصة — العناصر التي اخترتها قد تنفد قريبًا. أكمل طلبك الآن."
+          : "لا تزال العناصر التي اخترتها محفوظة في سلتك. أكمل طلبك قبل نفاد الكمية.",
+        cta: "أكمل عملية الشراء",
+      }
+    : {
+        title: stage >= 3 ? "Last chance 🛒" : stage === 2 ? "Your cart is still waiting 🛒" : "Forgot something? 🛒",
+        para: stage >= 3
+          ? "This is your final reminder — the items you picked may sell out soon. Complete your order now."
+          : "The items you picked are still saved in your cart. Check out before they're gone.",
+        cta: "Complete your purchase",
+      };
+
+  const subjectMap = {
+    en:
+      stage >= 3
+        ? "Last chance — your cart is about to expire"
+        : stage === 2
+        ? "Still thinking it over? Your cart is waiting"
+        : "You left something in your cart",
+    ar:
+      stage >= 3
+        ? "فرصة أخيرة — سلتك على وشك الانتهاء"
+        : stage === 2
+        ? "ما زلت تفكر؟ سلتك في انتظارك"
+        : "لقد تركت شيئًا في سلتك",
+  };
+
+  const body = `
+    <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${copy.title}</h1>
+    <p class="text" style="margin:0 0 14px;">${greeting(lang, user.name)}</p>
+    <p class="text" style="margin:0 0 18px;">${copy.para}</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${T.border};border-radius:10px;border-collapse:separate;border-spacing:0;overflow:hidden;font-family:${FONT_STACK};font-size:14px;margin:10px 0;">
+      <thead>
+        <tr style="background:${T.borderSoft};">
+          <th style="padding:10px 14px;text-align:${align};color:${T.textMuted};font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">${headers[0]}</th>
+          <th style="padding:10px 14px;text-align:center;color:${T.textMuted};font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">${headers[1]}</th>
+          <th style="padding:10px 14px;text-align:${lang === "ar" ? "left" : "right"};color:${T.textMuted};font-size:12px;text-transform:uppercase;letter-spacing:0.05em;">${headers[2]}</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    ${ctaButton(`${CLIENT_URL}/cart`, copy.cta)}
+  `;
+
+  const html = renderEmailLayout({ lang, previewText: copy.para, body });
+  const text = `${copy.title}\n${copy.para}\n${CLIENT_URL}/cart`;
+
+  return sendEmail({ to: user.email, subject: subjectMap[lang], html, text });
+};
+
 export default sendEmail;

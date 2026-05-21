@@ -29,6 +29,7 @@ const ALWAYS_ALLOW_PREFIXES = [
   "/api/users/me",
   "/api/_ping",
   "/api/v1/health",
+  "/api/cron",
 ];
 
 const isAdminToken = async (accessToken) => {
