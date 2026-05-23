@@ -7,46 +7,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // autoUpdate: new SW takes over on next navigation, no "reload" prompt.
       registerType: "autoUpdate",
       injectRegister: "auto",
-      // The existing public/manifest.json is already linked from index.html.
       manifest: false,
-      workbox: {
-        // Workbox precaches the hashed build output and versions per build,
-        // so the "stale chunk" bug from the hand-rolled SW can't recur.
+      // Custom SW so we can handle push events (browser push notifications).
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,json,webmanifest}"],
-        // /api/* never gets intercepted — that was the source of the auth-hang bug.
-        navigateFallbackDenylist: [/^\/api\//],
-        navigateFallback: "/index.html",
-        cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "cloudinary-images",
-              expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: "StaleWhileRevalidate",
-            options: { cacheName: "google-fonts-stylesheets" },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "google-fonts-files",
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
       },
     }),
   ],

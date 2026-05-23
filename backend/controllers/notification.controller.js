@@ -1,5 +1,6 @@
 import Notification from "../models/notification.model.js";
 import NotificationPreferences from "../models/notificationPreferences.model.js";
+import User from "../models/user.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import {
@@ -8,6 +9,7 @@ import {
   emitNotificationMarkAllRead,
   emitNotificationUpdated,
 } from "../utils/socket.js";
+import { getPublicKey, isWebPushEnabled } from "../utils/webpush.js";
 
 // Get all notifications for the current user
 export const getNotifications = controllerWrapper(
@@ -197,6 +199,34 @@ export const createNotification = controllerWrapper(
     });
   }
 );
+
+// ── Web Push ──
+export const getPushKey = controllerWrapper("getPushKey", async (req, res) => {
+  if (!isWebPushEnabled()) {
+    return res.status(503).json({ success: false, message: "Push not configured" });
+  }
+  res.json({ success: true, publicKey: getPublicKey() });
+});
+
+export const subscribePush = controllerWrapper("subscribePush", async (req, res) => {
+  const { endpoint, keys } = req.body;
+  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    return res.status(400).json({ success: false, message: "Invalid subscription" });
+  }
+  await User.findByIdAndUpdate(req.user._id, {
+    $addToSet: { pushSubscriptions: { endpoint, keys } },
+  });
+  res.json({ success: true });
+});
+
+export const unsubscribePush = controllerWrapper("unsubscribePush", async (req, res) => {
+  const { endpoint } = req.body;
+  if (!endpoint) return res.status(400).json({ success: false, message: "endpoint required" });
+  await User.findByIdAndUpdate(req.user._id, {
+    $pull: { pushSubscriptions: { endpoint } },
+  });
+  res.json({ success: true });
+});
 
 // ── Notification Preferences ──
 export const getMyNotificationPreferences = controllerWrapper(

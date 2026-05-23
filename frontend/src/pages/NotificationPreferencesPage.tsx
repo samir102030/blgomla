@@ -1,9 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { axiosInstance } from "../lib/axios";
+import {
+  isPushSupported,
+  subscribeToPush,
+  unsubscribeFromPush,
+  getCurrentPushStatus,
+} from "../lib/webPush";
 import type { NotificationPreferences } from "../types/notification.type";
 
 type ChannelKey = "emailNotifications" | "pushNotifications";
@@ -47,6 +53,8 @@ const NotificationPreferencesPage: React.FC = () => {
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pushStatus, setPushStatus] = useState<"subscribed" | "denied" | "default" | "unsupported">("default");
+  const wasAnyPushEnabled = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -55,22 +63,46 @@ const NotificationPreferencesPage: React.FC = () => {
         "/notifications/preferences"
       )
       .then((res) => {
-        if (mounted) setPrefs(res.data.preferences);
+        if (!mounted) return;
+        const p = res.data.preferences;
+        setPrefs(p);
+        wasAnyPushEnabled.current = Object.values(p.pushNotifications).some(Boolean);
       })
       .catch(() => toast.error(t("Failed to load preferences")))
       .finally(() => mounted && setLoading(false));
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [t]);
 
-  const updateChannel = (
+  useEffect(() => {
+    getCurrentPushStatus().then(setPushStatus);
+  }, []);
+
+  const updateChannel = async (
     channel: ChannelKey,
     key: keyof NotificationPreferences["emailNotifications"],
     value: boolean
   ) => {
     if (!prefs) return;
-    setPrefs({ ...prefs, [channel]: { ...prefs[channel], [key]: value } });
+    const updated = { ...prefs, [channel]: { ...prefs[channel], [key]: value } };
+    setPrefs(updated);
+
+    if (channel === "pushNotifications") {
+      const anyEnabled = Object.values(updated.pushNotifications).some(Boolean);
+      if (anyEnabled && !wasAnyPushEnabled.current) {
+        const result = await subscribeToPush();
+        if (result === "denied") {
+          toast.error(t("Notifications blocked. Enable them in your browser settings."));
+          setPrefs({ ...updated, pushNotifications: { ...updated.pushNotifications, [key]: false } });
+          setPushStatus("denied");
+          return;
+        }
+        if (result === "subscribed") setPushStatus("subscribed");
+      } else if (!anyEnabled && wasAnyPushEnabled.current) {
+        await unsubscribeFromPush();
+        setPushStatus("default");
+      }
+      wasAnyPushEnabled.current = anyEnabled;
+    }
   };
 
   const updateSms = (key: SmsKey, value: boolean) => {
@@ -150,16 +182,26 @@ const NotificationPreferencesPage: React.FC = () => {
               <h2 className="text-lg font-semibold text-[var(--text)] mb-2">
                 {t("Push Notifications")}
               </h2>
-              <div className="divide-y divide-[var(--border)]">
-                {CHANNEL_CATEGORIES.map((cat) => (
-                  <Toggle
-                    key={`push-${cat.key}`}
-                    label={t(cat.labelKey)}
-                    checked={prefs.pushNotifications[cat.key]}
-                    onChange={(v) => updateChannel("pushNotifications", cat.key, v)}
-                  />
-                ))}
-              </div>
+              {!isPushSupported() ? (
+                <p className="text-sm text-[var(--text-muted)] py-2">
+                  {t("Your browser doesn't support push notifications.")}
+                </p>
+              ) : pushStatus === "denied" ? (
+                <p className="text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-3">
+                  {t("Push notifications are blocked. Enable them in your browser's site settings and reload.")}
+                </p>
+              ) : (
+                <div className="divide-y divide-[var(--border)]">
+                  {CHANNEL_CATEGORIES.map((cat) => (
+                    <Toggle
+                      key={`push-${cat.key}`}
+                      label={t(cat.labelKey)}
+                      checked={prefs.pushNotifications[cat.key]}
+                      onChange={(v) => updateChannel("pushNotifications", cat.key, v)}
+                    />
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* SMS */}

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { sendPushToUser, isWebPushEnabled } from "../utils/webpush.js";
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -46,6 +47,16 @@ const notificationSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+notificationSchema.post("save", function (doc) {
+  if (!isWebPushEnabled()) return;
+  sendPushToUser(doc.user, {
+    title: doc.title,
+    body: doc.message,
+    tag: doc._id.toString(),
+    url: "/notifications",
+  }).catch(() => {});
+});
 
 const Notification = mongoose.model("Notification", notificationSchema);
 export default Notification;

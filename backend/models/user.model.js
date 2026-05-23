@@ -122,6 +122,20 @@ const userSchema = new mongoose.Schema(
     // the secret stays so we can verify codes on future logins.
     twoFactorEnabled: { type: Boolean, default: false },
     totpSecret: { type: String, select: false },
+    pushSubscriptions: {
+      type: [
+        {
+          endpoint: { type: String, required: true },
+          keys: {
+            p256dh: { type: String, required: true },
+            auth: { type: String, required: true },
+          },
+          _id: false,
+        },
+      ],
+      default: [],
+      select: false,
+    },
   },
   { timestamps: true, suppressReservedKeysWarning: true },
 );

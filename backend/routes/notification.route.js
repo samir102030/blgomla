@@ -10,6 +10,9 @@ import {
   createNotification,
   getMyNotificationPreferences,
   updateMyNotificationPreferences,
+  getPushKey,
+  subscribePush,
+  unsubscribePush,
 } from "../controllers/notification.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
@@ -23,6 +26,12 @@ router.get("/", getNotifications);
 router.get("/unread-count", getUnreadCount);
 router.get("/preferences", getMyNotificationPreferences);
 router.put("/preferences", updateMyNotificationPreferences);
+
+// Web push (must be before /:id wildcard)
+router.get("/push-key", getPushKey);
+router.post("/push-subscribe", subscribePush);
+router.delete("/push-subscribe", unsubscribePush);
+
 router.get("/:id", getNotificationById);
 router.put("/:id/read", markAsRead);
 router.put("/mark-all-read", markAllAsRead);
