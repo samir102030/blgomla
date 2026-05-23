@@ -5,6 +5,7 @@ import type { ErrorInfo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import useNotificationSocket from "./hooks/useNotificationSocket";
 import SiteModeGate from "./components/SiteModeGate";
+import CompareBar from "./components/CompareBar";
 import { captureError } from "./lib/sentry";
 
 // ── Eagerly loaded (above-the-fold critical path) ──
@@ -67,6 +68,7 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const BrandsPage = lazy(() => import("./pages/BrandsPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
+const ComparePage = lazy(() => import("./pages/ComparePage"));
 const LoginRegisterPage = lazy(() => import("./pages/LoginRegisterPage"));
 const ShoppingCartPage = lazy(() => import("./pages/ShoppingCartPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
@@ -134,6 +136,7 @@ function App() {
           <Route path="/brands" element={<BrandsPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
+          <Route path="/compare" element={<ComparePage />} />
           <Route path="/login" element={<LoginRegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
@@ -174,6 +177,7 @@ function App() {
         </SiteModeGate>
       </Suspense>
       </ErrorBoundary>
+      <CompareBar />
       <Suspense fallback={null}>
         <GeneralSupportChat />
         <InstallPrompt />

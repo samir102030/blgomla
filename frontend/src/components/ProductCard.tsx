@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
+import { useCompareStore, COMPARE_MAX } from "../stores/compare.store";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { cldImg, cldSrcSet } from "../lib/cldImage";
@@ -46,6 +47,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, toggleLoveProduct, getLovedProducts } = useUserStore();
+  const compareIds = useCompareStore((s) => s.ids);
+  const toggleCompare = useCompareStore((s) => s.toggle);
+  const inCompare = compareIds.includes(id);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -87,6 +91,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const stockBadgeClasses = hasStock
     ? "text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-900/30"
     : "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-900/30";
+
+  const handleCompare = () => {
+    if (inCompare) {
+      toggleCompare(id);
+      toast.success(t("Removed from compare"));
+      return;
+    }
+    const added = toggleCompare(id);
+    if (added) toast.success(t("Added to compare"));
+    else toast.error(t("You can compare up to {{max}} products", { max: COMPARE_MAX }));
+  };
 
   const toggleWishlist = async () => {
     if (!user) {
@@ -166,6 +181,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
           </svg>
         )}
+      </button>
+
+      {/* Compare Button */}
+      <button
+        onClick={handleCompare}
+        title={t("Compare")}
+        aria-label={t("Compare")}
+        className={`absolute top-14 right-3 z-10 w-9 h-9 rounded-xl backdrop-blur-sm border flex items-center justify-center transition-all duration-200 shadow-sm ${
+          inCompare
+            ? "bg-[var(--brand-primary)] border-[var(--brand-primary)] text-white"
+            : "bg-[var(--surface)]/90 border-[var(--border)] text-[var(--text-subtle)] hover:border-[var(--brand-primary)]"
+        }`}
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h2m6-16h2a2 2 0 012 2v12a2 2 0 01-2 2h-2m-6 0h6M9 5v16m6-16v16" />
+        </svg>
       </button>
 
       {/* Product Image — always on a light background, even in dark mode, so
