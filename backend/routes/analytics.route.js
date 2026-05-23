@@ -12,13 +12,20 @@ import {
   getInventoryAlerts,
   getCustomerAnalytics,
 } from "../controllers/admin.analytics.controller.js";
+import { createEvent, getInsights } from "../controllers/event.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
 
-// All analytics routes require authentication
+// PUBLIC: anonymous behavioral-event capture (must stay above protectRoute).
+router.post("/events", createEvent);
+
+// All analytics routes below require authentication
 router.use(protectRoute);
+
+// Admin merchandising insights (top searches, zero-results, top-viewed)
+router.get("/insights", translateResponse, getInsights);
 
 // Get sales overview data
 router.get("/sales-overview", translateResponse, getSalesOverview);

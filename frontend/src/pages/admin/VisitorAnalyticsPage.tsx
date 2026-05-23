@@ -39,6 +39,13 @@ interface TopPagesData {
   topPages: Array<{ _id: string; views: number; uniqueVisitors: number }>;
 }
 
+interface InsightsData {
+  noResultSearches: Array<{ query: string; count: number }>;
+  topSearches: Array<{ query: string; count: number }>;
+  topViewed: Array<{ productId: string; name?: string; count: number }>;
+  addToCartCount: number;
+}
+
 const VisitorAnalyticsPage: React.FC = () => {
   const { t } = useTranslation();
   const [period, setPeriod] = useState("30d");
@@ -47,20 +54,24 @@ const VisitorAnalyticsPage: React.FC = () => {
   const [devices, setDevices] = useState<DeviceData | null>(null);
   const [locations, setLocations] = useState<LocationData | null>(null);
   const [topPages, setTopPages] = useState<TopPagesData | null>(null);
+  const [insights, setInsights] = useState<InsightsData | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [statsRes, devicesRes, locationsRes, pagesRes] = await Promise.all([
-        api.get(`/analytics/visitors/stats?period=${period}`),
-        api.get(`/analytics/visitors/devices?period=${period}`),
-        api.get(`/analytics/visitors/locations?period=${period}`),
-        api.get(`/analytics/visitors/pages?period=${period}`),
-      ]);
+      const [statsRes, devicesRes, locationsRes, pagesRes, insightsRes] =
+        await Promise.all([
+          api.get(`/analytics/visitors/stats?period=${period}`),
+          api.get(`/analytics/visitors/devices?period=${period}`),
+          api.get(`/analytics/visitors/locations?period=${period}`),
+          api.get(`/analytics/visitors/pages?period=${period}`),
+          api.get(`/analytics/insights`),
+        ]);
       setStats(statsRes.data.data);
       setDevices(devicesRes.data.data);
       setLocations(locationsRes.data.data);
       setTopPages(pagesRes.data.data);
+      setInsights(insightsRes.data.insights);
     } catch (err) {
       console.error("Error fetching analytics:", err);
     } finally {
@@ -401,6 +412,68 @@ const VisitorAnalyticsPage: React.FC = () => {
         ) : (
           <EmptyState message={t("visitorAnalytics.noPageData")} />
         )}
+      </div>
+
+      {/* Merchandising insights — what shoppers search, miss, and view */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-amber-200 dark:border-amber-900/40 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            🔎 {t("Searches with no results")}
+          </h2>
+          <p className="text-xs text-gray-500 mb-4">
+            {t("Demand you aren't meeting — consider stocking or renaming these")}
+          </p>
+          {insights?.noResultSearches?.length ? (
+            <ul className="space-y-2">
+              {insights.noResultSearches.map((s) => (
+                <li key={s.query} className="flex justify-between text-sm">
+                  <span className="text-gray-700 dark:text-gray-300 truncate">{s.query}</span>
+                  <span className="font-semibold text-amber-600">{s.count}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState message={t("No data yet")} />
+          )}
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            🔥 {t("Top searches")}
+          </h2>
+          {insights?.topSearches?.length ? (
+            <ul className="space-y-2">
+              {insights.topSearches.map((s) => (
+                <li key={s.query} className="flex justify-between text-sm">
+                  <span className="text-gray-700 dark:text-gray-300 truncate">{s.query}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{s.count}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState message={t("No data yet")} />
+          )}
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            👁️ {t("Most viewed products")}
+          </h2>
+          {insights?.topViewed?.length ? (
+            <ul className="space-y-2">
+              {insights.topViewed.map((p) => (
+                <li key={p.productId} className="flex justify-between text-sm">
+                  <span className="text-gray-700 dark:text-gray-300 truncate">
+                    {p.name || p.productId}
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{p.count}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState message={t("No data yet")} />
+          )}
+        </div>
       </div>
     </div>
   );

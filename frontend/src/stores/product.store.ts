@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 // import { Product } from "../types/product.type";
 import { axiosInstance } from "../lib/axios";
+import { trackBehavior } from "../lib/analytics";
 import type { Product } from "../types/product.type";
 
 interface PaginatedResult<T> {
@@ -104,6 +105,7 @@ export const useProductStore = create<ProductStore>()(
             { productId, quantity }
           );
           set({ cart: data.cart, loading: false });
+          trackBehavior("add_to_cart", { product: productId });
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,

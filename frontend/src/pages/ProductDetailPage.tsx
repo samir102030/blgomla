@@ -9,6 +9,7 @@ import ProductQuestions from "../components/ProductQuestions";
 import ProductRail from "../components/ProductRail";
 import RecentlyViewed from "../components/RecentlyViewed";
 import { addRecentlyViewed } from "../lib/recentlyViewed";
+import { trackBehavior } from "../lib/analytics";
 import { useProductStore } from "../stores/product.store";
 import { useUserStore } from "../stores/user.store";
 import { useBrandStore } from "../stores/brand.store";
@@ -66,9 +67,12 @@ const ProductDetailPage: React.FC = () => {
     if (productId) fetchProductById(productId);
   }, [productId, fetchProductById]);
 
-  // Track this product for the "recently viewed" rail.
+  // Track this product for the "recently viewed" rail + behavioral analytics.
   useEffect(() => {
-    if (product?._id) addRecentlyViewed(product._id);
+    if (product?._id) {
+      addRecentlyViewed(product._id);
+      trackBehavior("view", { product: product._id });
+    }
   }, [product?._id]);
 
   // Check if the current user purchased this product

@@ -1,5 +1,6 @@
 // GA4 wrapper. Reads measurement ID from VITE_GA_MEASUREMENT_ID; no-ops if missing.
 // Loads gtag.js on first use so dev builds without the env var stay clean.
+import { axiosInstance } from "./axios";
 
 declare global {
   interface Window {
@@ -55,3 +56,34 @@ export function trackEvent(
 }
 
 export const analyticsEnabled = Boolean(MEASUREMENT_ID);
+
+// ── First-party behavioral capture (our own backend, not GA) ──
+// Stable anonymous session id so events group without requiring login.
+const behaviorSessionId = (): string | undefined => {
+  try {
+    let s = localStorage.getItem("sid");
+    if (!s) {
+      s = Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem("sid", s);
+    }
+    return s;
+  } catch {
+    return undefined;
+  }
+};
+
+type BehaviorType = "view" | "add_to_cart" | "search" | "checkout_start";
+
+// Fire-and-forget event to POST /analytics/events. Never blocks/throws into UI.
+export function trackBehavior(
+  type: BehaviorType,
+  payload: { product?: string; query?: string; meta?: Record<string, unknown> } = {}
+): void {
+  try {
+    axiosInstance
+      .post("/analytics/events", { type, sessionId: behaviorSessionId(), ...payload })
+      .catch(() => {});
+  } catch {
+    // ignore
+  }
+}

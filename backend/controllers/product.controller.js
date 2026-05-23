@@ -7,6 +7,7 @@ import Notification from "../models/notification.model.js";
 import BrandRequest from "../models/brandRequest.model.js";
 import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
+import { logEventSafe } from "./event.controller.js";
 import mongoose from "mongoose";
 
 // Tokenized, case-insensitive search filter: every word must appear in the
@@ -204,6 +205,10 @@ export const getAllProducts = controllerWrapper(
       page,
       limit,
     });
+    // Capture demand we couldn't satisfy — gold for stocking decisions.
+    if (search && result.total === 0) {
+      logEventSafe({ type: "search_no_results", query: String(search) });
+    }
     res.status(200).json(result);
   }
 );
@@ -359,6 +364,10 @@ export const getStorefrontProducts = controllerWrapper(
         { $group: { _id: null, min: { $min: "$price" }, max: { $max: "$price" } } },
       ]),
     ]);
+
+    if (search && result.total === 0) {
+      logEventSafe({ type: "search_no_results", query: String(search) });
+    }
 
     res.status(200).json({
       ...result,
