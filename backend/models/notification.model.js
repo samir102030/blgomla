@@ -28,6 +28,7 @@ const notificationSchema = new mongoose.Schema(
         "promotion",
         "system",
         "product",
+        "address",
         "brand_request",
         "category_request",
         "product_approval",
