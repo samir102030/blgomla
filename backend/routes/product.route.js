@@ -32,6 +32,7 @@ import {
   getRelatedProducts,
   getFrequentlyBoughtTogether,
   getProductsByIds,
+  getPricingInsights,
   getSaleProducts,
   getStoreProducts,
   getStorefrontProducts,
@@ -116,6 +117,7 @@ router.delete("/cart/:productId", protectRoute, removeFromCart);
 router.post("/", protectRoute, storeRoute, validateCreateProduct, createProduct);
 router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
 router.get("/approvals", protectRoute, adminRoute, getProductApprovals);
+router.get("/pricing-insights", protectRoute, adminOrStoreRoute, getPricingInsights);
 router.post("/:productId/approve", protectRoute, adminRoute, approveProduct);
 router.post("/:productId/reject", protectRoute, adminRoute, rejectProduct);
 router.put("/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, validateUpdateProduct, updateProduct);

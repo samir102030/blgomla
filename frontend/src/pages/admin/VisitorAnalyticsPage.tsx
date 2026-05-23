@@ -14,6 +14,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 import { axiosInstance as api } from "../../lib/axios";
+import PricingInsights from "../../components/admin/PricingInsights";
 
 interface VisitorStatsData {
   totalVisitors: number;
@@ -475,6 +476,8 @@ const VisitorAnalyticsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      <PricingInsights />
     </div>
   );
 };

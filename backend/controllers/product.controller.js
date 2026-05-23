@@ -1331,6 +1331,78 @@ export const getFrequentlyBoughtTogether = controllerWrapper(
   }
 );
 
+// Admin pricing intelligence: products that have competitor prices, ranked by
+// how far above the cheapest competitor they sit (biggest chance to win sales).
+// Market-aware (no cost field exists, so this isn't margin-based).
+export const getPricingInsights = controllerWrapper(
+  "getPricingInsights",
+  async (req, res) => {
+    const rows = await Product.aggregate([
+      {
+        $match: {
+          isActive: true,
+          deleted: false,
+          "competitorPrices.0": { $exists: true },
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          price: 1,
+          competitorMin: { $min: "$competitorPrices.price" },
+          competitorAvg: { $avg: "$competitorPrices.price" },
+          competitorCount: { $size: "$competitorPrices" },
+        },
+      },
+      {
+        $addFields: {
+          premiumPct: {
+            $cond: [
+              { $gt: ["$competitorMin", 0] },
+              {
+                $multiply: [
+                  {
+                    $divide: [
+                      { $subtract: ["$price", "$competitorMin"] },
+                      "$competitorMin",
+                    ],
+                  },
+                  100,
+                ],
+              },
+              0,
+            ],
+          },
+        },
+      },
+      { $sort: { premiumPct: -1 } },
+      { $limit: 50 },
+    ]);
+
+    const insights = rows.map((r) => {
+      const premiumPct = Math.round((r.premiumPct || 0) * 10) / 10;
+      const position =
+        premiumPct > 2 ? "above" : premiumPct < -2 ? "below" : "at";
+      // Suggest matching the cheapest competitor when we're priced above market.
+      const suggestedPrice =
+        position === "above" ? Math.round(r.competitorMin) : r.price;
+      return {
+        productId: r._id,
+        name: r.name,
+        price: r.price,
+        competitorMin: r.competitorMin,
+        competitorAvg: Math.round((r.competitorAvg || 0) * 100) / 100,
+        competitorCount: r.competitorCount,
+        premiumPct,
+        position,
+        suggestedPrice,
+      };
+    });
+
+    res.status(200).json({ success: true, insights });
+  }
+);
+
 // Batch fetch products by id (used by the "recently viewed" rail) — one
 // round-trip instead of N, with the requested order preserved.
 export const getProductsByIds = controllerWrapper(
