@@ -97,6 +97,15 @@ const orderSchema = new mongoose.Schema(
     trackingNumber: { type: String },
     trackingUrl: { type: String },
     estimatedDelivery: { type: Date },
+    // Carrier shipment reference (e.g. Accurate). trackingNumber mirrors
+    // shipment.code for backwards-compatible display.
+    shipment: {
+      provider: { type: String },
+      id: { type: Number },
+      code: { type: String },
+      status: { type: String },
+      syncedAt: { type: Date },
+    },
   },
   { timestamps: true, suppressReservedKeysWarning: true }
 );

@@ -25,6 +25,7 @@ import siteModeRoutes from "./siteMode.route.js";
 import cronRoutes from "./cron.route.js";
 import questionRoutes from "./question.route.js";
 import shippingRoutes from "./shipping.route.js";
+import accurateRoutes from "./accurate.route.js";
 
 const router = express.Router();
 
@@ -54,5 +55,6 @@ router.use("/site-mode", siteModeRoutes);
 router.use("/cron", cronRoutes);
 router.use("/questions", questionRoutes);
 router.use("/shipping", shippingRoutes);
+router.use("/accurate", accurateRoutes);
 
 export default router;

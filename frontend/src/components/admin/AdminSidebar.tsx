@@ -164,6 +164,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       roles: ["admin", "super_admin"],
     },
     {
+      name: t("admin.accurate", "Accurate shipping"),
+      href: "/dashboard/accurate",
+      icon: TruckIcon,
+      roles: ["admin", "super_admin"],
+    },
+    {
       name: t("admin.collections"),
       href: "/dashboard/collections",
       icon: TagIcon,

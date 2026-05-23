@@ -11,6 +11,11 @@ import Address from "../models/address.model.js";
 import { getShippingSettings } from "../models/shippingSettings.model.js";
 import { resolveShippingFee } from "../utils/shipping.js";
 import { getBostaShippingFee, isBostaEnabled } from "../utils/bosta.js";
+import {
+  getAccurateShippingFee,
+  isAccurateEnabled,
+  createAccurateShipment,
+} from "../utils/accurate.js";
 import { emitNotificationCreated } from "../utils/socket.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
@@ -346,14 +351,18 @@ export const createOrder = controllerWrapper(
       const addressDoc = await Address.findById(shippingAddress)
         .select("city state")
         .session(session);
-      // Prefer live Bosta rates when configured; fall back to the zone rates.
-      // Honor a free-shipping threshold regardless of source.
+      // Prefer live carrier rates when configured (Accurate, then Bosta); fall
+      // back to the admin zone rates. Honor a free-shipping threshold regardless
+      // of source.
       const freeByThreshold =
         shippingSettings?.enabled !== false &&
         Number(shippingSettings?.freeShippingThreshold) > 0 &&
         itemsPrice >= Number(shippingSettings.freeShippingThreshold);
       let liveFee = null;
-      if (!freeByThreshold && isBostaEnabled()) {
+      if (!freeByThreshold && isAccurateEnabled()) {
+        liveFee = await getAccurateShippingFee(addressDoc || {}, itemsPrice);
+      }
+      if (liveFee == null && !freeByThreshold && isBostaEnabled()) {
         liveFee = await getBostaShippingFee(addressDoc || {});
       }
       shippingPrice =
@@ -618,6 +627,36 @@ export const updateOrderStatus = controllerWrapper(
     // Award loyalty points the first time an order reaches "delivered".
     if (status === "delivered") {
       await awardPointsForDelivery(order._id);
+    }
+
+    // Auto-create an Accurate waybill the first time an order is marked shipped.
+    // Fail-safe: a carrier error is logged but never blocks the status update.
+    if (status === "shipped" && isAccurateEnabled() && !order.trackingNumber) {
+      try {
+        const populated = await Order.findById(order._id)
+          .populate("shippingAddress")
+          .populate("user");
+        const shipment = await createAccurateShipment({
+          order: populated,
+          address: populated.shippingAddress,
+          customer: populated.user,
+        });
+        await Order.findByIdAndUpdate(order._id, {
+          trackingNumber: shipment.code,
+          ...(shipment.trackingUrl ? { trackingUrl: shipment.trackingUrl } : {}),
+          shipment: {
+            provider: "accurate",
+            id: shipment.id,
+            code: shipment.code,
+            status: shipment.status,
+            syncedAt: new Date(),
+          },
+        });
+        order.trackingNumber = shipment.code;
+        if (shipment.trackingUrl) order.trackingUrl = shipment.trackingUrl;
+      } catch (err) {
+        console.error("[Accurate] auto shipment on 'shipped' failed:", err.message);
+      }
     }
 
     // Create notification for customer about status change
