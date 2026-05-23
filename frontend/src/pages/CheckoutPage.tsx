@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -14,6 +14,9 @@ import { resolveShippingFee, type ShippingSettings } from "../lib/shipping";
 import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 import { getBulkPricing } from "../lib/pricing";
+import type { PickedAddress } from "../components/AddressMapPicker";
+
+const AddressMapPicker = lazy(() => import("../components/AddressMapPicker"));
 
 interface CartItemWithProduct {
   _id?: string;
@@ -69,6 +72,18 @@ const CheckoutPage: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [couponCode, setCouponCode] = useState("");
   const [shippingSettings, setShippingSettings] = useState<ShippingSettings | null>(null);
+  const [showMap, setShowMap] = useState(false);
+
+  // Map picker fills the address fields and switches to the "new address" path.
+  const handleMapSelect = (a: PickedAddress) => {
+    setSelectedAddressId("");
+    setBillingData((prev) => ({
+      ...prev,
+      address1: a.address || prev.address1,
+      city: a.city || prev.city,
+      state: a.state || prev.state,
+    }));
+  };
 
   // Load the store's shipping config once so the summary can show a real fee.
   useEffect(() => {
@@ -862,6 +877,30 @@ const CheckoutPage: React.FC = () => {
                       }
                       className="w-full px-2 sm:px-3 py-2 text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
+                  </div>
+
+                  {/* Map / address picker — fills the fields below */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowMap((s) => !s)}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                    >
+                      📍 {showMap ? t("Hide map") : t("Pick address on map")}
+                    </button>
+                    {showMap && (
+                      <div className="mt-3">
+                        <Suspense
+                          fallback={
+                            <div className="text-sm text-[var(--text-muted)]">
+                              {t("Loading map…")}
+                            </div>
+                          }
+                        >
+                          <AddressMapPicker onSelect={handleMapSelect} />
+                        </Suspense>
+                      </div>
+                    )}
                   </div>
 
                   <div>
