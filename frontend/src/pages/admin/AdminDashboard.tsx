@@ -17,6 +17,7 @@ import {
   downloadCsv,
   getExportPages,
 } from "../../lib/exporters";
+import OperationsBacklog from "../../components/admin/OperationsBacklog";
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -162,6 +163,9 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        {/* Operations backlog — what's waiting on staff action */}
+        {isAdminLike && <OperationsBacklog />}
+
         {/* Error Alert */}
         {error && (
           <div className="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-lg">

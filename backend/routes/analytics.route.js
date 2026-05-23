@@ -13,7 +13,8 @@ import {
   getCustomerAnalytics,
 } from "../controllers/admin.analytics.controller.js";
 import { createEvent, getInsights } from "../controllers/event.controller.js";
-import { protectRoute } from "../middleware/auth.middleware.js";
+import { getBacklog } from "../controllers/backlog.controller.js";
+import { protectRoute, adminOrStoreRoute } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 
 const router = express.Router();
@@ -26,6 +27,9 @@ router.use(protectRoute);
 
 // Admin merchandising insights (top searches, zero-results, top-viewed)
 router.get("/insights", translateResponse, getInsights);
+
+// Operations backlog — everything awaiting staff action (admin/store only)
+router.get("/backlog", adminOrStoreRoute, translateResponse, getBacklog);
 
 // Get sales overview data
 router.get("/sales-overview", translateResponse, getSalesOverview);
