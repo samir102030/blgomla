@@ -460,7 +460,9 @@ const CheckoutPage: React.FC = () => {
         const stockCheckPromises = Array.from(requiredProducts.entries()).map(
           async ([productId, quantity]) => {
             const { data } = await axiosInstance.get(`/products/${productId}`);
-            const product = data.data?.[0];
+            const product = data?.data?._id
+              ? data.data
+              : data?.data?.[0] || data?.product;
             const currentStock = product?.stock || 0;
             if (currentStock < quantity) {
               throw new Error(
@@ -1075,9 +1077,15 @@ const CheckoutPage: React.FC = () => {
                       />
                       <span className="text-xs sm:text-sm text-amber-800">
                         {t("Use {{points}} loyalty points (−{{value}} EGP)", {
-                          points: pointsBalance,
+                          points: maxRedeemable,
                           value: maxRedeemable.toLocaleString("en-EG", { maximumFractionDigits: 2 }),
                         })}
+                        {pointsBalance > maxRedeemable && (
+                          <span className="text-amber-600">
+                            {" "}
+                            {t("(of {{balance}} available)", { balance: pointsBalance })}
+                          </span>
+                        )}
                       </span>
                     </label>
                   )}

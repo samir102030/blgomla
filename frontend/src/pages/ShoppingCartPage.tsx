@@ -13,6 +13,7 @@ import type { Coupon } from "../types/coupon.type";
 import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 import { getBaseUnitPrice, getBulkPricing } from "../lib/pricing";
+import { resolveShippingFee, type ShippingSettings } from "../lib/shipping";
 import { cldImg } from "../lib/cldImage";
 import FeaturedProducts from "../components/FeaturedProducts";
 // import LoadingComp from "../components/LoadingComp";
@@ -60,13 +61,19 @@ const ShoppingCartPage: React.FC = () => {
     loading: couponLoading,
   } = useCouponStore();
 
-  const [shippingInfo, setShippingInfo] = useState({
-    country: "Egypt",
-    city: "Cairo",
-    postcode: "",
-  });
+  const [shippingSettings, setShippingSettings] =
+    useState<ShippingSettings | null>(null);
+  const [selectedGovernorate, setSelectedGovernorate] = useState("");
 
   const [couponCode, setCouponCode] = useState("");
+
+  // Load the store's shipping config so the cart can show a real estimate.
+  useEffect(() => {
+    axiosInstance
+      .get<{ success: boolean; settings: ShippingSettings }>("/shipping")
+      .then((res) => setShippingSettings(res.data.settings))
+      .catch(() => {});
+  }, []);
 
   // Handle cart updates when user cart changes (but only after initial load)
   useEffect(() => {
@@ -455,7 +462,16 @@ const ShoppingCartPage: React.FC = () => {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + getItemTotal(item), 0);
-  const shippingCost = 0.0;
+  const shippingCost = resolveShippingFee(
+    shippingSettings,
+    { state: selectedGovernorate },
+    subtotal
+  );
+  const freeShippingThreshold = Number(
+    shippingSettings?.freeShippingThreshold || 0
+  );
+  const amountToFreeShipping =
+    freeShippingThreshold > 0 ? freeShippingThreshold - subtotal : 0;
 
   // Calculate coupon discount
   const calculateCouponDiscount = () => {
@@ -701,12 +717,11 @@ const ShoppingCartPage: React.FC = () => {
                           {item.type === "collection" ? (
                             <div className="flex flex-col">
                               <span className="line-through text-[var(--text-subtle)] text-xs">
-                                $
                                 {item.collectionDetails
-                                  ? getCollectionOriginalTotal(
+                                  ? `${getCollectionOriginalTotal(
                                       item.collectionDetails
-                                    ).toFixed(2)
-                                  : "0.00"}
+                                    ).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP`
+                                  : "0.00 EGP"}
                               </span>
                               <span className="font-medium text-[var(--brand-primary)]">
                                 {(getItemPrice(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
@@ -897,12 +912,11 @@ const ShoppingCartPage: React.FC = () => {
                         {item.type === "collection" ? (
                           <>
                             <span className="line-through text-[var(--text-subtle)]">
-                              $
                               {item.collectionDetails
-                                ? getCollectionOriginalTotal(
+                                ? `${getCollectionOriginalTotal(
                                     item.collectionDetails
-                                  ).toFixed(2)
-                                : "0.00"}
+                                  ).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP`
+                                : "0.00 EGP"}
                             </span>
                             <span className="ml-2 font-medium text-[var(--brand-primary)]">
                               {(getItemPrice(item)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} EGP
@@ -1039,50 +1053,46 @@ const ShoppingCartPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Left Column - Shipping & Coupon */}
             <div className="space-y-4 sm:space-y-6">
-              {/* Calculate Shipping */}
-              <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
-                <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
-                  {t("Calculate Shipping")}
-                </h3>
-                <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4">
+              {/* Estimate Shipping */}
+              {shippingSettings?.enabled !== false && (
+                <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
+                  <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
+                    {t("Estimate Shipping")}
+                  </h3>
                   <select
-                    value={shippingInfo.country}
-                    onChange={(e) =>
-                      setShippingInfo({
-                        ...shippingInfo,
-                        country: e.target.value,
-                      })
-                    }
-                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm"
+                    value={selectedGovernorate}
+                    onChange={(e) => setSelectedGovernorate(e.target.value)}
+                    className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm"
                   >
-                    <option value="Egypt">{t("Egypt")}</option>
+                    <option value="">{t("Select your governorate")}</option>
+                    {(shippingSettings?.zones || []).map((zone) => (
+                      <option key={zone.governorate} value={zone.governorate}>
+                        {zone.governorate}
+                      </option>
+                    ))}
                   </select>
-                  <select
-                    value={shippingInfo.city}
-                    onChange={(e) =>
-                      setShippingInfo({ ...shippingInfo, city: e.target.value })
-                    }
-                    className="px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm"
-                  >
-                    <option value="Cairo">{t("Cairo")}</option>
-                  </select>
+                  <div className="mt-3 flex items-center justify-between text-xs sm:text-sm">
+                    <span className="text-[var(--text-muted)]">
+                      {t("Estimated shipping")}
+                    </span>
+                    <span className="font-semibold text-[var(--text)]">
+                      {shippingCost === 0
+                        ? t("Free")
+                        : `${shippingCost.toLocaleString("en-EG", { maximumFractionDigits: 2 })} ${t("EGP")}`}
+                    </span>
+                  </div>
+                  {freeShippingThreshold > 0 && amountToFreeShipping > 0 && (
+                    <p className="mt-2 text-xs text-[var(--brand-primary)]">
+                      {t("Add {{amount}} EGP more to get free shipping!", {
+                        amount: amountToFreeShipping.toLocaleString("en-EG", { maximumFractionDigits: 2 }),
+                      })}
+                    </p>
+                  )}
+                  <p className="mt-2 text-[10px] sm:text-xs text-[var(--text-subtle)]">
+                    {t("Final shipping is confirmed at checkout based on your address.")}
+                  </p>
                 </div>
-                <input
-                  type="text"
-                  placeholder={t("Postcode / Zip")}
-                  value={shippingInfo.postcode}
-                  onChange={(e) =>
-                    setShippingInfo({
-                      ...shippingInfo,
-                      postcode: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent mb-4 text-xs sm:text-sm"
-                />
-                <button className="w-full bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white py-2.5 px-4 rounded-xl font-semibold text-xs sm:text-sm hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all duration-300">
-                  {t("ESTIMATE")}
-                </button>
-              </div>
+              )}
 
               {/* Discount Coupon */}
               <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm border border-[var(--border)]">
@@ -1100,7 +1110,7 @@ const ShoppingCartPage: React.FC = () => {
                         <p className="text-xs text-green-400">
                           {appliedCoupon.discountType === "percentage"
                             ? `${appliedCoupon.discountValue}% ${t("off")}`
-                            : `$${appliedCoupon.discountValue} ${t("off")}`}
+                            : `${appliedCoupon.discountValue.toLocaleString("en-EG", { maximumFractionDigits: 2 })} ${t("EGP")} ${t("off")}`}
                         </p>
                       </div>
                       <button
