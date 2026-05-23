@@ -32,6 +32,8 @@ interface HomeFeed {
   products: Product[];
   saleProducts: Product[];
   newestProducts: Product[];
+  bestSellers: Product[];
+  topRated: Product[];
   categories: Category[];
   collections: any[];
 }

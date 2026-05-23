@@ -9,6 +9,32 @@ import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import mongoose from "mongoose";
 
+// Tokenized, case-insensitive search filter: every word must appear in the
+// name, tags, or description (order-independent). Beats a single contiguous
+// regex for multi-word queries like "hikvision 4mp camera". Returns a Mongo
+// `$and` array, or null when there's nothing to search.
+// NOTE: true typo tolerance (e.g. "hikvison" → "hikvision") needs MongoDB
+// Atlas Search with a fuzzy index — a documented follow-up; not active here.
+const buildSearchFilter = (search) => {
+  const tokens = String(search || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 6);
+  if (tokens.length === 0) return null;
+  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return tokens.map((tok) => {
+    const rx = new RegExp(esc(tok), "i");
+    return {
+      $or: [
+        { name: { $regex: rx } },
+        { description: { $regex: rx } },
+        { tags: { $in: [rx] } },
+      ],
+    };
+  });
+};
+
 const normalizeBulkPricing = (bulkPricing = []) => {
   if (!Array.isArray(bulkPricing)) return [];
   const cleaned = bulkPricing
@@ -152,17 +178,8 @@ export const getAllProducts = controllerWrapper(
   async (req, res) => {
     const { page = 1, limit = 20, search, ...filters } = req.query;
     const filter = {};
-    if (search) {
-      const regex = new RegExp(
-        search.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&"),
-        "i"
-      );
-      filter.$or = [
-        { name: { $regex: regex } },
-        { description: { $regex: regex } },
-        { tags: { $in: [regex] } },
-      ];
-    }
+    const searchAnd = buildSearchFilter(search);
+    if (searchAnd) filter.$and = searchAnd;
     if (filters.categoryId) filter.category = filters.categoryId;
     if (filters.brandId) filter.brand = filters.brandId;
     if (filters.storeId) filter.store = filters.storeId;
@@ -182,7 +199,8 @@ export const getAllProducts = controllerWrapper(
 
     const result = await paginateProducts({
       filter,
-      sort: { createdAt: -1 },
+      // For searches, rank by popularity/quality; otherwise newest first.
+      sort: search ? { soldCount: -1, rating: -1 } : { createdAt: -1 },
       page,
       limit,
     });
@@ -295,16 +313,8 @@ export const getStorefrontProducts = controllerWrapper(
       approvalStatus: "approved",
     };
 
-    if (search) {
-      const regex = new RegExp(
-        search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i"
-      );
-      query.$or = [
-        { name: { $regex: regex } },
-        { description: { $regex: regex } },
-        { tags: { $in: [regex] } },
-      ];
-    }
+    const searchAnd = buildSearchFilter(search);
+    if (searchAnd) query.$and = searchAnd;
     if (category) query.category = category;
     if (brand) query.brand = brand;
     if (inStock === "true") query.stock = { $gt: 0 };
@@ -315,8 +325,8 @@ export const getStorefrontProducts = controllerWrapper(
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    // Sort options
-    let sortOption = { createdAt: -1 };
+    // Sort options — searches default to popularity/quality ranking.
+    let sortOption = search && !sortBy ? { soldCount: -1, rating: -1 } : { createdAt: -1 };
     switch (sortBy) {
       case "price_asc": sortOption = { price: 1 }; break;
       case "price_desc": sortOption = { price: -1 }; break;
@@ -1190,6 +1200,113 @@ export const getMostRatedProducts = controllerWrapper(
       limit,
     });
     res.status(200).json(result);
+  }
+);
+
+// Related products ("you may also like"): same category first, then same
+// brand, then top up from bestsellers so the rail is always full.
+export const getRelatedProducts = controllerWrapper(
+  "getRelatedProducts",
+  async (req, res) => {
+    const { productId } = req.params;
+    const limit = Math.min(Number(req.query.limit) || 8, 20);
+
+    const base = await Product.findById(productId).select("category brand");
+    if (!base) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
+
+    const baseFilter = {
+      isActive: true,
+      deleted: false,
+      approvalStatus: "approved",
+    };
+    const withRelations = (q) =>
+      q
+        .sort({ soldCount: -1, rating: -1 })
+        .populate("brand", "name slug logo")
+        .populate("category", "name slug")
+        .lean();
+
+    const collected = [];
+    const seen = new Set([String(base._id)]);
+    const pushUnique = (docs) => {
+      for (const d of docs) {
+        if (collected.length >= limit) break;
+        if (seen.has(String(d._id))) continue;
+        seen.add(String(d._id));
+        collected.push(d);
+      }
+    };
+
+    if (base.category) {
+      pushUnique(
+        await withRelations(
+          Product.find({
+            ...baseFilter,
+            category: base.category,
+            _id: { $nin: [...seen] },
+          }).limit(limit)
+        )
+      );
+    }
+    if (collected.length < limit && base.brand) {
+      pushUnique(
+        await withRelations(
+          Product.find({
+            ...baseFilter,
+            brand: base.brand,
+            _id: { $nin: [...seen] },
+          }).limit(limit - collected.length)
+        )
+      );
+    }
+    if (collected.length < limit) {
+      pushUnique(
+        await withRelations(
+          Product.find({
+            ...baseFilter,
+            _id: { $nin: [...seen] },
+          }).limit(limit - collected.length)
+        )
+      );
+    }
+
+    res.status(200).json({ success: true, data: collected });
+  }
+);
+
+// Batch fetch products by id (used by the "recently viewed" rail) — one
+// round-trip instead of N, with the requested order preserved.
+export const getProductsByIds = controllerWrapper(
+  "getProductsByIds",
+  async (req, res) => {
+    const raw = Array.isArray(req.body?.ids) ? req.body.ids : [];
+    const ids = raw
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+      .slice(0, 50);
+    if (ids.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const products = await Product.find({
+      _id: { $in: ids },
+      isActive: true,
+      deleted: false,
+    })
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .lean();
+
+    const order = new Map(ids.map((id, i) => [String(id), i]));
+    products.sort(
+      (a, b) =>
+        (order.get(String(a._id)) ?? 0) - (order.get(String(b._id)) ?? 0)
+    );
+
+    res.status(200).json({ success: true, data: products });
   }
 );
 

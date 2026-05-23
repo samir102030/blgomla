@@ -16,6 +16,8 @@ import { cldImg } from "../lib/cldImage";
 import { useHomeFeed } from "../lib/queries";
 
 const FeaturedProducts = lazy(() => import("../components/FeaturedProducts"));
+const ProductRail = lazy(() => import("../components/ProductRail"));
+const RecentlyViewed = lazy(() => import("../components/RecentlyViewed"));
 const Newsletter = lazy(() => import("../components/Newsletter"));
 const Services = lazy(() => import("../components/Services"));
 const BrandLogos = lazy(() => import("../components/BrandLogos"));
@@ -110,6 +112,8 @@ const HomePage: React.FC = () => {
   const allProducts: Product[] = feed?.products ?? [];
   const saleProducts: Product[] = feed?.saleProducts ?? [];
   const newestProducts: Product[] = feed?.newestProducts ?? [];
+  const bestSellers: Product[] = feed?.bestSellers ?? [];
+  const topRated: Product[] = feed?.topRated ?? [];
   const categories: Category[] = feed?.categories ?? [];
   const collections: any[] = feed?.collections ?? [];
   const loadingAll = feedLoading;
@@ -281,6 +285,41 @@ const HomePage: React.FC = () => {
         <ScrollReveal>
           <Suspense fallback={null}>
             <FeaturedProducts />
+          </Suspense>
+        </ScrollReveal>
+
+        {/* Bestsellers — social proof that nudges undecided buyers */}
+        {bestSellers.length > 0 && (
+          <ScrollReveal>
+            <Suspense fallback={null}>
+              <ProductRail
+                icon="🏆"
+                title="Bestsellers"
+                subtitle="Most-ordered products this season"
+                products={bestSellers}
+              />
+            </Suspense>
+          </ScrollReveal>
+        )}
+
+        {/* Top Rated — quality signal from real reviews */}
+        {topRated.length > 0 && (
+          <ScrollReveal>
+            <Suspense fallback={null}>
+              <ProductRail
+                icon="⭐"
+                title="Top Rated"
+                subtitle="Highest-rated by our customers"
+                products={topRated}
+              />
+            </Suspense>
+          </ScrollReveal>
+        )}
+
+        {/* Recently Viewed — personalized re-engagement (localStorage-driven) */}
+        <ScrollReveal>
+          <Suspense fallback={null}>
+            <RecentlyViewed />
           </Suspense>
         </ScrollReveal>
 

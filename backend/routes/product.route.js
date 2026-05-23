@@ -29,6 +29,8 @@ import {
   getProductFeatures,
   getProductsByBrand,
   getProductsByCategory,
+  getRelatedProducts,
+  getProductsByIds,
   getSaleProducts,
   getStoreProducts,
   getStorefrontProducts,
@@ -90,6 +92,7 @@ router.get("/featured", publicListCache, translateResponse, getFeaturedProducts)
 router.get("/newest", publicListCache, translateResponse, getNewestProducts);
 router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);
 router.get("/mostRated", publicListCache, translateResponse, getMostRatedProducts);
+router.post("/by-ids", translateResponse, getProductsByIds);
 router.get("/saleProducts", publicListCache, translateResponse, getSaleProducts);
 router.get("/filter", translateResponse, validateFilterProducts, filterProducts);
 router.get("/category/:categoryId", translateResponse, getProductsByCategory);
@@ -129,6 +132,11 @@ router.get("/:productId/reviews/eligibility", protectRoute, checkReviewEligibili
 router.post("/:productId/reviews", protectRoute, validateAddReview, addProductReview);
 router.put("/:productId/reviews/:reviewId", protectRoute, validateUpdateReview, updateProductReview);
 router.delete("/:productId/reviews/:reviewId", protectRoute, deleteProductReview);
+
+// ═══════════════════════════════════════════════
+// RELATED PRODUCTS (you may also like)
+// ═══════════════════════════════════════════════
+router.get("/:productId/related", publicListCache, translateResponse, getRelatedProducts);
 
 // ═══════════════════════════════════════════════
 // FEATURES & ATTRIBUTES

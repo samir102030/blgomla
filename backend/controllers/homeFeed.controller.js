@@ -78,6 +78,24 @@ const queries = {
       )
     ),
 
+  bestSellers: () =>
+    Product.aggregate(
+      productListPipeline(
+        { isActive: true, deleted: false },
+        { soldCount: -1 },
+        12
+      )
+    ),
+
+  topRated: () =>
+    Product.aggregate(
+      productListPipeline(
+        { isActive: true, deleted: false },
+        { rating: -1 },
+        12
+      )
+    ),
+
   categories: async () => {
     // Categories + per-category counts in one round-trip via $lookup.
     const cats = await Category.aggregate([
