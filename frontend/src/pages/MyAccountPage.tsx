@@ -10,6 +10,7 @@ import AccountProfile from "../components/AccountProfile";
 import AccountPassword from "../components/AccountPassword";
 import AccountSecurity from "../components/AccountSecurity";
 import AccountStore from "../components/AccountStore";
+import AccountPrivacy from "../components/AccountPrivacy";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
@@ -49,6 +50,7 @@ const MyAccountPage: React.FC = () => {
     { id: "profile", label: t("account.accountDetails", "Profile"), icon: "👤", desc: t("account.profileDesc", "Personal info") },
     { id: "password", label: t("account.changePassword", "Password"), icon: "🔒", desc: t("account.passwordDesc", "Security settings") },
     { id: "security", label: t("account.security", "2FA"), icon: "🛡️", desc: t("account.securityDesc", "Two-factor authentication") },
+    { id: "privacy", label: t("account.privacy", "Privacy & Data"), icon: "🔐", desc: t("account.privacyDesc", "Export or delete your data") },
     { id: "notifications", label: t("account.notifications", "Notifications"), icon: "🔔", desc: t("account.notificationsDesc", "Email & alert preferences"), href: "/account/notifications" },
     ...(user?.role === "store" ? [{ id: "store", label: t("account.myStore", "My Store"), icon: "🏪", desc: t("account.storeDesc", "Vendor panel") }] : []),
   ];
@@ -193,6 +195,7 @@ const MyAccountPage: React.FC = () => {
                 {activeTab === "profile" && <AccountProfile />}
                 {activeTab === "password" && <AccountPassword />}
                 {activeTab === "security" && <AccountSecurity />}
+                {activeTab === "privacy" && <AccountPrivacy />}
                 {activeTab === "store" && user?.role === "store" && <AccountStore />}
               </div>
             </div>

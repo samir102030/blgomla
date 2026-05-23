@@ -55,6 +55,8 @@ import {
   setup2FA,
   enable2FA,
   disable2FA,
+  exportMyData,
+  deleteMyAccount,
 } from "../controllers/auth.controller.js";
 
 import {
@@ -92,6 +94,10 @@ router.put("/changePassword", protectRoute, changePassword);
 router.post("/2fa/setup", protectRoute, setup2FA);
 router.post("/2fa/enable", protectRoute, enable2FA);
 router.post("/2fa/disable", protectRoute, disable2FA);
+
+// GDPR
+router.get("/me/data-export", protectRoute, exportMyData);
+router.delete("/me/account", protectRoute, deleteMyAccount);
 
 // Verify-email endpoints. /verifyEmail is rate-limited to slow code
 // brute force; /generateVerificationCode is rate-limited so attackers

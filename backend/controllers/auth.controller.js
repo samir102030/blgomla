@@ -13,6 +13,7 @@ import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
+import { logAudit } from "../utils/audit.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -1154,4 +1155,81 @@ export const disable2FA = controllerWrapper("disable2FA", async (req, res) => {
     success: true,
     message: "Two-factor authentication disabled.",
   });
+});
+
+// ── GDPR: export all personal data ──────────────────────────────────────────
+export const exportMyData = controllerWrapper("exportMyData", async (req, res) => {
+  const userId = req.user._id;
+
+  const [user, orders, addresses, notifications, notifPrefs] = await Promise.all([
+    User.findById(userId)
+      .select("-password -resetPasswordToken -verificationToken -totpSecret -pushSubscriptions")
+      .lean(),
+    mongoose.model("Order").find({ user: userId }).lean(),
+    mongoose.model("Address").find({ user: userId }).lean(),
+    mongoose.model("Notification").find({ user: userId, deleted: false }).lean(),
+    mongoose.model("NotificationPreferences").findOne({ user: userId }).lean(),
+  ]);
+
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    profile: user,
+    orders,
+    addresses,
+    notifications,
+    notificationPreferences: notifPrefs,
+  };
+
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="belgomla-data-${userId}.json"`
+  );
+  res.status(200).json(payload);
+});
+
+// ── GDPR: self-service account deletion ─────────────────────────────────────
+export const deleteMyAccount = controllerWrapper("deleteMyAccount", async (req, res) => {
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ success: false, message: "Password is required to confirm deletion" });
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+  const passwordOk = await user.comparePassword(password);
+  if (!passwordOk) {
+    return res.status(400).json({ success: false, message: "Incorrect password" });
+  }
+
+  const ts = Date.now();
+  // Anonymise all PII — keep the document so relational data stays intact.
+  await User.findByIdAndUpdate(req.user._id, {
+    email: `deleted_${ts}@deleted.invalid`,
+    name: "Deleted User",
+    phoneNumber: undefined,
+    profilePicture: undefined,
+    googleId: undefined,
+    cart: [],
+    love: [],
+    pushSubscriptions: [],
+    referralCode: undefined,
+    deleted: true,
+    active: false,
+  });
+
+  // Cancel any open orders so stock is not held indefinitely.
+  await mongoose.model("Order").updateMany(
+    { user: req.user._id, status: { $in: ["pending", "confirmed", "processing"] } },
+    { status: "cancelled", cancelled: true }
+  );
+
+  logAudit(req, "user.self_deleted", "user", req.user._id);
+
+  // Clear auth cookies.
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
+
+  res.status(200).json({ success: true, message: "Account deleted." });
 });
