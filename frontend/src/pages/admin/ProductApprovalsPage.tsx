@@ -78,7 +78,9 @@ const ProductApprovalsPage: React.FC = () => {
     if (!term) return products;
     return products.filter((p) => {
       const storeName =
-        typeof p.store === "object" ? p.store?.name || "" : String(p.store);
+        typeof p.store === "object" && p.store
+          ? ("storeName" in p.store ? p.store.storeName : p.store.name) || ""
+          : String(p.store || "");
       return (
         (p.name || "").toLowerCase().includes(term) ||
         storeName.toLowerCase().includes(term) ||
@@ -231,8 +233,10 @@ const ProductApprovalsPage: React.FC = () => {
                       <div className="text-xs text-gray-500">{product._id}</div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
-                      {typeof product.store === "object"
-                        ? product.store?.name || "—"
+                      {typeof product.store === "object" && product.store
+                        ? ("storeName" in product.store
+                            ? product.store.storeName
+                            : product.store.name) || "—"
                         : product.store || "—"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">

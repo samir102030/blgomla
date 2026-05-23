@@ -263,7 +263,7 @@ const VisitorAnalyticsPage: React.FC = () => {
           </h2>
           {devices?.browsers && devices.browsers.length > 0 ? (
             <div className="space-y-3">
-              {devices.browsers.slice(0, 8).map((b, i) => (
+              {devices.browsers.slice(0, 8).map((b) => (
                 <div
                   key={b._id}
                   className="flex justify-between items-center text-sm"

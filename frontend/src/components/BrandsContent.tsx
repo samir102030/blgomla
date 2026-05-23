@@ -16,6 +16,7 @@ interface FilterState {
   search: string;
   featured: boolean;
   onSale: boolean;
+  inStock: boolean;
 }
 
 const BrandsContent: React.FC = () => {
@@ -29,6 +30,7 @@ const BrandsContent: React.FC = () => {
     search: "",
     featured: false,
     onSale: false,
+    inStock: false,
   });
   const [sortBy, setSortBy] = useState<string>("name");
 
@@ -71,17 +73,24 @@ const BrandsContent: React.FC = () => {
       const selectedCategoryIds = filters.categories.flatMap((catId) =>
         getAllSubcategoryIds(catId, categories)
       );
-      if (!selectedCategoryIds.includes(product.category || "")) {
+      const productCategoryId =
+        typeof product.category === "string"
+          ? product.category
+          : product.category?._id || "";
+      if (!selectedCategoryIds.includes(productCategoryId)) {
         return false;
       }
     }
 
     // Brand filter
-    if (
-      filters.brands.length > 0 &&
-      !filters.brands.includes(product.brand || "")
-    ) {
-      return false;
+    if (filters.brands.length > 0) {
+      const productBrandId =
+        typeof product.brand === "string"
+          ? product.brand
+          : product.brand?._id || "";
+      if (!filters.brands.includes(productBrandId)) {
+        return false;
+      }
     }
 
     // Price filter

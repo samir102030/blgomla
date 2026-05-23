@@ -32,7 +32,7 @@ const VendorProductManagement: React.FC = () => {
     price: 0,
     salePrice: 0,
     stock: 0,
-    Category: "",
+    category: "",
     brand: "",
     images: [] as ProductImage[],
     features: [] as string[],
@@ -58,7 +58,7 @@ const VendorProductManagement: React.FC = () => {
       price: 0,
       salePrice: 0,
       stock: 0,
-      Category: "",
+      category: "",
       brand: "",
       images: [],
       features: [],
@@ -98,8 +98,14 @@ const VendorProductManagement: React.FC = () => {
       price: product.price,
       salePrice: product.salePrice || 0,
       stock: product.stock,
-      category: product.category || "",
-      brand: product.brand || "",
+      category:
+        typeof product.category === "string"
+          ? product.category
+          : product.category?._id || "",
+      brand:
+        typeof product.brand === "string"
+          ? product.brand
+          : product.brand?._id || "",
       images: product.images,
       features: product.features || [],
       attributes: product.attributes || [],
@@ -387,7 +393,7 @@ const VendorProductManagement: React.FC = () => {
                       onChange={(e) =>
                         setProductForm((prev) => ({
                           ...prev,
-                          Category: e.target.value,
+                          category: e.target.value,
                         }))
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"

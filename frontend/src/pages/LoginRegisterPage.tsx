@@ -33,7 +33,6 @@ const LoginRegisterPage: React.FC = () => {
   const signup = useUserStore((s) => s.signup);
   const googleSignIn = useUserStore((s) => s.googleSignIn);
   const loading = useUserStore((s) => s.loading);
-  const error = useUserStore((s) => s.error);
 
   const handleGoogleSuccess = async (credential?: string) => {
     setLoginError(null);

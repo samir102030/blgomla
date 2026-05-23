@@ -113,9 +113,9 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
   // title/subtitle/description, but defending here keeps it correct if the ad
   // was fetched before the middleware was applied to the route.
   const title =
-    (isRtl && (currentAd as any).titleAr) || currentAd.title || "";
+    (isRtl && currentAd.titleAr) || currentAd.title || "";
   const subtitle =
-    (isRtl && ((currentAd as any).subtitleAr || (currentAd as any).descriptionAr)) ||
+    (isRtl && (currentAd.subtitleAr || currentAd.descriptionAr)) ||
     currentAd.subtitle ||
     currentAd.description ||
     "";

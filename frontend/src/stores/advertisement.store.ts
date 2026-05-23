@@ -4,7 +4,11 @@ import { axiosInstance } from "../lib/axios";
 export interface Advertisement {
   _id: string;
   title: string;
+  titleAr?: string;
+  subtitle?: string;
+  subtitleAr?: string;
   description?: string;
+  descriptionAr?: string;
   image: string;
   link?: string;
   position: "hero" | "banner" | "popup";

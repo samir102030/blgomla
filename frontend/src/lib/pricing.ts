@@ -1,6 +1,8 @@
 import type { BulkPricingRule, Product } from "../types/product.type";
 
-type PriceInput = Pick<Product, "price" | "saleActive" | "salePercentage">;
+type PriceInput = Pick<Product, "price" | "saleActive"> & {
+  salePercentage?: number;
+};
 type BulkInput = PriceInput & Pick<Product, "bulkPricing">;
 
 const sortBulkPricing = (rules?: BulkPricingRule[]) => {
