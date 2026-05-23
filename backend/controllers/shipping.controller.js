@@ -2,6 +2,7 @@ import ShippingSettings, {
   getShippingSettings,
 } from "../models/shippingSettings.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
+import { logAudit } from "../utils/audit.js";
 
 // GET /api/shipping — public; the checkout reads this to show the fee.
 export const getShipping = controllerWrapper("getShipping", async (req, res) => {
@@ -33,6 +34,7 @@ export const updateShipping = controllerWrapper(
       { $set: update },
       { new: true, upsert: true }
     );
+    logAudit(req, "shipping.updated", "shipping", null, { defaultFee: settings.defaultFee, freeShippingThreshold: settings.freeShippingThreshold, enabled: settings.enabled });
     res.status(200).json({ success: true, settings });
   }
 );

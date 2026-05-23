@@ -8,6 +8,7 @@ import BrandRequest from "../models/brandRequest.model.js";
 import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import { logEventSafe } from "./event.controller.js";
+import { logAudit } from "../utils/audit.js";
 import mongoose from "mongoose";
 
 // Tokenized, case-insensitive search filter: every word must appear in the
@@ -481,6 +482,7 @@ export const approveProduct = controllerWrapper(
       });
     }
 
+    logAudit(req, "product.approved", "product", product._id, { name: product.name, note });
     res.status(200).json({ success: true, product });
   }
 );
@@ -516,6 +518,7 @@ export const rejectProduct = controllerWrapper(
       });
     }
 
+    logAudit(req, "product.rejected", "product", product._id, { name: product.name, reason });
     res.status(200).json({ success: true, product });
   }
 );
@@ -530,6 +533,7 @@ export const deleteProduct = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
+    logAudit(req, "product.deleted", "product", productId, { name: product.name });
     res.status(200).json({ success: true, message: "Product deleted" });
   }
 );
@@ -551,6 +555,7 @@ export const softDeleteProduct = controllerWrapper(
     res
       .status(200)
       .json({ success: true, message: "Product marked as deleted" });
+    logAudit(req, "product.archived", "product", req.params.productId);
   }
 );
 
@@ -568,6 +573,7 @@ export const restoreProduct = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
+    logAudit(req, "product.restored", "product", req.params.productId);
     res.status(200).json({ success: true, message: "Product restored" });
   }
 );
@@ -583,6 +589,7 @@ export const toggleSaleProduct = controllerWrapper(
         .status(404)
         .json({ success: false, message: "Product not found" });
     product.saleActive = !product.saleActive;
+    logAudit(req, "product.sale_toggled", "product", product._id, { saleActive: product.saleActive });
     await product.save();
     res.status(200).json({ success: true, saleActive: product.saleActive });
   }
@@ -661,6 +668,7 @@ export const toggleFeaturedProduct = controllerWrapper(
         .status(404)
         .json({ success: false, message: "Product not found" });
     product.featured = !product.featured;
+    logAudit(req, "product.featured_toggled", "product", product._id, { featured: product.featured });
     await product.save();
     res.status(200).json({ success: true, featured: product.featured });
   }
@@ -681,6 +689,7 @@ export const updateProductStock = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Product not found" });
+    logAudit(req, "product.stock_updated", "product", productId, { stock });
     res.status(200).json({ success: true, product });
   }
 );

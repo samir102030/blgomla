@@ -26,6 +26,7 @@ import cronRoutes from "./cron.route.js";
 import questionRoutes from "./question.route.js";
 import shippingRoutes from "./shipping.route.js";
 import accurateRoutes from "./accurate.route.js";
+import auditLogRoutes from "./auditLog.route.js";
 
 const router = express.Router();
 
@@ -56,5 +57,6 @@ router.use("/cron", cronRoutes);
 router.use("/questions", questionRoutes);
 router.use("/shipping", shippingRoutes);
 router.use("/accurate", accurateRoutes);
+router.use("/audit-logs", auditLogRoutes);
 
 export default router;

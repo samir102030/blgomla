@@ -152,6 +152,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       roles: ["admin", "super_admin"],
     },
     {
+      name: "Audit Log",
+      href: "/dashboard/audit-log",
+      icon: ClipboardDocumentListIcon,
+      roles: ["admin", "super_admin"],
+    },
+    {
       name: t("admin.siteMode", "Coming Soon"),
       href: "/dashboard/site-mode",
       icon: RocketLaunchIcon,

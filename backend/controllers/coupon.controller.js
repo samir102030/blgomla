@@ -3,6 +3,7 @@ import Product from "../models/product.model.js";
 import Store from "../models/store.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
+import { logAudit } from "../utils/audit.js";
 
 // Create Coupon
 export const createCoupon = controllerWrapper(
@@ -93,6 +94,7 @@ export const createCoupon = controllerWrapper(
       "store",
     ]);
 
+    logAudit(req, "coupon.created", "coupon", coupon._id, { code: coupon.code });
     res.status(201).json({ success: true, coupon });
   }
 );
@@ -295,6 +297,7 @@ export const deleteCoupon = controllerWrapper(
     }
 
     await Coupon.findByIdAndDelete(couponId);
+    logAudit(req, "coupon.deleted", "coupon", couponId, { code: coupon.code });
 
     res.status(200).json({
       success: true,
@@ -469,6 +472,7 @@ export const toggleCouponStatus = controllerWrapper(
       "store",
     ]);
 
+    logAudit(req, "coupon.status_toggled", "coupon", coupon._id, { isActive: coupon.isActive, code: coupon.code });
     res.status(200).json({
       success: true,
       coupon,

@@ -17,6 +17,7 @@ import {
   createAccurateShipment,
 } from "../utils/accurate.js";
 import { emitNotificationCreated } from "../utils/socket.js";
+import { logAudit } from "../utils/audit.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
 import {
@@ -659,6 +660,8 @@ export const updateOrderStatus = controllerWrapper(
       }
     }
 
+    logAudit(req, "order.status_changed", "order", order._id, { status, note });
+
     // Create notification for customer about status change
     const statusMessages = {
       confirmed: "confirmed",
@@ -777,6 +780,7 @@ export const cancelOrder = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+    logAudit(req, "order.cancelled", "order", order._id, { reason: req.body?.reason });
     res.status(200).json({ success: true, order });
   }
 );
@@ -840,6 +844,7 @@ export const deleteOrder = controllerWrapper(
 
     // Delete the order
     await Order.findByIdAndDelete(req.params.id);
+    logAudit(req, "order.deleted", "order", order._id);
 
     res
       .status(200)

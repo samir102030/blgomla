@@ -28,6 +28,7 @@ import AdminsPage from "../pages/admin/AdminsPage";
 import SiteModePage from "../pages/admin/SiteModePage";
 import ShippingSettingsPage from "../pages/admin/ShippingSettingsPage";
 import AccurateSettingsPage from "../pages/admin/AccurateSettingsPage";
+import AuditLogPage from "../pages/admin/AuditLogPage";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -116,6 +117,7 @@ const AdminRoutes: React.FC = () => {
         {/* Shipping */}
         <Route path="/shipping" element={<ShippingSettingsPage />} />
         <Route path="/accurate" element={<AccurateSettingsPage />} />
+        <Route path="/audit-log" element={<AuditLogPage />} />
 
         {/* Content Management */}
         <Route path="/advertisements" element={<AdvertisementsPage />} />
