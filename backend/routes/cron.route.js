@@ -3,6 +3,7 @@ import {
   recoverAbandonedCarts,
   runSaleScheduler,
   runPostPurchaseEmails,
+  runStockAlerts,
 } from "../controllers/cron.controller.js";
 
 const router = express.Router();
@@ -11,5 +12,6 @@ const router = express.Router();
 router.get("/cart-recovery", recoverAbandonedCarts);
 router.get("/sale-scheduler", runSaleScheduler);
 router.get("/post-purchase", runPostPurchaseEmails);
+router.get("/stock-alerts", runStockAlerts);
 
 export default router;

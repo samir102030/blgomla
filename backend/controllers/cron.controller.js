@@ -2,7 +2,13 @@ import User from "../models/user.model.js";
 import Product from "../models/product.model.js";
 import Order from "../models/order.model.js";
 import EmailLog from "../models/emailLog.model.js";
-import { sendAbandonedCartEmail, sendReviewRequestEmail } from "../utils/email.js";
+import StockAlert from "../models/stockAlert.model.js";
+import { effectivePrice } from "./stockAlert.controller.js";
+import {
+  sendAbandonedCartEmail,
+  sendReviewRequestEmail,
+  sendStockAlertEmail,
+} from "../utils/email.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 
 const HOUR = 60 * 60 * 1000;
@@ -165,6 +171,61 @@ export const runPostPurchaseEmails = controllerWrapper(
     res.status(200).json({
       success: true,
       processed: orders.length,
+      sent,
+      ...(errors.length ? { errors } : {}),
+    });
+  }
+);
+
+/**
+ * GET /api/cron/stock-alerts
+ * Notifies shoppers when a watched product is back in stock or its price has
+ * dropped below what they subscribed at. Idempotent via the `notified` flag.
+ * Protected by CRON_SECRET; no-ops when the mailer isn't configured.
+ */
+export const runStockAlerts = controllerWrapper(
+  "runStockAlerts",
+  async (req, res) => {
+    if (rejectIfUnauthorized(req, res)) return;
+
+    const alerts = await StockAlert.find({ notified: false })
+      .limit(BATCH_LIMIT)
+      .populate(
+        "product",
+        "name stock price salePrice saleActive salePercentage images slug"
+      );
+
+    let sent = 0;
+    const errors = [];
+
+    for (const alert of alerts) {
+      const p = alert.product;
+      if (!p) continue;
+
+      const due =
+        alert.type === "price_drop"
+          ? typeof alert.priceAtSubscribe === "number" &&
+            effectivePrice(p) < alert.priceAtSubscribe
+          : p.stock > 0;
+      if (!due) continue;
+
+      try {
+        const result = await sendStockAlertEmail(alert.email, p, alert.type);
+        if (!result) {
+          errors.push({ alert: String(alert._id), error: "email not sent" });
+          continue;
+        }
+        alert.notified = true;
+        await alert.save();
+        sent += 1;
+      } catch (err) {
+        errors.push({ alert: String(alert._id), error: err.message });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      processed: alerts.length,
       sent,
       ...(errors.length ? { errors } : {}),
     });

@@ -588,6 +588,48 @@ export const sendReviewRequestEmail = async (user, order) => {
 };
 
 /**
+ * Back-in-stock / price-drop alert for a single product. `email` is a raw
+ * address (alerts are anonymous-friendly), `type` is "restock" | "price_drop".
+ */
+export const sendStockAlertEmail = async (email, product, type, lang = "en") => {
+  const l = pickLang(lang);
+  const url = `${CLIENT_URL}/product/${product._id}`;
+  const isDrop = type === "price_drop";
+
+  const subjectMap = isDrop
+    ? { en: `Price drop: ${product.name}`, ar: `انخفض السعر: ${product.name}` }
+    : { en: `Back in stock: ${product.name}`, ar: `عاد للمخزون: ${product.name}` };
+
+  const labels =
+    l === "ar"
+      ? {
+          title: isDrop ? "انخفض السعر 🎉" : "عاد المنتج للمخزون ✅",
+          line: isDrop
+            ? `انخفض سعر <strong>${product.name}</strong> الذي كنت تتابعه.`
+            : `<strong>${product.name}</strong> متوفر الآن. اطلبه قبل نفاد الكمية.`,
+          cta: isDrop ? "اشترِ الآن" : "اطلب الآن",
+        }
+      : {
+          title: isDrop ? "Price drop 🎉" : "Back in stock ✅",
+          line: isDrop
+            ? `The price of <strong>${product.name}</strong> just dropped.`
+            : `<strong>${product.name}</strong> is available again. Grab it before it's gone.`,
+          cta: isDrop ? "Buy now" : "Order now",
+        };
+
+  const body = `
+    <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${labels.title}</h1>
+    <p class="text" style="margin:0 0 14px;">${labels.line}</p>
+    ${ctaButton(url, labels.cta)}
+  `;
+
+  const html = renderEmailLayout({ lang: l, previewText: labels.line, body });
+  const text = `${labels.title}\n${product.name}\n${url}`;
+
+  return sendEmail({ to: email, subject: subjectMap[l], html, text });
+};
+
+/**
  * Abandoned-cart recovery — nudges a user who left items in their cart.
  * `cartItems` is the populated cart array (cart.product / cart.collection).
  * `stage` (1|2|3) lets the copy escalate gently across the sequence.

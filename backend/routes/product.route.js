@@ -60,6 +60,7 @@ import {
   updateCompetitorPrice,
   deleteCompetitorPrice,
 } from "../controllers/product.controller.js";
+import { subscribeStockAlert } from "../controllers/stockAlert.controller.js";
 
 import {
   validateCreateProduct,
@@ -139,6 +140,7 @@ router.delete("/:productId/reviews/:reviewId", protectRoute, deleteProductReview
 // ═══════════════════════════════════════════════
 router.get("/:productId/related", publicListCache, translateResponse, getRelatedProducts);
 router.get("/:productId/frequently-bought-together", publicListCache, translateResponse, getFrequentlyBoughtTogether);
+router.post("/:productId/notify", subscribeStockAlert);
 
 // ═══════════════════════════════════════════════
 // FEATURES & ATTRIBUTES

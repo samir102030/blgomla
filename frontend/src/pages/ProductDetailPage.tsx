@@ -8,6 +8,7 @@ import CountdownTimer from "../components/CountdownTimer";
 import ProductQuestions from "../components/ProductQuestions";
 import ProductRail from "../components/ProductRail";
 import RecentlyViewed from "../components/RecentlyViewed";
+import StockAlert from "../components/StockAlert";
 import { addRecentlyViewed } from "../lib/recentlyViewed";
 import { trackBehavior } from "../lib/analytics";
 import { useProductStore } from "../stores/product.store";
@@ -730,6 +731,9 @@ const ProductDetailPage: React.FC = () => {
                   </p>
                 </div>
               )}
+
+              {/* Back-in-stock / price-drop alert */}
+              <StockAlert productId={product._id} inStock={stockValue > 0} />
 
               {/* Share */}
               <div className="mt-4 pt-4 border-t border-[var(--border)]">
