@@ -544,6 +544,50 @@ export const sendOrderStatusEmail = async (user, order, status) => {
 };
 
 /**
+ * Post-purchase review request — sent a few days after delivery to grow review
+ * volume (trust + SEO) and bring the customer back to the store.
+ */
+export const sendReviewRequestEmail = async (user, order) => {
+  const lang = pickLang(user.lang || user.locale);
+  const orderNum = order._id.toString().slice(-8).toUpperCase();
+
+  const subjectMap = {
+    en: `How was your order? — #${orderNum}`,
+    ar: `شاركنا رأيك في طلبك — #${orderNum}`,
+  };
+  const labels =
+    lang === "ar"
+      ? {
+          title: "رأيك يهمنا ⭐",
+          line: "نتمنى أن تكون قد استمتعت بمنتجاتك. تقييم سريع يساعد عملاء آخرين على الاختيار.",
+          cta: "أضف تقييمك",
+          browse: "اكتشف المزيد من المنتجات",
+        }
+      : {
+          title: "How did we do? ⭐",
+          line: "We hope you're enjoying your purchase. A quick review helps other shoppers decide.",
+          cta: "Write a review",
+          browse: "Discover more products",
+        };
+
+  const body = `
+    <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${labels.title}</h1>
+    <p class="text" style="margin:0 0 14px;">${greeting(lang, user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${labels.line}</p>
+    ${ctaButton(`${CLIENT_URL}/orders`, labels.cta)}
+    <p class="text" style="margin:18px 0 0;font-size:14px;"><a href="${CLIENT_URL}/products" style="color:${T.navy};">${labels.browse} →</a></p>
+  `;
+
+  const html = renderEmailLayout({ lang, previewText: labels.line, body });
+  const text =
+    lang === "ar"
+      ? `${labels.title}\n${labels.line}\n${CLIENT_URL}/orders`
+      : `${labels.title}\n${labels.line}\n${CLIENT_URL}/orders`;
+
+  return sendEmail({ to: user.email, subject: subjectMap[lang], html, text });
+};
+
+/**
  * Abandoned-cart recovery — nudges a user who left items in their cart.
  * `cartItems` is the populated cart array (cart.product / cart.collection).
  * `stage` (1|2|3) lets the copy escalate gently across the sequence.

@@ -1287,6 +1287,50 @@ export const getRelatedProducts = controllerWrapper(
   }
 );
 
+// Frequently bought together: products that co-occur in real orders with this
+// one, ranked by co-occurrence count. Pure signal from purchase history.
+export const getFrequentlyBoughtTogether = controllerWrapper(
+  "getFrequentlyBoughtTogether",
+  async (req, res) => {
+    const { productId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: "Invalid product id" });
+    }
+    const pid = new mongoose.Types.ObjectId(productId);
+    const limit = Math.min(Number(req.query.limit) || 6, 12);
+
+    const co = await Order.aggregate([
+      { $match: { "orderItems.product": pid } },
+      { $unwind: "$orderItems" },
+      { $match: { "orderItems.product": { $ne: pid } } },
+      { $group: { _id: "$orderItems.product", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: limit },
+    ]);
+
+    const ids = co.map((c) => c._id).filter(Boolean);
+    if (ids.length === 0) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const products = await Product.find({
+      _id: { $in: ids },
+      isActive: true,
+      deleted: false,
+    })
+      .populate("brand", "name slug logo")
+      .populate("category", "name slug")
+      .lean();
+
+    const order = new Map(ids.map((id, i) => [String(id), i]));
+    products.sort(
+      (a, b) => (order.get(String(a._id)) ?? 0) - (order.get(String(b._id)) ?? 0)
+    );
+
+    res.status(200).json({ success: true, data: products });
+  }
+);
+
 // Batch fetch products by id (used by the "recently viewed" rail) — one
 // round-trip instead of N, with the requested order preserved.
 export const getProductsByIds = controllerWrapper(

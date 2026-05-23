@@ -30,6 +30,7 @@ import {
   getProductsByBrand,
   getProductsByCategory,
   getRelatedProducts,
+  getFrequentlyBoughtTogether,
   getProductsByIds,
   getSaleProducts,
   getStoreProducts,
@@ -137,6 +138,7 @@ router.delete("/:productId/reviews/:reviewId", protectRoute, deleteProductReview
 // RELATED PRODUCTS (you may also like)
 // ═══════════════════════════════════════════════
 router.get("/:productId/related", publicListCache, translateResponse, getRelatedProducts);
+router.get("/:productId/frequently-bought-together", publicListCache, translateResponse, getFrequentlyBoughtTogether);
 
 // ═══════════════════════════════════════════════
 // FEATURES & ATTRIBUTES

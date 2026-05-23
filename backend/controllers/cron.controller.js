@@ -1,6 +1,8 @@
 import User from "../models/user.model.js";
 import Product from "../models/product.model.js";
-import { sendAbandonedCartEmail } from "../utils/email.js";
+import Order from "../models/order.model.js";
+import EmailLog from "../models/emailLog.model.js";
+import { sendAbandonedCartEmail, sendReviewRequestEmail } from "../utils/email.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 
 const HOUR = 60 * 60 * 1000;
@@ -103,6 +105,67 @@ export const recoverAbandonedCarts = controllerWrapper(
       processed: candidates.length,
       sent,
       byStage,
+      ...(errors.length ? { errors } : {}),
+    });
+  }
+);
+
+/**
+ * GET /api/cron/post-purchase
+ * Sends a review-request email a few days after delivery. Idempotent via the
+ * EmailLog collection (so we never touch the order schema). Protected by
+ * CRON_SECRET. No-ops cleanly when the mailer (RESEND_API_KEY) isn't configured.
+ */
+export const runPostPurchaseEmails = controllerWrapper(
+  "runPostPurchaseEmails",
+  async (req, res) => {
+    if (rejectIfUnauthorized(req, res)) return;
+
+    const now = Date.now();
+    const windowStart = new Date(now - 10 * 24 * HOUR); // not older than 10 days
+    const windowEnd = new Date(now - 3 * 24 * HOUR); // delivered >= 3 days ago
+
+    const orders = await Order.find({
+      isDelivered: true,
+      deliveredAt: { $gte: windowStart, $lte: windowEnd },
+    })
+      .limit(BATCH_LIMIT)
+      .populate("user", "name email lang locale");
+
+    let sent = 0;
+    const errors = [];
+
+    for (const order of orders) {
+      if (!order.user?.email) continue;
+      const already = await EmailLog.findOne({
+        order: order._id,
+        type: "review_request",
+      });
+      if (already) continue;
+
+      try {
+        const result = await sendReviewRequestEmail(order.user, order);
+        // Mailer no-op/failure returns null — don't log, so it retries next run.
+        if (!result) {
+          errors.push({ order: String(order._id), error: "email not sent" });
+          continue;
+        }
+        await EmailLog.create({
+          order: order._id,
+          user: order.user._id,
+          type: "review_request",
+        });
+        sent += 1;
+      } catch (err) {
+        if (err?.code === 11000) continue; // raced another run — already logged
+        errors.push({ order: String(order._id), error: err.message });
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      processed: orders.length,
+      sent,
       ...(errors.length ? { errors } : {}),
     });
   }
