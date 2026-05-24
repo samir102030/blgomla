@@ -1,17 +1,23 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../lib/axios";
-import type { Product } from "../types/product.type";
 import {
   ArrowRightOnRectangleIcon,
+  ChevronDownIcon,
+  ClockIcon,
   GlobeAltIcon,
   HeartIcon,
   MagnifyingGlassIcon,
   ShoppingCartIcon,
+  Squares2X2Icon,
+  TagIcon,
   UserCircleIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useCategoryStore } from "../stores/category.store";
+import { useBrandStore } from "../stores/brand.store";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
@@ -25,22 +31,89 @@ interface NavigationItem {
   className?: string;
 }
 
+interface SuggestProduct {
+  _id: string;
+  name: string;
+  slug?: string;
+  price: number;
+  salePrice?: number;
+  saleActive?: boolean;
+  image?: string | null;
+}
+
+interface SuggestRef {
+  _id: string;
+  name: string;
+  slug?: string;
+  logo?: string;
+}
+
+interface Suggestions {
+  products: SuggestProduct[];
+  brands: SuggestRef[];
+  categories: SuggestRef[];
+}
+
+const EMPTY_SUGGESTIONS: Suggestions = { products: [], brands: [], categories: [] };
+
+// Recent searches live client-side only (no PII to a server). Capped small.
+const RECENT_KEY = "belgomla:recentSearches";
+const RECENT_MAX = 5;
+
+const readRecent = (): string[] => {
+  try {
+    const raw = localStorage.getItem(RECENT_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter((s) => typeof s === "string").slice(0, RECENT_MAX) : [];
+  } catch {
+    return [];
+  }
+};
+
 const Header: React.FC = () => {
   const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
+  const categories = useCategoryStore((state) => state.categories);
+  const fetchCategories = useCategoryStore((state) => state.fetchCategories);
+  const brands = useBrandStore((state) => state.brands);
+  const fetchBrands = useBrandStore((state) => state.fetchBrands);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestions>(EMPTY_SUGGESTIONS);
   const [searching, setSearching] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => readRecent());
   const [language, setLanguage] = useState(i18n.language);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [catMenuOpen, setCatMenuOpen] = useState(false);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const catMenuRef = useRef<HTMLLIElement>(null);
   const navigate = useNavigate();
+
+  // Load categories/brands once for the Categories flyout (stores are
+  // persisted, so this is usually a no-op after first visit).
+  useEffect(() => {
+    if (!categories.length) fetchCategories();
+    if (!brands.length) fetchBrands();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Close the Categories flyout on outside click.
+  useEffect(() => {
+    if (!catMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (catMenuRef.current && !catMenuRef.current.contains(e.target as Node)) {
+        setCatMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [catMenuOpen]);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -59,9 +132,61 @@ const Header: React.FC = () => {
     navigate("/");
   };
 
+  const closeSearch = () => {
+    setShowDropdown(false);
+    setActiveIndex(-1);
+  };
+
+  const pushRecent = (term: string) => {
+    const q = term.trim();
+    if (q.length < 2) return;
+    setRecentSearches((prev) => {
+      const next = [q, ...prev.filter((s) => s.toLowerCase() !== q.toLowerCase())].slice(
+        0,
+        RECENT_MAX
+      );
+      try {
+        localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore quota / private-mode errors */
+      }
+      return next;
+    });
+  };
+
+  const clearRecent = () => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem(RECENT_KEY);
+    } catch {
+      /* ignore */
+    }
+  };
+
   const goToProduct = (productId: string) => {
     navigate(`/product/${productId}`);
-    setShowDropdown(false);
+    closeSearch();
+    setSearchQuery("");
+  };
+
+  const goToBrand = (brandId: string) => {
+    navigate(`/products?brand=${encodeURIComponent(brandId)}`);
+    closeSearch();
+    setSearchQuery("");
+  };
+
+  const goToCategory = (categoryId: string) => {
+    navigate(`/products?category=${encodeURIComponent(categoryId)}`);
+    closeSearch();
+    setSearchQuery("");
+  };
+
+  const submitSearch = (term: string) => {
+    const q = term.trim();
+    if (q.length < 1) return;
+    pushRecent(q);
+    navigate(`/products?search=${encodeURIComponent(q)}`);
+    closeSearch();
     setSearchQuery("");
   };
 
@@ -93,11 +218,15 @@ const Header: React.FC = () => {
     return () => window.removeEventListener("keydown", onKey);
   }, [isMenuOpen]);
 
-  // Debounced search — uses a local results buffer so it doesn't trample the
-  // global product store (which the All Products page reads from).
+  // Debounced instant-search — hits the lightweight /search-suggestions
+  // endpoint that returns matching products + brands + categories in one trip.
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setShowDropdown(false);
+    const q = searchQuery.trim();
+    setActiveIndex(-1);
+    // Under 2 chars we still keep the dropdown open (on focus) to show recents.
+    if (q.length < 2) {
+      setSuggestions(EMPTY_SUGGESTIONS);
+      setSearching(false);
       return;
     }
     let cancelled = false;
@@ -105,25 +234,24 @@ const Header: React.FC = () => {
       setSearching(true);
       setShowDropdown(true);
       try {
-        const { data } = await axiosInstance.get<{ data: Product[] }>(
-          "/products",
-          {
-            params: {
-              search: searchQuery,
-              limit: 5,
-              isActive: true,
-              deleted: false,
-              approvalStatus: "approved",
-            },
-          }
-        );
-        if (!cancelled) setSearchResults(data.data || []);
+        const { data } = await axiosInstance.get<{
+          products?: SuggestProduct[];
+          brands?: SuggestRef[];
+          categories?: SuggestRef[];
+        }>("/products/search-suggestions", { params: { q } });
+        if (!cancelled) {
+          setSuggestions({
+            products: data.products || [],
+            brands: data.brands || [],
+            categories: data.categories || [],
+          });
+        }
       } catch {
-        if (!cancelled) setSearchResults([]);
+        if (!cancelled) setSuggestions(EMPTY_SUGGESTIONS);
       } finally {
         if (!cancelled) setSearching(false);
       }
-    }, 300);
+    }, 250);
     return () => {
       cancelled = true;
       clearTimeout(timer);
@@ -157,6 +285,66 @@ const Header: React.FC = () => {
     };
   }, []);
 
+  const hasQuery = searchQuery.trim().length >= 2;
+  const hasResults =
+    suggestions.products.length > 0 ||
+    suggestions.brands.length > 0 ||
+    suggestions.categories.length > 0;
+
+  // Flat, ordered list of every selectable row in the dropdown so ArrowUp/Down
+  // can move a single highlight across the Products → Brands → Categories →
+  // "view all" sections (or across recent searches when the query is empty).
+  const flatItems = useMemo(() => {
+    const items: { run: () => void }[] = [];
+    if (!hasQuery) {
+      recentSearches.forEach((term) => items.push({ run: () => submitSearch(term) }));
+      return items;
+    }
+    suggestions.products.forEach((p) => items.push({ run: () => goToProduct(p._id) }));
+    suggestions.brands.forEach((b) => items.push({ run: () => goToBrand(b._id) }));
+    suggestions.categories.forEach((c) => items.push({ run: () => goToCategory(c._id) }));
+    if (hasResults) items.push({ run: () => submitSearch(searchQuery) });
+    return items;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasQuery, hasResults, suggestions, recentSearches, searchQuery]);
+
+  const onSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setShowDropdown(true);
+      setActiveIndex((i) => (flatItems.length ? (i + 1) % flatItems.length : -1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) =>
+        flatItems.length ? (i <= 0 ? flatItems.length - 1 : i - 1) : -1
+      );
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeIndex >= 0 && flatItems[activeIndex]) flatItems[activeIndex].run();
+      else if (searchQuery.trim()) submitSearch(searchQuery);
+    } else if (e.key === "Escape") {
+      closeSearch();
+    }
+  };
+
+  // Top-level categories only, keeps the flyout slim. Falls back to a flat
+  // list when the taxonomy has no parent/child structure.
+  const topCategories = useMemo(
+    () =>
+      (categories || [])
+        .filter((c) => !c.parentCategory && c.isActive !== false && !c.deleted)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .slice(0, 12),
+    [categories]
+  );
+  const topBrands = useMemo(
+    () =>
+      (brands || [])
+        .filter((b) => b.isActive !== false && !b.deleted)
+        .slice(0, 8),
+    [brands]
+  );
+
   const role = user?.role;
   const showBecomeVendor = !role || role === "customer";
   const showAdminDashboard =
@@ -186,72 +374,177 @@ const Header: React.FC = () => {
   ];
 
   /* ── Search Dropdown ── */
-  const SearchDropdown = () =>
-    showDropdown ? (
-      <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto animate-fadeInDown">
+  const rowClass = (idx: number) =>
+    `w-full text-left flex items-center gap-3 px-4 py-2.5 transition-colors ${
+      activeIndex === idx
+        ? "bg-[var(--surface-2)]"
+        : "hover:bg-[var(--surface-2)]"
+    }`;
+
+  const sectionLabel = (
+    label: string,
+    Icon: React.ComponentType<{ className?: string }>
+  ) => (
+    <div className="flex items-center gap-1.5 px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+      <Icon className="w-3.5 h-3.5" />
+      {label}
+    </div>
+  );
+
+  const renderDropdown = () => {
+    if (!showDropdown) return null;
+    const { products, brands, categories } = suggestions;
+    const bOff = products.length;
+    const cOff = bOff + brands.length;
+    const viewAllIdx = cOff + categories.length;
+
+    if (!searching && !hasQuery && recentSearches.length === 0) return null;
+
+    return (
+      <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 max-h-[28rem] overflow-y-auto animate-fadeInDown">
         {searching ? (
           <div className="p-5 text-center text-[var(--text-subtle)]">
             <div className="animate-spin rounded-full h-6 w-6 border-2 border-[var(--brand-primary)] border-t-transparent mx-auto" />
             <p className="mt-2 text-sm">{t("Searching...")}</p>
           </div>
-        ) : searchResults.length > 0 ? (
+        ) : !hasQuery ? (
           <div className="py-2">
-            {searchResults.map((product) => (
+            <div className="flex items-center justify-between px-4 py-1.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                {t("Recent searches")}
+              </span>
               <button
-                key={product._id}
                 type="button"
-                className="w-full text-left flex items-center px-4 py-3 hover:bg-[var(--surface-2)] transition-colors border-b border-[var(--border)]/50 last:border-b-0 gap-3"
-                onClick={() => goToProduct(product._id)}
+                onClick={clearRecent}
+                className="inline-flex items-center gap-1 text-xs text-[var(--text-subtle)] hover:text-[var(--text)] transition-colors"
               >
-                <img
-                  src={cldImg(product.images[0]?.url, { w: 120 })}
-                  alt={product.name}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-12 h-12 object-cover rounded-lg bg-[var(--surface-2)]"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-[var(--text)] truncate">
-                    {product.name}
-                  </h4>
-                  <div className="flex items-center mt-0.5 gap-2">
-                    <span className="text-sm font-semibold text-[var(--brand-primary)]">
-                      {product.price.toLocaleString()} EGP
-                    </span>
-                    {product.saleActive && (
-                      <span className="text-xs text-[var(--danger)] line-through">
-                        {product.salePrice?.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <XMarkIcon className="w-3.5 h-3.5" />
+                {t("Clear")}
+              </button>
+            </div>
+            {recentSearches.map((term, i) => (
+              <button
+                key={term}
+                type="button"
+                className={rowClass(i)}
+                onMouseEnter={() => setActiveIndex(i)}
+                onClick={() => submitSearch(term)}
+              >
+                <ClockIcon className="w-4 h-4 text-[var(--text-subtle)] shrink-0" />
+                <span className="text-sm text-[var(--text)] truncate">{term}</span>
               </button>
             ))}
-            <div className="px-4 py-2.5 border-t border-[var(--border)]">
+          </div>
+        ) : hasResults ? (
+          <div className="py-1.5">
+            {products.length > 0 && (
+              <>
+                {sectionLabel(t("Products"), MagnifyingGlassIcon)}
+                {products.map((p, i) => {
+                  const onSale = p.saleActive && p.salePrice != null;
+                  return (
+                    <button
+                      key={p._id}
+                      type="button"
+                      className={rowClass(i)}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      onClick={() => goToProduct(p._id)}
+                    >
+                      <img
+                        src={cldImg(p.image || undefined, { w: 120 })}
+                        alt={p.name}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-10 h-10 object-cover rounded-lg bg-[var(--surface-2)] shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-[var(--text)] truncate">
+                          {p.name}
+                        </h4>
+                        <div className="flex items-center mt-0.5 gap-2">
+                          <span className="text-sm font-semibold text-[var(--brand-primary)]">
+                            {(onSale ? p.salePrice! : p.price).toLocaleString()} EGP
+                          </span>
+                          {onSale && (
+                            <span className="text-xs text-[var(--text-subtle)] line-through">
+                              {p.price.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
+            {brands.length > 0 && (
+              <>
+                {sectionLabel(t("Brands"), TagIcon)}
+                {brands.map((b, i) => {
+                  const idx = bOff + i;
+                  return (
+                    <button
+                      key={b._id}
+                      type="button"
+                      className={rowClass(idx)}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      onClick={() => goToBrand(b._id)}
+                    >
+                      <TagIcon className="w-4 h-4 text-[var(--text-subtle)] shrink-0" />
+                      <span className="text-sm text-[var(--text)] truncate">{b.name}</span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
+            {categories.length > 0 && (
+              <>
+                {sectionLabel(t("Categories"), Squares2X2Icon)}
+                {categories.map((c, i) => {
+                  const idx = cOff + i;
+                  return (
+                    <button
+                      key={c._id}
+                      type="button"
+                      className={rowClass(idx)}
+                      onMouseEnter={() => setActiveIndex(idx)}
+                      onClick={() => goToCategory(c._id)}
+                    >
+                      <Squares2X2Icon className="w-4 h-4 text-[var(--text-subtle)] shrink-0" />
+                      <span className="text-sm text-[var(--text)] truncate">{c.name}</span>
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
+            <div className="px-4 py-2.5 border-t border-[var(--border)] mt-1">
               <button
                 type="button"
-                className="text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] font-medium transition-colors"
-                onClick={() => {
-                  navigate(
-                    `/products?search=${encodeURIComponent(searchQuery)}`
-                  );
-                  setShowDropdown(false);
-                  setSearchQuery("");
-                }}
+                className={`text-sm font-medium transition-colors ${
+                  activeIndex === viewAllIdx
+                    ? "text-[var(--brand-primary-hover)]"
+                    : "text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]"
+                }`}
+                onMouseEnter={() => setActiveIndex(viewAllIdx)}
+                onClick={() => submitSearch(searchQuery)}
               >
                 {t("View all results for")} &ldquo;{searchQuery}&rdquo;
               </button>
             </div>
           </div>
-        ) : searchQuery.trim() ? (
+        ) : (
           <div className="p-5 text-center text-[var(--text-subtle)]">
             <p className="text-sm">
-              {t("No products found for")} &ldquo;{searchQuery}&rdquo;
+              {t("No results for")} &ldquo;{searchQuery}&rdquo;
             </p>
           </div>
-        ) : null}
+        )}
       </div>
-    ) : null;
+    );
+  };
 
   return (
     <header
@@ -298,11 +591,16 @@ const Header: React.FC = () => {
                   placeholder={t("Search products, brands, categories...")}
                   className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all"
                   value={searchQuery}
+                  autoComplete="off"
+                  role="combobox"
+                  aria-expanded={showDropdown}
+                  aria-autocomplete="list"
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                  onFocus={() => setShowDropdown(true)}
+                  onKeyDown={onSearchKeyDown}
                 />
               </div>
-              <SearchDropdown />
+              {renderDropdown()}
             </div>
           </div>
 
@@ -449,11 +747,16 @@ const Header: React.FC = () => {
                 placeholder={t("Search...")}
                 className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all"
                 value={searchQuery}
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={showDropdown}
+                aria-autocomplete="list"
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                onFocus={() => setShowDropdown(true)}
+                onKeyDown={onSearchKeyDown}
               />
             </div>
-            <SearchDropdown />
+            {renderDropdown()}
           </div>
         </div>
       </div>
@@ -462,6 +765,85 @@ const Header: React.FC = () => {
       <nav className="hidden lg:block border-t border-[var(--border)] bg-[var(--brand-nav)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <ul className="flex flex-row items-center gap-1">
+            {/* Categories flyout — slim mega-menu (top categories + brands) */}
+            <li
+              className="relative"
+              ref={catMenuRef}
+              onMouseEnter={() => setCatMenuOpen(true)}
+              onMouseLeave={() => setCatMenuOpen(false)}
+            >
+              <button
+                type="button"
+                aria-haspopup="true"
+                aria-expanded={catMenuOpen}
+                onClick={() => setCatMenuOpen((v) => !v)}
+                className="flex items-center gap-1.5 py-3 px-4 text-sm font-medium text-[var(--brand-nav-text)] opacity-70 hover:opacity-100 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all"
+              >
+                <Squares2X2Icon className="w-4 h-4" />
+                {t("Categories")}
+                <ChevronDownIcon
+                  className={`w-3.5 h-3.5 transition-transform ${catMenuOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+              {catMenuOpen && (
+                <div className="absolute ltr:left-0 rtl:right-0 top-full mt-1 w-[min(92vw,40rem)] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 p-4 animate-fadeInDown">
+                  {topCategories.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
+                        {topCategories.map((c) => (
+                          <button
+                            key={c._id}
+                            type="button"
+                            onClick={() => {
+                              goToCategory(c._id);
+                              setCatMenuOpen(false);
+                            }}
+                            className="text-left text-sm text-[var(--text)] hover:text-[var(--brand-primary)] hover:bg-[var(--surface-2)] rounded-lg px-3 py-2 truncate transition-colors"
+                          >
+                            {c.name}
+                          </button>
+                        ))}
+                      </div>
+                      {topBrands.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)] mb-1.5 px-1">
+                            {t("Top brands")}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {topBrands.map((b) => (
+                              <button
+                                key={b._id}
+                                type="button"
+                                onClick={() => {
+                                  goToBrand(b._id);
+                                  setCatMenuOpen(false);
+                                }}
+                                className="text-xs px-2.5 py-1 rounded-full border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors"
+                              >
+                                {b.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="mt-3 pt-1">
+                        <Link
+                          to="/products"
+                          onClick={() => setCatMenuOpen(false)}
+                          className="text-sm font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] transition-colors"
+                        >
+                          {t("Browse all products")} →
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-sm text-[var(--text-subtle)] px-2 py-3">
+                      {t("No categories yet")}
+                    </div>
+                  )}
+                </div>
+              )}
+            </li>
             {navigationItems
               .filter((item) => item.condition === undefined || item.condition)
               .map((item) => (
@@ -528,6 +910,31 @@ const Header: React.FC = () => {
                   </li>
                 ))}
             </ul>
+
+            {topCategories.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                <div className="flex items-center gap-1.5 px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                  <Squares2X2Icon className="w-3.5 h-3.5" />
+                  {t("Shop by Category")}
+                </div>
+                <ul className="flex flex-col gap-0.5">
+                  {topCategories.map((c) => (
+                    <li key={c._id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          goToCategory(c._id);
+                        }}
+                        className="w-full text-left block py-2.5 px-4 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors truncate"
+                      >
+                        {c.name}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </nav>
         </aside>
       </div>

@@ -3,6 +3,8 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { paginateProducts } from "../utils/productPagination.js";
 import User from "../models/user.model.js";
+import Brand from "../models/brand.model.js";
+import Category from "../models/category.model.js";
 import Notification from "../models/notification.model.js";
 import BrandRequest from "../models/brandRequest.model.js";
 import CategoryRequest from "../models/categoryRequest.model.js";
@@ -211,6 +213,71 @@ export const getAllProducts = controllerWrapper(
       logEventSafe({ type: "search_no_results", query: String(search) });
     }
     res.status(200).json(result);
+  }
+);
+
+// Search suggestions (instant autocomplete): lightweight, multi-section.
+// Returns top matching products + brands + categories for the header
+// search-as-you-type dropdown. Kept separate from getAllProducts so the
+// payload stays tiny (no facets, no pagination, projection-limited) and the
+// query path is optimized for sub-100ms response on every keystroke.
+export const getSearchSuggestions = controllerWrapper(
+  "getSearchSuggestions",
+  async (req, res) => {
+    const raw = String(req.query.q ?? req.query.search ?? "").trim();
+    // Require 2+ chars so a single letter doesn't scan the whole catalog.
+    if (raw.length < 2) {
+      return res
+        .status(200)
+        .json({ success: true, products: [], brands: [], categories: [] });
+    }
+
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const tokens = raw.split(/\s+/).filter(Boolean).slice(0, 6);
+    const rxs = tokens.map((tok) => new RegExp(esc(tok), "i"));
+
+    // Products: every token must hit name / nameAr / tags (AND across tokens,
+    // OR across fields) — same multi-word logic as buildSearchFilter but
+    // extended to the Arabic name so AR queries match too.
+    const productFilter = {
+      isActive: true,
+      deleted: { $ne: true },
+      approvalStatus: "approved",
+      $and: rxs.map((rx) => ({
+        $or: [{ name: rx }, { nameAr: rx }, { tags: { $in: [rx] } }],
+      })),
+    };
+
+    // Brands/categories: match any token on name or nameAr.
+    const orNameFilter = {
+      $or: rxs.flatMap((rx) => [{ name: rx }, { nameAr: rx }]),
+    };
+
+    const [products, brands, categories] = await Promise.all([
+      Product.find(productFilter)
+        .select("name nameAr slug price salePrice saleActive images")
+        .sort({ soldCount: -1, rating: -1 })
+        .limit(6)
+        .lean(),
+      Brand.find(orNameFilter).select("name nameAr slug logo").limit(4).lean(),
+      Category.find(orNameFilter).select("name nameAr slug").limit(4).lean(),
+    ]);
+
+    // Slim products to a single image so the dropdown payload stays small.
+    const slimProducts = products.map((p) => ({
+      _id: p._id,
+      name: p.name,
+      nameAr: p.nameAr,
+      slug: p.slug,
+      price: p.price,
+      salePrice: p.salePrice,
+      saleActive: p.saleActive,
+      image: p.images?.[0]?.url ?? null,
+    }));
+
+    res
+      .status(200)
+      .json({ success: true, products: slimProducts, brands, categories });
   }
 );
 

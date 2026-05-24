@@ -34,6 +34,7 @@ import {
   getProductsByIds,
   getPricingInsights,
   getSaleProducts,
+  getSearchSuggestions,
   getStoreProducts,
   getStorefrontProducts,
   removeFromCart,
@@ -91,6 +92,7 @@ const publicListCache = cacheHeaders(60, 300);
 // ═══════════════════════════════════════════════
 router.get("/", publicListCache, translateResponse, validateGetAllProducts, getAllProducts);
 router.get("/storefront", publicListCache, translateResponse, getStorefrontProducts);
+router.get("/search-suggestions", publicListCache, translateResponse, getSearchSuggestions);
 router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);
 router.get("/newest", publicListCache, translateResponse, getNewestProducts);
 router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);
