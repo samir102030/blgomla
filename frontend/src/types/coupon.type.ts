@@ -11,6 +11,7 @@ export interface Coupon {
   usageLimit?: number;
   usageCount: number;
   isActive: boolean;
+  isPublic?: boolean;
   applicableProducts?: string[];
   applicableCategories?: string[];
   store: string;

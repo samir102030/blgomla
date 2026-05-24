@@ -22,6 +22,7 @@ import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
 import { getCategoryIcon } from "../lib/categoryIcon";
+import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
 import Logo, { BRAND } from "./Logo";
 
@@ -359,6 +360,7 @@ const Header: React.FC = () => {
   const navigationItems: NavigationItem[] = [
     { label: t("Home"), path: "/" },
     { label: t("All Products"), path: "/products" },
+    { label: t("Deals"), path: "/deals", className: "!text-[var(--brand-accent)] font-semibold" },
     { label: t("Collections"), path: "/collections" },
     { label: t("Contact"), path: "/contact" },
     {
@@ -548,7 +550,9 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header
+    <>
+      <AnnouncementBar />
+      <header
       className={`sticky top-0 z-50 transition-all duration-300 ${
         scrolled
           ? "bg-[var(--surface)]/95 backdrop-blur-xl shadow-lg border-b border-[var(--border)]/50"
@@ -957,6 +961,7 @@ const Header: React.FC = () => {
         </aside>
       </div>
     </header>
+    </>
   );
 };
 

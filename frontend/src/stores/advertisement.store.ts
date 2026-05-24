@@ -11,7 +11,14 @@ export interface Advertisement {
   descriptionAr?: string;
   image: string;
   link?: string;
-  position: "hero" | "banner" | "popup";
+  position:
+    | "hero"
+    | "banner"
+    | "popup"
+    | "announcement"
+    | "category-strip"
+    | "sidebar"
+    | "pdp";
   isActive: boolean;
   startDate: string;
   endDate?: string;

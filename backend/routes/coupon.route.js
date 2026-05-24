@@ -9,12 +9,16 @@ import {
   getStoreCoupons,
   toggleCouponStatus,
   getCouponByCode,
+  getPublicCoupons,
 } from "../controllers/coupon.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-// All coupon routes require authentication
+// Public — storefront collectible coupon strip
+router.get("/public", getPublicCoupons);
+
+// All routes below require authentication
 router.use(protectRoute);
 
 // Coupon CRUD routes

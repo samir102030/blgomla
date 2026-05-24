@@ -30,6 +30,7 @@ const AddCouponModal: React.FC<AddCouponModalProps> = ({
     usageLimit: "",
     applicableProducts: [] as string[],
     applicableCategories: [] as string[],
+    isPublic: false,
   });
 
   const { createCoupon, loading } = useCouponStore();
@@ -356,6 +357,20 @@ const AddCouponModal: React.FC<AddCouponModalProps> = ({
               Leave empty to apply to all categories
             </p>
           </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.isPublic}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, isPublic: e.target.checked }))
+              }
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <span className="text-sm text-gray-700">
+              Show on storefront (collectible coupon strip)
+            </span>
+          </label>
 
           <div className="flex justify-end space-x-3 pt-6 border-t">
             <button

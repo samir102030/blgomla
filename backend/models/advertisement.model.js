@@ -37,7 +37,12 @@ const advertisementSchema = new mongoose.Schema(
     },
     image: {
       type: String,
-      required: [true, "Advertisement image is required"],
+      required: [
+        function () {
+          return this.position !== "announcement";
+        },
+        "Advertisement image is required",
+      ],
     },
     link: {
       type: String,
@@ -45,7 +50,15 @@ const advertisementSchema = new mongoose.Schema(
     },
     position: {
       type: String,
-      enum: ["hero", "banner", "popup"],
+      enum: [
+        "hero",
+        "banner",
+        "popup",
+        "announcement",
+        "category-strip",
+        "sidebar",
+        "pdp",
+      ],
       default: "banner",
     },
     isActive: {

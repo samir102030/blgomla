@@ -24,6 +24,8 @@ import questionRoutes from "./question.route.js";
 import shippingRoutes from "./shipping.route.js";
 import accurateRoutes from "./accurate.route.js";
 import opsRoutes from "../modules/ops/routes.js";
+import subscriberRoutes from "./subscriber.route.js";
+import socialProofRoutes from "./socialProof.route.js";
 
 const router = express.Router();
 
@@ -51,6 +53,8 @@ router.use("/quotations", quotationRoutes);
 router.use("/questions", questionRoutes);
 router.use("/shipping", shippingRoutes);
 router.use("/accurate", accurateRoutes);
+router.use("/subscribers", subscriberRoutes);
+router.use("/social-proof", socialProofRoutes);
 
 // ops module owns: /analytics, /audit-logs, /site-mode, /cron
 router.use("/", opsRoutes);

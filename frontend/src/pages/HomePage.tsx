@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { cldImg, cldSrcSet } from "../lib/cldImage";
 import { useHomeFeed } from "../lib/queries";
+import CouponStrip from "../components/CouponStrip";
 
 const FeaturedProducts = lazy(() => import("../components/FeaturedProducts"));
 const ProductRail = lazy(() => import("../components/ProductRail"));
@@ -249,6 +250,18 @@ const HomePage: React.FC = () => {
                   ))}
             </div>
           </section>
+        </ScrollReveal>
+
+        {/* Category-strip promo banner */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Suspense fallback={null}>
+            <AdvertisementBanner position="category-strip" />
+          </Suspense>
+        </div>
+
+        {/* Collectible coupons */}
+        <ScrollReveal>
+          <CouponStrip />
         </ScrollReveal>
 
         {/* ════════════════════════════════════════════

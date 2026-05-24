@@ -1081,12 +1081,28 @@ const ShoppingCartPage: React.FC = () => {
                         : `${shippingCost.toLocaleString("en-EG", { maximumFractionDigits: 2 })} ${t("EGP")}`}
                     </span>
                   </div>
-                  {freeShippingThreshold > 0 && amountToFreeShipping > 0 && (
-                    <p className="mt-2 text-xs text-[var(--brand-primary)]">
-                      {t("Add {{amount}} EGP more to get free shipping!", {
-                        amount: amountToFreeShipping.toLocaleString("en-EG", { maximumFractionDigits: 2 }),
-                      })}
-                    </p>
+                  {freeShippingThreshold > 0 && (
+                    <div className="mt-3">
+                      {amountToFreeShipping > 0 ? (
+                        <p className="text-xs text-[var(--text)] mb-1.5">
+                          {t("Add {{amount}} EGP more to get free shipping!", {
+                            amount: amountToFreeShipping.toLocaleString("en-EG", { maximumFractionDigits: 2 }),
+                          })}
+                        </p>
+                      ) : (
+                        <p className="text-xs font-semibold text-green-500 mb-1.5 inline-flex items-center gap-1">
+                          🎉 {t("You unlocked FREE shipping!")}
+                        </p>
+                      )}
+                      <div className="h-2 w-full rounded-full bg-[var(--surface-3)] overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] transition-all duration-500"
+                          style={{
+                            width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
                   )}
                   <p className="mt-2 text-[10px] sm:text-xs text-[var(--text-subtle)]">
                     {t("Final shipping is confirmed at checkout based on your address.")}

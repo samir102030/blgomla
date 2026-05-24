@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductFilterSidebar from "./ProductFilterSidebar";
+import AdvertisementBanner from "./AdvertisementBanner";
 import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
 import { useProductStore } from "../stores/product.store";
@@ -297,6 +298,9 @@ const ProductsContent: React.FC = () => {
           </p>
         </div>
 
+        {/* Top promo strip */}
+        <AdvertisementBanner position="category-strip" />
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Sidebar — appears above products on mobile (filter trigger),
               left-rail on desktop. */}
@@ -309,6 +313,9 @@ const ProductsContent: React.FC = () => {
                 onFilterChange={handleFilterChange}
                 onSearchChange={handleSearchChange}
               />
+              <div className="hidden md:block mt-4">
+                <AdvertisementBanner position="sidebar" />
+              </div>
             </div>
           </div>
 

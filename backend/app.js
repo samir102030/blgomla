@@ -132,6 +132,8 @@ const cacheablePrefixes = [
   "/api/categories",
   "/api/collections",
   "/api/advertisements",
+  "/api/social-proof",
+  "/api/coupons/public",
 ];
 app.use((req, res, next) => {
   if (req.method !== "GET") return next();

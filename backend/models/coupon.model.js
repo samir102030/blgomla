@@ -53,6 +53,11 @@ const couponSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // When true, the coupon is advertised on the storefront (collectible strip).
+    isPublic: {
+      type: Boolean,
+      default: false,
+    },
     applicableProducts: [
       {
         type: mongoose.Schema.Types.ObjectId,

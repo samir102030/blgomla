@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAdvertisementStore } from "../stores/advertisement.store";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { cldImg, cldSrcSet } from "../lib/cldImage";
 
 interface AdvertisementBannerProps {
-  position?: "hero" | "banner" | "popup";
+  position?: "hero" | "banner" | "popup" | "category-strip" | "sidebar" | "pdp";
 }
 
 const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
@@ -76,6 +77,14 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
     sessionStorage.setItem("popupClosed", "true");
   };
 
+  // Prefer titleAr / subtitleAr / descriptionAr when available and in AR mode.
+  const title = (isRtl && currentAd.titleAr) || currentAd.title || "";
+  const subtitle =
+    (isRtl && (currentAd.subtitleAr || currentAd.descriptionAr)) ||
+    currentAd.subtitle ||
+    currentAd.description ||
+    "";
+
   // Popup Advertisement
   if (position === "popup" && showPopup) {
     return (
@@ -95,10 +104,11 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
           </button>
           <div onClick={handleClick} className="cursor-pointer">
             <img
-              src={currentAd.image}
+              src={cldImg(currentAd.image, { w: 1200 })}
               alt={currentAd.title}
               className="w-full h-auto max-h-[85vh] object-contain"
               loading="eager"
+              decoding="async"
             />
           </div>
         </div>
@@ -106,220 +116,100 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
     );
   }
 
-  // Determine ad theme based on title keywords
   const isHero = position === "hero";
-  // Prefer titleAr / subtitleAr / descriptionAr when available and in AR mode.
-  // Otherwise the localize middleware would have already swapped fields into
-  // title/subtitle/description, but defending here keeps it correct if the ad
-  // was fetched before the middleware was applied to the route.
-  const title =
-    (isRtl && currentAd.titleAr) || currentAd.title || "";
-  const subtitle =
-    (isRtl && (currentAd.subtitleAr || currentAd.descriptionAr)) ||
-    currentAd.subtitle ||
-    currentAd.description ||
-    "";
+  const isSidebar = position === "sidebar";
+  const isStrip = position === "category-strip";
 
-  // ── Premium CSS-based promotional banner ──
+  // Aspect ratio per placement
+  const aspectClass = isHero
+    ? "aspect-[16/6] md:aspect-[16/5]"
+    : isSidebar
+      ? "aspect-[3/4]"
+      : isStrip
+        ? "aspect-[16/4] md:aspect-[16/3]"
+        : "aspect-[16/5] md:aspect-[16/4]";
+
+  // Only overlay marketing copy when the admin filled in a subtitle/description.
+  // This lets pre-designed creatives (text baked into the image) render clean,
+  // while plain images still get a headline + CTA.
+  const showOverlay = Boolean(subtitle);
+  const imgW = isHero ? 1600 : isSidebar ? 640 : 1280;
+  const srcW = isHero ? 800 : isSidebar ? 320 : 640;
+
+  // ── Image-based promotional banner (Amazon/Noon style) ──
   return (
     <div
       onClick={handleClick}
       className={`relative w-full cursor-pointer overflow-hidden rounded-2xl ${
-        isHero ? "my-4" : "my-6"
+        isHero ? "my-4" : isStrip ? "my-4" : "my-6"
       } group`}
     >
-      {/* Gradient Background */}
-      <div
-        className={`relative ${
-          isHero ? "py-12 md:py-16 lg:py-20" : "py-8 md:py-12"
-        }`}
-        style={{
-          background: isHero
-            ? "linear-gradient(135deg, #0B0B10 0%, #15151C 50%, #0B0B10 100%)"
-            : "linear-gradient(135deg, #15151C 0%, #1c1c25 50%, #15151C 100%)",
-        }}
-      >
-        {/* Animated background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          {/* Glow orbs */}
-          <div
-            className="absolute w-64 h-64 rounded-full opacity-20 blur-3xl"
-            style={{
-              background: isHero
-                ? "radial-gradient(circle, #FF6A1A, transparent)"
-                : "radial-gradient(circle, #E8530A, transparent)",
-              top: "-30%",
-              right: "10%",
-              animation: "float 6s ease-in-out infinite",
-            }}
-          />
-          <div
-            className="absolute w-48 h-48 rounded-full opacity-15 blur-3xl"
-            style={{
-              background: isHero
-                ? "radial-gradient(circle, #FFB382, transparent)"
-                : "radial-gradient(circle, #FF6A1A, transparent)",
-              bottom: "-20%",
-              left: "15%",
-              animation: "float 8s ease-in-out infinite reverse",
-            }}
-          />
+      <div className={`relative w-full ${aspectClass} bg-[var(--surface-2)]`}>
+        <img
+          src={cldImg(currentAd.image, { w: imgW })}
+          srcSet={cldSrcSet(currentAd.image, srcW)}
+          sizes={isSidebar ? "(min-width:1024px) 280px, 100vw" : "100vw"}
+          alt={title || currentAd.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+          loading={isHero ? "eager" : "lazy"}
+          decoding="async"
+        />
 
-          {/* Grid pattern overlay */}
+        {showOverlay && (
           <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-            }}
-          />
-
-          {/* Diagonal accent line */}
-          <div
-            className="absolute top-0 right-0 w-1/3 h-full opacity-10"
-            style={{
-              background: `linear-gradient(135deg, transparent 30%, ${
-                isHero ? "#FF6A1A" : "#E8530A"
-              } 50%, transparent 70%)`,
-            }}
-          />
-        </div>
-
-        {/* Content */}
-        <div className="relative max-w-7xl mx-auto px-6 md:px-8 lg:px-12">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            {/* Left: Text content */}
-            <div className="flex-1 text-center md:text-start">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-4">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="text-xs font-medium text-white/80 uppercase tracking-wider">
-                  {isHero ? `🔥 ${t("Limited Time Offer")}` : `💼 ${t("Wholesale Pricing")}`}
-                </span>
-              </div>
-
-              {/* Title */}
+            className={`absolute inset-0 flex flex-col justify-center gap-2 p-6 md:p-10 ${
+              isRtl
+                ? "items-end text-right bg-gradient-to-l"
+                : "items-start text-left bg-gradient-to-r"
+            } from-black/70 via-black/30 to-transparent`}
+          >
+            {title && (
               <h2
-                className={`font-extrabold text-white mb-3 leading-tight ${
+                className={`font-extrabold text-white drop-shadow-lg leading-tight max-w-xl ${
                   isHero
-                    ? "text-3xl md:text-4xl lg:text-5xl"
-                    : "text-2xl md:text-3xl lg:text-4xl"
+                    ? "text-2xl md:text-4xl lg:text-5xl"
+                    : "text-xl md:text-3xl"
                 }`}
               >
-                {title.split(" ").map((word, i) => {
-                  // Color certain keywords
-                  const highlights = ["Sale", "Discount", "Off", "Free", "خصم", "تخفيضات"];
-                  const isHighlight = highlights.some((h) =>
-                    word.toLowerCase().includes(h.toLowerCase())
-                  );
-                  return (
-                    <span key={i}>
-                      {isHighlight ? (
-                        <span
-                          className="bg-clip-text text-transparent"
-                          style={{
-                            backgroundImage: isHero
-                              ? "linear-gradient(135deg, #FF6A1A, #FFB382)"
-                              : "linear-gradient(135deg, #E8530A, #FF6A1A)",
-                          }}
-                        >
-                          {word}
-                        </span>
-                      ) : (
-                        word
-                      )}{" "}
-                    </span>
-                  );
-                })}
+                {title}
               </h2>
-
-              {/* Subtitle */}
-              {subtitle && (
-                <p
-                  className={`text-white/70 max-w-lg mb-6 ${
-                    isHero ? "text-base md:text-lg" : "text-sm md:text-base"
-                  }`}
-                >
-                  {subtitle}
-                </p>
-              )}
-
-              {/* CTA Button */}
-              <button
-                className={`inline-flex items-center gap-2 font-semibold rounded-xl transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg ${
-                  isHero
-                    ? "px-6 py-3 text-sm bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] text-white shadow-lg shadow-[#FF6A1A]/30"
-                    : "px-5 py-2.5 text-sm bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20"
+            )}
+            <p
+              className={`text-white/90 drop-shadow max-w-md ${
+                isHero ? "text-sm md:text-lg" : "text-xs md:text-base"
+              }`}
+            >
+              {subtitle}
+            </p>
+            <span
+              className={`mt-2 inline-flex items-center gap-2 font-semibold rounded-xl bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] text-white shadow-lg transition-transform group-hover:scale-105 ${
+                isHero ? "px-6 py-3 text-sm" : "px-5 py-2.5 text-xs md:text-sm"
+              }`}
+            >
+              {isHero ? t("Shop Now") : t("View Deals")}
+              <svg
+                className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${
+                  isRtl ? "rotate-180" : ""
                 }`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                {isHero ? t("Shop Now") : t("View Deals")}
-                <svg
-                  className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${
-                    isRtl ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Right: Visual accent */}
-            <div className="hidden md:flex items-center justify-center flex-shrink-0">
-              <div className="relative">
-                {/* Large percentage/offer display */}
-                <div
-                  className={`${
-                    isHero ? "w-40 h-40 lg:w-48 lg:h-48" : "w-32 h-32 lg:w-40 lg:h-40"
-                  } rounded-full bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 flex flex-col items-center justify-center`}
-                >
-                  <span className="text-xs text-white/50 uppercase tracking-wider font-medium">
-                    {isHero ? t("Up to") : t("Save")}
-                  </span>
-                  <span
-                    className={`font-black bg-clip-text text-transparent ${
-                      isHero ? "text-5xl lg:text-6xl" : "text-4xl lg:text-5xl"
-                    }`}
-                    style={{
-                      backgroundImage: isHero
-                        ? "linear-gradient(135deg, #FF6A1A, #FFB382)"
-                        : "linear-gradient(135deg, #E8530A, #FF6A1A)",
-                    }}
-                  >
-                    25%
-                  </span>
-                  <span className="text-xs text-white/50 uppercase tracking-wider font-medium">
-                    {t("off")}
-                  </span>
-                </div>
-
-                {/* Decorative ring */}
-                <div
-                  className={`absolute inset-0 ${
-                    isHero ? "-m-3" : "-m-2"
-                  } rounded-full border-2 border-dashed border-white/10 animate-spin`}
-                  style={{ animationDuration: "20s" }}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
                 />
-              </div>
-            </div>
+              </svg>
+            </span>
           </div>
-        </div>
-
-        {/* Bottom edge gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+        )}
       </div>
 
       {/* Carousel indicators */}
       {ads.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {ads.map((_, index) => (
             <button
               key={index}
@@ -330,7 +220,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
               className={`h-1.5 rounded-full transition-all duration-300 ${
                 index === currentIndex
                   ? "bg-white w-6"
-                  : "bg-white/30 w-1.5 hover:bg-white/50"
+                  : "bg-white/40 w-1.5 hover:bg-white/60"
               }`}
             />
           ))}

@@ -17,6 +17,8 @@ import HomePage from "./pages/HomePage";
 const GeneralSupportChat = lazy(() => import("./components/GeneralSupportChat"));
 const InstallPrompt = lazy(() => import("./components/InstallPrompt"));
 const RouteAnalytics = lazy(() => import("./components/RouteAnalytics"));
+const ExitIntentPopup = lazy(() => import("./components/ExitIntentPopup"));
+const SocialProofToast = lazy(() => import("./components/SocialProofToast"));
 
 // ── Error Boundary ──
 interface ErrorBoundaryProps {
@@ -67,6 +69,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const BrandsPage = lazy(() => import("./pages/BrandsPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const DealsPage = lazy(() => import("./pages/DealsPage"));
 const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const LoginRegisterPage = lazy(() => import("./pages/LoginRegisterPage"));
@@ -136,6 +139,7 @@ function App() {
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/brands" element={<BrandsPage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route path="/deals" element={<DealsPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/login" element={<LoginRegisterPage />} />
@@ -186,6 +190,8 @@ function App() {
       <Suspense fallback={null}>
         <GeneralSupportChat />
         <InstallPrompt />
+        <ExitIntentPopup />
+        <SocialProofToast />
       </Suspense>
       <Toaster
         position="top-right"

@@ -1,19 +1,23 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { axiosInstance } from "../lib/axios";
 
 const Newsletter: React.FC = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      console.log("Newsletter subscription:", email);
-      setIsSubmitted(true);
-      setEmail("");
-      setTimeout(() => setIsSubmitted(false), 3000);
+    if (!email) return;
+    try {
+      await axiosInstance.post("/subscribers", { email, source: "newsletter" });
+    } catch {
+      // Non-blocking: still thank the user even if the request fails.
     }
+    setIsSubmitted(true);
+    setEmail("");
+    setTimeout(() => setIsSubmitted(false), 3000);
   };
 
   return (

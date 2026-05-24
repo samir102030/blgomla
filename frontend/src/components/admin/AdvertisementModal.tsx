@@ -96,8 +96,11 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.image) {
-      toast.error("Title and image are required");
+    const imageRequired = formData.position !== "announcement";
+    if (!formData.title || (imageRequired && !formData.image)) {
+      toast.error(
+        imageRequired ? "Title and image are required" : "Title is required"
+      );
       return;
     }
 
@@ -220,8 +223,12 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#002B5B] focus:border-transparent"
             >
               <option value="hero">Hero (Main Banner)</option>
-              <option value="banner">Banner</option>
+              <option value="banner">Banner (Mid-page)</option>
               <option value="popup">Popup</option>
+              <option value="announcement">Announcement Bar (Top strip)</option>
+              <option value="category-strip">Category Strip (Homepage/Listing)</option>
+              <option value="sidebar">Sidebar (Product Listing)</option>
+              <option value="pdp">Product Page (Cross-sell)</option>
             </select>
           </div>
 

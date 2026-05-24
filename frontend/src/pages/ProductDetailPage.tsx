@@ -7,6 +7,7 @@ import ShareButtons from "../components/ShareButtons";
 import CountdownTimer from "../components/CountdownTimer";
 import ProductQuestions from "../components/ProductQuestions";
 import ProductRail from "../components/ProductRail";
+import AdvertisementBanner from "../components/AdvertisementBanner";
 import RecentlyViewed from "../components/RecentlyViewed";
 import StockAlert from "../components/StockAlert";
 import { addRecentlyViewed } from "../lib/recentlyViewed";
@@ -970,6 +971,10 @@ const ProductDetailPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AdvertisementBanner position="pdp" />
+      </div>
 
       {productId && (
         <ProductRail

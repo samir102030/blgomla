@@ -5,6 +5,28 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { logAudit } from "../utils/audit.js";
 
+// Public: list coupons advertised on the storefront (collectible strip).
+export const getPublicCoupons = controllerWrapper(
+  "getPublicCoupons",
+  async (req, res) => {
+    const now = new Date();
+    const coupons = await Coupon.find({
+      isPublic: true,
+      isActive: true,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+    })
+      .select(
+        "code description discountType discountValue minimumPurchase maximumDiscount endDate"
+      )
+      .sort({ discountValue: -1 })
+      .limit(12)
+      .lean();
+
+    res.status(200).json({ success: true, coupons });
+  }
+);
+
 // Create Coupon
 export const createCoupon = controllerWrapper(
   "createCoupon",
@@ -21,6 +43,7 @@ export const createCoupon = controllerWrapper(
       usageLimit,
       applicableProducts,
       applicableCategories,
+      isPublic,
     } = req.body;
 
     // Validate dates
@@ -81,6 +104,7 @@ export const createCoupon = controllerWrapper(
       usageLimit,
       applicableProducts,
       applicableCategories,
+      isPublic: Boolean(isPublic),
       store: storeId,
       createdBy: req.user._id,
     });
