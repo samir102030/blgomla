@@ -9,4 +9,4 @@ Disallow: /account
 Disallow: /login
 Disallow: /api/
 
-Sitemap: https://halafawystore-frontend.vercel.app/sitemap.xml
+Sitemap: https://www.belgmla.com/sitemap.xml

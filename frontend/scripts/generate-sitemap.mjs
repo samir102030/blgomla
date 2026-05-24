@@ -14,7 +14,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, "../public/sitemap.xml");
 
 const SITE_URL = (
-  process.env.SITE_URL || "https://halafawystore-frontend.vercel.app"
+  process.env.SITE_URL || "https://www.belgmla.com"
 ).replace(/\/$/, "");
 const API_URL = (process.env.SITEMAP_API_URL || process.env.VITE_API_URL || "")
   .replace(/\/$/, "");
