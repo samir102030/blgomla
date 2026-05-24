@@ -7,6 +7,8 @@ Disallow: /checkout
 Disallow: /cart
 Disallow: /account
 Disallow: /login
+Disallow: /orders
+Disallow: /order-confirmation
 Disallow: /api/
 
 Sitemap: https://www.belgmla.com/sitemap.xml

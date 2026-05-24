@@ -292,6 +292,14 @@ const OrderConfirmationPage: React.FC = () => {
             >
               {t("View My Orders")}
             </Link>
+            {orderId && (
+              <Link
+                to={`/orders/${orderId}/track`}
+                className="border border-[#002B5B] text-[#002B5B] px-8 py-3 rounded-md hover:bg-[#002B5B] hover:text-white font-medium text-center transition-colors"
+              >
+                {t("Track Order")}
+              </Link>
+            )}
           </div>
         </div>
       </main>

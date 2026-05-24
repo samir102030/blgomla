@@ -101,6 +101,7 @@ const AccountOrders: React.FC = () => {
               </div>
               <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--border)]">
                 <button onClick={() => handleViewOrderDetails(order._id)} className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">{t("account.viewDetails", "View Details")}</button>
+                <Link to={`/orders/${order._id}/track`} className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">{t("account.trackOrder", "Track Order")}</Link>
                 {order.status === "delivered" && (
                   <button
                     className={`text-xs font-semibold ${hasReturnForOrder(order._id) ? "text-[var(--text-subtle)] cursor-not-allowed" : "text-amber-600 hover:underline"}`}

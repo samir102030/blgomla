@@ -581,6 +581,31 @@ export const getOrderById = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+
+    // Ownership: customers may only view their own orders; store users only
+    // orders for stores they own; admins/super_admins any order. Without this
+    // any authenticated user could read any order (and its buyer) by id.
+    const role = req.user.role;
+    if (role !== "admin" && role !== "super_admin") {
+      if (role === "store") {
+        const myStores = await Store.find({ owner: req.user._id }).select("_id");
+        const ownsStore = myStores.some(
+          (s) => s._id.toString() === order.store?.toString()
+        );
+        if (!ownsStore)
+          return res
+            .status(403)
+            .json({ success: false, message: "Not authorized to view this order" });
+      } else {
+        const orderUserId =
+          order.user?._id?.toString() ?? order.user?.toString();
+        if (orderUserId !== req.user._id.toString())
+          return res
+            .status(403)
+            .json({ success: false, message: "Not authorized to view this order" });
+      }
+    }
+
     res.status(200).json({ success: true, order });
   }
 );
