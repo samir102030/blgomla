@@ -21,6 +21,7 @@ import { useBrandStore } from "../stores/brand.store";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
+import { getCategoryIcon } from "../lib/categoryIcon";
 import ThemeToggle from "./ThemeToggle";
 import Logo, { BRAND } from "./Logo";
 
@@ -798,9 +799,26 @@ const Header: React.FC = () => {
                               goToCategory(c._id);
                               setCatMenuOpen(false);
                             }}
-                            className="text-left text-sm text-[var(--text)] hover:text-[var(--brand-primary)] hover:bg-[var(--surface-2)] rounded-lg px-3 py-2 truncate transition-colors"
+                            className="flex items-center gap-2.5 text-left text-sm text-[var(--text)] hover:text-[var(--brand-primary)] hover:bg-[var(--surface-2)] rounded-lg px-3 py-2 transition-colors"
                           >
-                            {c.name}
+                            <span className="w-8 h-8 shrink-0 rounded-lg bg-[var(--surface-2)] flex items-center justify-center overflow-hidden">
+                              {c.image ? (
+                                <img
+                                  src={cldImg(c.image, { w: 64 })}
+                                  alt=""
+                                  width={32}
+                                  height={32}
+                                  loading="lazy"
+                                  decoding="async"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-base" aria-hidden="true">
+                                  {getCategoryIcon(c.name)}
+                                </span>
+                              )}
+                            </span>
+                            <span className="truncate">{c.name}</span>
                           </button>
                         ))}
                       </div>

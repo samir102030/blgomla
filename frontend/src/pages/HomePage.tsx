@@ -12,7 +12,7 @@ import { useCollectionStore } from "../stores/collection.store";
 import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { cldImg } from "../lib/cldImage";
+import { cldImg, cldSrcSet } from "../lib/cldImage";
 import { useHomeFeed } from "../lib/queries";
 
 const FeaturedProducts = lazy(() => import("../components/FeaturedProducts"));
@@ -224,9 +224,23 @@ const HomePage: React.FC = () => {
                       className="group flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-accent)] hover:shadow-md transition-all duration-300"
                     >
                       <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-[var(--surface-2)] flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300">
-                        <span className="text-2xl sm:text-3xl" aria-hidden="true">
-                          {getCategoryIcon(cat.name)}
-                        </span>
+                        {cat.image ? (
+                          <img
+                            src={cldImg(cat.image, { w: 160 })}
+                            srcSet={cldSrcSet(cat.image, 80)}
+                            sizes="80px"
+                            alt={cat.name}
+                            width={80}
+                            height={80}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-2xl sm:text-3xl" aria-hidden="true">
+                            {getCategoryIcon(cat.name)}
+                          </span>
+                        )}
                       </div>
                       <span className="text-xs sm:text-sm font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] text-center line-clamp-2 transition-colors">
                         {cat.name}
