@@ -134,6 +134,7 @@ const cacheablePrefixes = [
   "/api/advertisements",
   "/api/social-proof",
   "/api/coupons/public",
+  "/api/mosaic-cards/active",
 ];
 app.use((req, res, next) => {
   if (req.method !== "GET") return next();

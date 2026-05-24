@@ -88,6 +88,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { name: t("admin.collections"), href: "/dashboard/collections", roles: ["admin", "store"] },
         { name: t("admin.coupons"), href: "/dashboard/coupons", roles: ["admin", "store"] },
         { name: t("admin.advertisements"), href: "/dashboard/advertisements", roles: ["admin"] },
+        { name: t("admin.mosaic", "Card Mosaic"), href: "/dashboard/mosaic", roles: ["admin"] },
       ],
     },
 

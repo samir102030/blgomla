@@ -23,6 +23,7 @@ const Newsletter = lazy(() => import("../components/Newsletter"));
 const Services = lazy(() => import("../components/Services"));
 const BrandLogos = lazy(() => import("../components/BrandLogos"));
 const AdvertisementBanner = lazy(() => import("../components/AdvertisementBanner"));
+const CardMosaic = lazy(() => import("../components/CardMosaic"));
 import type { Product } from "../types/product.type";
 import type { Category } from "../types/category.type";
 import toast from "react-hot-toast";
@@ -258,6 +259,13 @@ const HomePage: React.FC = () => {
             <AdvertisementBanner position="category-strip" />
           </Suspense>
         </div>
+
+        {/* Card mosaic — admin-curated merchandising grid */}
+        <ScrollReveal>
+          <Suspense fallback={null}>
+            <CardMosaic />
+          </Suspense>
+        </ScrollReveal>
 
         {/* Collectible coupons */}
         <ScrollReveal>
