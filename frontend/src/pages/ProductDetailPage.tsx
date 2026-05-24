@@ -20,7 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ProductReview } from "../types/product.type";
 import { getBulkPricing } from "../lib/pricing";
-import { cldImg, cldSrcSet } from "../lib/cldImage";
+import ProductGallery from "../components/ProductGallery";
 
 const ProductDetailPage: React.FC = () => {
   const { t } = useTranslation();
@@ -28,7 +28,6 @@ const ProductDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
 
   // Review eligibility
   const [canReview, setCanReview] = useState(false);
@@ -476,42 +475,7 @@ const ProductDetailPage: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Product Images */}
-            <div>
-              {/* Main Image */}
-              <div className="aspect-square bg-[var(--surface-2)] rounded-lg overflow-hidden mb-4">
-                <img
-                  src={cldImg(productImages[selectedImage], { w: 800 })}
-                  srcSet={cldSrcSet(productImages[selectedImage], 400)}
-                  sizes="(min-width: 1024px) 600px, 100vw"
-                  alt={product.name}
-                  fetchPriority="high"
-                  decoding="async"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              {/* Thumbnail Images */}
-              <div className="flex space-x-2">
-                {productImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 bg-[var(--surface-2)] rounded-lg overflow-hidden border-2 ${selectedImage === index
-                        ? "border-blue-500"
-                        : "border-transparent"
-                      }`}
-                  >
-                    <img
-                      src={cldImg(image, { w: 160 })}
-                      alt={`${product.name} ${index + 1}`}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-contain"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
+            <ProductGallery images={productImages} alt={product.name} />
 
             {/* Product Info */}
             <div>
