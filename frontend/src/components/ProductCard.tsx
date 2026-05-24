@@ -246,7 +246,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Product Info */}
       <div className="p-4 sm:p-5 flex flex-col flex-grow">
         <Link to={`/product/${id}`}>
-          <h3 className="text-sm sm:text-base font-semibold text-[var(--text)] mb-1.5 line-clamp-2 hover:text-[var(--brand-primary)] transition-colors cursor-pointer leading-snug">
+          <h3 className="text-sm sm:text-base font-semibold text-[var(--text)] mb-1.5 line-clamp-2 min-h-[2.5rem] sm:min-h-[2.75rem] hover:text-[var(--brand-primary)] transition-colors cursor-pointer leading-snug">
             {name}
           </h3>
         </Link>
@@ -276,7 +276,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </span>
         </div>
         {description && (
-          <p className="text-[var(--text-subtle)] text-xs leading-relaxed line-clamp-2 hidden sm:block mb-3">
+          <p className="text-[var(--text-subtle)] text-xs leading-snug line-clamp-2 min-h-[2.25rem] hidden sm:block mb-3">
             {description}
           </p>
         )}
