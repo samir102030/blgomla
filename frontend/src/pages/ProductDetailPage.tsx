@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 import type { ProductReview } from "../types/product.type";
 import { getBulkPricing } from "../lib/pricing";
 import ProductGallery from "../components/ProductGallery";
+import { cldImg } from "../lib/cldImage";
 
 const ProductDetailPage: React.FC = () => {
   const { t } = useTranslation();
@@ -28,6 +29,10 @@ const ProductDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const [quantity, setQuantity] = useState(1);
+
+  // Sticky add-to-cart bar — shown once the main buy box scrolls out of view.
+  const actionButtonsRef = useRef<HTMLDivElement>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
 
   // Review eligibility
   const [canReview, setCanReview] = useState(false);
@@ -74,6 +79,18 @@ const ProductDetailPage: React.FC = () => {
       addRecentlyViewed(product._id);
       trackBehavior("view", { product: product._id });
     }
+  }, [product?._id]);
+
+  // Toggle the sticky bar based on whether the main buy box is on screen.
+  useEffect(() => {
+    const el = actionButtonsRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowStickyBar(!entry.isIntersecting),
+      { rootMargin: "0px 0px -80px 0px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
   }, [product?._id]);
 
   // Check if the current user purchased this product
@@ -654,7 +671,7 @@ const ProductDetailPage: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex space-x-4 mb-8">
+              <div ref={actionButtonsRef} className="flex space-x-4 mb-8">
                 <button
                   onClick={isProductInCart() ? handleGoToCart : handleAddToCart}
                   disabled={loading || (!isProductInCart() && isOutOfStock)}
@@ -959,6 +976,61 @@ const ProductDetailPage: React.FC = () => {
       )}
 
       <RecentlyViewed excludeId={productId} />
+
+      {/* Sticky add-to-cart bar — appears once the main buy box scrolls away */}
+      <div
+        className={`fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)] border-t border-[var(--border)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transition-transform duration-300 ${
+          showStickyBar ? "translate-y-0" : "translate-y-full"
+        }`}
+        aria-hidden={!showStickyBar}
+      >
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+          <img
+            src={cldImg(productImages[0], { w: 96 })}
+            alt={product.name}
+            className="w-12 h-12 rounded-lg object-contain bg-[var(--surface-2)] shrink-0 hidden sm:block"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-[var(--text)] truncate">
+              {product.name}
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold text-[var(--text)]">
+                {(unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })}{" "}
+                {t("EGP")}
+              </span>
+              {product.saleActive &&
+                product.salePercentage &&
+                product.salePercentage > 0 && (
+                  <span className="text-xs text-[var(--text-subtle)] line-through">
+                    {(product.price ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })}
+                  </span>
+                )}
+            </div>
+          </div>
+          <button
+            onClick={isProductInCart() ? handleGoToCart : handleAddToCart}
+            disabled={loading || (!isProductInCart() && isOutOfStock)}
+            className={`shrink-0 py-2.5 px-6 rounded-md font-medium transition-colors ${
+              isProductInCart()
+                ? "bg-green-600 text-white hover:bg-green-700"
+                : isOutOfStock
+                ? "bg-gray-400 text-white cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700"
+            } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {loading
+              ? t("Adding...")
+              : isProductInCart()
+              ? t("In Cart")
+              : isOutOfStock
+              ? t("Out of Stock")
+              : t("Add to Cart")}
+          </button>
+        </div>
+      </div>
 
       <Footer />
     </div>
