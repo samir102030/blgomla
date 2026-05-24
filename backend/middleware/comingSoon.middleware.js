@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { getSiteMode } from "../models/siteMode.model.js";
+import { getSiteMode } from "../modules/ops/index.js";
 import User from "../models/user.model.js";
 
 // Tiny in-process cache so this middleware doesn't run a Mongo query on every

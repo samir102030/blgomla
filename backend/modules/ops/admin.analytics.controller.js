@@ -1,8 +1,8 @@
-import Order from "../models/order.model.js";
-import Product from "../models/product.model.js";
-import User from "../models/user.model.js";
-import Store from "../models/store.model.js";
-import { controllerWrapper } from "../utils/wrappers.js";
+import Order from "../../models/order.model.js";
+import Product from "../../models/product.model.js";
+import User from "../../models/user.model.js";
+import Store from "../../models/store.model.js";
+import { controllerWrapper } from "../../utils/wrappers.js";
 
 // ──────────────────────────────────────────────
 //  PAYMENT ANALYTICS

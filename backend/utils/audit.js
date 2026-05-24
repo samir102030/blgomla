@@ -1,4 +1,4 @@
-import AuditLog from "../models/auditLog.model.js";
+import { AuditLog } from "../modules/ops/index.js";
 
 /**
  * Fire-and-forget audit log entry. Never throws — a logging failure

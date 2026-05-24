@@ -7,7 +7,6 @@ import ordersRoutes from "./order.route.js";
 import addressesRoutes from "./address.route.js";
 import uploadRoutes from "./upload.js";
 import storeRoutes from "./store.route.js";
-import analyticsRoutes from "./analytics.route.js";
 import reviewRoutes from "./review.route.js";
 import chatRoutes from "./chat.route.js";
 import notificationRoutes from "./notification.route.js";
@@ -21,12 +20,10 @@ import advertisementRoutes from "./advertisement.route.js";
 import paymentRoutes from "./payment.route.js";
 import quotationRoutes from "./quotation.route.js";
 import homeFeedRoutes from "./home.route.js";
-import siteModeRoutes from "./siteMode.route.js";
-import cronRoutes from "./cron.route.js";
 import questionRoutes from "./question.route.js";
 import shippingRoutes from "./shipping.route.js";
 import accurateRoutes from "./accurate.route.js";
-import auditLogRoutes from "./auditLog.route.js";
+import opsRoutes from "../modules/ops/routes.js";
 
 const router = express.Router();
 
@@ -39,7 +36,6 @@ router.use("/addresses", addressesRoutes);
 router.use("/orders", ordersRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/stores", storeRoutes);
-router.use("/analytics", analyticsRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/chat", chatRoutes);
 router.use("/notifications", notificationRoutes);
@@ -52,11 +48,11 @@ router.use("/bulk-products", bulkProductRoutes);
 router.use("/advertisements", advertisementRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/quotations", quotationRoutes);
-router.use("/site-mode", siteModeRoutes);
-router.use("/cron", cronRoutes);
 router.use("/questions", questionRoutes);
 router.use("/shipping", shippingRoutes);
 router.use("/accurate", accurateRoutes);
-router.use("/audit-logs", auditLogRoutes);
+
+// ops module owns: /analytics, /audit-logs, /site-mode, /cron
+router.use("/", opsRoutes);
 
 export default router;

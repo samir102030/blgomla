@@ -1,12 +1,12 @@
-import Order from "../models/order.model.js";
-import Return from "../models/return.model.js";
-import Product from "../models/product.model.js";
-import ProductQuestion from "../models/productQuestion.model.js";
-import BrandRequest from "../models/brandRequest.model.js";
-import CategoryRequest from "../models/categoryRequest.model.js";
-import Store from "../models/store.model.js";
-import Event from "../models/event.model.js";
-import { controllerWrapper } from "../utils/wrappers.js";
+import Order from "../../models/order.model.js";
+import Return from "../../models/return.model.js";
+import Product from "../../models/product.model.js";
+import ProductQuestion from "../../models/productQuestion.model.js";
+import BrandRequest from "../../models/brandRequest.model.js";
+import CategoryRequest from "../../models/categoryRequest.model.js";
+import Store from "../../models/store.model.js";
+import Event from "../../models/event.model.js";
+import { controllerWrapper } from "../../utils/wrappers.js";
 
 const DAY = 24 * 60 * 60 * 1000;
 

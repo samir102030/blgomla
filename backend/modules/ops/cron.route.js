@@ -4,7 +4,7 @@ import {
   runSaleScheduler,
   runPostPurchaseEmails,
   runStockAlerts,
-} from "../controllers/cron.controller.js";
+} from "./cron.controller.js";
 
 const router = express.Router();
 

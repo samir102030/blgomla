@@ -1,15 +1,15 @@
-import User from "../models/user.model.js";
-import Product from "../models/product.model.js";
-import Order from "../models/order.model.js";
-import EmailLog from "../models/emailLog.model.js";
-import StockAlert from "../models/stockAlert.model.js";
-import { effectivePrice } from "./stockAlert.controller.js";
+import User from "../../models/user.model.js";
+import Product from "../../models/product.model.js";
+import Order from "../../models/order.model.js";
+import EmailLog from "../../models/emailLog.model.js";
+import StockAlert from "../../models/stockAlert.model.js";
+import { effectivePrice } from "../../controllers/stockAlert.controller.js";
 import {
   sendAbandonedCartEmail,
   sendReviewRequestEmail,
   sendStockAlertEmail,
-} from "../utils/email.js";
-import { controllerWrapper } from "../utils/wrappers.js";
+} from "../../utils/email.js";
+import { controllerWrapper } from "../../utils/wrappers.js";
 
 const HOUR = 60 * 60 * 1000;
 

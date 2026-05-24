@@ -1,6 +1,6 @@
-import AuditLog from "../models/auditLog.model.js";
-import { controllerWrapper } from "../utils/wrappers.js";
-import { paginateQuery } from "../utils/pagination.js";
+import AuditLog from "./auditLog.model.js";
+import { controllerWrapper } from "../../utils/wrappers.js";
+import { paginateQuery } from "../../utils/pagination.js";
 
 export const getAuditLogs = controllerWrapper("getAuditLogs", async (req, res) => {
   const {

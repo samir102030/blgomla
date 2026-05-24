@@ -5,8 +5,8 @@ import {
   updateSiteMode,
   subscribeComingSoon,
   listSubscribers,
-} from "../controllers/siteMode.controller.js";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+} from "./siteMode.controller.js";
+import { protectRoute, adminRoute } from "../../middleware/auth.middleware.js";
 
 const router = express.Router();
 

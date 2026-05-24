@@ -6,16 +6,17 @@ import {
   getPerformanceMetrics,
   getRevenueBreakdown,
   getSalesTrend,
-} from "../controllers/analytics.controller.js";
+} from "./analytics.controller.js";
 import {
   getPaymentAnalytics,
   getInventoryAlerts,
   getCustomerAnalytics,
-} from "../controllers/admin.analytics.controller.js";
-import { createEvent, getInsights } from "../controllers/event.controller.js";
-import { getBacklog } from "../controllers/backlog.controller.js";
-import { protectRoute, adminOrStoreRoute } from "../middleware/auth.middleware.js";
-import { translateResponse } from "../middleware/translation.middleware.js";
+} from "./admin.analytics.controller.js";
+// Cross-module: event capture/insights live in the (future) engagement module.
+import { createEvent, getInsights } from "../../controllers/event.controller.js";
+import { getBacklog } from "./backlog.controller.js";
+import { protectRoute, adminOrStoreRoute } from "../../middleware/auth.middleware.js";
+import { translateResponse } from "../../middleware/translation.middleware.js";
 
 const router = express.Router();
 
@@ -60,7 +61,7 @@ import {
   getDeviceBreakdown,
   getLocationBreakdown,
   getTopPages,
-} from "../controllers/visitor.controller.js";
+} from "../../controllers/visitor.controller.js";
 
 router.get("/visitors/stats", getVisitorStats);
 router.get("/visitors/devices", getDeviceBreakdown);
