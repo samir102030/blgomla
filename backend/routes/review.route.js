@@ -1,7 +1,7 @@
 import express from "express";
 import {
   protectRoute,
-  adminOrStoreRoute,
+  requirePermission,
 } from "../middleware/auth.middleware.js";
 import {
   getAllReviews,
@@ -19,9 +19,11 @@ import {
 
 const router = express.Router();
 
-// All routes require authentication and admin/store role
+// Authenticated + at least review viewing access for everything here.
 router.use(protectRoute);
-router.use(adminOrStoreRoute);
+router.use(requirePermission("reviews.view"));
+
+const canManage = requirePermission("reviews.manage");
 
 // Get all reviews with filtering and pagination
 router.get("/", getAllReviews);
@@ -30,20 +32,20 @@ router.get("/", getAllReviews);
 router.get("/stats", getReviewStats);
 
 // Request endpoints (for vendors)
-router.post("/:productId/:reviewId/request-hide", requestHideReview);
-router.post("/:productId/:reviewId/request-delete", requestDeleteReview);
-router.post("/:productId/:reviewId/request-unhide", requestUnhideReview);
+router.post("/:productId/:reviewId/request-hide", canManage, requestHideReview);
+router.post("/:productId/:reviewId/request-delete", canManage, requestDeleteReview);
+router.post("/:productId/:reviewId/request-unhide", canManage, requestUnhideReview);
 
 // Admin request management endpoints
 router.get("/requests/list/all", getReviewRequests);
 router.get("/requests/vendor/my-requests", getVendorReviewRequests);
-router.put("/:productId/requests/:requestId/approve", approveReviewRequest);
-router.put("/:productId/requests/:requestId/reject", rejectReviewRequest);
+router.put("/:productId/requests/:requestId/approve", canManage, approveReviewRequest);
+router.put("/:productId/requests/:requestId/reject", canManage, rejectReviewRequest);
 
-// Toggle review visibility (show/hide) - Admin only
-router.put("/:productId/:reviewId/visibility", toggleReviewVisibility);
+// Toggle review visibility (show/hide)
+router.put("/:productId/:reviewId/visibility", canManage, toggleReviewVisibility);
 
-// Delete review - Admin only
-router.delete("/:productId/:reviewId", deleteReview);
+// Delete review
+router.delete("/:productId/:reviewId", canManage, deleteReview);
 
 export default router;

@@ -108,10 +108,9 @@ export const mixRoute = (roles) => {
 // which populate req.user and (for stores) req.store. Reads :productId or :id.
 export const requireProductAccess = async (req, res, next) => {
   try {
-    if (["admin", "super_admin"].includes(req.user?.role)) return next();
-    if (req.user?.role !== "store") {
-      return res.status(403).json({ success: false, message: "Access denied" });
-    }
+    // Store users are limited to their own products. Anyone else reaching here
+    // already passed a products.* permission check, so they manage all products.
+    if (req.user?.role !== "store") return next();
     const productId = req.params.productId || req.params.id;
     const product = await Product.findById(productId).select("store");
     if (!product) {

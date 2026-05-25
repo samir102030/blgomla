@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
 import AuditTrail from "../../components/admin/AuditTrail";
+import { axiosInstance } from "../../lib/axios";
 
 const UsersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -26,6 +27,9 @@ const UsersPage: React.FC = () => {
     role: "customer",
     active: true,
   });
+  const [assignableRoles, setAssignableRoles] = useState<
+    { key: string; name: string }[]
+  >([]);
   const {
     users,
     paginated,
@@ -41,6 +45,13 @@ const UsersPage: React.FC = () => {
   useEffect(() => {
     fetchUsers({ page: currentPage, limit: 10 });
   }, [currentPage, fetchUsers]);
+
+  useEffect(() => {
+    axiosInstance
+      .get<{ roles: { key: string; name: string }[] }>("/roles/assignable")
+      .then((r) => setAssignableRoles(r.data.roles || []))
+      .catch(() => {});
+  }, []);
 
   const handleViewUser = (user: any) => {
     setSelectedUser(user);
@@ -59,7 +70,7 @@ const UsersPage: React.FC = () => {
   const handleSaveEdit = async () => {
     if (selectedUser) {
       const success = await updateUser(selectedUser._id, {
-        role: editForm.role as "customer" | "store" | "admin",
+        role: editForm.role,
         active: editForm.active,
       });
       if (success) {
@@ -548,9 +559,19 @@ const UsersPage: React.FC = () => {
                     setEditForm({ ...editForm, role: e.target.value })
                   }
                 >
-                  <option value="customer">Customer</option>
-                  <option value="store">Store</option>
-                  <option value="admin">Admin</option>
+                  {assignableRoles.length > 0 ? (
+                    assignableRoles.map((r) => (
+                      <option key={r.key} value={r.key}>
+                        {r.name}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="customer">Customer</option>
+                      <option value="store">Store</option>
+                      <option value="admin">Admin</option>
+                    </>
+                  )}
                 </select>
               </div>
               <div>

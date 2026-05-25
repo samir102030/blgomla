@@ -37,6 +37,19 @@ export const getPermissionRegistry = controllerWrapper(
   }
 );
 
+// GET /api/roles/assignable — lightweight role list for the Users role picker.
+// Available to anyone who can edit users (not just role managers).
+export const getAssignableRoles = controllerWrapper(
+  "getAssignableRoles",
+  async (_req, res) => {
+    const roles = await Role.find({ key: { $ne: "super_admin" } })
+      .select("key name isSystem")
+      .sort({ isSystem: -1, name: 1 })
+      .lean();
+    res.json({ success: true, roles });
+  }
+);
+
 // GET /api/roles — all roles with a user count.
 export const getRoles = controllerWrapper("getRoles", async (_req, res) => {
   const roles = await Role.find({}).sort({ isSystem: -1, name: 1 }).lean();

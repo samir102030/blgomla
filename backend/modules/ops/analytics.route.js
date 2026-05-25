@@ -15,7 +15,7 @@ import {
 // Cross-module: event capture/insights live in the (future) engagement module.
 import { createEvent, getInsights } from "../../controllers/event.controller.js";
 import { getBacklog } from "./backlog.controller.js";
-import { protectRoute, adminOrStoreRoute } from "../../middleware/auth.middleware.js";
+import { protectRoute, requirePermission } from "../../middleware/auth.middleware.js";
 import { translateResponse } from "../../middleware/translation.middleware.js";
 
 const router = express.Router();
@@ -30,7 +30,7 @@ router.use(protectRoute);
 router.get("/insights", translateResponse, getInsights);
 
 // Operations backlog — everything awaiting staff action (admin/store only)
-router.get("/backlog", adminOrStoreRoute, translateResponse, getBacklog);
+router.get("/backlog", requirePermission("analytics.view"), translateResponse, getBacklog);
 
 // Get sales overview data
 router.get("/sales-overview", translateResponse, getSalesOverview);

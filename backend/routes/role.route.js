@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getRoles,
+  getAssignableRoles,
   getPermissionRegistry,
   createRole,
   updateRole,
@@ -9,6 +10,15 @@ import {
 import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
+
+// Assignable list is available to user managers (gated separately, before the
+// roles.manage wall below).
+router.get(
+  "/assignable",
+  protectRoute,
+  requirePermission(["users.role", "users.edit", "roles.manage"]),
+  getAssignableRoles
+);
 
 router.use(protectRoute, requirePermission("roles.manage"));
 

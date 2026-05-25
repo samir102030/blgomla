@@ -10,7 +10,7 @@ import {
   validateUpdateReturnStatus,
 } from "../validations/return.validate.js";
 import {
-  adminOrStoreRoute,
+  requirePermission,
   protectRoute,
 } from "../middleware/auth.middleware.js";
 
@@ -22,14 +22,14 @@ router.post("/", protectRoute, validateCreateReturn, createReturnRequest);
 // Customer: get their returns
 router.get("/my-returns", protectRoute, getMyReturns);
 
-// Admin/Store: list returns
-router.get("/", protectRoute, adminOrStoreRoute, getReturns);
+// Returns viewers: list returns
+router.get("/", protectRoute, requirePermission("returns.view"), getReturns);
 
-// Admin/Store: update return status
+// Returns managers: update return status
 router.put(
   "/:id/status",
   protectRoute,
-  adminOrStoreRoute,
+  requirePermission("returns.manage"),
   validateUpdateReturnStatus,
   updateReturnStatus
 );

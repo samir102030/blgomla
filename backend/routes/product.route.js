@@ -2,7 +2,6 @@ import express from "express";
 import {
   protectRoute,
   requirePermission,
-  adminOrStoreRoute,
   adminRoute,
   storeRoute,
   requireProductAccess,
@@ -120,17 +119,17 @@ router.delete("/cart/:productId", protectRoute, removeFromCart);
 router.post("/", protectRoute, storeRoute, validateCreateProduct, createProduct);
 router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
 router.get("/approvals", protectRoute, requirePermission("products.approve"), getProductApprovals);
-router.get("/pricing-insights", protectRoute, adminOrStoreRoute, getPricingInsights);
+router.get("/pricing-insights", protectRoute, requirePermission("products.view"), getPricingInsights);
 router.post("/:productId/approve", protectRoute, requirePermission("products.approve"), approveProduct);
 router.post("/:productId/reject", protectRoute, requirePermission("products.approve"), rejectProduct);
-router.put("/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, validateUpdateProduct, updateProduct);
-router.put("/sale/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, toggleSaleProduct);
-router.put("/sale-schedule/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, scheduleSale);
-router.put("/featured/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, toggleFeaturedProduct);
-router.put("/stock/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, validateUpdateStock, updateProductStock);
-router.delete("/delete/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, softDeleteProduct);
-router.put("/restore/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, restoreProduct);
-router.delete("/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, deleteProduct);
+router.put("/:productId", protectRoute, requirePermission("products.edit"), requireProductAccess, validateUpdateProduct, updateProduct);
+router.put("/sale/:productId", protectRoute, requirePermission("products.sale"), requireProductAccess, toggleSaleProduct);
+router.put("/sale-schedule/:productId", protectRoute, requirePermission("products.sale"), requireProductAccess, scheduleSale);
+router.put("/featured/:productId", protectRoute, requirePermission("products.feature"), requireProductAccess, toggleFeaturedProduct);
+router.put("/stock/:productId", protectRoute, requirePermission("products.stock"), requireProductAccess, validateUpdateStock, updateProductStock);
+router.delete("/delete/:productId", protectRoute, requirePermission("products.delete"), requireProductAccess, softDeleteProduct);
+router.put("/restore/:productId", protectRoute, requirePermission("products.delete"), requireProductAccess, restoreProduct);
+router.delete("/:productId", protectRoute, requirePermission("products.delete"), requireProductAccess, deleteProduct);
 
 // ═══════════════════════════════════════════════
 // REVIEWS
@@ -151,29 +150,29 @@ router.post("/:productId/notify", subscribeStockAlert);
 // FEATURES & ATTRIBUTES
 // ═══════════════════════════════════════════════
 router.get("/:productId/features", getProductFeatures);
-router.post("/:productId/features", protectRoute, adminOrStoreRoute, validateAddFeature, addProductFeature);
-router.put("/:productId/features", protectRoute, adminOrStoreRoute, validateUpdateFeature, updateProductFeature);
-router.delete("/:productId/features/:featureId", protectRoute, adminOrStoreRoute, deleteProductFeature);
+router.post("/:productId/features", protectRoute, requirePermission("products.edit"), validateAddFeature, addProductFeature);
+router.put("/:productId/features", protectRoute, requirePermission("products.edit"), validateUpdateFeature, updateProductFeature);
+router.delete("/:productId/features/:featureId", protectRoute, requirePermission("products.edit"), deleteProductFeature);
 
 router.get("/:productId/attributes", getProductAttributes);
-router.post("/:productId/attributes", protectRoute, adminOrStoreRoute, validateAddAttribute, addProductAttribute);
-router.put("/:productId/attributes/:attributeId", protectRoute, adminOrStoreRoute, validateUpdateAttribute, updateProductAttribute);
-router.delete("/:productId/attributes/:attributeId", protectRoute, adminOrStoreRoute, deleteProductAttribute);
+router.post("/:productId/attributes", protectRoute, requirePermission("products.edit"), validateAddAttribute, addProductAttribute);
+router.put("/:productId/attributes/:attributeId", protectRoute, requirePermission("products.edit"), validateUpdateAttribute, updateProductAttribute);
+router.delete("/:productId/attributes/:attributeId", protectRoute, requirePermission("products.edit"), deleteProductAttribute);
 
 // ═══════════════════════════════════════════════
 // PRICE SUGGESTIONS
 // ═══════════════════════════════════════════════
 router.post("/:productId/suggest-price", suggestPrice);
-router.get("/:productId/price-suggestions", protectRoute, adminOrStoreRoute, getPriceSuggestions);
+router.get("/:productId/price-suggestions", protectRoute, requirePermission("products.view"), getPriceSuggestions);
 router.put("/:productId/price-suggestions/:suggestionId", protectRoute, requirePermission("products.approve"), reviewPriceSuggestion);
 
 // ═══════════════════════════════════════════════
 // COMPETITOR PRICES
 // ═══════════════════════════════════════════════
 router.get("/:productId/competitor-prices", getCompetitorPrices);
-router.post("/:productId/competitor-prices", protectRoute, adminOrStoreRoute, addCompetitorPrice);
-router.put("/:productId/competitor-prices/:competitorId", protectRoute, adminOrStoreRoute, updateCompetitorPrice);
-router.delete("/:productId/competitor-prices/:competitorId", protectRoute, adminOrStoreRoute, deleteCompetitorPrice);
+router.post("/:productId/competitor-prices", protectRoute, requirePermission("products.edit"), addCompetitorPrice);
+router.put("/:productId/competitor-prices/:competitorId", protectRoute, requirePermission("products.edit"), updateCompetitorPrice);
+router.delete("/:productId/competitor-prices/:competitorId", protectRoute, requirePermission("products.edit"), deleteCompetitorPrice);
 
 // ═══════════════════════════════════════════════
 // SINGLE PRODUCT (must be LAST)

@@ -1,8 +1,7 @@
 import express from "express";
 import {
   protectRoute,
-  adminRoute,
-  adminOrStoreRoute,
+  requirePermission,
 } from "../middleware/auth.middleware.js";
 import {
   setBrandToProduct,
@@ -33,12 +32,12 @@ router.get("/category/:categoryId", headerCache, memCache, translateResponse, ge
 const invalidate = (req, res, next) => { clearCache("brands"); next(); };
 
 // Admin / Store routes
-router.post("/", protectRoute, adminOrStoreRoute, invalidate, createBrand);
-router.put("/:brandId", protectRoute, adminOrStoreRoute, invalidate, updateBrand);
-router.delete("/:brandId", protectRoute, adminOrStoreRoute, invalidate, deleteBrand);
-router.put("/delete/:brandId", protectRoute, adminOrStoreRoute, invalidate, safeDeleteBrand);
-router.put("/restore/:brandId", protectRoute, adminOrStoreRoute, invalidate, restoreBrand);
-router.put("/setBrandToProduct/:productId", protectRoute, adminOrStoreRoute, setBrandToProduct);
+router.post("/", protectRoute, requirePermission("brands.manage"), invalidate, createBrand);
+router.put("/:brandId", protectRoute, requirePermission("brands.manage"), invalidate, updateBrand);
+router.delete("/:brandId", protectRoute, requirePermission("brands.manage"), invalidate, deleteBrand);
+router.put("/delete/:brandId", protectRoute, requirePermission("brands.manage"), invalidate, safeDeleteBrand);
+router.put("/restore/:brandId", protectRoute, requirePermission("brands.manage"), invalidate, restoreBrand);
+router.put("/setBrandToProduct/:productId", protectRoute, requirePermission("brands.manage"), setBrandToProduct);
 
 // Single brand (last)
 router.get("/:brandId", translateResponse, getBrandById);
