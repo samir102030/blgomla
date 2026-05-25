@@ -41,7 +41,7 @@ const HeroSlider: React.FC = () => {
       buttonLink: "/products?category=cameras",
       accentColor: "from-[#FFB382] to-[#FF6A1A]",
       icon: "📸",
-      image: "", // paste the Magnific/Cloudinary square (1:1) image URL here
+      image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669608/halafawy/hero/cameras.png",
     },
     {
       id: 3,
