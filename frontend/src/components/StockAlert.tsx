@@ -22,7 +22,7 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
 
   const submit = async () => {
     if (!email.trim()) {
-      toast.error(t("Please enter your email"));
+      toast.error(t("inventory.stockAlert.enterEmail"));
       return;
     }
     setSubmitting(true);
@@ -32,9 +32,9 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
         type,
       });
       setDone(true);
-      toast.success(t("Done! We'll email you."));
+      toast.success(t("inventory.stockAlert.done"));
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || t("Couldn't subscribe — try again"));
+      toast.error(err?.response?.data?.message || t("inventory.stockAlert.subscribeFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -43,14 +43,14 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
   if (done) {
     return (
       <p className="text-sm text-emerald-600 mt-3">
-        ✅ {t("We'll email you when it's available.")}
+        ✅ {t("inventory.stockAlert.emailWhenAvailable")}
       </p>
     );
   }
 
   const label = inStock
-    ? t("🔔 Notify me on price drop")
-    : t("🔔 Notify me when back in stock");
+    ? t("inventory.stockAlert.notifyPriceDrop")
+    : t("inventory.stockAlert.notifyRestock");
 
   if (!open) {
     return (
@@ -70,7 +70,7 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        placeholder={t("Your email")}
+        placeholder={t("inventory.stockAlert.yourEmail")}
         className="flex-1 px-3 py-2 text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
       />
       <button
@@ -79,7 +79,7 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
         disabled={submitting}
         className="rounded-lg bg-[var(--brand-primary)] text-white text-sm font-semibold px-4 py-2 hover:bg-[var(--brand-primary-hover)] disabled:opacity-50 whitespace-nowrap"
       >
-        {submitting ? t("Saving…") : t("Notify me")}
+        {submitting ? t("inventory.stockAlert.saving") : t("inventory.stockAlert.notifyMe")}
       </button>
     </div>
   );

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const SupportTickets: React.FC = () => {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -94,15 +96,15 @@ const SupportTickets: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Support Tickets</h1>
-          <p className="text-gray-600">Manage customer support requests and issues</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('supportTickets.title')}</h1>
+          <p className="text-gray-600">{t('supportTickets.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-            + Create Ticket
+            + {t('supportTickets.createTicket')}
           </button>
           <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-            📤 Export
+            📤 {t('admin.export')}
           </button>
         </div>
       </div>
@@ -115,7 +117,7 @@ const SupportTickets: React.FC = () => {
               🔴
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Open</p>
+              <p className="text-sm font-medium text-gray-600">{t('supportTickets.open')}</p>
               <p className="text-2xl font-bold text-gray-900">23</p>
             </div>
           </div>
@@ -126,7 +128,7 @@ const SupportTickets: React.FC = () => {
               🟡
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">In Progress</p>
+              <p className="text-sm font-medium text-gray-600">{t('supportTickets.inProgress')}</p>
               <p className="text-2xl font-bold text-gray-900">15</p>
             </div>
           </div>
@@ -137,7 +139,7 @@ const SupportTickets: React.FC = () => {
               🔵
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Pending</p>
+              <p className="text-sm font-medium text-gray-600">{t('supportTickets.pending')}</p>
               <p className="text-2xl font-bold text-gray-900">8</p>
             </div>
           </div>
@@ -148,7 +150,7 @@ const SupportTickets: React.FC = () => {
               ✅
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Resolved</p>
+              <p className="text-sm font-medium text-gray-600">{t('supportTickets.resolved')}</p>
               <p className="text-2xl font-bold text-gray-900">156</p>
             </div>
           </div>
@@ -159,7 +161,7 @@ const SupportTickets: React.FC = () => {
               ⏱️
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Avg Response</p>
+              <p className="text-sm font-medium text-gray-600">{t('supportTickets.avgResponse')}</p>
               <p className="text-2xl font-bold text-gray-900">2.4h</p>
             </div>
           </div>
@@ -173,7 +175,7 @@ const SupportTickets: React.FC = () => {
             <div className="relative w-full sm:w-auto">
               <input
                 type="text"
-                placeholder="Search tickets..."
+                placeholder={t('supportTickets.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -185,27 +187,27 @@ const SupportTickets: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             >
-              <option value="all">All Status</option>
-              <option value="open">Open</option>
-              <option value="in-progress">In Progress</option>
-              <option value="pending">Pending</option>
-              <option value="resolved">Resolved</option>
-              <option value="closed">Closed</option>
+              <option value="all">{t('supportTickets.allStatus')}</option>
+              <option value="open">{t('supportTickets.open')}</option>
+              <option value="in-progress">{t('supportTickets.inProgress')}</option>
+              <option value="pending">{t('supportTickets.pending')}</option>
+              <option value="resolved">{t('supportTickets.resolved')}</option>
+              <option value="closed">{t('supportTickets.closed')}</option>
             </select>
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             >
-              <option value="all">All Priority</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
+              <option value="all">{t('supportTickets.allPriority')}</option>
+              <option value="high">{t('supportTickets.priorityHigh')}</option>
+              <option value="medium">{t('supportTickets.priorityMedium')}</option>
+              <option value="low">{t('supportTickets.priorityLow')}</option>
             </select>
           </div>
           <div className="flex items-center space-x-4">
             <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-              🔄 Refresh
+              🔄 {t('supportTickets.refresh')}
             </button>
           </div>
         </div>
@@ -217,14 +219,14 @@ const SupportTickets: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('supportTickets.colTicket')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('supportTickets.colCustomer')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('supportTickets.colStatus')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('supportTickets.colPriority')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('supportTickets.colCategory')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('supportTickets.colAssignedTo')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('supportTickets.colCreated')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.actions')}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -263,10 +265,10 @@ const SupportTickets: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-500" title="View Details">👁️</button>
-                      <button className="text-green-600 hover:text-green-500" title="Reply">💬</button>
-                      <button className="text-yellow-600 hover:text-yellow-500" title="Edit">✏️</button>
-                      <button className="text-purple-600 hover:text-purple-500" title="Assign">👤</button>
+                      <button className="text-blue-600 hover:text-blue-500" title={t('supportTickets.viewDetails')}>👁️</button>
+                      <button className="text-green-600 hover:text-green-500" title={t('supportTickets.reply')}>💬</button>
+                      <button className="text-yellow-600 hover:text-yellow-500" title={t('admin.actions')}> ✏️</button>
+                      <button className="text-purple-600 hover:text-purple-500" title={t('supportTickets.assign')}>👤</button>
                     </div>
                   </td>
                 </tr>
@@ -300,45 +302,45 @@ const SupportTickets: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
               <div className="bg-gray-50 rounded-md p-2">
-                <div className="text-gray-500">Category</div>
+                <div className="text-gray-500">{t('supportTickets.colCategory')}</div>
                 <div className="font-semibold text-gray-900">{ticket.category}</div>
               </div>
               <div className="bg-gray-50 rounded-md p-2">
-                <div className="text-gray-500">Assigned</div>
+                <div className="text-gray-500">{t('supportTickets.assigned')}</div>
                 <div className="font-semibold text-gray-900">{ticket.assignedTo}</div>
               </div>
               <div className="bg-gray-50 rounded-md p-2 col-span-2">
-                <div className="text-gray-500">Created</div>
+                <div className="text-gray-500">{t('supportTickets.colCreated')}</div>
                 <div className="font-semibold text-gray-900">{ticket.created}</div>
               </div>
             </div>
 
             <div className="flex items-center justify-end space-x-3 text-sm font-medium">
-              <button className="text-blue-600 hover:text-blue-500" title="View Details">👁️</button>
-              <button className="text-green-600 hover:text-green-500" title="Reply">💬</button>
-              <button className="text-yellow-600 hover:text-yellow-500" title="Edit">✏️</button>
-              <button className="text-purple-600 hover:text-purple-500" title="Assign">👤</button>
+              <button className="text-blue-600 hover:text-blue-500" title={t('supportTickets.viewDetails')}>👁️</button>
+              <button className="text-green-600 hover:text-green-500" title={t('supportTickets.reply')}>💬</button>
+              <button className="text-yellow-600 hover:text-yellow-500" title={t('admin.actions')}>✏️</button>
+              <button className="text-purple-600 hover:text-purple-500" title={t('supportTickets.assign')}>👤</button>
             </div>
           </div>
         ))}
 
         {filteredTickets.length === 0 && (
           <div className="text-center text-gray-500 text-sm">
-            No tickets found
+            {t('supportTickets.noTickets')}
           </div>
         )}
       </div>
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('supportTickets.quickActions')}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
             <div className="flex items-center space-x-3">
               <span className="text-2xl">📧</span>
               <div>
-                <p className="font-medium text-gray-900">Send Bulk Email</p>
-                <p className="text-sm text-gray-500">Send updates to multiple customers</p>
+                <p className="font-medium text-gray-900">{t('supportTickets.sendBulkEmail')}</p>
+                <p className="text-sm text-gray-500">{t('supportTickets.sendBulkEmailDesc')}</p>
               </div>
             </div>
           </button>
@@ -346,8 +348,8 @@ const SupportTickets: React.FC = () => {
             <div className="flex items-center space-x-3">
               <span className="text-2xl">📊</span>
               <div>
-                <p className="font-medium text-gray-900">Generate Report</p>
-                <p className="text-sm text-gray-500">Create support performance report</p>
+                <p className="font-medium text-gray-900">{t('supportTickets.generateReport')}</p>
+                <p className="text-sm text-gray-500">{t('supportTickets.generateReportDesc')}</p>
               </div>
             </div>
           </button>
@@ -355,8 +357,8 @@ const SupportTickets: React.FC = () => {
             <div className="flex items-center space-x-3">
               <span className="text-2xl">⚙️</span>
               <div>
-                <p className="font-medium text-gray-900">Ticket Settings</p>
-                <p className="text-sm text-gray-500">Configure ticket categories and rules</p>
+                <p className="font-medium text-gray-900">{t('supportTickets.ticketSettings')}</p>
+                <p className="text-sm text-gray-500">{t('supportTickets.ticketSettingsDesc')}</p>
               </div>
             </div>
           </button>

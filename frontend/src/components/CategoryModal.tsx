@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 import { useCategoryStore } from "../stores/category.store";
 import type { Category } from "../types/category.type";
 import { axiosInstance } from "../lib/axios";
@@ -33,6 +34,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
 
+  const { t } = useTranslation();
   const { createCategory, updateCategory, loading } = useCategoryStore();
 
   useEffect(() => {
@@ -118,7 +120,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
     const imageUrl = await uploadImage();
     if (imageFile && !imageUrl) {
-      alert("Failed to upload image");
+      alert(t("categories.failedUpload"));
       return;
     }
 
@@ -147,7 +149,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-semibold">
-            {category ? "Edit Category" : "Add New Category"}
+            {category ? t("categories.editCategory") : t("categories.addNewCategory")}
           </h2>
           <button
             onClick={onClose}
@@ -161,7 +163,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category Name (English) *
+                {t("categories.categoryNameEn")}
               </label>
               <input
                 type="text"
@@ -171,7 +173,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                   setFormData({ ...formData, name: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter category name"
+                placeholder={t("categories.categoryNameEn")}
               />
             </div>
 
@@ -193,7 +195,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Parent Category
+                {t("categories.parentCategory")}
               </label>
               <select
                 value={formData.parentCategory}
@@ -202,7 +204,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">No Parent (Top Level)</option>
+                <option value="">{t("categories.noParent")}</option>
                 {parentCategories
                   .filter((cat) => cat._id !== category?._id)
                   .map((cat) => (
@@ -217,7 +219,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description (English)
+                {t("categories.descriptionEn")}
               </label>
               <textarea
                 value={formData.description}
@@ -226,7 +228,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                 }
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter category description"
+                placeholder={t("Description")}
               />
             </div>
             <div>
@@ -249,7 +251,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Meta Title
+                {t("categories.metaTitle")}
               </label>
               <input
                 type="text"
@@ -258,13 +260,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                   setFormData({ ...formData, metaTitle: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="SEO meta title"
+                placeholder={t("categories.metaTitlePlaceholder")}
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sort Order
+                {t("categories.sortOrder")}
               </label>
               <input
                 type="number"
@@ -283,7 +285,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Meta Description
+              {t("categories.metaDescription")}
             </label>
             <textarea
               value={formData.metaDescription}
@@ -292,13 +294,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               }
               rows={2}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="SEO meta description"
+              placeholder={t("categories.metaDescPlaceholder")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category Image
+              {t("categories.categoryImage")}
             </label>
             <div className="flex items-center space-x-4">
               <input
@@ -313,7 +315,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                 className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200"
               >
                 <PhotoIcon className="h-5 w-5 mr-2" />
-                Choose Image
+                {t("categories.chooseImage")}
               </label>
               {imagePreview && (
                 <img
@@ -336,7 +338,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
-              Active
+              {t("Active")}
             </label>
           </div>
 
@@ -346,7 +348,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
             >
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               type="submit"
@@ -354,10 +356,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {loading || uploading
-                ? "Saving..."
+                ? t("categories.saving")
                 : category
-                ? "Update"
-                : "Create"}
+                ? t("categories.update")
+                : t("Create")}
             </button>
           </div>
         </form>

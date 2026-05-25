@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 import { useBrandStore } from "../stores/brand.store";
 import type { Brand } from "../types/brand.type";
 import { axiosInstance } from "../lib/axios";
@@ -11,6 +12,7 @@ interface BrandModalProps {
 }
 
 const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     name: "",
     nameAr: "",
@@ -97,7 +99,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
 
     const logoUrl = await uploadLogo();
     if (logoFile && !logoUrl) {
-      alert("Failed to upload logo");
+      alert(t("Failed to upload logo"));
       return;
     }
 
@@ -125,7 +127,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
       <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-semibold">
-            {brand ? "Edit Brand" : "Add New Brand"}
+            {brand ? t("admin.editBrand") : t("brands.addNewBrand")}
           </h2>
           <button
             onClick={onClose}
@@ -139,7 +141,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Brand Name (English) *
+                {t("brands.brandNameEn")}
               </label>
               <input
                 type="text"
@@ -149,7 +151,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter brand name"
+                placeholder={t("brands.brandName")}
               />
             </div>
             <div>
@@ -172,7 +174,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description (English)
+                {t("brands.descriptionEn")}
               </label>
               <textarea
                 value={formData.description}
@@ -181,7 +183,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
                 }
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter brand description"
+                placeholder={t("Description")}
               />
             </div>
             <div>
@@ -203,7 +205,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand Logo
+              {t("brands.brandLogo")}
             </label>
             <div className="flex items-center space-x-4">
               <input
@@ -218,7 +220,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
                 className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg cursor-pointer hover:bg-gray-200"
               >
                 <PhotoIcon className="h-5 w-5 mr-2" />
-                Choose Logo
+                {t("brands.chooseLogo")}
               </label>
               {logoPreview && (
                 <img
@@ -241,7 +243,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <label htmlFor="isActive" className="ml-2 text-sm text-gray-700">
-              Active
+              {t("Active")}
             </label>
           </div>
 
@@ -251,14 +253,14 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
             >
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               type="submit"
               disabled={loading || uploading}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading || uploading ? "Saving..." : brand ? "Update" : "Create"}
+              {loading || uploading ? t("brands.saving") : brand ? t("brands.update") : t("Create")}
             </button>
           </div>
         </form>

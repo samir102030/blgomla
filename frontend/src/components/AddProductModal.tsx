@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { axiosInstance } from "../lib/axios";
+import { useTranslation } from "react-i18next";
 import { useUserStore } from "../stores/user.store";
 import { useVendorStore } from "../stores/vendor.store";
 
@@ -19,6 +20,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   categories,
 }) => {
   const [creating, setCreating] = useState(false);
+  const { t } = useTranslation();
   const { user } = useUserStore();
   const { vendorStore } = useVendorStore();
   const [form, setForm] = useState({
@@ -207,16 +209,16 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
         <div className="flex items-start justify-between px-6 py-4 border-b">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
-              Create Product
+              {t("modal.addProduct.title")}
             </h2>
             <p className="text-sm text-gray-500">
-              Add product details and upload images
+              {t("modal.addProduct.subtitle")}
             </p>
           </div>
           <div>
             <button
               onClick={onClose}
-              aria-label="Close modal"
+              aria-label={t("modal.addProduct.closeModal")}
               className="text-gray-500 hover:text-gray-700 rounded-md p-1"
             >
               ✕
@@ -231,7 +233,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
           {/* Left: image uploader + previews */}
           <div className="md:col-span-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Images
+              {t("modal.addProduct.images")}
             </label>
             <div
               onDragOver={(e) => e.preventDefault()}
@@ -242,10 +244,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               className="border-2 border-dashed border-gray-200 rounded-lg p-3 h-44 flex flex-col items-center justify-center text-center cursor-pointer bg-gray-50 hover:bg-gray-100"
             >
               <p className="text-sm text-gray-500">
-                Drag & drop images here or click to select
+                {t("modal.addProduct.dragDrop")}
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                Supports multiple images (jpg, png). Max 5 images.
+                {t("modal.addProduct.supportsMultiple")}
               </p>
               <input
                 id="product-images-input"
@@ -284,11 +286,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Name (English)
+                  {t("modal.addProduct.nameLabel")}
                 </label>
                 <input
                   required
-                  placeholder="Product name"
+                  placeholder={t("modal.addProduct.namePlaceholder")}
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   className="mt-1 block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
@@ -310,7 +312,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                Price
+                {t("modal.addProduct.priceLabel")}
               </label>
               <input
                 required
@@ -326,26 +328,26 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Brand
+                  {t("modal.addProduct.brandLabel")}
                 </label>
                 <select
                   value={form.brand}
                   onChange={(e) => setForm({ ...form, brand: e.target.value })}
                   className="mt-1 block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 >
-                  <option value="">Select brand</option>
+                  <option value="">{t("modal.addProduct.brandSelect")}</option>
                   {brands?.map((b: any) => (
                     <option key={b._id} value={b._id}>
                       {b.name}
                     </option>
                   ))}
-                  <option value="CREATE_NEW">+ Create New Brand</option>
+                  <option value="CREATE_NEW">{t("modal.addProduct.createNewBrand")}</option>
                 </select>
                 {form.brand === "CREATE_NEW" && (
                   <div className="mt-2 space-y-2">
                     <input
                       required
-                      placeholder="New brand name"
+                      placeholder={t("modal.addProduct.newBrandName")}
                       value={form.newBrandName}
                       onChange={(e) =>
                         setForm({ ...form, newBrandName: e.target.value })
@@ -353,7 +355,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     />
                     <textarea
-                      placeholder="Brand description (optional)"
+                      placeholder={t("modal.addProduct.brandDescriptionOpt")}
                       value={form.newBrandDescription}
                       onChange={(e) =>
                         setForm({
@@ -364,15 +366,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     />
                     <p className="text-xs text-amber-600">
-                      ⚠️ This brand will need admin approval before your product
-                      is published
+                      ⚠️ {t("modal.addProduct.brandApprovalWarning")}
                     </p>
                   </div>
                 )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Category
+                  {t("modal.addProduct.categoryLabel")}
                 </label>
                 <select
                   value={form.category}
@@ -381,19 +382,19 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   }
                   className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 >
-                  <option value="">Select category</option>
+                  <option value="">{t("modal.addProduct.categorySelect")}</option>
                   {categories.map((c: any) => (
                     <option key={c._id} value={c._id}>
                       {c.name}
                     </option>
                   ))}
-                  <option value="CREATE_NEW">+ Create New Category</option>
+                  <option value="CREATE_NEW">{t("modal.addProduct.createNewCategory")}</option>
                 </select>
                 {form.category === "CREATE_NEW" && (
                   <div className="mt-2 space-y-2">
                     <input
                       required
-                      placeholder="New category name"
+                      placeholder={t("modal.addProduct.newCategoryName")}
                       value={form.newCategoryName}
                       onChange={(e) =>
                         setForm({ ...form, newCategoryName: e.target.value })
@@ -401,7 +402,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     />
                     <textarea
-                      placeholder="Category description (optional)"
+                      placeholder={t("modal.addProduct.categoryDescriptionOpt")}
                       value={form.newCategoryDescription}
                       onChange={(e) =>
                         setForm({
@@ -412,8 +413,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     />
                     <p className="text-xs text-amber-600">
-                      ⚠️ This category will need admin approval before your
-                      product is published
+                      ⚠️ {t("modal.addProduct.categoryApprovalWarning")}
                     </p>
                   </div>
                 )}
@@ -423,7 +423,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Sale Percentage (%)
+                  {t("modal.addProduct.salePercentageLabel")}
                 </label>
                 <input
                   placeholder="0"
@@ -439,7 +439,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Stock
+                  {t("modal.addProduct.stockLabel")}
                 </label>
                 <input
                   placeholder="0"
@@ -462,7 +462,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   className="mr-2"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Sale Active
+                  {t("modal.addProduct.saleActive")}
                 </span>
               </label>
               <label className="flex items-center">
@@ -475,7 +475,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   className="mr-2"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Is Active
+                  {t("modal.addProduct.isActive")}
                 </span>
               </label>
               <label className="flex items-center">
@@ -488,7 +488,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   className="mr-2"
                 />
                 <span className="text-sm font-medium text-gray-700">
-                  Featured
+                  {t("modal.addProduct.featured")}
                 </span>
               </label>
             </div>
@@ -496,10 +496,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Description (English)
+                  {t("modal.addProduct.descriptionLabel")}
                 </label>
                 <textarea
-                  placeholder="Short description"
+                  placeholder={t("modal.addProduct.shortDescription")}
                   value={form.description}
                   onChange={(e) =>
                     setForm({ ...form, description: e.target.value })
@@ -527,7 +527,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Bulk Pricing Rules
+                  {t("modal.addProduct.bulkPricingRules")}
                 </label>
                 <button
                   type="button"
@@ -542,12 +542,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   }
                   className="text-sm text-blue-600 hover:text-blue-800"
                 >
-                  Add Rule
+                  {t("modal.addProduct.addRule")}
                 </button>
               </div>
               {form.bulkPricing.length === 0 ? (
                 <p className="text-xs text-gray-500">
-                  Add rules like min quantity 6 {"=>"} unit price 95.
+                  {t("modal.addProduct.bulkPricingHint")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -559,7 +559,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       <input
                         type="number"
                         min="1"
-                        placeholder="Min Qty"
+                        placeholder={t("modal.addProduct.minQtyPlaceholder")}
                         value={rule.minQty}
                         onChange={(e) => {
                           const next = [...form.bulkPricing];
@@ -575,7 +575,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         type="number"
                         min="0"
                         step="0.01"
-                        placeholder="Unit Price"
+                        placeholder={t("modal.addProduct.unitPricePlaceholder")}
                         value={rule.unitPrice}
                         onChange={(e) => {
                           const next = [...form.bulkPricing];
@@ -599,7 +599,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                         }
                         className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
                       >
-                        Remove
+                        {t("modal.addProduct.remove")}
                       </button>
                     </div>
                   ))}
@@ -610,12 +610,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tags
+                {t("modal.addProduct.tagsLabel")}
               </label>
               <div className="flex gap-2 mb-2">
                 <input
                   id="tag-input"
-                  placeholder="Add a tag"
+                  placeholder={t("modal.addProduct.tagsAddPlaceholder")}
                   className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
                 <button
@@ -634,7 +634,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   }}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                 >
-                  Add
+                  {t("modal.addProduct.addButton")}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -664,12 +664,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             {/* Features */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Features
+                {t("modal.addProduct.featuresLabel")}
               </label>
               <div className="flex gap-2 mb-2">
                 <input
                   id="feature-input"
-                  placeholder="Add a feature"
+                  placeholder={t("modal.addProduct.featuresAddPlaceholder")}
                   className="flex-1 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
                 <button
@@ -688,7 +688,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   }}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                 >
-                  Add
+                  {t("modal.addProduct.addButton")}
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -718,17 +718,17 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             {/* Attributes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Attributes
+                {t("modal.addProduct.attributesLabel")}
               </label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
                 <input
                   id="attr-name-input"
-                  placeholder="Attribute name"
+                  placeholder={t("modal.addProduct.attrNamePlaceholder")}
                   className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
                 <input
                   id="attr-value-input"
-                  placeholder="Attribute value"
+                  placeholder={t("modal.addProduct.attrValuePlaceholder")}
                   className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                 />
                 <button
@@ -757,7 +757,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   }}
                   className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
                 >
-                  Add
+                  {t("modal.addProduct.addButton")}
                 </button>
               </div>
               <div className="space-y-2">
@@ -797,14 +797,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 border rounded-md text-sm"
             >
-              Cancel
+              {t("modal.addProduct.cancel")}
             </button>
             <button
               type="submit"
               disabled={creating}
               className="px-4 py-2 bg-[#FFD600] rounded-md text-sm font-medium disabled:opacity-60"
             >
-              {creating ? "Creating..." : "Create Product"}
+              {creating ? t("modal.addProduct.creating") : t("modal.addProduct.submit")}
             </button>
           </div>
         </form>

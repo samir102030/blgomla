@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const CustomersList: React.FC = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedCustomers, setSelectedCustomers] = useState<number[]>([]);
@@ -110,15 +112,15 @@ const CustomersList: React.FC = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Customer Management</h1>
-          <p className="text-gray-600">Manage customer relationships and track engagement</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('customersList.title')}</h1>
+          <p className="text-gray-600">{t('customersList.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
-            + Add Customer
+            + {t('customersList.addCustomer')}
           </button>
           <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-            📤 Export
+            📤 {t('admin.export')}
           </button>
         </div>
       </div>
@@ -131,7 +133,7 @@ const CustomersList: React.FC = () => {
               👥
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-sm font-medium text-gray-600">{t('customerAnalytics.totalCustomers')}</p>
               <p className="text-2xl font-bold text-gray-900">2,847</p>
             </div>
           </div>
@@ -142,7 +144,7 @@ const CustomersList: React.FC = () => {
               ✅
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Active Customers</p>
+              <p className="text-sm font-medium text-gray-600">{t('customersList.activeCustomers')}</p>
               <p className="text-2xl font-bold text-gray-900">2,156</p>
             </div>
           </div>
@@ -153,7 +155,7 @@ const CustomersList: React.FC = () => {
               👑
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">VIP Customers</p>
+              <p className="text-sm font-medium text-gray-600">{t('customersList.vipCustomers')}</p>
               <p className="text-2xl font-bold text-gray-900">234</p>
             </div>
           </div>
@@ -164,7 +166,7 @@ const CustomersList: React.FC = () => {
               💰
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Avg. Order Value</p>
+              <p className="text-sm font-medium text-gray-600">{t('sales.avgOrderValue')}</p>
               <p className="text-2xl font-bold text-gray-900">$156.80</p>
             </div>
           </div>
@@ -178,7 +180,7 @@ const CustomersList: React.FC = () => {
             <div className="relative w-full sm:w-auto">
               <input
                 type="text"
-                placeholder="Search customers..."
+                placeholder={t('customersList.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
@@ -190,29 +192,29 @@ const CustomersList: React.FC = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="blocked">Blocked</option>
+              <option value="all">{t('users.allStatus')}</option>
+              <option value="active">{t('users.active')}</option>
+              <option value="inactive">{t('users.inactive')}</option>
+              <option value="blocked">{t('customersList.blocked')}</option>
             </select>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {selectedCustomers.length > 0 && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-gray-600">{selectedCustomers.length} selected</span>
+                <span className="text-sm text-gray-600">{selectedCustomers.length} {t('customersList.selected')}</span>
                 <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded-md text-sm hover:bg-blue-200">
-                  📧 Email
+                  📧 {t('customersList.email')}
                 </button>
                 <button className="px-3 py-1 bg-green-100 text-green-800 rounded-md text-sm hover:bg-green-200">
-                  🏷️ Tag
+                  🏷️ {t('customersList.tag')}
                 </button>
                 <button className="px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200">
-                  🚫 Block
+                  🚫 {t('customersList.block')}
                 </button>
               </div>
             )}
             <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-              🔄 Refresh
+              🔄 {t('supportTickets.refresh')}
             </button>
           </div>
         </div>
@@ -232,14 +234,14 @@ const CustomersList: React.FC = () => {
                     className="rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
                   />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Segment</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Spent</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Order</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('users.colUser')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customersList.colContact')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('users.colStatus')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customersList.colSegment')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customerAnalytics.colOrders')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customerAnalytics.colTotalSpent')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('customersList.colLastOrder')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('admin.actions')}</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -289,10 +291,10 @@ const CustomersList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-500" title="View Profile">👁️</button>
-                      <button className="text-green-600 hover:text-green-500" title="Send Message">💬</button>
-                      <button className="text-purple-600 hover:text-purple-500" title="Order History">📋</button>
-                      <button className="text-yellow-600 hover:text-yellow-500" title="Edit">✏️</button>
+                      <button className="text-blue-600 hover:text-blue-500" title={t('customersList.viewProfile')}>👁️</button>
+                      <button className="text-green-600 hover:text-green-500" title={t('customersList.sendMessage')}>💬</button>
+                      <button className="text-purple-600 hover:text-purple-500" title={t('customersList.orderHistory')}>📋</button>
+                      <button className="text-yellow-600 hover:text-yellow-500" title={t('admin.actions')}>✏️</button>
                     </div>
                   </td>
                 </tr>
@@ -329,7 +331,7 @@ const CustomersList: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="bg-gray-50 rounded-md p-2">
-                <div className="text-gray-500">Status</div>
+                <div className="text-gray-500">{t('users.colStatus')}</div>
                 <div className="font-semibold text-gray-900">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(customer.status)}`}>
                     {customer.status.charAt(0).toUpperCase() + customer.status.slice(1)}
@@ -337,7 +339,7 @@ const CustomersList: React.FC = () => {
                 </div>
               </div>
               <div className="bg-gray-50 rounded-md p-2">
-                <div className="text-gray-500">Segment</div>
+                <div className="text-gray-500">{t('customersList.colSegment')}</div>
                 <div className="font-semibold text-gray-900">
                   <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSegmentColor(customer.segment)}`}>
                     {customer.segment}
@@ -345,24 +347,24 @@ const CustomersList: React.FC = () => {
                 </div>
               </div>
               <div className="bg-gray-50 rounded-md p-2">
-                <div className="text-gray-500">Orders</div>
+                <div className="text-gray-500">{t('customerAnalytics.colOrders')}</div>
                 <div className="font-semibold text-gray-900">{customer.totalOrders}</div>
               </div>
               <div className="bg-gray-50 rounded-md p-2">
-                <div className="text-gray-500">Total Spent</div>
+                <div className="text-gray-500">{t('customerAnalytics.colTotalSpent')}</div>
                 <div className="font-semibold text-gray-900">{customer.totalSpent}</div>
               </div>
               <div className="bg-gray-50 rounded-md p-2 col-span-2">
-                <div className="text-gray-500">Last Order</div>
+                <div className="text-gray-500">{t('customersList.colLastOrder')}</div>
                 <div className="font-semibold text-gray-900">{customer.lastOrder}</div>
               </div>
             </div>
 
             <div className="flex items-center justify-end space-x-3 text-sm font-medium">
-              <button className="text-blue-600 hover:text-blue-500" title="View Profile">👁️</button>
-              <button className="text-green-600 hover:text-green-500" title="Send Message">💬</button>
-              <button className="text-purple-600 hover:text-purple-500" title="Order History">📋</button>
-              <button className="text-yellow-600 hover:text-yellow-500" title="Edit">✏️</button>
+              <button className="text-blue-600 hover:text-blue-500" title={t('customersList.viewProfile')}>👁️</button>
+              <button className="text-green-600 hover:text-green-500" title={t('customersList.sendMessage')}>💬</button>
+              <button className="text-purple-600 hover:text-purple-500" title={t('customersList.orderHistory')}>📋</button>
+              <button className="text-yellow-600 hover:text-yellow-500" title={t('admin.actions')}>✏️</button>
             </div>
           </div>
         ))}
@@ -372,18 +374,18 @@ const CustomersList: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-4 sm:px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">10</span> of{' '}
-            <span className="font-medium">{filteredCustomers.length}</span> results
+            {t('brands.showing')} <span className="font-medium">1</span> {t('brands.to')} <span className="font-medium">10</span> {t('brands.of')}{' '}
+            <span className="font-medium">{filteredCustomers.length}</span> {t('brands.results')}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button className="px-3 py-2 border border-gray-300 text-gray-500 rounded-md hover:bg-gray-50">
-              Previous
+              {t('brands.previous')}
             </button>
             <button className="px-3 py-2 bg-yellow-500 text-white rounded-md">1</button>
             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">2</button>
             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">3</button>
             <button className="px-3 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50">
-              Next
+              {t('brands.next')}
             </button>
           </div>
         </div>

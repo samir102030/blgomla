@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useVendorStore } from '../../stores/vendor.store';
 // import type { VendorStore } from '../../types/vendor.type';
 
 const VendorStoreManagement: React.FC = () => {
+  const { t } = useTranslation();
   const {
     vendorStore,
     loading,
@@ -55,14 +57,14 @@ const VendorStoreManagement: React.FC = () => {
     try {
       if (vendorStore) {
         await updateStore(vendorStore._id, storeForm);
-        toast.success('Store updated successfully!');
+        toast.success(t('vendor.storeUpdatedSuccess'));
       } else {
         await createStore(storeForm);
-        toast.success('Store created successfully!');
+        toast.success(t('vendor.storeCreatedSuccess'));
       }
       setIsEditing(false);
     } catch (error) {
-      toast.error('Failed to save store');
+      toast.error(t('vendor.storeFailedSave'));
     }
   };
 
@@ -147,13 +149,13 @@ const VendorStoreManagement: React.FC = () => {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">🏪</div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Create a new store</h2>
-        <p className="text-gray-600 mb-6">You don't have any store on this project. Create a new store from here</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('vendor.createNewStoreTitle')}</h2>
+        <p className="text-gray-600 mb-6">{t('vendor.createNewStoreDesc')}</p>
         <button
           onClick={() => setIsEditing(true)}
           className="bg-yellow-500 text-white px-6 py-3 rounded-md hover:bg-yellow-600"
         >
-          Create Store
+          {t('vendor.createStore')}
         </button>
       </div>
     );
@@ -164,15 +166,15 @@ const VendorStoreManagement: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Store Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Customize your store profile and settings</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{t('vendor.storeManagement')}</h1>
+          <p className="text-sm sm:text-base text-gray-600">{t('vendor.customizeProfile')}</p>
         </div>
         {vendorStore && !isEditing && (
           <button
             onClick={() => setIsEditing(true)}
             className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 self-start sm:self-auto"
           >
-            Edit Store
+            {t('vendor.editStore')}
           </button>
         )}
       </div>
@@ -181,11 +183,11 @@ const VendorStoreManagement: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Basic Information</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t('vendor.basicInformation')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Store Name *
+                  {t('vendor.storeName')} *
                 </label>
                 <input
                   type="text"
@@ -198,7 +200,7 @@ const VendorStoreManagement: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
+                  {t('vendor.storeEmail')}
                 </label>
                 <input
                   type="email"
@@ -210,7 +212,7 @@ const VendorStoreManagement: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone
+                  {t('vendor.storePhone')}
                 </label>
                 <input
                   type="tel"
@@ -222,7 +224,7 @@ const VendorStoreManagement: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
+                  {t('vendor.location')}
                 </label>
                 <input
                   type="text"
@@ -235,7 +237,7 @@ const VendorStoreManagement: React.FC = () => {
 
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store Description
+                {t('vendor.description')}
               </label>
               <textarea
                 value={storeForm.description}
@@ -247,7 +249,7 @@ const VendorStoreManagement: React.FC = () => {
 
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address
+                {t('vendor.address')}
               </label>
               <textarea
                 value={storeForm.address}
@@ -260,31 +262,31 @@ const VendorStoreManagement: React.FC = () => {
 
           {/* About & Story */}
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">About Your Store</h2>
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t('vendor.aboutYourStore')}</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  About
+                  {t('vendor.about')}
                 </label>
                 <textarea
                   value={storeForm.about}
                   onChange={(e) => setStoreForm(prev => ({ ...prev, about: e.target.value }))}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                  placeholder="Tell customers about your store..."
+                  placeholder={t('vendor.aboutPlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Story
+                  {t('vendor.yourStory')}
                 </label>
                 <textarea
                   value={storeForm.story}
                   onChange={(e) => setStoreForm(prev => ({ ...prev, story: e.target.value }))}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                  placeholder="Share your store's story..."
+                  placeholder={t('vendor.storyPlaceholder')}
                 />
               </div>
             </div>
@@ -293,13 +295,13 @@ const VendorStoreManagement: React.FC = () => {
           {/* Social Links */}
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-3 sm:mb-4">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900">Social Links</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900">{t('vendor.socialLinks')}</h2>
               <button
                 type="button"
                 onClick={addSocialLink}
                 className="text-yellow-600 hover:text-yellow-700 text-sm font-medium"
               >
-                + Add Link
+                + {t('vendor.addLink')}
               </button>
             </div>
             <div className="space-y-3">
@@ -310,7 +312,7 @@ const VendorStoreManagement: React.FC = () => {
                     onChange={(e) => updateSocialLink(index, 'platform', e.target.value)}
                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
                   >
-                    <option value="">Select Platform</option>
+                    <option value="">{t('vendor.selectPlatform')}</option>
                     <option value="facebook">Facebook</option>
                     <option value="instagram">Instagram</option>
                     <option value="twitter">Twitter</option>
@@ -360,14 +362,14 @@ const VendorStoreManagement: React.FC = () => {
               }}
               className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300"
             >
-              Cancel
+              {t('vendor.cancel')}
             </button>
             <button
               type="submit"
               disabled={loading}
               className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50"
             >
-              {loading ? 'Saving...' : (vendorStore ? 'Update Store' : 'Create Store')}
+              {loading ? t('vendor.saving') : (vendorStore ? t('vendor.updateStore') : t('vendor.createStore'))}
             </button>
           </div>
         </form>
@@ -392,33 +394,33 @@ const VendorStoreManagement: React.FC = () => {
                     ? 'bg-green-100 text-green-800'
                     : 'bg-red-100 text-red-800'
                   }`}>
-                  {vendorStore.isActive ? 'Active' : 'Inactive'}
+                  {vendorStore.isActive ? t('vendor.active') : t('vendor.inactive')}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Contact Information</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{t('vendor.contactInformation')}</h3>
                   <div className="space-y-1 text-sm text-gray-600">
-                    <p><strong>Email:</strong> {vendorStore.email || 'Not set'}</p>
-                    <p><strong>Phone:</strong> {vendorStore.phone || 'Not set'}</p>
-                    <p><strong>Address:</strong> {vendorStore.address || 'Not set'}</p>
+                    <p><strong>{t('vendor.email')}:</strong> {vendorStore.email || t('vendor.notSet')}</p>
+                    <p><strong>{t('vendor.phone')}:</strong> {vendorStore.phone || t('vendor.notSet')}</p>
+                    <p><strong>{t('vendor.address')}:</strong> {vendorStore.address || t('vendor.notSet')}</p>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Store Metrics</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{t('vendor.storeMetrics')}</h3>
                   <div className="space-y-1 text-sm text-gray-600">
-                    <p><strong>Subscribers:</strong> {vendorStore.subscribers?.length || 0}</p>
-                    <p><strong>Social Links:</strong> {vendorStore.socialLinks?.length || 0}</p>
-                    <p><strong>Created:</strong> {new Date(vendorStore.createdAt).toLocaleDateString()}</p>
+                    <p><strong>{t('vendor.subscribers')}:</strong> {vendorStore.subscribers?.length || 0}</p>
+                    <p><strong>{t('vendor.socialLinks')}:</strong> {vendorStore.socialLinks?.length || 0}</p>
+                    <p><strong>{t('vendor.created')}:</strong> {new Date(vendorStore.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
 
               {vendorStore.description && (
                 <div className="mt-6">
-                  <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2">{t('vendor.description')}</h3>
                   <p className="text-gray-700">{vendorStore.description}</p>
                 </div>
               )}
@@ -427,16 +429,16 @@ const VendorStoreManagement: React.FC = () => {
             {/* About & Story */}
             {(vendorStore.about || vendorStore.story) && (
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">About Your Store</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t('vendor.aboutYourStore')}</h2>
                 {vendorStore.about && (
                   <div className="mb-4">
-                    <h3 className="font-medium text-gray-900 mb-2">About</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">{t('vendor.about')}</h3>
                     <p className="text-gray-700">{vendorStore.about}</p>
                   </div>
                 )}
                 {vendorStore.story && (
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-2">Our Story</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">{t('vendor.ourStory')}</h3>
                     <p className="text-gray-700">{vendorStore.story}</p>
                   </div>
                 )}
@@ -446,7 +448,7 @@ const VendorStoreManagement: React.FC = () => {
             {/* Social Links */}
             {vendorStore.socialLinks && vendorStore.socialLinks.length > 0 && (
               <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Social Links</h2>
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">{t('vendor.socialLinks')}</h2>
                 <div className="flex flex-wrap gap-3">
                   {vendorStore.socialLinks.map((link, index) => (
                     <a

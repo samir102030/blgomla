@@ -39,10 +39,10 @@ const SalesReports: React.FC = () => {
             onChange={(e) => setDateRange(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           >
-            <option value="7days">Last 7 days</option>
-            <option value="30days">Last 30 days</option>
-            <option value="90days">Last 90 days</option>
-            <option value="1year">Last year</option>
+            <option value="7days">{t('sales.last7Days')}</option>
+            <option value="30days">{t('sales.last30Days')}</option>
+            <option value="90days">{t('sales.last90Days')}</option>
+            <option value="1year">{t('sales.lastYear')}</option>
           </select>
           <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors">
             📊 {t('sales.exportReport')}
@@ -59,7 +59,7 @@ const SalesReports: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{salesData.totalRevenue}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +12.5%</span>
-                <span className="text-sm text-gray-500 ml-1">vs last period</span>
+                <span className="text-sm text-gray-500 ml-1">{t('sales.vsLastPeriod')}</span>
               </div>
             </div>
             <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-white text-xl">
@@ -75,7 +75,7 @@ const SalesReports: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{salesData.totalOrders.toLocaleString()}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +8.3%</span>
-                <span className="text-sm text-gray-500 ml-1">vs last period</span>
+                <span className="text-sm text-gray-500 ml-1">{t('sales.vsLastPeriod')}</span>
               </div>
             </div>
             <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white text-xl">
@@ -91,7 +91,7 @@ const SalesReports: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{salesData.averageOrderValue}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +3.8%</span>
-                <span className="text-sm text-gray-500 ml-1">vs last period</span>
+                <span className="text-sm text-gray-500 ml-1">{t('sales.vsLastPeriod')}</span>
               </div>
             </div>
             <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-white text-xl">
@@ -107,7 +107,7 @@ const SalesReports: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{salesData.conversionRate}</p>
               <div className="flex items-center mt-2">
                 <span className="text-sm font-medium text-green-600">↗ +0.4%</span>
-                <span className="text-sm text-gray-500 ml-1">vs last period</span>
+                <span className="text-sm text-gray-500 ml-1">{t('sales.vsLastPeriod')}</span>
               </div>
             </div>
             <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-white text-xl">
@@ -122,18 +122,18 @@ const SalesReports: React.FC = () => {
         {/* Revenue Chart */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Revenue Trend</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('sales.revenueTrend')}</h3>
             <select className="text-sm border border-gray-300 rounded-md px-3 py-1">
-              <option>Daily</option>
-              <option>Weekly</option>
-              <option>Monthly</option>
+              <option>{t('sales.daily')}</option>
+              <option>{t('sales.weekly')}</option>
+              <option>{t('sales.monthly')}</option>
             </select>
           </div>
           <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-2">📊</div>
-              <p className="text-gray-500">Revenue Chart</p>
-              <p className="text-sm text-gray-400">Line chart showing revenue over time</p>
+              <p className="text-gray-500">{t('sales.revenueChart')}</p>
+              <p className="text-sm text-gray-400">{t('sales.revenueChartDesc')}</p>
             </div>
           </div>
         </div>
@@ -141,18 +141,18 @@ const SalesReports: React.FC = () => {
         {/* Orders Chart */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Order Volume</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('sales.orderVolume')}</h3>
             <select className="text-sm border border-gray-300 rounded-md px-3 py-1">
-              <option>Daily</option>
-              <option>Weekly</option>
-              <option>Monthly</option>
+              <option>{t('sales.daily')}</option>
+              <option>{t('sales.weekly')}</option>
+              <option>{t('sales.monthly')}</option>
             </select>
           </div>
           <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-2">📈</div>
-              <p className="text-gray-500">Orders Chart</p>
-              <p className="text-sm text-gray-400">Bar chart showing order volume</p>
+              <p className="text-gray-500">{t('sales.ordersChart')}</p>
+              <p className="text-sm text-gray-400">{t('sales.ordersChartDesc')}</p>
             </div>
           </div>
         </div>
@@ -175,7 +175,7 @@ const SalesReports: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-500">{product.units} units sold</p>
+                    <p className="text-sm text-gray-500">{product.units} {t('sales.unitsSold')}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -202,12 +202,12 @@ const SalesReports: React.FC = () => {
                   </div>
                   <div>
                     <p className="font-medium text-gray-900">{vendor.name}</p>
-                    <p className="text-sm text-gray-500">{vendor.orders} orders</p>
+                    <p className="text-sm text-gray-500">{vendor.orders} {t('admin.orders')}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-900">{vendor.revenue}</p>
-                  <p className="text-sm text-gray-600">Commission: {vendor.commission}</p>
+                  <p className="text-sm text-gray-600">{t('sales.commission')}: {vendor.commission}</p>
                 </div>
               </div>
             ))}
@@ -219,20 +219,20 @@ const SalesReports: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h3 className="text-lg font-semibold text-gray-900">Detailed Sales Report</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('sales.detailedReport')}</h3>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <select
                 value={reportType}
                 onChange={(e) => setReportType(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-md text-sm"
               >
-                <option value="overview">Overview</option>
-                <option value="products">By Products</option>
-                <option value="vendors">By Vendors</option>
-                <option value="categories">By Categories</option>
+                <option value="overview">{t('sales.overview')}</option>
+                <option value="products">{t('sales.byProducts')}</option>
+                <option value="vendors">{t('sales.byVendors')}</option>
+                <option value="categories">{t('sales.byCategories')}</option>
               </select>
               <button className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm">
-                📥 Download CSV
+                📥 {t('sales.downloadCsv')}
               </button>
             </div>
           </div>
@@ -240,8 +240,8 @@ const SalesReports: React.FC = () => {
         <div className="p-6">
           <div className="text-center py-12">
             <div className="text-4xl mb-4">📋</div>
-            <p className="text-gray-500 mb-2">Detailed Report Table</p>
-            <p className="text-sm text-gray-400">Interactive table with sorting, filtering, and export capabilities</p>
+            <p className="text-gray-500 mb-2">{t('sales.detailedReportTable')}</p>
+            <p className="text-sm text-gray-400">{t('sales.detailedReportTableDesc')}</p>
           </div>
         </div>
       </div>

@@ -63,7 +63,7 @@ const QuotationsPage: React.FC = () => {
       setQuotations(data.data || []);
       setTotalPages(data.pages || 1);
     } catch {
-      toast.error("Failed to load quotations");
+      toast.error(t("quotations.failedToLoad"));
     } finally {
       setLoading(false);
     }
@@ -105,26 +105,26 @@ const QuotationsPage: React.FC = () => {
       if (editForm.validUntil) payload.validUntil = editForm.validUntil;
 
       await axiosInstance.put(`/quotations/${selectedQuotation._id}`, payload);
-      toast.success("Quotation updated");
+      toast.success(t("quotations.updated"));
       setSelectedQuotation(null);
       fetchQuotations();
       fetchStats();
     } catch {
-      toast.error("Failed to update quotation");
+      toast.error(t("quotations.failedToUpdate"));
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this quotation?")) return;
+    if (!confirm(t("quotations.confirmDelete"))) return;
     try {
       await axiosInstance.delete(`/quotations/${id}`);
-      toast.success("Quotation deleted");
+      toast.success(t("quotations.deleted"));
       fetchQuotations();
       fetchStats();
     } catch {
-      toast.error("Failed to delete");
+      toast.error(t("quotations.failedToDelete"));
     }
   };
 
@@ -189,13 +189,13 @@ const QuotationsPage: React.FC = () => {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                    Loading...
+                    {t('Loading...')}
                   </td>
                 </tr>
               ) : quotations.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                    No quotations found
+                    {t('quotations.noQuotations')}
                   </td>
                 </tr>
               ) : (
@@ -207,7 +207,7 @@ const QuotationsPage: React.FC = () => {
                       <p className="text-xs text-gray-400">{q.customer.phone}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-sm text-gray-700">{q.bundleCollection?.name || "Custom"}</p>
+                      <p className="text-sm text-gray-700">{q.bundleCollection?.name || t('quotations.custom')}</p>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">{q.collectionQuantity}</td>
                     <td className="px-4 py-3">
@@ -216,7 +216,7 @@ const QuotationsPage: React.FC = () => {
                       </p>
                       {q.finalTotal && (
                         <p className="text-xs text-green-600 font-medium">
-                          Final: EGP {q.finalTotal.toLocaleString()}
+                          {t('quotations.final')}: EGP {q.finalTotal.toLocaleString()}
                         </p>
                       )}
                     </td>
@@ -254,21 +254,21 @@ const QuotationsPage: React.FC = () => {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
-            <p className="text-xs text-gray-500">Page {page} of {totalPages}</p>
+            <p className="text-xs text-gray-500">{t('Page')} {page} {t('brands.of')} {totalPages}</p>
             <div className="flex gap-2">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
                 className="px-3 py-1 text-xs border rounded hover:bg-gray-50 disabled:opacity-40"
               >
-                Previous
+                {t('Previous')}
               </button>
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
                 className="px-3 py-1 text-xs border rounded hover:bg-gray-50 disabled:opacity-40"
               >
-                Next
+                {t('Next')}
               </button>
             </div>
           </div>
@@ -283,7 +283,7 @@ const QuotationsPage: React.FC = () => {
             <div className="px-4 sm:px-6 py-5 border-b bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">
-                  Quotation #{selectedQuotation._id.slice(-8)}
+                  {t('quotations.quotation')} #{selectedQuotation._id.slice(-8)}
                 </h2>
                 <p className="text-xs text-gray-500">
                   {new Date(selectedQuotation.createdAt).toLocaleString()}
@@ -301,20 +301,20 @@ const QuotationsPage: React.FC = () => {
               {/* Customer Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Customer</p>
+                  <p className="text-xs text-gray-500 font-medium">{t('admin.customer')}</p>
                   <p className="text-sm font-semibold text-gray-900">{selectedQuotation.customer.name}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Email</p>
+                  <p className="text-xs text-gray-500 font-medium">{t('admin.email')}</p>
                   <p className="text-sm text-gray-700">{selectedQuotation.customer.email}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Phone</p>
+                  <p className="text-xs text-gray-500 font-medium">{t('Phone')}</p>
                   <p className="text-sm text-gray-700">{selectedQuotation.customer.phone}</p>
                 </div>
                 {selectedQuotation.customer.company && (
                   <div>
-                    <p className="text-xs text-gray-500 font-medium">Company</p>
+                    <p className="text-xs text-gray-500 font-medium">{t('Company')}</p>
                     <p className="text-sm text-gray-700">{selectedQuotation.customer.company}</p>
                   </div>
                 )}
@@ -322,7 +322,7 @@ const QuotationsPage: React.FC = () => {
 
               {/* Items */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Items ({selectedQuotation.items.length})</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">{t('quotations.items')} ({selectedQuotation.items.length})</h3>
                 <div className="space-y-2">
                   {selectedQuotation.items.map((item, idx) => (
                     <div key={idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -338,10 +338,10 @@ const QuotationsPage: React.FC = () => {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {item.product?.name || "Product"}
+                          {item.product?.name || t('Product')}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Qty: {item.quantity} × EGP {item.unitPrice?.toLocaleString() || item.product?.price?.toLocaleString() || "—"}
+                          {t('Qty')}: {item.quantity} × EGP {item.unitPrice?.toLocaleString() || item.product?.price?.toLocaleString() || "—"}
                         </p>
                       </div>
                     </div>
@@ -352,7 +352,7 @@ const QuotationsPage: React.FC = () => {
               {/* Customer Notes */}
               {selectedQuotation.customerNotes && (
                 <div className="bg-amber-50 p-3 rounded-xl">
-                  <p className="text-xs font-medium text-amber-800 mb-1">Customer Notes:</p>
+                  <p className="text-xs font-medium text-amber-800 mb-1">{t('quotations.customerNotes')}:</p>
                   <p className="text-sm text-amber-700">{selectedQuotation.customerNotes}</p>
                 </div>
               )}
@@ -360,49 +360,49 @@ const QuotationsPage: React.FC = () => {
               {/* Pricing */}
               <div className="flex gap-4 bg-[var(--brand-primary)]/10 p-4 rounded-xl">
                 <div className="flex-1">
-                  <p className="text-xs text-gray-500">Estimated Total</p>
+                  <p className="text-xs text-gray-500">{t('quotations.estimatedTotal')}</p>
                   <p className="text-lg font-bold text-gray-900">
                     EGP {selectedQuotation.estimatedTotal?.toLocaleString() || "—"}
                   </p>
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs text-gray-500">Quantity</p>
+                  <p className="text-xs text-gray-500">{t('Quantity')}</p>
                   <p className="text-lg font-bold text-gray-900">{selectedQuotation.collectionQuantity}×</p>
                 </div>
               </div>
 
               {/* Admin Response Form */}
               <div className="border-t pt-4 space-y-3">
-                <h3 className="text-sm font-bold text-gray-700">Admin Response</h3>
+                <h3 className="text-sm font-bold text-gray-700">{t('quotations.adminResponse')}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">{t('admin.status')}</label>
                     <select
                       value={editForm.status}
                       onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
                     >
-                      <option value="pending">Pending</option>
-                      <option value="reviewed">Reviewed</option>
-                      <option value="quoted">Quoted</option>
-                      <option value="accepted">Accepted</option>
-                      <option value="rejected">Rejected</option>
-                      <option value="expired">Expired</option>
+                      <option value="pending">{t('admin.pending')}</option>
+                      <option value="reviewed">{t('quotations.reviewed')}</option>
+                      <option value="quoted">{t('quotations.quoted')}</option>
+                      <option value="accepted">{t('quotations.accepted')}</option>
+                      <option value="rejected">{t('admin.rejected')}</option>
+                      <option value="expired">{t('quotations.expired')}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Final Total (EGP)</label>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">{t('quotations.finalTotalLabel')}</label>
                     <input
                       type="number"
                       value={editForm.finalTotal}
                       onChange={(e) => setEditForm({ ...editForm, finalTotal: e.target.value })}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)]"
-                      placeholder="Set final price"
+                      placeholder={t('quotations.setFinalPrice')}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Valid Until</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('quotations.validUntil')}</label>
                   <input
                     type="date"
                     value={editForm.validUntil}
@@ -411,13 +411,13 @@ const QuotationsPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Admin Notes</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">{t('quotations.adminNotes')}</label>
                   <textarea
                     value={editForm.adminNotes}
                     onChange={(e) => setEditForm({ ...editForm, adminNotes: e.target.value })}
                     rows={3}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[var(--brand-primary)] resize-none"
-                    placeholder="Internal notes or response to customer..."
+                    placeholder={t('quotations.adminNotesPlaceholder')}
                   />
                 </div>
               </div>
@@ -428,14 +428,14 @@ const QuotationsPage: React.FC = () => {
                   onClick={() => setSelectedQuotation(null)}
                   className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
                 <button
                   onClick={handleUpdate}
                   disabled={updating}
                   className="flex-1 px-4 py-2.5 bg-[var(--brand-accent)] text-white rounded-xl text-sm font-semibold hover:bg-[var(--brand-accent)] transition-colors disabled:opacity-60"
                 >
-                  {updating ? "Saving..." : "Save Changes"}
+                  {updating ? t('Saving…') : t('Save changes')}
                 </button>
               </div>
             </div>

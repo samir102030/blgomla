@@ -3,6 +3,7 @@ import { useCollectionStore } from "../../stores/collection.store";
 import { useUserStore } from "../../stores/user.store";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 import type { CollectionItemInput } from "../../types/collection.type";
 
 interface VendorProduct {
@@ -16,6 +17,7 @@ interface VendorProduct {
 }
 
 const VendorCollectionsPage: React.FC = () => {
+  const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
   const {
     collections,
@@ -106,23 +108,23 @@ const VendorCollectionsPage: React.FC = () => {
 
   const handleCreateCollection = async () => {
     if (!formState.name.trim()) {
-      toast.error("Collection name is required");
+      toast.error(t("vendorCollections.nameRequired"));
       return;
     }
 
     if (selectedItems.length < 2) {
-      toast.error("Select at least two products");
+      toast.error(t("vendorCollections.selectAtLeastTwo"));
       return;
     }
 
     const bundlePrice = Number(formState.bundlePrice);
     if (!bundlePrice || bundlePrice <= 0) {
-      toast.error("Enter a valid bundle price");
+      toast.error(t("vendorCollections.enterValidBundlePrice"));
       return;
     }
 
     if (bundlePrice > originalTotal) {
-      toast.error("Bundle price must be less than the original total");
+      toast.error(t("vendorCollections.bundlePriceLessThanTotal"));
       return;
     }
 
@@ -134,7 +136,7 @@ const VendorCollectionsPage: React.FC = () => {
     });
 
     if (collection) {
-      toast.success("Collection created");
+      toast.success(t("vendorCollections.created"));
       setFormState({ name: "", description: "", bundlePrice: "" });
       setItems({});
       setShowCreateModal(false);
@@ -178,7 +180,7 @@ const VendorCollectionsPage: React.FC = () => {
   const handleEditCollection = async () => {
     if (!selectedCollection) return;
     if (!editFormState.name.trim()) {
-      toast.error("Collection name is required");
+      toast.error(t("vendorCollections.nameRequired"));
       return;
     }
 
@@ -189,13 +191,13 @@ const VendorCollectionsPage: React.FC = () => {
       .map(([product, quantity]) => ({ product, quantity }));
 
     if (selectedItemsForUpdate.length < 2) {
-      toast.error("Select at least two products");
+      toast.error(t("vendorCollections.selectAtLeastTwo"));
       return;
     }
 
     const bundlePrice = Number(editFormState.bundlePrice);
     if (!bundlePrice || bundlePrice <= 0) {
-      toast.error("Enter a valid bundle price");
+      toast.error(t("vendorCollections.enterValidBundlePrice"));
       return;
     }
 
@@ -209,7 +211,7 @@ const VendorCollectionsPage: React.FC = () => {
     }, 0);
 
     if (bundlePrice > originalTotal) {
-      toast.error("Bundle price must be less than the original total");
+      toast.error(t("vendorCollections.bundlePriceLessThanTotal"));
       return;
     }
 
@@ -221,20 +223,20 @@ const VendorCollectionsPage: React.FC = () => {
     });
 
     if (updated) {
-      toast.success("Collection updated");
+      toast.success(t("vendorCollections.updated"));
       setShowEditModal(false);
       setSelectedCollection(null);
     } else {
-      toast.error("Failed to update collection");
+      toast.error(t("vendorCollections.updateFailed"));
     }
   };
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
     const updated = await updateCollection(id, { isActive: !isActive });
     if (updated) {
-      toast.success("Collection updated");
+      toast.success(t("vendorCollections.updated"));
     } else {
-      toast.error("Failed to update collection");
+      toast.error(t("vendorCollections.updateFailed"));
     }
   };
 
@@ -242,11 +244,11 @@ const VendorCollectionsPage: React.FC = () => {
     if (!selectedCollection) return;
     const success = await deleteCollection(selectedCollection._id);
     if (success) {
-      toast.success("Collection deleted");
+      toast.success(t("vendorCollections.deleted"));
       setShowDeleteModal(false);
       setSelectedCollection(null);
     } else {
-      toast.error("Failed to delete collection");
+      toast.error(t("vendorCollections.deleteFailed"));
     }
   };
 
@@ -254,10 +256,10 @@ const VendorCollectionsPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">
-          Bulk Buy Collections
+          {t("vendorCollections.title")}
         </h1>
         <p className="text-sm sm:text-base text-[#9E9E9E]">
-          Create bundle deals that customers can purchase together at a discount.
+          {t("vendorCollections.subtitle")}
         </p>
       </div>
 
@@ -266,13 +268,13 @@ const VendorCollectionsPage: React.FC = () => {
           onClick={() => setShowCreateModal(true)}
           className="bg-[#002B5B] text-white px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg hover:bg-[#001a3d] w-full sm:w-auto"
         >
-          Create Collection
+          {t("vendorCollections.createCollection")}
         </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
         <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
-          Your Collections
+          {t("vendorCollections.yourCollections")}
         </h3>
         {loading && collections.length === 0 ? (
           <div className="flex items-center justify-center py-8">
@@ -282,7 +284,7 @@ const VendorCollectionsPage: React.FC = () => {
           <div className="text-sm text-red-600">{error}</div>
         ) : collections.length === 0 ? (
           <div className="text-sm text-gray-600">
-            No collections created yet.
+            {t("vendorCollections.noCollections")}
           </div>
         ) : (
           <div className="space-y-4">
@@ -305,7 +307,7 @@ const VendorCollectionsPage: React.FC = () => {
                         .join(" + ")}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Bundle price: EGP {collection.bundlePrice.toFixed(2)}
+                      {t("vendorCollections.bundlePrice")}: EGP {collection.bundlePrice.toFixed(2)}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -313,13 +315,13 @@ const VendorCollectionsPage: React.FC = () => {
                       onClick={() => openViewModal(collection)}
                       className="text-xs px-3 py-1 rounded-full bg-blue-100 text-blue-700"
                     >
-                      View
+                      {t("vendorCollections.view")}
                     </button>
                     <button
                       onClick={() => openEditModal(collection)}
                       className="text-xs px-3 py-1 rounded-full bg-yellow-100 text-yellow-700"
                     >
-                      Edit
+                      {t("vendorCollections.edit")}
                     </button>
                     <button
                       onClick={() =>
@@ -331,13 +333,13 @@ const VendorCollectionsPage: React.FC = () => {
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
-                      {collection.isActive ? "Active" : "Inactive"}
+                      {collection.isActive ? t("vendorCollections.active") : t("vendorCollections.inactive")}
                     </button>
                     <button
                       onClick={() => openDeleteModal(collection)}
                       className="text-xs px-3 py-1 rounded-full bg-red-100 text-red-700"
                     >
-                      Delete
+                      {t("vendorCollections.delete")}
                     </button>
                   </div>
                 </div>
@@ -372,11 +374,10 @@ const VendorCollectionsPage: React.FC = () => {
 
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Create Collection
+                {t("vendorCollections.createCollection")}
               </h2>
               <p className="text-sm text-gray-600">
-                Select products from your store and set a discounted bundle
-                price.
+                {t("vendorCollections.createSubtitle")}
               </p>
             </div>
 
@@ -384,7 +385,7 @@ const VendorCollectionsPage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Collection Name
+                    {t("vendorCollections.collectionName")}
                   </label>
                   <input
                     type="text"
@@ -393,12 +394,12 @@ const VendorCollectionsPage: React.FC = () => {
                       setFormState((prev) => ({ ...prev, name: e.target.value }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Example: Camera Starter Kit"
+                    placeholder={t("vendorCollections.collectionNamePlaceholder")}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    {t("vendorCollections.description")}
                   </label>
                   <textarea
                     value={formState.description}
@@ -410,12 +411,12 @@ const VendorCollectionsPage: React.FC = () => {
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     rows={4}
-                    placeholder="Describe what's included in this bundle"
+                    placeholder={t("vendorCollections.descriptionPlaceholder")}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bundle Price (EGP)
+                    {t("vendorCollections.bundlePriceEGP")}
                   </label>
                   <input
                     type="number"
@@ -428,18 +429,18 @@ const VendorCollectionsPage: React.FC = () => {
                       }))
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Enter discounted price"
+                    placeholder={t("vendorCollections.bundlePricePlaceholder")}
                   />
                 </div>
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="flex justify-between text-sm">
-                    <span>Original total</span>
+                    <span>{t("vendorCollections.originalTotal")}</span>
                     <span className="font-medium">
                       EGP {originalTotal.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm text-green-600 mt-2">
-                    <span>Savings</span>
+                    <span>{t("vendorCollections.savings")}</span>
                     <span className="font-medium">
                       EGP{" "}
                       {Math.max(
@@ -453,7 +454,7 @@ const VendorCollectionsPage: React.FC = () => {
 
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  Select Products
+                  {t("vendorCollections.selectProducts")}
                 </h3>
                 <div className="grid grid-cols-1 gap-4 max-h-[420px] overflow-y-auto pr-2">
                   {products.map((product) => {
@@ -476,7 +477,7 @@ const VendorCollectionsPage: React.FC = () => {
                             {product.name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            EGP {product.price.toFixed(2)} · Stock{" "}
+                            EGP {product.price.toFixed(2)} · {t("vendorCollections.stock")}{" "}
                             {product.stock}
                           </p>
                         </div>
@@ -492,7 +493,7 @@ const VendorCollectionsPage: React.FC = () => {
                             )
                           }
                           className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
-                          placeholder="Qty"
+                          placeholder={t("vendorCollections.qty")}
                         />
                       </div>
                     );
@@ -506,13 +507,13 @@ const VendorCollectionsPage: React.FC = () => {
                 onClick={() => setShowCreateModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
-                Cancel
+                {t("vendorCollections.cancel")}
               </button>
               <button
                 onClick={handleCreateCollection}
                 className="bg-[#002B5B] text-white px-6 py-2 rounded-lg hover:bg-[#001a3d]"
               >
-                Create Collection
+                {t("vendorCollections.createCollection")}
               </button>
             </div>
           </div>
@@ -546,7 +547,7 @@ const VendorCollectionsPage: React.FC = () => {
                 {selectedCollection.name}
               </h2>
               <p className="text-sm text-gray-600">
-                {selectedCollection.description || "No description"}
+                {selectedCollection.description || t("vendorCollections.noDescription")}
               </p>
             </div>
             <div className="space-y-3">
@@ -571,7 +572,7 @@ const VendorCollectionsPage: React.FC = () => {
                           {item.product?.name || "Product"}
                         </p>
                         <p className="text-xs text-gray-500">
-                          Qty {item.quantity}
+                          {t("vendorCollections.qty")} {item.quantity}
                         </p>
                       </div>
                     </div>
@@ -582,8 +583,8 @@ const VendorCollectionsPage: React.FC = () => {
                       className="text-xs text-[#002B5B] hover:text-[#001a3d] flex items-center gap-1"
                     >
                       {expandedProductIds.includes(item.product?._id)
-                        ? "Hide details"
-                        : "View details"}
+                        ? t("vendorCollections.hideDetails")
+                        : t("vendorCollections.viewDetails")}
                         <span className="text-base">
                           {expandedProductIds.includes(item.product?._id)
                             ? "-"
@@ -595,27 +596,27 @@ const VendorCollectionsPage: React.FC = () => {
                     <div className="mt-3 grid grid-cols-2 gap-3 text-xs text-gray-600">
                       <div>
                         <span className="font-medium text-gray-700">
-                          Price:
+                          {t("vendorCollections.price")}:
                         </span>{" "}
                         EGP {item.product?.price?.toFixed(2)}
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">
-                          Stock:
+                          {t("vendorCollections.stock")}:
                         </span>{" "}
                         {item.product?.stock ?? "-"}
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">
-                          Sale:
+                          {t("vendorCollections.sale")}:
                         </span>{" "}
                         {item.product?.saleActive
                           ? `${item.product?.salePercentage || 0}%`
-                          : "No"}
+                          : t("vendorCollections.no")}
                       </div>
                       <div>
                         <span className="font-medium text-gray-700">
-                          SKU:
+                          {t("vendorCollections.sku")}:
                         </span>{" "}
                         {item.product?.sku || "-"}
                       </div>
@@ -626,7 +627,7 @@ const VendorCollectionsPage: React.FC = () => {
             </div>
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t pt-4">
               <div>
-                <p className="text-xs text-gray-500">Bundle price</p>
+                <p className="text-xs text-gray-500">{t("vendorCollections.bundlePrice")}</p>
                 <p className="text-lg font-semibold text-[#002B5B]">
                   EGP {selectedCollection.bundlePrice.toFixed(2)}
                 </p>
@@ -635,7 +636,7 @@ const VendorCollectionsPage: React.FC = () => {
                 onClick={() => setShowViewModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 self-end sm:self-auto"
               >
-                Close
+                {t("vendorCollections.close")}
               </button>
             </div>
           </div>
@@ -667,10 +668,10 @@ const VendorCollectionsPage: React.FC = () => {
 
             <div className="mb-6">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Edit Collection
+                {t("vendorCollections.editCollection")}
               </h2>
               <p className="text-sm text-gray-600">
-                Update bundle details and products.
+                {t("vendorCollections.editSubtitle")}
               </p>
             </div>
 
@@ -678,7 +679,7 @@ const VendorCollectionsPage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Collection Name
+                    {t("vendorCollections.collectionName")}
                   </label>
                   <input
                     type="text"
@@ -694,7 +695,7 @@ const VendorCollectionsPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
+                    {t("vendorCollections.description")}
                   </label>
                   <textarea
                     value={editFormState.description}
@@ -710,7 +711,7 @@ const VendorCollectionsPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Bundle Price (EGP)
+                    {t("vendorCollections.bundlePriceEGP")}
                   </label>
                   <input
                     type="number"
@@ -729,7 +730,7 @@ const VendorCollectionsPage: React.FC = () => {
 
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                  Update Products
+                  {t("vendorCollections.updateProducts")}
                 </h3>
                 <div className="grid grid-cols-1 gap-4 max-h-[420px] overflow-y-auto pr-2">
                   {products.map((product) => {
@@ -757,7 +758,7 @@ const VendorCollectionsPage: React.FC = () => {
                             {product.name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            EGP {product.price.toFixed(2)} · Stock{" "}
+                            EGP {product.price.toFixed(2)} · {t("vendorCollections.stock")}{" "}
                             {product.stock}
                           </p>
                         </div>
@@ -776,7 +777,7 @@ const VendorCollectionsPage: React.FC = () => {
                             }))
                           }
                           className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
-                          placeholder="Qty"
+                          placeholder={t("vendorCollections.qty")}
                         />
                       </div>
                     );
@@ -790,13 +791,13 @@ const VendorCollectionsPage: React.FC = () => {
                 onClick={() => setShowEditModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
-                Cancel
+                {t("vendorCollections.cancel")}
               </button>
               <button
                 onClick={handleEditCollection}
                 className="bg-[#002B5B] text-white px-6 py-2 rounded-lg hover:bg-[#001a3d]"
               >
-                Save Changes
+                {t("vendor.saveChanges")}
               </button>
             </div>
           </div>
@@ -827,14 +828,10 @@ const VendorCollectionsPage: React.FC = () => {
             </button>
             <div className="mb-4">
               <h2 className="text-xl font-bold text-gray-900">
-                Delete Collection
+                {t("vendorCollections.deleteCollection")}
               </h2>
               <p className="text-sm text-gray-600">
-                Are you sure you want to delete{" "}
-                <span className="font-semibold">
-                  {selectedCollection.name}
-                </span>
-                ?
+                {t("vendorCollections.deleteConfirm", { name: selectedCollection.name })}
               </p>
             </div>
             <div className="flex justify-end gap-3">
@@ -842,13 +839,13 @@ const VendorCollectionsPage: React.FC = () => {
                 onClick={() => setShowDeleteModal(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
-                Cancel
+                {t("vendorCollections.cancel")}
               </button>
               <button
                 onClick={handleDelete}
                 className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
               >
-                Delete
+                {t("vendorCollections.delete")}
               </button>
             </div>
           </div>

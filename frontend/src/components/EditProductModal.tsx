@@ -424,12 +424,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {/* Flash-sale scheduler */}
             <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-3">
               <p className="text-sm font-semibold text-amber-800">
-                ⚡ {t("modal.editProduct.scheduleSaleTitle", "Schedule a flash sale")}
+                ⚡ {t("modal.editProduct.scheduleSaleTitle")}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600">
-                    {t("modal.editProduct.saleStartsAt", "Starts at")}
+                    {t("modal.editProduct.saleStartsAt")}
                   </label>
                   <input
                     type="datetime-local"
@@ -440,7 +440,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600">
-                    {t("modal.editProduct.saleEndsAt", "Ends at")}
+                    {t("modal.editProduct.saleEndsAt")}
                   </label>
                   <input
                     type="datetime-local"
@@ -457,12 +457,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   onClick={async () => {
                     const pct = Number(form.salePercentage);
                     if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
-                      toast.error(t("Enter a sale percentage between 1 and 100"));
+                      toast.error(t("modal.editProduct.salePercentageError"));
                       return;
                     }
                     if (form.saleStartsAt && form.saleEndsAt &&
                         new Date(form.saleEndsAt) <= new Date(form.saleStartsAt)) {
-                      toast.error(t("End time must be after start time"));
+                      toast.error(t("modal.editProduct.endTimeError"));
                       return;
                     }
                     setScheduling(true);
@@ -477,17 +477,17 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       setForm((f) => ({ ...f, saleActive: !!updated.saleActive }));
                       toast.success(
                         updated.saleActive
-                          ? t("Sale is now live")
-                          : t("Sale scheduled")
+                          ? t("modal.editProduct.saleIsLive")
+                          : t("modal.editProduct.saleScheduled")
                       );
                       onProductUpdated();
                     } else {
-                      toast.error(useProductStore.getState().error || t("Failed to schedule sale"));
+                      toast.error(useProductStore.getState().error || t("modal.editProduct.saleScheduleFailed"));
                     }
                   }}
                   className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 disabled:opacity-50"
                 >
-                  {scheduling ? t("Saving...") : t("modal.editProduct.scheduleSaleBtn", "Schedule sale")}
+                  {scheduling ? t("modal.editProduct.updating") : t("modal.editProduct.scheduleSaleBtn")}
                 </button>
                 {(form.saleActive || form.saleStartsAt || form.saleEndsAt) && (
                   <button
@@ -503,18 +503,18 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       setScheduling(false);
                       if (updated) {
                         setForm((f) => ({ ...f, saleActive: false, saleStartsAt: "", saleEndsAt: "" }));
-                        toast.success(t("Sale cleared"));
+                        toast.success(t("modal.editProduct.saleCleared"));
                         onProductUpdated();
                       }
                     }}
                     className="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
                   >
-                    {t("modal.editProduct.clearSaleBtn", "Clear sale")}
+                    {t("modal.editProduct.clearSaleBtn")}
                   </button>
                 )}
               </div>
               <p className="text-xs text-gray-500">
-                {t("modal.editProduct.scheduleSaleHint", "Leave times empty for an immediate, open-ended sale. The scheduler activates and expires sales automatically.")}
+                {t("modal.editProduct.scheduleSaleHint")}
               </p>
             </div>
 
@@ -594,7 +594,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Bulk Pricing Rules
+                  {t("modal.editProduct.bulkPricingRules")}
                 </label>
                 <button
                   type="button"
@@ -609,12 +609,12 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                   }
                   className="text-sm text-blue-600 hover:text-blue-800"
                 >
-                  Add Rule
+                  {t("modal.editProduct.addRule")}
                 </button>
               </div>
               {form.bulkPricing.length === 0 ? (
                 <p className="text-xs text-gray-500">
-                  Add rules like min quantity 6 {"=>"} unit price 95.
+                  {t("modal.editProduct.bulkPricingHint")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -626,7 +626,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       <input
                         type="number"
                         min="1"
-                        placeholder="Min Qty"
+                        placeholder={t("modal.editProduct.minQtyPlaceholder")}
                         value={rule.minQty}
                         onChange={(e) => {
                           const next = [...form.bulkPricing];
@@ -642,7 +642,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         type="number"
                         min="0"
                         step="0.01"
-                        placeholder="Unit Price"
+                        placeholder={t("modal.editProduct.unitPricePlaceholder")}
                         value={rule.unitPrice}
                         onChange={(e) => {
                           const next = [...form.bulkPricing];
@@ -666,7 +666,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         }
                         className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
                       >
-                        Remove
+                        {t("modal.editProduct.remove")}
                       </button>
                     </div>
                   ))}

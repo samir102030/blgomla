@@ -80,7 +80,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
           <button
             onClick={onMenuClick}
             className="p-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors"
-            aria-label="Toggle sidebar"
+            aria-label={t('admin.toggleSidebar')}
           >
             <Bars3Icon className="w-5 h-5" />
           </button>
@@ -150,7 +150,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                     onClick={() => setShowUserDropdown(false)}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
                   >
-                    🏠 <span>Back to site</span>
+                    🏠 <span>{t('admin.backToSite')}</span>
                   </Link>
                 </div>
                 <div className="border-t border-[var(--border)] py-1">

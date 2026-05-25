@@ -1,5 +1,6 @@
 import React from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useTranslation } from "react-i18next";
 import type { Brand } from "../types/brand.type";
 
 interface ViewBrandModalProps {
@@ -13,13 +14,14 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
   onClose,
   brand,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen || !brand) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold">View Brand Details</h2>
+          <h2 className="text-xl font-semibold">{t("brands.viewBrandDetails")}</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -39,7 +41,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
                loading="lazy" decoding="async"/>
             ) : (
               <div className="h-32 w-32 bg-gray-100 rounded-lg flex items-center justify-center border">
-                <span className="text-gray-400 text-sm">No Logo</span>
+                <span className="text-gray-400 text-sm">{t("brands.noLogo")}</span>
               </div>
             )}
           </div>
@@ -48,7 +50,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Brand Name
+                {t("brands.brandName")}
               </label>
               <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                 {brand.name}
@@ -57,7 +59,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Status
+                {t("Status")}
               </label>
               <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                 <span
@@ -67,7 +69,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
                       : "bg-gray-100 text-gray-800"
                   }`}
                 >
-                  {brand.isActive ? "Active" : "Inactive"}
+                  {brand.isActive ? t("Active") : t("Inactive")}
                 </span>
               </div>
             </div>
@@ -75,10 +77,10 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description
+              {t("Description")}
             </label>
             <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg min-h-[80px]">
-              {brand.description || "No description provided"}
+              {brand.description || t("brands.noDescription")}
             </div>
           </div>
 
@@ -86,7 +88,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Created At
+                {t("Created At")}
               </label>
               <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                 {brand.createdAt
@@ -97,7 +99,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Updated At
+                {t("Updated At")}
               </label>
               <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
                 {brand.updatedAt
@@ -110,7 +112,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
           {/* Brand ID */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand ID
+              {t("brands.brandId")}
             </label>
             <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg font-mono text-sm">
               {brand._id}
@@ -123,7 +125,7 @@ const ViewBrandModal: React.FC<ViewBrandModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
           >
-            Close
+            {t("Close")}
           </button>
         </div>
       </div>

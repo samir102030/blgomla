@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   XMarkIcon,
   AdjustmentsHorizontalIcon,
@@ -33,6 +34,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   categories,
   vendors = [],
 }) => {
+  const { t } = useTranslation();
   const [filters, setFilters] = useState<ProductFilters>(currentFilters);
 
   useEffect(() => {
@@ -79,17 +81,17 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </div>
             <div className="ml-3">
               <h2 className="text-lg font-semibold text-gray-900">
-                Advanced Filters
+                {t('Advanced Filters')}
               </h2>
               <p className="text-sm text-gray-600">
-                Filter products by multiple criteria
+                {t('Filter products by multiple criteria')}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
-            aria-label="Close modal"
+            aria-label={t('Close')}
           >
             <XMarkIcon className="h-5 w-5 text-gray-500" />
           </button>
@@ -100,14 +102,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
           {/* Brand Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Brand
+              {t('Brand')}
             </label>
             <select
               value={filters.brand}
               onChange={(e) => handleInputChange("brand", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Brands</option>
+              <option value="">{t('All Brands')}</option>
               {brands?.map((brand) => (
                 <option key={brand._id} value={brand._id}>
                   {brand.name}
@@ -119,14 +121,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
           {/* Category Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Category
+              {t('Category')}
             </label>
             <select
               value={filters.category}
               onChange={(e) => handleInputChange("category", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Categories</option>
+              <option value="">{t('All Categories')}</option>
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
                   {category.name}
@@ -138,14 +140,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
           {/* Vendor Filter */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Vendor
+              {t('Vendor')}
             </label>
             <select
               value={filters.vendor || ""}
               onChange={(e) => handleInputChange("vendor", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Vendors</option>
+              <option value="">{t('All Vendors')}</option>
               {vendors.map((vendor) => (
                 <option key={vendor._id} value={vendor._id}>
                   {vendor.name}
@@ -157,13 +159,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
           {/* Price Range */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Price Range
+              {t('Price Range')}
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <input
                   type="number"
-                  placeholder="Min Price"
+                  placeholder={t('Min Price')}
                   value={filters.priceMin}
                   onChange={(e) =>
                     handleInputChange("priceMin", e.target.value)
@@ -176,7 +178,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               <div>
                 <input
                   type="number"
-                  placeholder="Max Price"
+                  placeholder={t('Max Price')}
                   value={filters.priceMax}
                   onChange={(e) =>
                     handleInputChange("priceMax", e.target.value)
@@ -192,24 +194,24 @@ const FilterModal: React.FC<FilterModalProps> = ({
           {/* Stock Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Stock Status
+              {t('Stock Status')}
             </label>
             <select
               value={filters.stockStatus}
               onChange={(e) => handleInputChange("stockStatus", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Stock Status</option>
-              <option value="in_stock">In Stock</option>
-              <option value="low_stock">Low Stock (&lt; 30)</option>
-              <option value="out_of_stock">Out of Stock</option>
+              <option value="">{t('All Stock Status')}</option>
+              <option value="in_stock">{t('In Stock')}</option>
+              <option value="low_stock">{t('Low Stock (< 30)')}</option>
+              <option value="out_of_stock">{t('Out of Stock')}</option>
             </select>
           </div>
 
           {/* Product Status */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Status
+              {t('Product Status')}
             </label>
             <select
               value={filters.productStatus}
@@ -218,9 +220,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
+              <option value="">{t('All Status')}</option>
+              <option value="active">{t('Active')}</option>
+              <option value="inactive">{t('Inactive')}</option>
             </select>
           </div>
         </div>
@@ -232,7 +234,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             onClick={handleClearFilters}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors"
           >
-            Clear All
+            {t('Clear All')}
           </button>
           <div className="flex gap-3">
             <button
@@ -240,13 +242,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              {t('Cancel')}
             </button>
             <button
               onClick={handleApplyFilters}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200"
             >
-              Apply Filters
+              {t('Apply Filters')}
             </button>
           </div>
         </div>

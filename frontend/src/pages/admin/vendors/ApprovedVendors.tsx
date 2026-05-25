@@ -140,11 +140,11 @@ const ApprovedVendors: React.FC = () => {
               {/* Store Info */}
               {vendor.store && (
                 <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <div className="text-sm font-medium text-gray-900 mb-1">Store Information</div>
+                  <div className="text-sm font-medium text-gray-900 mb-1">{t('approvedVendors.storeInformation')}</div>
                   <div className="text-xs text-gray-600 space-y-1">
-                    <div>Products: {vendor.store.productCount || 0}</div>
-                    <div>Orders: {vendor.store.orderCount || 0}</div>
-                    <div>Rating: {vendor.store.rating || 'N/A'}</div>
+                    <div>{t('approvedVendors.products')}: {vendor.store.productCount || 0}</div>
+                    <div>{t('approvedVendors.orders')}: {vendor.store.orderCount || 0}</div>
+                    <div>{t('approvedVendors.rating')}: {vendor.store.rating || t('approvedVendors.na')}</div>
                   </div>
                 </div>
               )}
@@ -193,22 +193,22 @@ const ApprovedVendors: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Basic Info */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Business Information</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('approvedVendors.businessInformation')}</h3>
                 <div className="space-y-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Business Name</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.businessName')}</label>
                     <p className="text-sm text-gray-900">{selectedVendor.businessName}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Legal Entity Type</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.legalEntityType')}</label>
                     <p className="text-sm text-gray-900">{selectedVendor.legalEntityType}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.contactEmail')}</label>
                     <p className="text-sm text-gray-900">{selectedVendor.contactEmail}</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Contact Phone</label>
+                    <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.contactPhone')}</label>
                     <p className="text-sm text-gray-900">{selectedVendor.contactPhone}</p>
                   </div>
                 </div>
@@ -216,42 +216,42 @@ const ApprovedVendors: React.FC = () => {
 
               {/* Store Info */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Store Performance</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('approvedVendors.storePerformance')}</h3>
                 {selectedVendor.store ? (
                   <div className="space-y-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Store Name</label>
-                      <p className="text-sm text-gray-900">{selectedVendor.store.name || 'Not set'}</p>
+                      <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.storeName')}</label>
+                      <p className="text-sm text-gray-900">{selectedVendor.store.name || t('vendor.notSet')}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Products</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.products')}</label>
                       <p className="text-sm text-gray-900">{selectedVendor.store.productCount || 0}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Total Orders</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.totalOrders')}</label>
                       <p className="text-sm text-gray-900">{selectedVendor.store.orderCount || 0}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Rating</label>
-                      <p className="text-sm text-gray-900">{selectedVendor.store.rating || 'No ratings yet'}</p>
+                      <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.rating')}</label>
+                      <p className="text-sm text-gray-900">{selectedVendor.store.rating || t('approvedVendors.noRatingsYet')}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">Store Status</label>
+                      <label className="block text-sm font-medium text-gray-700">{t('approvedVendors.storeStatus')}</label>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${selectedVendor.store.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                        {selectedVendor.store.isActive ? 'Active' : 'Inactive'}
+                        {selectedVendor.store.isActive ? t('approvedVendors.active') : t('approvedVendors.inactive')}
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500">Store not yet created</p>
+                  <p className="text-sm text-gray-500">{t('approvedVendors.storeNotYetCreated')}</p>
                 )}
               </div>
             </div>
 
             {selectedVendor.businessDescription && (
               <div className="mt-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('approvedVendors.businessDescription')}</label>
                 <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md">{selectedVendor.businessDescription}</p>
               </div>
             )}

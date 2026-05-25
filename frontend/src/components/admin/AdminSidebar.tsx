@@ -74,10 +74,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: t("admin.vendors"),
       icon: BuildingStorefrontIcon,
       children: [
-        { name: "All Vendors", href: "/dashboard/vendors", perm: "vendors.view" },
+        { name: t("admin.allVendors"), href: "/dashboard/vendors", perm: "vendors.view" },
         { name: t("admin.requests"), href: "/dashboard/requests", perm: "vendors.approve" },
-        { name: "Product Approvals", href: "/dashboard/approvals", perm: "products.approve" },
-        { name: "Admins", href: "/dashboard/admins", perm: "roles.manage" },
+        { name: t("admin.productApprovals"), href: "/dashboard/approvals", perm: "products.approve" },
+        { name: t("admin.admins"), href: "/dashboard/admins", perm: "roles.manage" },
       ],
     },
 
@@ -101,16 +101,16 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: t("admin.order"),
       icon: ClipboardDocumentListIcon,
       children: [
-        { name: "All Orders", href: "/dashboard/order", perm: "orders.view" },
+        { name: t("admin.allOrders"), href: "/dashboard/order", perm: "orders.view" },
         { name: t("admin.returns"), href: "/dashboard/returns", perm: "returns.view" },
-        { name: t("Quotations"), href: "/dashboard/quotations", perm: "quotations.view" },
-        { name: "Inventory Alerts", href: "/dashboard/inventory", perm: "products.view" },
+        { name: t("admin.quotations"), href: "/dashboard/quotations", perm: "quotations.view" },
+        { name: t("admin.inventoryAlerts"), href: "/dashboard/inventory", perm: "products.view" },
       ],
     },
 
     // ── Customers / CRM ──────────────────────────────────────
     {
-      name: "Customers",
+      name: t("admin.customers"),
       icon: UserIcon,
       children: [
         { name: t("admin.user"), href: "/dashboard/user", perm: "users.view" },
@@ -124,28 +124,28 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: t("admin.sales"),
       icon: ChartBarIcon,
       children: [
-        { name: "Sales Overview", href: "/dashboard/sales", perm: "analytics.view" },
-        { name: "Payments", href: "/dashboard/payments", roles: ["admin"] },
-        { name: "Customer Analytics", href: "/dashboard/customers", roles: ["admin"] },
-        { name: "Visitor Analytics", href: "/dashboard/visitors", roles: ["admin"] },
+        { name: t("admin.salesOverview"), href: "/dashboard/sales", perm: "analytics.view" },
+        { name: t("admin.payments"), href: "/dashboard/payments", roles: ["admin"] },
+        { name: t("admin.customerAnalytics"), href: "/dashboard/customers", roles: ["admin"] },
+        { name: t("admin.visitorAnalytics"), href: "/dashboard/visitors", roles: ["admin"] },
       ],
     },
 
     // ── Quick-access top-level entries (kept flat for visibility) ──
     {
-      name: "Approvals",
+      name: t("admin.approvals"),
       href: "/dashboard/approvals",
       icon: ClipboardDocumentCheckIcon,
       perm: "products.approve",
     },
     {
-      name: "Communications",
+      name: t("admin.communications"),
       href: "/dashboard/support",
       icon: ChatBubbleLeftRightIcon,
       perm: "support.view",
     },
     {
-      name: "Promotions",
+      name: t("admin.promotions"),
       href: "/dashboard/advertisements",
       icon: MegaphoneIcon,
       perm: "advertisements.manage",
@@ -239,7 +239,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                 belgomla
               </span>
               <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--brand-primary)]/15 text-[var(--brand-primary)]">
-                Admin
+                {t('admin.adminBadge')}
               </span>
             </>
           )}
@@ -248,7 +248,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <button
             onClick={onCloseMobile}
             className="lg:hidden p-1.5 rounded-md text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)]"
-            aria-label="Close menu"
+            aria-label={t('admin.closeMenu')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
