@@ -2,7 +2,7 @@ import express from "express";
 import { rateLimit } from "express-rate-limit";
 
 import {
-  adminRoute,
+  requirePermission,
   protectRoute,
   superAdminRoute,
 } from "../middleware/auth.middleware.js";
@@ -109,12 +109,12 @@ router.post("/resetPassword/:token", authLimiter, validateResetPassword, resetPa
 
 router
   .route("/")
-  .all(protectRoute, adminRoute)
+  .all(protectRoute, requirePermission("users.view"))
   .get(translateResponse, getAllUsers);
 router.get(
   "/usersType",
   protectRoute,
-  adminRoute,
+  requirePermission("users.view"),
   translateResponse,
   getAllUsersType
 );
@@ -122,17 +122,17 @@ router.get(
 router.delete(
   "/usersFinalDelete/:userId",
   protectRoute,
-  adminRoute,
+  requirePermission("users.delete"),
   finalDeleteUser
 );
 router
   .route("/:userId")
-  .all(protectRoute, adminRoute)
-  .put(updateUser)
-  .delete(safeDeleteUser);
+  .all(protectRoute)
+  .put(requirePermission("users.edit"), updateUser)
+  .delete(requirePermission("users.delete"), safeDeleteUser);
 
 // tested
-router.put("/changeRole/:userId", protectRoute, adminRoute, changeUserRole);
+router.put("/changeRole/:userId", protectRoute, requirePermission("users.role"), changeUserRole);
 router.put(
   "/adminTime/:userId",
   protectRoute,
@@ -145,13 +145,13 @@ router.put(
   superAdminRoute,
   endAdminTimeNow
 );
-router.put("/activateUser/:userId", protectRoute, adminRoute, activateUser);
-router.put("/deactivateUser/:userId", protectRoute, adminRoute, deActivateUser);
-router.put("/restoreUser/:userId", protectRoute, adminRoute, restoreUser);
+router.put("/activateUser/:userId", protectRoute, requirePermission("users.activate"), activateUser);
+router.put("/deactivateUser/:userId", protectRoute, requirePermission("users.activate"), deActivateUser);
+router.put("/restoreUser/:userId", protectRoute, requirePermission("users.delete"), restoreUser);
 router.get(
   "/deletedUsers",
   protectRoute,
-  adminRoute,
+  requirePermission("users.view"),
   translateResponse,
   getDeletedUsers
 );

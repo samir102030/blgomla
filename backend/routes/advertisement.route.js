@@ -1,5 +1,5 @@
 import express from "express";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import {
   createAdvertisement,
@@ -20,11 +20,11 @@ router.post("/:advertisementId/view", incrementViewCount);
 router.post("/:advertisementId/click", incrementClickCount);
 
 // Admin routes
-router.post("/", protectRoute, adminRoute, createAdvertisement);
-router.get("/", protectRoute, adminRoute, getAllAdvertisements);
-router.get("/:advertisementId", protectRoute, adminRoute, getAdvertisementById);
-router.put("/:advertisementId", protectRoute, adminRoute, updateAdvertisement);
-router.delete("/:advertisementId", protectRoute, adminRoute, deleteAdvertisement);
+router.post("/", protectRoute, requirePermission("advertisements.manage"), createAdvertisement);
+router.get("/", protectRoute, requirePermission("advertisements.manage"), getAllAdvertisements);
+router.get("/:advertisementId", protectRoute, requirePermission("advertisements.manage"), getAdvertisementById);
+router.put("/:advertisementId", protectRoute, requirePermission("advertisements.manage"), updateAdvertisement);
+router.delete("/:advertisementId", protectRoute, requirePermission("advertisements.manage"), deleteAdvertisement);
 
 export default router;
 

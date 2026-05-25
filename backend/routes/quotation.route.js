@@ -1,5 +1,5 @@
 import express from "express";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import {
   createQuotation,
   listQuotations,
@@ -25,11 +25,11 @@ router.post("/", async (req, res, next) => {
 });
 
 // Admin routes
-router.get("/", protectRoute, adminRoute, listQuotations);
-router.get("/stats", protectRoute, adminRoute, getQuotationStats);
-router.get("/:quotationId", protectRoute, adminRoute, getQuotation);
-router.get("/:quotationId/pdf", protectRoute, adminRoute, generateQuotationPDF);
-router.put("/:quotationId", protectRoute, adminRoute, updateQuotationStatus);
-router.delete("/:quotationId", protectRoute, adminRoute, deleteQuotation);
+router.get("/", protectRoute, requirePermission("quotations.view"), listQuotations);
+router.get("/stats", protectRoute, requirePermission("quotations.view"), getQuotationStats);
+router.get("/:quotationId", protectRoute, requirePermission("quotations.view"), getQuotation);
+router.get("/:quotationId/pdf", protectRoute, requirePermission("quotations.view"), generateQuotationPDF);
+router.put("/:quotationId", protectRoute, requirePermission("quotations.manage"), updateQuotationStatus);
+router.delete("/:quotationId", protectRoute, requirePermission("quotations.manage"), deleteQuotation);
 
 export default router;

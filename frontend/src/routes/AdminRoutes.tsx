@@ -30,6 +30,8 @@ import SiteModePage from "../pages/admin/SiteModePage";
 import ShippingSettingsPage from "../pages/admin/ShippingSettingsPage";
 import AccurateSettingsPage from "../pages/admin/AccurateSettingsPage";
 import AuditLogPage from "../pages/admin/AuditLogPage";
+import RolesAccessPage from "../pages/admin/RolesAccessPage";
+import { RequirePermission } from "../components/Can";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -119,6 +121,14 @@ const AdminRoutes: React.FC = () => {
         <Route path="/shipping" element={<ShippingSettingsPage />} />
         <Route path="/accurate" element={<AccurateSettingsPage />} />
         <Route path="/audit-log" element={<AuditLogPage />} />
+        <Route
+          path="/roles"
+          element={
+            <RequirePermission perm="roles.manage">
+              <RolesAccessPage />
+            </RequirePermission>
+          }
+        />
 
         {/* Content Management */}
         <Route path="/advertisements" element={<AdvertisementsPage />} />

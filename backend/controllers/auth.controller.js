@@ -14,6 +14,7 @@ import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
 import { logAudit, diff } from "../utils/audit.js";
+import { getUserPermissions } from "../utils/permissions.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -363,6 +364,7 @@ export const login = controllerWrapper("login", async (req, res) => {
       ...user._doc,
       password: undefined,
       totpSecret: undefined,
+      permissions: await getUserPermissions(user),
       store:
         user.role === "store"
           ? await Store.findOne({ owner: user._id })
@@ -463,6 +465,7 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
       ...user._doc,
       password: undefined,
       totpSecret: undefined,
+      permissions: await getUserPermissions(user),
       store:
         user.role === "store"
           ? await Store.findOne({ owner: user._id })
@@ -1055,6 +1058,7 @@ export const getProfile = controllerWrapper("getProfile", async (req, res) => {
   const userData = {
     ...user._doc,
     password: undefined,
+    permissions: await getUserPermissions(user),
     store:
       user.role === "store"
         ? await Store.findOne({ owner: user._id })

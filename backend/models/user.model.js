@@ -95,10 +95,13 @@ const userSchema = new mongoose.Schema(
         ref: "Product",
       },
     ],
+    // References Role.key. Built-ins: customer/store/admin/super_admin, plus
+    // any custom role created in Roles & Access. No enum so custom roles work.
     role: {
       type: String,
-      enum: ["customer", "store", "admin", "super_admin"],
       default: "customer",
+      lowercase: true,
+      trim: true,
     },
     deleted: { type: Boolean, default: false },
     active: { type: Boolean, default: false },

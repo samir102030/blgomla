@@ -1,6 +1,7 @@
 import express from "express";
 import {
   protectRoute,
+  requirePermission,
   adminOrStoreRoute,
   adminRoute,
   storeRoute,
@@ -118,10 +119,10 @@ router.delete("/cart/:productId", protectRoute, removeFromCart);
 // ═══════════════════════════════════════════════
 router.post("/", protectRoute, storeRoute, validateCreateProduct, createProduct);
 router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
-router.get("/approvals", protectRoute, adminRoute, getProductApprovals);
+router.get("/approvals", protectRoute, requirePermission("products.approve"), getProductApprovals);
 router.get("/pricing-insights", protectRoute, adminOrStoreRoute, getPricingInsights);
-router.post("/:productId/approve", protectRoute, adminRoute, approveProduct);
-router.post("/:productId/reject", protectRoute, adminRoute, rejectProduct);
+router.post("/:productId/approve", protectRoute, requirePermission("products.approve"), approveProduct);
+router.post("/:productId/reject", protectRoute, requirePermission("products.approve"), rejectProduct);
 router.put("/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, validateUpdateProduct, updateProduct);
 router.put("/sale/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, toggleSaleProduct);
 router.put("/sale-schedule/:productId", protectRoute, adminOrStoreRoute, requireProductAccess, scheduleSale);
@@ -164,7 +165,7 @@ router.delete("/:productId/attributes/:attributeId", protectRoute, adminOrStoreR
 // ═══════════════════════════════════════════════
 router.post("/:productId/suggest-price", suggestPrice);
 router.get("/:productId/price-suggestions", protectRoute, adminOrStoreRoute, getPriceSuggestions);
-router.put("/:productId/price-suggestions/:suggestionId", protectRoute, adminRoute, reviewPriceSuggestion);
+router.put("/:productId/price-suggestions/:suggestionId", protectRoute, requirePermission("products.approve"), reviewPriceSuggestion);
 
 // ═══════════════════════════════════════════════
 // COMPETITOR PRICES

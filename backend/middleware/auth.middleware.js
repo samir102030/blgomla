@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import Store from "../models/store.model.js";
 import Product from "../models/product.model.js";
+import { userCan } from "../utils/permissions.js";
 
 export const protectRoute = async (req, res, next) => {
   try {
@@ -129,6 +130,30 @@ export const requireProductAccess = async (req, res, next) => {
     console.log("Error in requireProductAccess middleware", error.message);
     return res.status(500).json({ success: false, message: "Authorization check failed" });
   }
+};
+
+// Fine-grained permission gate. Use after protectRoute. Accepts a single key
+// or an array (any-of). Honors "*" and "resource.*" wildcards via the resolver.
+export const requirePermission = (keys) => {
+  const list = Array.isArray(keys) ? keys : [keys];
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+      }
+      for (const key of list) {
+        if (await userCan(req.user, key)) return next();
+      }
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied - missing permission" });
+    } catch (error) {
+      console.log("Error in requirePermission middleware", error.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Authorization check failed" });
+    }
+  };
 };
 
 // Aliases for compatibility with route imports

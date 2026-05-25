@@ -15,7 +15,13 @@ dotenv.config();
 
 let dbConnectionPromise;
 const ensureDB = () => {
-  if (!dbConnectionPromise) dbConnectionPromise = connectDB();
+  if (!dbConnectionPromise) {
+    dbConnectionPromise = connectDB().then(async () => {
+      // Ensure the built-in roles exist (idempotent; never overwrites edits).
+      const { seedRoles } = await import("./models/role.model.js");
+      await seedRoles();
+    });
+  }
   return dbConnectionPromise;
 };
 

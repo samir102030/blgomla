@@ -5,13 +5,13 @@ import {
   approveCategoryRequest,
   rejectCategoryRequest,
 } from "../controllers/categoryRequest.controller.js";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 // All routes require authentication and admin privileges
 router.use(protectRoute);
-router.use(adminRoute);
+router.use(requirePermission("categories.manage"));
 
 // Get all category requests
 router.get("/", getAllCategoryRequests);

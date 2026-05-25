@@ -1,5 +1,5 @@
 import express from "express";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import {
   createCategory,
   deleteCategory,
@@ -31,12 +31,12 @@ router.get("/tree", publicCache, memCache, translateResponse, getCategoryTree);
 router.get("/slug/:slug", publicCache, memCache, translateResponse, getCategoryBySlug);
 
 // Admin
-router.post("/", protectRoute, adminRoute, invalidate, createCategory);
-router.put("/:categoryId", protectRoute, adminRoute, invalidate, updateCategory);
-router.delete("/:categoryId", protectRoute, adminRoute, invalidate, deleteCategory);
-router.put("/safeDelete/:categoryId", protectRoute, adminRoute, invalidate, safeDeleteCategory);
-router.put("/restore/:categoryId", protectRoute, adminRoute, invalidate, restoreCategory);
-router.put("/setCategoryToProduct/:productId", protectRoute, adminRoute, setCategoryToProduct);
+router.post("/", protectRoute, requirePermission("categories.manage"), invalidate, createCategory);
+router.put("/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, updateCategory);
+router.delete("/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, deleteCategory);
+router.put("/safeDelete/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, safeDeleteCategory);
+router.put("/restore/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, restoreCategory);
+router.put("/setCategoryToProduct/:productId", protectRoute, requirePermission("categories.manage"), setCategoryToProduct);
 
 // Nested resource lookups
 router.get("/products/:categoryId", getProductsByCategory);

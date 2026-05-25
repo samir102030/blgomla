@@ -27,6 +27,7 @@ import opsRoutes from "../modules/ops/routes.js";
 import subscriberRoutes from "./subscriber.route.js";
 import socialProofRoutes from "./socialProof.route.js";
 import mosaicCardRoutes from "./mosaicCard.route.js";
+import roleRoutes from "./role.route.js";
 
 const router = express.Router();
 
@@ -57,6 +58,7 @@ router.use("/accurate", accurateRoutes);
 router.use("/subscribers", subscriberRoutes);
 router.use("/social-proof", socialProofRoutes);
 router.use("/mosaic-cards", mosaicCardRoutes);
+router.use("/roles", roleRoutes);
 
 // ops module owns: /analytics, /audit-logs, /site-mode, /cron
 router.use("/", opsRoutes);

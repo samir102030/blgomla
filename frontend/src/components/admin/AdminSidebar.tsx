@@ -22,6 +22,7 @@ import {
   // StarIcon,
 } from "@heroicons/react/24/outline";
 import Logo, { BRAND } from "../Logo";
+import { useCan } from "../../lib/permissions";
 
 interface AdminSidebarProps {
   collapsed: boolean;
@@ -37,14 +38,18 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const { t } = useTranslation();
   const location = useLocation();
   const user = useUserStore((s) => s.user);
+  const can = useCan();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-  const hasAccess = (roles?: string[]) => {
-    if (!roles) return true;
+  // Prefer permission-based gating (item.perm); fall back to legacy role lists.
+  const hasAccess = (item?: { perm?: string | string[]; roles?: string[] }) => {
+    if (!item) return true;
+    if (item.perm) return can(item.perm);
+    if (!item.roles) return true;
     const currentRole = user?.role || "";
     return (
-      roles.includes(currentRole) ||
-      (currentRole === "super_admin" && roles.includes("admin"))
+      item.roles.includes(currentRole) ||
+      (currentRole === "super_admin" && item.roles.includes("admin"))
     );
   };
 
@@ -68,12 +73,11 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     {
       name: t("admin.vendors"),
       icon: BuildingStorefrontIcon,
-      roles: ["admin"],
       children: [
-        { name: "All Vendors", href: "/dashboard/vendors", roles: ["admin"] },
-        { name: t("admin.requests"), href: "/dashboard/requests", roles: ["admin"] },
-        { name: "Product Approvals", href: "/dashboard/approvals", roles: ["admin"] },
-        { name: "Admins", href: "/dashboard/admins", roles: ["super_admin"] },
+        { name: "All Vendors", href: "/dashboard/vendors", perm: "vendors.view" },
+        { name: t("admin.requests"), href: "/dashboard/requests", perm: "vendors.approve" },
+        { name: "Product Approvals", href: "/dashboard/approvals", perm: "products.approve" },
+        { name: "Admins", href: "/dashboard/admins", perm: "roles.manage" },
       ],
     },
 
@@ -82,13 +86,13 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: t("admin.ecommerce"),
       icon: ShoppingBagIcon,
       children: [
-        { name: t("admin.products"), href: "/dashboard/products", roles: ["admin", "store"] },
-        { name: t("admin.category"), href: "/dashboard/category", roles: ["admin"] },
-        { name: t("admin.brands"), href: "/dashboard/brands", roles: ["admin"] },
-        { name: t("admin.collections"), href: "/dashboard/collections", roles: ["admin", "store"] },
-        { name: t("admin.coupons"), href: "/dashboard/coupons", roles: ["admin", "store"] },
-        { name: t("admin.advertisements"), href: "/dashboard/advertisements", roles: ["admin"] },
-        { name: t("admin.mosaic", "Card Mosaic"), href: "/dashboard/mosaic", roles: ["admin"] },
+        { name: t("admin.products"), href: "/dashboard/products", perm: "products.view" },
+        { name: t("admin.category"), href: "/dashboard/category", perm: "categories.manage" },
+        { name: t("admin.brands"), href: "/dashboard/brands", perm: "brands.manage" },
+        { name: t("admin.collections"), href: "/dashboard/collections", perm: "collections.view" },
+        { name: t("admin.coupons"), href: "/dashboard/coupons", perm: "coupons.view" },
+        { name: t("admin.advertisements"), href: "/dashboard/advertisements", perm: "advertisements.manage" },
+        { name: t("admin.mosaic", "Card Mosaic"), href: "/dashboard/mosaic", perm: "mosaic.manage" },
       ],
     },
 
@@ -97,10 +101,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: t("admin.order"),
       icon: ClipboardDocumentListIcon,
       children: [
-        { name: "All Orders", href: "/dashboard/order", roles: ["admin", "store"] },
-        { name: t("admin.returns"), href: "/dashboard/returns", roles: ["admin", "store"] },
-        { name: t("Quotations"), href: "/dashboard/quotations", roles: ["admin"] },
-        { name: "Inventory Alerts", href: "/dashboard/inventory", roles: ["admin", "store"] },
+        { name: "All Orders", href: "/dashboard/order", perm: "orders.view" },
+        { name: t("admin.returns"), href: "/dashboard/returns", perm: "returns.view" },
+        { name: t("Quotations"), href: "/dashboard/quotations", perm: "quotations.view" },
+        { name: "Inventory Alerts", href: "/dashboard/inventory", perm: "products.view" },
       ],
     },
 
@@ -109,9 +113,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: "Customers",
       icon: UserIcon,
       children: [
-        { name: t("admin.user"), href: "/dashboard/user", roles: ["admin"] },
-        { name: t("admin.customerReviews"), href: "/dashboard/reviews", roles: ["admin"] },
-        { name: t("admin.customerSupport"), href: "/dashboard/support", roles: ["admin"] },
+        { name: t("admin.user"), href: "/dashboard/user", perm: "users.view" },
+        { name: t("admin.customerReviews"), href: "/dashboard/reviews", perm: "reviews.manage" },
+        { name: t("admin.customerSupport"), href: "/dashboard/support", perm: "support.view" },
       ],
     },
 
@@ -120,7 +124,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: t("admin.sales"),
       icon: ChartBarIcon,
       children: [
-        { name: "Sales Overview", href: "/dashboard/sales", roles: ["admin", "store"] },
+        { name: "Sales Overview", href: "/dashboard/sales", perm: "analytics.view" },
         { name: "Payments", href: "/dashboard/payments", roles: ["admin"] },
         { name: "Customer Analytics", href: "/dashboard/customers", roles: ["admin"] },
         { name: "Visitor Analytics", href: "/dashboard/visitors", roles: ["admin"] },
@@ -132,55 +136,55 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       name: "Approvals",
       href: "/dashboard/approvals",
       icon: ClipboardDocumentCheckIcon,
-      roles: ["admin"],
+      perm: "products.approve",
     },
     {
       name: "Communications",
       href: "/dashboard/support",
       icon: ChatBubbleLeftRightIcon,
-      roles: ["admin"],
+      perm: "support.view",
     },
     {
       name: "Promotions",
       href: "/dashboard/advertisements",
       icon: MegaphoneIcon,
-      roles: ["admin"],
+      perm: "advertisements.manage",
     },
     {
-      name: "Roles & Access",
-      href: "/dashboard/admins",
+      name: t("Roles & Access"),
+      href: "/dashboard/roles",
       icon: ShieldCheckIcon,
-      roles: ["admin", "super_admin"],
+      perm: "roles.manage",
     },
     {
-      name: "Audit Log",
+      name: t("Audit Log"),
       href: "/dashboard/audit-log",
       icon: ClipboardDocumentListIcon,
-      roles: ["admin", "super_admin"],
+      perm: "audit.view",
     },
     {
       name: t("admin.siteMode", "Coming Soon"),
       href: "/dashboard/site-mode",
       icon: RocketLaunchIcon,
-      roles: ["admin", "super_admin"],
+      perm: "siteMode.view",
     },
     {
       name: t("admin.shipping", "Shipping"),
       href: "/dashboard/shipping",
       icon: TruckIcon,
-      roles: ["admin", "super_admin"],
+      perm: "shipping.manage",
     },
     {
       name: t("admin.accurate", "Accurate shipping"),
       href: "/dashboard/accurate",
       icon: TruckIcon,
-      roles: ["admin", "super_admin"],
+      perm: "shipping.manage",
     },
     {
       name: t("admin.collections"),
       href: "/dashboard/collections",
       icon: TagIcon,
-      roles: ["store"],
+      perm: "collections.view",
     },
   ];
 
@@ -269,7 +273,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {menuItems
           .filter((item) => {
             // Check if user has access to the item itself
-            if (!hasAccess(item.roles)) {
+            if (!hasAccess(item)) {
               return false;
             }
 
@@ -294,7 +298,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
             // For items with children, check if user has access to any child
             if (item.children) {
               const accessibleChildren = item.children.filter(
-                (child) => hasAccess(child.roles),
+                (child) => hasAccess(child),
               );
               return accessibleChildren.length > 0;
             }
@@ -336,7 +340,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
                   {showLabels && expandedItems.has(item.name) && (
                     <div className="ml-7 mt-1 mb-1 space-y-0.5 border-l border-[var(--border)] pl-3">
                       {item.children
-                        .filter((child) => hasAccess(child.roles))
+                        .filter((child) => hasAccess(child))
                         .map((child, childIndex) => (
                           <Link
                             key={childIndex}

@@ -4,7 +4,8 @@ import AdminHeader from "./AdminHeader";
 import StoreInvalidPage from "./StoreInvalidPage";
 import { useUserStore } from "../../stores/user.store";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import { permsAllow } from "../../lib/permissions";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -30,6 +31,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     (user?.store && user.store.status === "approved" && !user.store.deleted);
 
   const isValid = isUserValid && isStoreValid && !adminExpired;
+
+  // Anyone with dashboard access: built-in staff roles, or any (custom) role
+  // granted dashboard.view. Logged-in users without it are sent home.
+  const canDashboard =
+    isAdmin ||
+    user?.role === "store" ||
+    permsAllow(user?.permissions, "dashboard.view");
+
+  if (user && isUserValid && !canDashboard) {
+    return <Navigate to="/" replace />;
+  }
 
   if (!isValid) {
     if (adminExpired) {

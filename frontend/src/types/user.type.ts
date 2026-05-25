@@ -11,7 +11,13 @@ export interface UserLoveItem {
   product: string; // ObjectId as string
 }
 
-export type UserRole = "customer" | "store" | "admin" | "super_admin";
+// Built-in roles, plus any custom role key created in Roles & Access.
+export type UserRole =
+  | "customer"
+  | "store"
+  | "admin"
+  | "super_admin"
+  | (string & {});
 
 export interface User {
   _id?: string;
@@ -31,6 +37,8 @@ export interface User {
   referredBy?: string;
   referralCount?: number;
   role: UserRole;
+  /** Resolved permission keys for this user's role (from the backend). */
+  permissions?: string[];
   deleted: boolean;
   active: boolean;
   resetPasswordToken?: string;

@@ -1,5 +1,5 @@
 import express from "express";
-import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import {
   createMosaicCard,
@@ -15,9 +15,9 @@ const router = express.Router();
 router.get("/active", translateResponse, getActiveMosaicCards);
 
 // Admin
-router.post("/", protectRoute, adminRoute, createMosaicCard);
-router.get("/", protectRoute, adminRoute, getAllMosaicCards);
-router.put("/:mosaicCardId", protectRoute, adminRoute, updateMosaicCard);
-router.delete("/:mosaicCardId", protectRoute, adminRoute, deleteMosaicCard);
+router.post("/", protectRoute, requirePermission("mosaic.manage"), createMosaicCard);
+router.get("/", protectRoute, requirePermission("mosaic.manage"), getAllMosaicCards);
+router.put("/:mosaicCardId", protectRoute, requirePermission("mosaic.manage"), updateMosaicCard);
+router.delete("/:mosaicCardId", protectRoute, requirePermission("mosaic.manage"), deleteMosaicCard);
 
 export default router;
