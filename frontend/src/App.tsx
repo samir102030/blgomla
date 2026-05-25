@@ -38,6 +38,22 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // A failed lazy-chunk import after a redeploy isn't a real bug — recover by
+    // reloading once (10s guard prevents a loop) instead of showing the error.
+    const msg = error?.message || "";
+    if (
+      /dynamically imported module|Loading chunk|Importing a module script failed/i.test(
+        msg
+      )
+    ) {
+      const KEY = "chunk-reload-ts";
+      const last = Number(sessionStorage.getItem(KEY) || 0);
+      if (Date.now() - last > 10_000) {
+        sessionStorage.setItem(KEY, String(Date.now()));
+        window.location.reload();
+        return;
+      }
+    }
     console.error("ErrorBoundary caught:", error, errorInfo);
     captureError(error, { componentStack: errorInfo.componentStack });
     this.setState({ errorInfo });

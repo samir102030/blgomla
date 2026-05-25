@@ -12,6 +12,19 @@ import { initSentry } from "./lib/sentry";
 initSentry();
 applyInitialTheme();
 
+// When a new deploy replaces the hashed asset files, a tab still running the
+// old build fails to lazy-load chunks ("Failed to fetch dynamically imported
+// module"). Reload once to pull the fresh bundle. The 10s guard prevents a
+// reload loop if the chunk is genuinely missing for another reason.
+const recoverFromChunkError = () => {
+  const KEY = "chunk-reload-ts";
+  const last = Number(sessionStorage.getItem(KEY) || 0);
+  if (Date.now() - last < 10_000) return;
+  sessionStorage.setItem(KEY, String(Date.now()));
+  window.location.reload();
+};
+window.addEventListener("vite:preloadError", recoverFromChunkError);
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 const queryClient = new QueryClient({
