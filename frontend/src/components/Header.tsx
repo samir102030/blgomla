@@ -275,17 +275,20 @@ const Header: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Update language state when i18n changes
+  // Update language state when i18n changes and refetch locale-dependent data
   useEffect(() => {
     const handleLanguageChange = (lng: string) => {
       setLanguage(lng);
+      // Force-refetch so category/brand names reflect the new language
+      fetchCategories();
+      fetchBrands();
     };
 
     i18n.on("languageChanged", handleLanguageChange);
     return () => {
       i18n.off("languageChanged", handleLanguageChange);
     };
-  }, []);
+  }, [fetchCategories, fetchBrands]);
 
   const hasQuery = searchQuery.trim().length >= 2;
   const hasResults =
