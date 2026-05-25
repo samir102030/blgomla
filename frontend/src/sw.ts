@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from "workbox-precaching";
+import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
 import { clientsClaim } from "workbox-core";
 import { NavigationRoute, registerRoute } from "workbox-routing";
-import { StaleWhileRevalidate, CacheFirst } from "workbox-strategies";
+import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from "workbox-strategies";
 import { ExpirationPlugin } from "workbox-expiration";
 import { CacheableResponsePlugin } from "workbox-cacheable-response";
 
@@ -14,10 +14,20 @@ clientsClaim();
 precacheAndRoute(self.__WB_MANIFEST);
 cleanupOutdatedCaches();
 
+// Serve the app shell network-first: after a new deploy the fresh index.html
+// (with its new hashed chunk references) is fetched immediately, so navigations
+// never load a stale shell that points at purged chunks. Falls back to the
+// cached shell only when offline.
+const appShell = new NetworkFirst({
+  cacheName: "app-shell",
+  networkTimeoutSeconds: 3,
+  plugins: [new CacheableResponsePlugin({ statuses: [0, 200] })],
+});
 registerRoute(
-  new NavigationRoute(createHandlerBoundToURL("/index.html"), {
-    denylist: [/^\/api\//],
-  })
+  new NavigationRoute(
+    ({ event }) => appShell.handle({ event, request: new Request("/index.html") }),
+    { denylist: [/^\/api\//] }
+  )
 );
 
 registerRoute(
