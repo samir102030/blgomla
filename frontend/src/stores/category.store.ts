@@ -232,7 +232,9 @@ export const useCategoryStore = create<CategoryStore>()(
             categories: state.categories.filter(
               (cat) => cat._id !== categoryId
             ),
-            deletedCategories: [...state.deletedCategories, deletedCategory],
+            deletedCategories: deletedCategory
+              ? [...state.deletedCategories, deletedCategory]
+              : state.deletedCategories,
             loading: false,
           }));
           return true;
@@ -255,7 +257,9 @@ export const useCategoryStore = create<CategoryStore>()(
           }>(`/categories/restore/${categoryId}`);
           const restoredCategory = data.category;
           set((state) => ({
-            categories: [...state.categories, restoredCategory],
+            categories: restoredCategory
+              ? [...state.categories, restoredCategory]
+              : state.categories,
             deletedCategories: state.deletedCategories.filter(
               (cat) => cat._id !== categoryId
             ),

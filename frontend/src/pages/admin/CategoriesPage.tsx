@@ -36,12 +36,13 @@ const CategoriesPage: React.FC = () => {
       : "bg-[#9E9E9E]/10 text-[#9E9E9E]";
   };
 
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (category.description &&
-        category.description.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredCategories = categories.filter((category) => {
+    if (!category) return false;
+    const term = searchTerm.toLowerCase();
+    const name = (category.name || "").toLowerCase();
+    const description = (category.description || "").toLowerCase();
+    return name.includes(term) || description.includes(term);
+  });
 
   const handleDelete = async (categoryId: string) => {
     if (window.confirm(t("categories.confirmDelete"))) {
