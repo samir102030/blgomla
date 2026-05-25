@@ -227,7 +227,7 @@ const HomePage: React.FC = () => {
                       key={cat._id}
                       className="group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--brand-accent)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                     >
-                      <div className="aspect-square w-full bg-white overflow-hidden">
+                      <div className="aspect-square w-full bg-[#ffffff] overflow-hidden flex items-center justify-center p-3 sm:p-4">
                         {cat.image ? (
                           <img
                             src={cldImg(cat.image, { w: 400 })}
@@ -238,11 +238,11 @@ const HomePage: React.FC = () => {
                             height={200}
                             loading="lazy"
                             decoding="async"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
                           <span
-                            className="flex h-full w-full items-center justify-center text-4xl sm:text-5xl group-hover:scale-105 transition-transform duration-300"
+                            className="text-4xl sm:text-5xl group-hover:scale-105 transition-transform duration-300"
                             aria-hidden="true"
                           >
                             {getCategoryIcon(cat.name)}
