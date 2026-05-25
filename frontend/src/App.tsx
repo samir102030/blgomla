@@ -4,6 +4,7 @@ import { useEffect, lazy, Suspense, Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import useNotificationSocket from "./hooks/useNotificationSocket";
+import { useUserStore } from "./stores/user.store";
 import SiteModeGate from "./components/SiteModeGate";
 import CompareBar from "./components/CompareBar";
 import { captureError } from "./lib/sentry";
@@ -124,6 +125,13 @@ const PageLoader = () => (
 function App() {
   const { i18n } = useTranslation();
   useNotificationSocket();
+
+  useEffect(() => {
+    // Refresh the logged-in user on boot so newly-added fields (e.g. resolved
+    // `permissions`) populate even from a previously persisted session.
+    const { user, getProfile } = useUserStore.getState();
+    if (user?._id) getProfile().catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleLanguageChange = (lng: string) => {
