@@ -1,4 +1,9 @@
 import Role from "../models/role.model.js";
+import { SYSTEM_ROLES } from "../config/permissions.js";
+
+// Fail-safe: built-in roles always resolve from static config even if the DB
+// seed is missing/failed, so an admin/super_admin can never be locked out.
+const STATIC_FALLBACK = new Map(SYSTEM_ROLES.map((r) => [r.key, r.permissions]));
 
 // In-memory role→permissions cache. Refreshed on a short TTL and explicitly
 // invalidated after role edits. Per serverless instance; stale by ≤ TTL.
@@ -26,7 +31,9 @@ export const invalidatePermissionCache = () => {
 export const getUserPermissions = async (user) => {
   if (!user?.role) return [];
   const map = await getRoleMap();
-  return map.get(user.role) || [];
+  // DB role wins (honors admin edits); fall back to static built-ins so a
+  // missing/failed seed can never strip a built-in role of its access.
+  return map.get(user.role) || STATIC_FALLBACK.get(user.role) || [];
 };
 
 /** Does a permission list satisfy a required key? Honors "*" and "resource.*". */
