@@ -145,7 +145,7 @@ const ProductRail: React.FC<ProductRailProps> = ({
             <div
               ref={scrollRef}
               onScroll={updateArrows}
-              className="flex gap-4 sm:gap-5 scroll-x-hidden scroll-smooth snap-x snap-proximity pt-2 pb-4 px-2 -mx-2"
+              className="flex gap-4 sm:gap-5 scroll-x-hidden scroll-smooth snap-x snap-proximity scroll-px-2 pt-2 pb-4 px-2 -mx-2"
             >
               {items.map((product, idx) => (
                 <div

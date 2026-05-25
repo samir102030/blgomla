@@ -67,7 +67,7 @@ const HScroller: React.FC<HScrollerProps> = ({ children, gapClass = "gap-3 sm:ga
       <div
         ref={ref}
         onScroll={updateArrows}
-        className={`flex ${gapClass} scroll-x-hidden scroll-smooth snap-x snap-proximity pt-2 pb-4 px-2 -mx-2`}
+        className={`flex ${gapClass} scroll-x-hidden scroll-smooth snap-x snap-proximity scroll-px-2 pt-2 pb-4 px-2 -mx-2`}
       >
         {children}
       </div>
