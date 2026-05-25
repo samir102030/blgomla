@@ -67,19 +67,23 @@ const ProductRail: React.FC<ProductRailProps> = ({
   const [canRight, setCanRight] = useState(false);
 
   // Detect available scroll room in both LTR and RTL (modern negative-scrollLeft model).
+  // EDGE buffer: the track has horizontal padding (px-2) so the first/last snap
+  // settles a few px off 0/max — treat that as "at the edge" so the arrow hides
+  // on the first/last item instead of overlapping it.
   const updateArrows = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
+    const EDGE = 16;
     const max = el.scrollWidth - el.clientWidth;
-    if (max <= 1) {
+    if (max <= EDGE) {
       setCanLeft(false);
       setCanRight(false);
       return;
     }
     const rtl = getComputedStyle(el).direction === "rtl";
     const fromLeft = rtl ? max + el.scrollLeft : el.scrollLeft;
-    setCanLeft(fromLeft > 1);
-    setCanRight(fromLeft < max - 1);
+    setCanLeft(fromLeft > EDGE);
+    setCanRight(fromLeft < max - EDGE);
   }, []);
 
   useEffect(() => {

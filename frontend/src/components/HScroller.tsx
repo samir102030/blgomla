@@ -20,16 +20,19 @@ const HScroller: React.FC<HScrollerProps> = ({ children, gapClass = "gap-3 sm:ga
   const updateArrows = useCallback(() => {
     const el = ref.current;
     if (!el) return;
+    // EDGE buffer absorbs the track's px-2 padding so arrows hide cleanly on the
+    // first/last item instead of lingering over it.
+    const EDGE = 16;
     const max = el.scrollWidth - el.clientWidth;
-    if (max <= 1) {
+    if (max <= EDGE) {
       setCanLeft(false);
       setCanRight(false);
       return;
     }
     const rtl = getComputedStyle(el).direction === "rtl";
     const fromLeft = rtl ? max + el.scrollLeft : el.scrollLeft;
-    setCanLeft(fromLeft > 1);
-    setCanRight(fromLeft < max - 1);
+    setCanLeft(fromLeft > EDGE);
+    setCanRight(fromLeft < max - EDGE);
   }, []);
 
   useEffect(() => {
