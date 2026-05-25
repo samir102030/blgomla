@@ -46,9 +46,11 @@ const ProductCardSkeleton: React.FC = () => (
 );
 
 const CategorySkeleton: React.FC = () => (
-  <div className="flex flex-col items-center gap-2 p-3">
-    <div className="w-16 h-16 lg:w-20 lg:h-20 animate-shimmer rounded-full" />
-    <div className="h-3 animate-shimmer rounded-full w-14" />
+  <div className="flex flex-col rounded-2xl border border-[var(--border)] overflow-hidden">
+    <div className="aspect-square w-full animate-shimmer" />
+    <div className="px-2 py-2.5 flex justify-center">
+      <div className="h-3 animate-shimmer rounded-full w-3/4" />
+    </div>
   </div>
 );
 
@@ -223,28 +225,31 @@ const HomePage: React.FC = () => {
                     <Link
                       to={`/products?category=${cat._id}`}
                       key={cat._id}
-                      className="group flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-accent)] hover:shadow-md transition-all duration-300"
+                      className="group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--brand-accent)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                     >
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full bg-[var(--surface-2)] flex items-center justify-center overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                      <div className="aspect-square w-full bg-white overflow-hidden">
                         {cat.image ? (
                           <img
-                            src={cldImg(cat.image, { w: 160 })}
-                            srcSet={cldSrcSet(cat.image, 80)}
-                            sizes="80px"
+                            src={cldImg(cat.image, { w: 400 })}
+                            srcSet={cldSrcSet(cat.image, 200)}
+                            sizes="(min-width:1024px) 200px, (min-width:640px) 22vw, 30vw"
                             alt={cat.name}
-                            width={80}
-                            height={80}
+                            width={200}
+                            height={200}
                             loading="lazy"
                             decoding="async"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <span className="text-2xl sm:text-3xl" aria-hidden="true">
+                          <span
+                            className="flex h-full w-full items-center justify-center text-4xl sm:text-5xl group-hover:scale-105 transition-transform duration-300"
+                            aria-hidden="true"
+                          >
                             {getCategoryIcon(cat.name)}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs sm:text-sm font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] text-center line-clamp-2 transition-colors">
+                      <span className="px-2 py-2.5 text-xs sm:text-sm font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] text-center line-clamp-2 transition-colors">
                         {cat.name}
                       </span>
                     </Link>
