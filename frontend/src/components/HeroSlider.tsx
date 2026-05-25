@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { cldImg, cldSrcSet } from "../lib/cldImage";
 
 interface Slide {
   id: number;
@@ -11,6 +12,8 @@ interface Slide {
   buttonLink: string;
   accentColor: string;
   icon: string;
+  // Optional square hero image (Cloudinary URL). Falls back to the emoji icon.
+  image?: string;
 }
 
 const HeroSlider: React.FC = () => {
@@ -27,6 +30,7 @@ const HeroSlider: React.FC = () => {
       buttonLink: "/products",
       accentColor: "from-[#FF6A1A] to-[#E8530A]",
       icon: "💻",
+      image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779668994/halafawy/hero/premium-tech.png",
     },
     {
       id: 2,
@@ -37,6 +41,7 @@ const HeroSlider: React.FC = () => {
       buttonLink: "/products?category=cameras",
       accentColor: "from-[#FFB382] to-[#FF6A1A]",
       icon: "📸",
+      image: "", // paste the Magnific/Cloudinary square (1:1) image URL here
     },
     {
       id: 3,
@@ -47,6 +52,18 @@ const HeroSlider: React.FC = () => {
       buttonLink: "/products?category=networking",
       accentColor: "from-[#E8530A] to-[#0B0B10]",
       icon: "🌐",
+      image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669319/halafawy/hero/networking.png",
+    },
+    {
+      id: 4,
+      title: t("Smartphones"),
+      subtitle: t("Flagship Power in Your Hand"),
+      description: t("The latest flagship smartphones from Samsung, Apple, and Xiaomi at wholesale prices."),
+      buttonText: t("Shop Phones"),
+      buttonLink: "/products",
+      accentColor: "from-[#E8530A] to-[#FF6A1A]",
+      icon: "📱",
+      image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669088/halafawy/hero/smartphones.png",
     },
   ];
 
@@ -112,8 +129,20 @@ const HeroSlider: React.FC = () => {
               <div className="hidden lg:flex justify-center items-center">
                 <div className="relative">
                   <div className={`w-72 h-72 xl:w-80 xl:h-80 rounded-3xl bg-gradient-to-br ${slide.accentColor} opacity-10 blur-2xl absolute inset-0`} />
-                  <div className="relative w-72 h-72 xl:w-80 xl:h-80 rounded-3xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center">
-                    <span className="text-8xl xl:text-9xl">{slide.icon}</span>
+                  <div className="relative w-72 h-72 xl:w-80 xl:h-80 rounded-3xl bg-[var(--surface-2)] border border-[var(--border)] flex items-center justify-center overflow-hidden">
+                    {slide.image ? (
+                      <img
+                        src={cldImg(slide.image, { w: 800 })}
+                        srcSet={cldSrcSet(slide.image, 400)}
+                        sizes="320px"
+                        alt={`${slide.title} ${slide.subtitle}`}
+                        className="w-full h-full object-cover"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        decoding="async"
+                      />
+                    ) : (
+                      <span className="text-8xl xl:text-9xl">{slide.icon}</span>
+                    )}
                   </div>
                 </div>
               </div>
