@@ -489,6 +489,12 @@ export const createOrder = controllerWrapper(
         console.error("Error creating order notifications:", error);
       }
 
+      logAudit(req, "order.placed", "order", savedOrder._id, {
+        total: savedOrder.totalPrice ?? savedOrder.total ?? savedOrder.totalAmount,
+        paymentMethod,
+        items: (orderItems?.length || 0) + (collectionItems?.length || 0),
+      }, { category: "customer" });
+
       res.status(201).json({
         success: true,
         order: savedOrder,

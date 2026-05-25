@@ -10,7 +10,7 @@ import BrandRequest from "../models/brandRequest.model.js";
 import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import { logEventSafe } from "./event.controller.js";
-import { logAudit } from "../utils/audit.js";
+import { logAudit, diff } from "../utils/audit.js";
 import mongoose from "mongoose";
 
 // Tokenized, case-insensitive search filter: every word must appear in the
@@ -171,6 +171,11 @@ export const createProduct = controllerWrapper(
         type: "product",
       });
     }
+
+    logAudit(req, "product.created", "product", product._id, {
+      name: product.name,
+      approvalStatus: product.approvalStatus,
+    }, { category: "admin" });
 
     res.status(201).json({ success: true, product });
   }
@@ -464,6 +469,24 @@ export const updateProduct = controllerWrapper(
         .status(404)
         .json({ success: false, message: "Product not found" });
 
+    const auditFields = [
+      "name",
+      "price",
+      "stock",
+      "isActive",
+      "approvalStatus",
+      "saleActive",
+      "salePercentage",
+      "category",
+      "brand",
+    ];
+    const snap = (p) =>
+      auditFields.reduce((o, f) => {
+        o[f] = p?.[f]?.toString?.() ?? p?.[f];
+        return o;
+      }, {});
+    const beforeSnap = snap(product);
+
     if (req.user.role === "store") {
       // Vendors cannot self-approve or publish directly
       delete updateData.isActive;
@@ -480,6 +503,10 @@ export const updateProduct = controllerWrapper(
       product.approvalNotes = undefined;
 
       await product.save();
+      logAudit(req, "product.updated", "product", product._id, { name: product.name }, {
+        changes: diff(beforeSnap, snap(product), auditFields),
+        category: "admin",
+      });
       return res.status(200).json({ success: true, product });
     }
 
@@ -491,6 +518,12 @@ export const updateProduct = controllerWrapper(
         runValidators: true,
       }
     );
+    logAudit(req, "product.updated", "product", updatedProduct._id, {
+      name: updatedProduct.name,
+    }, {
+      changes: diff(beforeSnap, snap(updatedProduct), auditFields),
+      category: "admin",
+    });
     res.status(200).json({ success: true, product: updatedProduct });
   }
 );
@@ -969,6 +1002,11 @@ export const addProductReview = controllerWrapper(
         type: "review",
       });
     }
+
+    logAudit(req, "review.created", "product", product._id, {
+      productName: product.name,
+      rating,
+    }, { category: "customer" });
 
     res.status(201).json({ success: true, reviews: product.reviews });
   }

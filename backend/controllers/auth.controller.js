@@ -13,7 +13,7 @@ import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
-import { logAudit } from "../utils/audit.js";
+import { logAudit, diff } from "../utils/audit.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -82,6 +82,12 @@ export const signup = controllerWrapper("signup", async (req, res) => {
   }
 
   await user.save();
+
+  logAudit(req, "user.registered", "user", user._id, {
+    role: user.role,
+    method: "password",
+    referred: Boolean(referredBy),
+  }, { actor: user, target: user, category: "account" });
 
   // Send welcome email with verification code (non-blocking).
   sendWelcomeEmail(user).catch((err) =>
@@ -271,6 +277,14 @@ export const login = controllerWrapper("login", async (req, res) => {
     }).select("+totpSecret").populate("love");
   if (phone) user = await User.findOne({ phoneNumber: phone }).select("+totpSecret");
   if (!user) {
+    logAudit(
+      req,
+      "auth.login_failed",
+      "auth",
+      undefined,
+      { email, phone, reason: "user_not_found" },
+      { status: "failure", severity: "warning", category: "security" }
+    );
     return res.status(400).json({
       success: false,
       message: "Invalid credentials",
@@ -278,10 +292,19 @@ export const login = controllerWrapper("login", async (req, res) => {
   }
 
   const isPasswordValid = await user.comparePassword(password);
-  if (!isPasswordValid)
+  if (!isPasswordValid) {
+    logAudit(
+      req,
+      "auth.login_failed",
+      "auth",
+      user._id,
+      { email: user.email, reason: "bad_password" },
+      { status: "failure", severity: "warning", category: "security", actor: user }
+    );
     return res
       .status(400)
       .json({ success: false, message: "Invalid credentials" });
+  }
 
   // Require verified email before issuing a session. Existing rows where
   // isVerified is undefined are treated as not-yet-verified.
@@ -307,6 +330,14 @@ export const login = controllerWrapper("login", async (req, res) => {
     }
     const { verifyTOTP } = await import("../utils/totp.js");
     if (!verifyTOTP(user.totpSecret, totpCode)) {
+      logAudit(
+        req,
+        "auth.login_failed",
+        "auth",
+        user._id,
+        { email: user.email, reason: "totp_invalid" },
+        { status: "failure", severity: "warning", category: "security", actor: user }
+      );
       return res.status(401).json({
         success: false,
         code: "TOTP_INVALID",
@@ -319,6 +350,11 @@ export const login = controllerWrapper("login", async (req, res) => {
 
   user.lastLogin = new Date();
   await user.save();
+
+  logAudit(req, "auth.login", "auth", user._id, { method: "password" }, {
+    actor: user,
+    category: "security",
+  });
 
   return res.status(200).json({
     success: true,
@@ -415,6 +451,11 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
 
   generateTokensAndSetCookies(res, user._id);
 
+  logAudit(req, "auth.login", "auth", user._id, { method: "google" }, {
+    actor: user,
+    category: "security",
+  });
+
   return res.status(200).json({
     success: true,
     message: "Signed in with Google",
@@ -433,6 +474,9 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
 export const logout = controllerWrapper("logout", async (req, res) => {
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
+  if (req.user) {
+    logAudit(req, "auth.logout", "auth", req.user._id, {}, { category: "security" });
+  }
   return res
     .status(200)
     .json({ success: true, message: "Logged out successfully" });
@@ -586,6 +630,7 @@ export const updateUser = controllerWrapper("updateUser", async (req, res) => {
   const guard = await guardSuperAdminMutation(userId, req.user);
   if (guard.status) return res.status(guard.status).json(guard.body);
 
+  const before = guard.targetUser;
   const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
     new: true,
     runValidators: true,
@@ -594,6 +639,18 @@ export const updateUser = controllerWrapper("updateUser", async (req, res) => {
   if (!updatedUser) {
     return res.status(404).json({ success: false, message: "User not found" });
   }
+
+  const changes = diff(
+    { role: before?.role, active: before?.active },
+    { role: updatedUser.role, active: updatedUser.active },
+    ["role", "active"]
+  );
+  logAudit(req, "user.updated", "user", updatedUser._id, {}, {
+    target: updatedUser,
+    changes,
+    severity: changes.some((c) => c.field === "role") ? "critical" : "warning",
+    category: "admin",
+  });
 
   return res.status(200).json({ success: true, user: updatedUser });
 });
@@ -618,6 +675,12 @@ export const safeDeleteUser = controllerWrapper(
       { new: true },
     );
 
+    logAudit(req, "user.soft_deleted", "user", userId, {}, {
+      target: user,
+      severity: "critical",
+      category: "admin",
+    });
+
     return res
       .status(200)
       .json({ success: true, message: "User marked as deleted" });
@@ -640,6 +703,12 @@ export const finalDeleteUser = controllerWrapper(
 
     const user = await User.findByIdAndDelete(userId);
 
+    logAudit(req, "user.deleted_permanently", "user", userId, {}, {
+      target: user,
+      severity: "critical",
+      category: "admin",
+    });
+
     res
       .status(200)
       .json({ success: true, message: "User permanently deleted" });
@@ -661,8 +730,16 @@ export const changeUserRole = controllerWrapper(
 
   const user = guard.targetUser;
 
+  const previousRole = user.role;
   user.role = role;
   await user.save();
+
+    logAudit(req, "user.role_changed", "user", user._id, {}, {
+      target: user,
+      changes: [{ field: "role", from: previousRole, to: role }],
+      severity: "critical",
+      category: "admin",
+    });
 
     res.status(200).json({ message: "User role updated successfully" });
   },
@@ -697,6 +774,13 @@ export const setAdminTime = controllerWrapper(
     target.adminGrantedBy = req.user._id;
     await target.save();
 
+    logAudit(req, "user.admin_granted", "user", target._id, {
+      days: Number(days),
+      hours: Number(hours),
+      minutes: Number(minutes),
+      expiresAt: target.adminExpiresAt,
+    }, { target, severity: "critical", category: "security" });
+
     res.status(200).json({
       success: true,
       message: "Admin time window updated",
@@ -723,6 +807,12 @@ export const endAdminTimeNow = controllerWrapper(
     target.adminGrantedBy = req.user._id;
     await target.save();
 
+    logAudit(req, "user.admin_revoked", "user", target._id, {}, {
+      target,
+      severity: "critical",
+      category: "security",
+    });
+
     res.status(200).json({ success: true, message: "Admin access ended now" });
   }
 );
@@ -742,6 +832,13 @@ export const activateUser = controllerWrapper(
 
     user.active = true; // Assuming you have an isActive field
     await user.save();
+
+    logAudit(req, "user.activated", "user", user._id, {}, {
+      target: user,
+      changes: [{ field: "active", from: false, to: true }],
+      severity: "warning",
+      category: "admin",
+    });
 
     res.status(200).json({ message: "User activated successfully" });
   },
@@ -763,6 +860,13 @@ export const deActivateUser = controllerWrapper(
     user.active = false; // Assuming you have an isActive field
     await user.save();
 
+    logAudit(req, "user.deactivated", "user", user._id, {}, {
+      target: user,
+      changes: [{ field: "active", from: true, to: false }],
+      severity: "warning",
+      category: "admin",
+    });
+
     res.status(200).json({ message: "User deactivated successfully" });
   },
 );
@@ -782,6 +886,13 @@ export const restoreUser = controllerWrapper(
 
     user.deleted = false; // Assuming you have a deleted field
     await user.save();
+
+    logAudit(req, "user.restored", "user", user._id, {}, {
+      target: user,
+      changes: [{ field: "deleted", from: true, to: false }],
+      severity: "warning",
+      category: "admin",
+    });
 
     res.status(200).json({ message: "User restored successfully" });
   },
@@ -987,6 +1098,9 @@ export const changePassword = controllerWrapper(
     // Check if current password is correct
     const isCurrentPasswordValid = await user.comparePassword(currentPassword);
     if (!isCurrentPasswordValid) {
+      logAudit(req, "user.password_change_failed", "user", user._id, {
+        reason: "bad_current_password",
+      }, { target: user, status: "failure", severity: "warning", category: "security" });
       return res.status(400).json({
         success: false,
         message: "Current password is incorrect",
@@ -996,6 +1110,12 @@ export const changePassword = controllerWrapper(
     // Update password
     user.password = newPassword;
     await user.save();
+
+    logAudit(req, "user.password_changed", "user", user._id, {}, {
+      target: user,
+      severity: "warning",
+      category: "security",
+    });
 
     // Create password change notification
     try {
@@ -1030,12 +1150,32 @@ export const updateProfile = controllerWrapper(
       });
     }
 
+    const beforeProfile = {
+      name: user.name,
+      phoneNumber: user.phoneNumber,
+      profilePicture: user.profilePicture,
+    };
+
     // Update allowed fields
     if (name !== undefined) user.name = name;
     if (phoneNumber !== undefined) user.phoneNumber = phoneNumber;
     if (profilePicture !== undefined) user.profilePicture = profilePicture;
 
     await user.save();
+
+    logAudit(req, "user.profile_updated", "user", user._id, {}, {
+      target: user,
+      changes: diff(
+        beforeProfile,
+        {
+          name: user.name,
+          phoneNumber: user.phoneNumber,
+          profilePicture: user.profilePicture,
+        },
+        ["name", "phoneNumber", "profilePicture"]
+      ),
+      category: "account",
+    });
 
     // Create profile update notification
     try {
@@ -1121,6 +1261,11 @@ export const enable2FA = controllerWrapper("enable2FA", async (req, res) => {
   }
   user.twoFactorEnabled = true;
   await user.save();
+  logAudit(req, "user.2fa_enabled", "user", user._id, {}, {
+    target: user,
+    severity: "warning",
+    category: "security",
+  });
   return res.status(200).json({
     success: true,
     message: "Two-factor authentication enabled.",
@@ -1151,6 +1296,11 @@ export const disable2FA = controllerWrapper("disable2FA", async (req, res) => {
   user.twoFactorEnabled = false;
   user.totpSecret = undefined;
   await user.save();
+  logAudit(req, "user.2fa_disabled", "user", user._id, {}, {
+    target: user,
+    severity: "warning",
+    category: "security",
+  });
   return res.status(200).json({
     success: true,
     message: "Two-factor authentication disabled.",
@@ -1225,7 +1375,11 @@ export const deleteMyAccount = controllerWrapper("deleteMyAccount", async (req, 
     { status: "cancelled", cancelled: true }
   );
 
-  logAudit(req, "user.self_deleted", "user", req.user._id);
+  logAudit(req, "user.self_deleted", "user", req.user._id, {}, {
+    target: req.user,
+    severity: "critical",
+    category: "account",
+  });
 
   // Clear auth cookies.
   res.clearCookie("accessToken");

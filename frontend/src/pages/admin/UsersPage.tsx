@@ -9,6 +9,7 @@ import {
   ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
+import AuditTrail from "../../components/admin/AuditTrail";
 
 const UsersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -471,20 +472,20 @@ const UsersPage: React.FC = () => {
       {/* View User Modal */}
       {showViewModal && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--surface)] text-[var(--text)] p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold mb-4">{t("users.userDetails")}</h3>
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <p>
-                <strong>Name:</strong> {selectedUser.name || "N/A"}
+                <strong>{t("Name")}:</strong> {selectedUser.name || "N/A"}
               </p>
               <p>
-                <strong>Email:</strong> {selectedUser.email}
+                <strong>{t("Email")}:</strong> {selectedUser.email}
               </p>
               <p>
-                <strong>Role:</strong> {selectedUser.role}
+                <strong>{t("Role")}:</strong> {selectedUser.role}
               </p>
               <p>
-                <strong>Status:</strong>{" "}
+                <strong>{t("Status")}:</strong>{" "}
                 {selectedUser.deleted
                   ? "Deleted"
                   : selectedUser.active
@@ -492,21 +493,34 @@ const UsersPage: React.FC = () => {
                   : "Inactive"}
               </p>
               <p>
-                <strong>Phone:</strong> {selectedUser.phoneNumber || "N/A"}
+                <strong>{t("Phone")}:</strong> {selectedUser.phoneNumber || "N/A"}
               </p>
               <p>
-                <strong>Join Date:</strong>{" "}
+                <strong>{t("Join Date")}:</strong>{" "}
                 {selectedUser.createdAt
                   ? new Date(selectedUser.createdAt).toLocaleDateString()
                   : "N/A"}
               </p>
               <p>
-                <strong>Last Login:</strong>{" "}
+                <strong>{t("Last Login")}:</strong>{" "}
                 {selectedUser.lastLogin
-                  ? new Date(selectedUser.lastLogin).toLocaleDateString()
+                  ? new Date(selectedUser.lastLogin).toLocaleString()
                   : "Never"}
               </p>
             </div>
+
+            <div className="mt-6">
+              <h4 className="text-sm font-semibold text-[var(--text)] mb-2">
+                {t("Activity")}
+              </h4>
+              <AuditTrail
+                userId={selectedUser._id}
+                showFilters={false}
+                compact
+                pageSize={20}
+              />
+            </div>
+
             <div className="flex justify-end mt-4">
               <button
                 className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
