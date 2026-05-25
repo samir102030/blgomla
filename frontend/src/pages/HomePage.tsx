@@ -15,6 +15,7 @@ import { Link } from "react-router-dom";
 import { cldImg, cldSrcSet } from "../lib/cldImage";
 import { useHomeFeed } from "../lib/queries";
 import CouponStrip from "../components/CouponStrip";
+import HScroller from "../components/HScroller";
 
 const FeaturedProducts = lazy(() => import("../components/FeaturedProducts"));
 const ProductRail = lazy(() => import("../components/ProductRail"));
@@ -218,21 +219,25 @@ const HomePage: React.FC = () => {
               viewAllLink="/categories"
               viewAllLabel={t("All Categories")}
             />
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 stagger-children">
+            <HScroller>
               {categoriesLoading
-                ? Array.from({ length: 6 }).map((_, i) => <CategorySkeleton key={i} />)
-                : (categories || []).slice(0, 12).map((cat: Category) => (
+                ? Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} className="w-[150px] sm:w-[170px] lg:w-[190px] shrink-0 snap-start">
+                      <CategorySkeleton />
+                    </div>
+                  ))
+                : (categories || []).map((cat: Category) => (
                     <Link
                       to={`/products?category=${cat._id}`}
                       key={cat._id}
-                      className="group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--brand-accent)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                      className="group w-[150px] sm:w-[170px] lg:w-[190px] shrink-0 snap-start flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-[var(--brand-accent)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                     >
                       <div className="aspect-square w-full bg-[#ffffff] overflow-hidden flex items-center justify-center p-3 sm:p-4">
                         {cat.image ? (
                           <img
                             src={cldImg(cat.image, { w: 400 })}
                             srcSet={cldSrcSet(cat.image, 200)}
-                            sizes="(min-width:1024px) 200px, (min-width:640px) 22vw, 30vw"
+                            sizes="190px"
                             alt={cat.name}
                             width={200}
                             height={200}
@@ -254,7 +259,7 @@ const HomePage: React.FC = () => {
                       </span>
                     </Link>
                   ))}
-            </div>
+            </HScroller>
           </section>
         </ScrollReveal>
 
