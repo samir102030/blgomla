@@ -175,9 +175,9 @@ export const useCategoryStore = create<CategoryStore>()(
         try {
           const { data } = await axiosInstance.put<{
             success: boolean;
-            category: Category;
+            data: Category;
           }>(`/categories/${categoryId}`, categoryData);
-          const updatedCategory = data.category;
+          const updatedCategory = data.data;
           set((state) => ({
             categories: state.categories.map((cat) =>
               cat._id === categoryId ? updatedCategory : cat
