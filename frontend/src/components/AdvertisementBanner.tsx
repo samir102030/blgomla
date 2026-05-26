@@ -56,6 +56,26 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
     }
   }, [ads, currentIndex, position, incrementViewCount, viewTracked, showPopup, popupClosed]);
 
+  // Esc closes the popup + lock page scroll while it's open.
+  // Declared before any early return to satisfy Rules of Hooks.
+  useEffect(() => {
+    if (!(position === "popup" && showPopup)) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowPopup(false);
+        setPopupClosed(true);
+        sessionStorage.setItem("popupClosed", "true");
+      }
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [position, showPopup]);
+
   if (ads.length === 0) return null;
 
   const currentAd = ads[currentIndex];
@@ -87,29 +107,108 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
 
   // Popup Advertisement
   if (position === "popup" && showPopup) {
+    const description =
+      (isRtl && currentAd.descriptionAr) || currentAd.description || "";
+    const hasCopy = Boolean(title || subtitle || description);
+    const ctaLabel = currentAd.link ? t("Shop Now") : t("Got it");
+    const handleCta = () => {
+      if (currentAd.link) handleClick();
+      handleClosePopup();
+    };
+
     return (
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
         onClick={handleClosePopup}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ad-popup-title"
+        dir={isRtl ? "rtl" : "ltr"}
       >
         <div
-          className="relative bg-[var(--surface)] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl border border-[var(--border)]"
+          className="relative bg-[var(--surface)] rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl border border-[var(--border)] grid grid-cols-1 md:grid-cols-2"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={handleClosePopup}
-            className="absolute top-3 right-3 bg-white/90 dark:bg-black/50 rounded-full p-2 shadow-lg hover:scale-110 z-10 transition-all"
+            aria-label={t("Close")}
+            className={`absolute top-3 ${isRtl ? "left-3" : "right-3"} bg-white/95 dark:bg-black/60 rounded-full p-2 shadow-lg hover:scale-110 z-10 transition-all`}
           >
             <XMarkIcon className="h-5 w-5 text-[var(--text)]" />
           </button>
-          <div onClick={handleClick} className="cursor-pointer">
+
+          {/* Image side */}
+          <div
+            onClick={currentAd.link ? handleCta : undefined}
+            className={`relative bg-[var(--surface-2)] flex items-center justify-center ${
+              currentAd.link ? "cursor-pointer" : ""
+            } ${hasCopy ? "aspect-square md:aspect-auto md:min-h-[360px]" : "aspect-[4/3]"}`}
+          >
             <img
-              src={cldImg(currentAd.image, { w: 1200 })}
-              alt={currentAd.title}
-              className="w-full h-auto max-h-[85vh] object-contain"
+              src={cldImg(currentAd.image, { w: 1000 })}
+              srcSet={cldSrcSet(currentAd.image, 500)}
+              sizes="(min-width: 768px) 384px, 100vw"
+              alt={title || currentAd.title || t("Promotion")}
+              className="absolute inset-0 w-full h-full object-contain p-4"
               loading="eager"
               decoding="async"
             />
+          </div>
+
+          {/* Content side */}
+          <div className="flex flex-col p-6 md:p-8 gap-3 overflow-y-auto">
+            <span className="inline-flex items-center gap-1.5 self-start text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] text-white shadow-sm">
+              ✨ {t("Limited Offer")}
+            </span>
+
+            <h2
+              id="ad-popup-title"
+              className="text-xl md:text-2xl font-extrabold text-[var(--text)] leading-tight"
+            >
+              {title || t("Special Promotion")}
+            </h2>
+
+            {subtitle && (
+              <p className="text-sm md:text-base font-semibold text-[var(--brand-primary)] leading-snug">
+                {subtitle}
+              </p>
+            )}
+
+            {description && (
+              <p className="text-sm text-[var(--text-muted)] leading-relaxed line-clamp-5">
+                {description}
+              </p>
+            )}
+
+            <div className="mt-auto pt-4 flex flex-col gap-2">
+              <button
+                onClick={handleCta}
+                className="w-full inline-flex items-center justify-center gap-2 font-semibold rounded-xl bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all px-6 py-3 text-sm md:text-base"
+              >
+                {ctaLabel}
+                {currentAd.link && (
+                  <svg
+                    className={`w-4 h-4 ${isRtl ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={handleClosePopup}
+                className="w-full text-xs text-[var(--text-subtle)] hover:text-[var(--text)] transition-colors py-1"
+              >
+                {t("No thanks")}
+              </button>
+            </div>
           </div>
         </div>
       </div>
