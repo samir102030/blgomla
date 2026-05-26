@@ -228,6 +228,22 @@ const storeSchema = new mongoose.Schema(
       default: 5, // 5% default commission
     },
 
+    // Vendor-supplied destination for payouts. Set by the vendor on their
+    // dashboard; consumed by Admin when marking a StorePayout as paid.
+    payoutDetails: {
+      method: {
+        type: String,
+        enum: ["bank_transfer", "instapay", "wallet", null],
+        default: null,
+      },
+      accountName: { type: String, trim: true },
+      accountNumber: { type: String, trim: true }, // IBAN or bank account
+      bankName: { type: String, trim: true },
+      instapayHandle: { type: String, trim: true }, // e.g. @user
+      walletNumber: { type: String, trim: true }, // Vodafone Cash / Etisalat Cash
+      notes: { type: String, trim: true },
+    },
+
     // Store Customization
     subscribers: [
       {

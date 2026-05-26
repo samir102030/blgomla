@@ -29,6 +29,7 @@ import AdminsPage from "../pages/admin/AdminsPage";
 import SiteModePage from "../pages/admin/SiteModePage";
 import ShippingSettingsPage from "../pages/admin/ShippingSettingsPage";
 import AccurateSettingsPage from "../pages/admin/AccurateSettingsPage";
+import PayoutsPage from "../pages/admin/PayoutsPage";
 import AuditLogPage from "../pages/admin/AuditLogPage";
 import RolesAccessPage from "../pages/admin/RolesAccessPage";
 import { RequirePermission } from "../components/Can";
@@ -120,6 +121,7 @@ const AdminRoutes: React.FC = () => {
         {/* Shipping */}
         <Route path="/shipping" element={<ShippingSettingsPage />} />
         <Route path="/accurate" element={<AccurateSettingsPage />} />
+        <Route path="/payouts" element={<PayoutsPage />} />
         <Route path="/audit-log" element={<AuditLogPage />} />
         <Route
           path="/roles"

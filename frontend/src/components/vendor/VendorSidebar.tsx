@@ -76,6 +76,12 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
       ]
     },
     {
+      title: 'Payouts',
+      icon: '💸',
+      path: '/vendor/payouts',
+      children: []
+    },
+    {
       title: 'Settings',
       icon: '⚙️',
       path: '/vendor/settings',

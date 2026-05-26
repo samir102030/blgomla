@@ -146,6 +146,14 @@ export const PERMISSION_GROUPS = [
     ],
   },
   {
+    resource: "payouts",
+    label: "Vendor Payouts",
+    actions: [
+      { key: "view", label: "View own statements" },
+      { key: "manage", label: "Generate / mark paid (admin)" },
+    ],
+  },
+  {
     resource: "analytics",
     label: "Analytics",
     actions: [{ key: "view", label: "View" }],
@@ -229,6 +237,7 @@ const STORE_PERMISSIONS = [
   "reviews.view",
   "reviews.manage",
   "analytics.view",
+  "payouts.view",
 ];
 
 // Admin = everything except the two super-admin-only powers.

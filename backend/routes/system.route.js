@@ -29,6 +29,7 @@ import socialProofRoutes from "./socialProof.route.js";
 import mosaicCardRoutes from "./mosaicCard.route.js";
 import roleRoutes from "./role.route.js";
 import emailPrefsRoutes from "./emailPreferences.route.js";
+import payoutRoutes from "./payout.route.js";
 
 const router = express.Router();
 
@@ -61,6 +62,7 @@ router.use("/social-proof", socialProofRoutes);
 router.use("/mosaic-cards", mosaicCardRoutes);
 router.use("/roles", roleRoutes);
 router.use("/emails", emailPrefsRoutes);
+router.use("/payouts", payoutRoutes);
 
 // ops module owns: /analytics, /audit-logs, /site-mode, /cron
 router.use("/", opsRoutes);

@@ -19,6 +19,7 @@ import {
   ShieldCheckIcon,
   RocketLaunchIcon,
   TruckIcon,
+  BanknotesIcon,
   // StarIcon,
 } from "@heroicons/react/24/outline";
 import Logo, { BRAND } from "../Logo";
@@ -179,6 +180,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       href: "/dashboard/accurate",
       icon: TruckIcon,
       perm: "shipping.manage",
+    },
+    {
+      name: t("admin.payouts", "Vendor payouts"),
+      href: "/dashboard/payouts",
+      icon: BanknotesIcon,
+      perm: "payouts.manage",
     },
     {
       name: t("admin.collections"),
