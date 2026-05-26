@@ -1,7 +1,9 @@
 export interface Category {
   _id: string;
   name: string;
+  nameAr?: string;
   description?: string;
+  descriptionAr?: string;
   image?: string;
   parentCategory?: string | Category; // ObjectId as string or populated Category
   subCategories?: Category[];

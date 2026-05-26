@@ -519,7 +519,7 @@ const Header: React.FC = () => {
                       onClick={() => goToCategory(c._id)}
                     >
                       <Squares2X2Icon className="w-4 h-4 text-[var(--text-subtle)] shrink-0" />
-                      <span className="text-sm text-[var(--text)] truncate">{c.name}</span>
+                      <span className="text-sm text-[var(--text)] truncate">{i18n.language === 'ar' && c.nameAr ? c.nameAr : c.name}</span>
                     </button>
                   );
                 })}
@@ -825,7 +825,7 @@ const Header: React.FC = () => {
                                 </span>
                               )}
                             </span>
-                            <span className="truncate">{c.name}</span>
+                            <span className="truncate">{i18n.language === 'ar' && c.nameAr ? c.nameAr : c.name}</span>
                           </button>
                         ))}
                       </div>
@@ -953,7 +953,7 @@ const Header: React.FC = () => {
                         }}
                         className="w-full text-left block py-2.5 px-4 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors truncate"
                       >
-                        {c.name}
+                        {i18n.language === 'ar' && c.nameAr ? c.nameAr : c.name}
                       </button>
                     </li>
                   ))}

@@ -106,7 +106,7 @@ const bundleThemes = [
 
 /* ═════════════════════ Main Page ═════════════════════ */
 const HomePage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   useUserStore((s) => s.user);
 
   const { addCollectionToCart } = useCollectionStore();
@@ -255,7 +255,7 @@ const HomePage: React.FC = () => {
                         )}
                       </div>
                       <span className="px-2 py-2.5 text-xs sm:text-sm font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] text-center line-clamp-2 transition-colors">
-                        {cat.name}
+                        {i18n.language === 'ar' && cat.nameAr ? cat.nameAr : cat.name}
                       </span>
                     </Link>
                   ))}

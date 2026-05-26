@@ -34,7 +34,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   categories,
   vendors = [],
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [filters, setFilters] = useState<ProductFilters>(currentFilters);
 
   useEffect(() => {
@@ -131,7 +131,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               <option value="">{t('All Categories')}</option>
               {categories.map((category) => (
                 <option key={category._id} value={category._id}>
-                  {category.name}
+                  {i18n.language === 'ar' && category.nameAr ? category.nameAr : category.name}
                 </option>
               ))}
             </select>

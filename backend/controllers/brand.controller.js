@@ -83,7 +83,7 @@ export const getAllBrands = controllerWrapper(
   "getAllBrands",
   async (req, res) => {
     const brands = await Brand.find({ deleted: { $ne: true } })
-      .populate("categories", "name slug")
+      .populate("categories", "name nameAr slug")
       .sort({ sortOrder: 1, name: 1 });
 
     // Aggregate product counts in one query
@@ -107,7 +107,7 @@ export const getBrandById = controllerWrapper(
   "getBrandById",
   async (req, res) => {
     const { brandId } = req.params;
-    const brand = await Brand.findById(brandId).populate("categories", "name slug");
+    const brand = await Brand.findById(brandId).populate("categories", "name nameAr slug");
     if (!brand || brand.deleted)
       return res.status(404).json({ success: false, message: "Brand not found" });
     res.status(200).json({ success: true, brand });
@@ -120,7 +120,7 @@ export const getBrandBySlug = controllerWrapper(
   async (req, res) => {
     const { slug } = req.params;
     const brand = await Brand.findOne({ slug, deleted: { $ne: true } })
-      .populate("categories", "name slug");
+      .populate("categories", "name nameAr slug");
     if (!brand)
       return res.status(404).json({ success: false, message: "Brand not found" });
     res.status(200).json({ success: true, brand });

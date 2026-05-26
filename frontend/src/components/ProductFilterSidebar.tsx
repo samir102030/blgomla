@@ -31,7 +31,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
   brands,
   onFilterChange,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [expandedSections, setExpandedSections] = useState({
     category: true,
     brand: true,
@@ -231,7 +231,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                       />
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span className="text-base shrink-0" aria-hidden="true">{getCategoryIcon(category.name)}</span>
-                        <span className="text-sm text-[var(--text)] truncate">{category.name}</span>
+                        <span className="text-sm text-[var(--text)] truncate">{i18n.language === 'ar' && category.nameAr ? category.nameAr : category.name}</span>
                       </div>
                     </label>
                     {subCats.length > 0 && isChecked && (
@@ -249,7 +249,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                             />
                             <div className="flex items-center gap-1.5 flex-1 min-w-0">
                               <span className="text-sm shrink-0" aria-hidden="true">{getCategoryIcon(sub.name)}</span>
-                              <span className="text-xs text-[var(--text-muted)]">{sub.name}</span>
+                              <span className="text-xs text-[var(--text-muted)]">{i18n.language === 'ar' && sub.nameAr ? sub.nameAr : sub.name}</span>
                             </div>
                           </label>
                         ))}

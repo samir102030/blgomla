@@ -308,7 +308,7 @@ export const getProductById = controllerWrapper(
     const { productId } = req.params;
     const product = await Product.findById(productId)
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .populate("store", "storeName logo")
       .populate("reviews.user", "name");
     if (!product)
@@ -326,7 +326,7 @@ export const getProductBySlug = controllerWrapper(
     const { slug } = req.params;
     const product = await Product.findOne({ slug, deleted: { $ne: true } })
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .populate("store", "storeName logo")
       .populate("reviews.user", "name");
     if (!product)
@@ -417,7 +417,7 @@ export const getStorefrontProducts = controllerWrapper(
 
     const mongooseQuery = Product.find(query)
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .sort(sortOption);
 
     const result = await paginateQuery(page, limit, mongooseQuery);
@@ -836,7 +836,7 @@ export const filterProducts = controllerWrapper(
     }
     const mongooseQuery = Product.find(query)
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
@@ -871,7 +871,7 @@ export const getProductsByCategory = controllerWrapper(
     };
     const mongooseQuery = Product.find(query)
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
@@ -891,7 +891,7 @@ export const getProductsByBrand = controllerWrapper(
     };
     const mongooseQuery = Product.find(query)
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
@@ -911,7 +911,7 @@ export const getStoreProducts = controllerWrapper(
     };
     const mongooseQuery = Product.find(query)
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .populate("store", "storeName logo");
     const result = await paginateQuery(page, limit, mongooseQuery);
     res.status(200).json(result);
@@ -1350,7 +1350,7 @@ export const getRelatedProducts = controllerWrapper(
       q
         .sort({ soldCount: -1, rating: -1 })
         .populate("brand", "name slug logo")
-        .populate("category", "name slug")
+        .populate("category", "name nameAr slug")
         .lean();
 
     const collected = [];
@@ -1433,7 +1433,7 @@ export const getFrequentlyBoughtTogether = controllerWrapper(
       deleted: false,
     })
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .lean();
 
     const order = new Map(ids.map((id, i) => [String(id), i]));
@@ -1536,7 +1536,7 @@ export const getProductsByIds = controllerWrapper(
       deleted: false,
     })
       .populate("brand", "name slug logo")
-      .populate("category", "name slug")
+      .populate("category", "name nameAr slug")
       .lean();
 
     const order = new Map(ids.map((id, i) => [String(id), i]));
