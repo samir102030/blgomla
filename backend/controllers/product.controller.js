@@ -32,7 +32,9 @@ const buildSearchFilter = (search) => {
     return {
       $or: [
         { name: { $regex: rx } },
+        { nameAr: { $regex: rx } },
         { description: { $regex: rx } },
+        { descriptionAr: { $regex: rx } },
         { tags: { $in: [rx] } },
       ],
     };
