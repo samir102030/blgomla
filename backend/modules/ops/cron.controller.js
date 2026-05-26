@@ -64,6 +64,9 @@ export const recoverAbandonedCarts = controllerWrapper(
       "cartRecovery.stage": { $lt: 3 },
       deleted: { $ne: true },
       email: { $ne: null },
+      // Respect explicit opt-out. Defaults to true via the schema, so existing
+      // users without the field set keep receiving reminders.
+      "emailPreferences.cartRecovery": { $ne: false },
     })
       .limit(BATCH_LIMIT)
       .populate("cart.product", "name price salePrice saleActive salePercentage images")

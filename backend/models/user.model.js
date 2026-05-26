@@ -89,6 +89,13 @@ const userSchema = new mongoose.Schema(
       stage: { type: Number, default: 0 },
       lastSentAt: { type: Date, default: null },
     },
+    // Per-channel email opt-outs. Honored by the cron filter for each
+    // category before sending. Transactional mail (orders, password
+    // reset, verification) is never gated on these.
+    emailPreferences: {
+      cartRecovery: { type: Boolean, default: true },
+      marketing: { type: Boolean, default: true },
+    },
     love: [
       {
         type: mongoose.Schema.Types.ObjectId,

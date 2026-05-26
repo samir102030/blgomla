@@ -1,16 +1,40 @@
 import { Resend } from "resend";
+import jwt from "jsonwebtoken";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM_EMAIL = process.env.FROM_EMAIL || "Belgomla <noreply@belgmla.com>";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "support@belgmla.com";
 const CLIENT_URL = process.env.CLIENT_URL || "https://halafawystore-frontend.vercel.app";
+const API_URL =
+  process.env.API_URL ||
+  process.env.PUBLIC_API_URL ||
+  "https://api.belgmla.com";
 
-const sendEmail = async ({ to, subject, html, text, replyTo }) => {
+// One-click unsubscribe link. Signed with JWT_SECRET so the route can verify
+// it without a DB lookup or session. `type` matches a key under User.emailPreferences.
+export const buildUnsubscribeLink = (userId, type) => {
+  if (!process.env.JWT_SECRET) return null;
+  const token = jwt.sign({ uid: String(userId), t: type }, process.env.JWT_SECRET, {
+    expiresIn: "365d",
+  });
+  return `${API_URL.replace(/\/$/, "")}/api/emails/unsubscribe?token=${encodeURIComponent(token)}`;
+};
+
+const sendEmail = async ({ to, subject, html, text, replyTo, unsubscribeUrl }) => {
   if (!process.env.RESEND_API_KEY || !resend) {
     console.warn("[Email] RESEND_API_KEY not set — skipping email to", to);
     return null;
   }
   try {
+    // RFC 8058 List-Unsubscribe headers — Gmail/Outlook surface a native
+    // "Unsubscribe" affordance next to the sender name when these are present,
+    // which protects deliverability for marketing-class mail.
+    const headers = unsubscribeUrl
+      ? {
+          "List-Unsubscribe": `<${unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        }
+      : undefined;
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: Array.isArray(to) ? to : [to],
@@ -18,6 +42,7 @@ const sendEmail = async ({ to, subject, html, text, replyTo }) => {
       html,
       text,
       reply_to: replyTo || SUPPORT_EMAIL,
+      ...(headers ? { headers } : {}),
     });
     if (error) {
       console.error("[Email] Resend error:", error);
@@ -84,6 +109,7 @@ const STRINGS = {
     privacy: "Privacy",
     terms: "Terms",
     contact: "Contact",
+    unsubscribe: "Unsubscribe from these emails",
   },
   ar: {
     tagline: "السوق الأول في مصر لتكنولوجيا المعلومات والشبكات",
@@ -96,6 +122,7 @@ const STRINGS = {
     privacy: "الخصوصية",
     terms: "الشروط",
     contact: "اتصل بنا",
+    unsubscribe: "إلغاء الاشتراك في هذه الرسائل",
   },
 };
 
@@ -106,7 +133,7 @@ const pickLang = (lang) => (String(lang || "").toLowerCase().startsWith("ar") ? 
  * width that collapses on narrow screens via a small <style> block in
  * <head> (Gmail honours this).
  */
-const renderEmailLayout = ({ lang = "en", previewText = "", body = "" }) => {
+const renderEmailLayout = ({ lang = "en", previewText = "", body = "", unsubscribeUrl = null }) => {
   const L = pickLang(lang);
   const t = STRINGS[L];
   const dir = L === "ar" ? "rtl" : "ltr";
@@ -202,6 +229,7 @@ const renderEmailLayout = ({ lang = "en", previewText = "", body = "" }) => {
               © ${year} Belgomla. ${t.rights}<br>
               ${t.address}<br>
               <span style="color:${T.textSubtle};opacity:0.8;">${t.youReceived}</span>
+              ${unsubscribeUrl ? `<br><a href="${unsubscribeUrl}" style="color:${T.textSubtle};text-decoration:underline;opacity:0.85;">${t.unsubscribe}</a>` : ""}
             </div>
           </td>
         </tr>
@@ -723,10 +751,17 @@ export const sendAbandonedCartEmail = async (user, cartItems = [], stage = 1) =>
     ${ctaButton(`${CLIENT_URL}/cart`, copy.cta)}
   `;
 
-  const html = renderEmailLayout({ lang, previewText: copy.para, body });
-  const text = `${copy.title}\n${copy.para}\n${CLIENT_URL}/cart`;
+  const unsubscribeUrl = buildUnsubscribeLink(user._id, "cartRecovery");
+  const html = renderEmailLayout({ lang, previewText: copy.para, body, unsubscribeUrl });
+  const text = `${copy.title}\n${copy.para}\n${CLIENT_URL}/cart${unsubscribeUrl ? `\n\n${unsubscribeUrl}` : ""}`;
 
-  return sendEmail({ to: user.email, subject: subjectMap[lang], html, text });
+  return sendEmail({
+    to: user.email,
+    subject: subjectMap[lang],
+    html,
+    text,
+    unsubscribeUrl,
+  });
 };
 
 export default sendEmail;
