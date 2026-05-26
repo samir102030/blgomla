@@ -215,6 +215,11 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
     );
   }
 
+  // Popup ads that have already been dismissed (or haven't opened yet) must
+  // not fall through to the image-banner render below — otherwise the popup
+  // creative leaks into the page as a giant inline strip.
+  if (position === "popup") return null;
+
   // ── Promo strip (no image, gradient background) ──
   if (position === "banner") {
     return (
