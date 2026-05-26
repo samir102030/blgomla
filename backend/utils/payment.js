@@ -210,6 +210,202 @@ export const verifyPaymobHmac = (data, hmac) => {
 };
 
 /* ─────────────────────────────────────────────────
+   TABBY INTEGRATION (Pay-in-4 BNPL, MENA)
+   ─────────────────────────────────────────────────
+   Tabby's Checkout Session API: we POST the cart, get back a hosted
+   web_url, and redirect the customer. Tabby signs webhook callbacks
+   with HMAC-SHA256 of the raw body using the merchant secret.
+*/
+
+const TABBY_BASE = process.env.TABBY_BASE_URL || "https://api.tabby.ai";
+
+export const createTabbyCheckout = async ({
+  amount,
+  orderId,
+  billingData,
+  items = [],
+  currency = "EGP",
+  successUrl,
+  cancelUrl,
+  failureUrl,
+  lang = "en",
+}) => {
+  if (!process.env.TABBY_SECRET_KEY || !process.env.TABBY_MERCHANT_CODE) {
+    throw new Error("Tabby is not configured (TABBY_SECRET_KEY / TABBY_MERCHANT_CODE missing)");
+  }
+
+  const body = {
+    payment: {
+      amount: Number(amount).toFixed(2),
+      currency,
+      buyer: {
+        phone: billingData.phone,
+        email: billingData.email,
+        name: `${billingData.firstName || ""} ${billingData.lastName || ""}`.trim() || "Customer",
+      },
+      order: {
+        reference_id: orderId,
+        items: items.map((i) => ({
+          title: i.name || "Product",
+          quantity: i.quantity,
+          unit_price: Number(i.price).toFixed(2),
+          category: i.category || "general",
+        })),
+      },
+      shipping_address: {
+        city: billingData.city || "Cairo",
+        address: billingData.street || billingData.address || "—",
+        zip: billingData.postalCode || "",
+      },
+    },
+    lang,
+    merchant_code: process.env.TABBY_MERCHANT_CODE,
+    merchant_urls: {
+      success: successUrl,
+      cancel: cancelUrl,
+      failure: failureUrl,
+    },
+  };
+
+  const res = await fetch(`${TABBY_BASE}/api/v2/checkout`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.TABBY_SECRET_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(`Tabby error: ${data?.error || data?.message || res.statusText}`);
+  }
+
+  // Tabby returns the customer-facing URL nested under
+  // configuration.available_products.installments[0].web_url. The session id
+  // we store so the webhook can correlate back.
+  const webUrl =
+    data?.configuration?.available_products?.installments?.[0]?.web_url ||
+    data?.web_url;
+  if (!webUrl) {
+    throw new Error("Tabby returned no checkout URL — the customer may be ineligible");
+  }
+
+  return {
+    sessionId: data.id,
+    paymentUrl: webUrl,
+  };
+};
+
+export const verifyTabbyWebhook = (rawBody, signatureHeader) => {
+  const secret = process.env.TABBY_WEBHOOK_SECRET || process.env.TABBY_SECRET_KEY;
+  if (!secret) return false;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(typeof rawBody === "string" ? rawBody : rawBody.toString("utf8"))
+    .digest("hex");
+  // Constant-time compare to avoid timing attacks.
+  const a = Buffer.from(expected);
+  const b = Buffer.from(String(signatureHeader || ""));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+
+/* ─────────────────────────────────────────────────
+   TAMARA INTEGRATION (Pay-in-3 BNPL, MENA)
+   ─────────────────────────────────────────────────
+   Tamara's Checkout API: POST a payload, get back a hosted checkout_url.
+   Their webhook authenticates via a static notification_token sent in
+   the `tamara-token` header — we compare it to the env value.
+*/
+
+const TAMARA_BASE = process.env.TAMARA_BASE_URL || "https://api.tamara.co";
+
+export const createTamaraCheckout = async ({
+  amount,
+  orderId,
+  billingData,
+  items = [],
+  currency = "EGP",
+  successUrl,
+  cancelUrl,
+  failureUrl,
+  notificationUrl,
+  lang = "en",
+  country = "EG",
+  shippingAmount = 0,
+  taxAmount = 0,
+}) => {
+  if (!process.env.TAMARA_API_TOKEN) {
+    throw new Error("Tamara is not configured (TAMARA_API_TOKEN missing)");
+  }
+
+  const body = {
+    order_reference_id: orderId,
+    total_amount: { amount: Number(amount).toFixed(2), currency },
+    shipping_amount: { amount: Number(shippingAmount).toFixed(2), currency },
+    tax_amount: { amount: Number(taxAmount).toFixed(2), currency },
+    description: `Belgomla order ${orderId}`,
+    country_code: country,
+    payment_type: "PAY_BY_INSTALMENTS",
+    locale: lang === "ar" ? "ar_EG" : "en_US",
+    items: items.map((i, idx) => ({
+      reference_id: String(i.id || idx),
+      type: "Physical",
+      name: i.name || "Product",
+      sku: i.sku || String(i.id || idx),
+      quantity: i.quantity,
+      unit_price: { amount: Number(i.price).toFixed(2), currency },
+      total_amount: {
+        amount: (Number(i.price) * i.quantity).toFixed(2),
+        currency,
+      },
+    })),
+    consumer: {
+      email: billingData.email,
+      phone_number: billingData.phone,
+      first_name: billingData.firstName || "Customer",
+      last_name: billingData.lastName || "—",
+    },
+    shipping_address: {
+      first_name: billingData.firstName || "Customer",
+      last_name: billingData.lastName || "—",
+      line1: billingData.street || billingData.address || "—",
+      city: billingData.city || "Cairo",
+      country_code: country,
+      phone_number: billingData.phone,
+    },
+    merchant_url: {
+      success: successUrl,
+      failure: failureUrl,
+      cancel: cancelUrl,
+      notification: notificationUrl,
+    },
+  };
+
+  const res = await fetch(`${TAMARA_BASE}/checkout`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.TAMARA_API_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(`Tamara error: ${data?.message || data?.errors?.[0]?.error_code || res.statusText}`);
+  }
+
+  return {
+    sessionId: data.order_id || data.checkout_id,
+    paymentUrl: data.checkout_url,
+  };
+};
+
+// Tamara authenticates webhooks with a static token in `tamara-token`.
+export const verifyTamaraWebhook = (token) =>
+  Boolean(process.env.TAMARA_NOTIFICATION_TOKEN) &&
+  String(token || "") === String(process.env.TAMARA_NOTIFICATION_TOKEN);
+
+/* ─────────────────────────────────────────────────
    PAYMENT GATEWAY ROUTER
    ───────────────────────────────────────────────── */
 
@@ -239,6 +435,42 @@ export const createPayment = async (method, { amount, orderId, billingData, item
             process.env.PAYMOB_IFRAME_ID,
         })),
       };
+    case "tabby": {
+      const base = (process.env.CLIENT_URL || "https://belgmla.com").replace(/\/$/, "");
+      return {
+        gateway: "tabby",
+        ...(await createTabbyCheckout({
+          amount,
+          orderId,
+          billingData,
+          items,
+          currency: (currency || "egp").toUpperCase(),
+          successUrl: `${base}/order/${orderId}?payment=success`,
+          cancelUrl: `${base}/checkout?payment=cancel`,
+          failureUrl: `${base}/checkout?payment=failure`,
+          lang: billingData?.lang || "en",
+        })),
+      };
+    }
+    case "tamara": {
+      const base = (process.env.CLIENT_URL || "https://belgmla.com").replace(/\/$/, "");
+      const apiBase = (process.env.API_URL || "https://api.belgmla.com").replace(/\/$/, "");
+      return {
+        gateway: "tamara",
+        ...(await createTamaraCheckout({
+          amount,
+          orderId,
+          billingData,
+          items,
+          currency: (currency || "egp").toUpperCase(),
+          successUrl: `${base}/order/${orderId}?payment=success`,
+          cancelUrl: `${base}/checkout?payment=cancel`,
+          failureUrl: `${base}/checkout?payment=failure`,
+          notificationUrl: `${apiBase}/api/payments/webhook/tamara`,
+          lang: billingData?.lang || "en",
+        })),
+      };
+    }
     case "cod":
       return { gateway: "cod", status: "pending" };
     default:

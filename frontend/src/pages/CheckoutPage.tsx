@@ -541,18 +541,21 @@ const CheckoutPage: React.FC = () => {
       if (order) {
         await fetchCart();
 
-        // Online payment (Paymob card / installments): get a payment key and
-        // hand off to the hosted iframe. Falls back to confirmation if the
-        // gateway isn't configured, so the order is never lost.
-        if (paymentMethod === "paymob" || paymentMethod === "paymob_installment") {
+        // Online payment (Paymob card / installments / Tabby / Tamara): get a
+        // payment session and hand off to the hosted page. Falls back to
+        // confirmation if the gateway isn't configured, so the order is never lost.
+        const onlineGateways = ["paymob", "paymob_installment", "tabby", "tamara"];
+        if (onlineGateways.includes(paymentMethod)) {
           try {
             const { data } = await axiosInstance.post("/payments/create-intent", {
               orderId: order._id,
               paymentMethod,
             });
-            const iframeUrl = data?.payment?.iframeUrl;
-            if (iframeUrl) {
-              window.location.href = iframeUrl;
+            // Paymob returns iframeUrl; Tabby/Tamara return paymentUrl.
+            const redirectUrl =
+              data?.payment?.iframeUrl || data?.payment?.paymentUrl;
+            if (redirectUrl) {
+              window.location.href = redirectUrl;
               return;
             }
           } catch (payErr) {
@@ -1219,6 +1222,32 @@ const CheckoutPage: React.FC = () => {
                       />
                       <span className="ml-2 text-xs sm:text-sm text-[var(--text-muted)]">
                         {t("Installments (ValU / Souhoola)")}
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="tabby"
+                        checked={paymentMethod === "tabby"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-xs sm:text-sm text-[var(--text-muted)]">
+                        {t("Tabby — Pay in 4, interest-free")}
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="payment"
+                        value="tamara"
+                        checked={paymentMethod === "tamara"}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-xs sm:text-sm text-[var(--text-muted)]">
+                        {t("Tamara — Pay in 3, no interest")}
                       </span>
                     </label>
                   </div>

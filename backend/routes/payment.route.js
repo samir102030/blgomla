@@ -1,7 +1,14 @@
 import express from "express";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { verifyToken } from "../middleware/auth.middleware.js";
-import { createPayment, verifyStripeWebhook, getStripePaymentIntent, verifyPaymobHmac } from "../utils/payment.js";
+import {
+  createPayment,
+  verifyStripeWebhook,
+  getStripePaymentIntent,
+  verifyPaymobHmac,
+  verifyTabbyWebhook,
+  verifyTamaraWebhook,
+} from "../utils/payment.js";
 import Order from "../models/order.model.js";
 import User from "../models/user.model.js";
 import { sendOrderConfirmationEmail } from "../utils/email.js";
@@ -184,6 +191,124 @@ router.post(
             await sendOrderConfirmationEmail(user, order);
           }
         }
+      }
+    }
+
+    res.status(200).json({ received: true });
+  })
+);
+
+/**
+ * POST /api/payments/webhook/tabby
+ * Tabby callback — HMAC-signed by the merchant secret. We need the raw body
+ * for the signature check, so the express.json() middleware is bypassed here
+ * via express.raw and re-parsed locally.
+ */
+router.post(
+  "/webhook/tabby",
+  express.raw({ type: "application/json" }),
+  controllerWrapper("tabbyWebhook", async (req, res) => {
+    const sig = req.headers["x-tabby-signature"] || req.headers["tabby-signature"];
+
+    if (process.env.TABBY_WEBHOOK_SECRET || process.env.TABBY_SECRET_KEY) {
+      if (!verifyTabbyWebhook(req.body, sig)) {
+        console.warn("[Tabby Webhook] Rejected: invalid signature");
+        return res.status(401).json({ received: false, error: "Invalid signature" });
+      }
+    } else {
+      console.warn(
+        "[Tabby Webhook] TABBY_WEBHOOK_SECRET / TABBY_SECRET_KEY not set — accepting WITHOUT signature verification. Set this before going live."
+      );
+    }
+
+    let payload;
+    try {
+      payload = JSON.parse(req.body.toString("utf8"));
+    } catch {
+      return res.status(400).json({ received: false, error: "Malformed JSON" });
+    }
+
+    const orderId = payload?.order?.reference_id;
+    const status = payload?.status; // "AUTHORIZED" | "CLOSED" | "EXPIRED" | "REJECTED" | …
+    const paid = status === "AUTHORIZED" || status === "CLOSED";
+
+    if (orderId && paid) {
+      const order = await Order.findByIdAndUpdate(
+        orderId,
+        {
+          isPaid: true,
+          paidAt: new Date(),
+          paymentResult: {
+            id: String(payload?.id || payload?.payment?.id || ""),
+            status: "succeeded",
+            update_time: new Date().toISOString(),
+          },
+          $push: {
+            statusTimeline: { status: "paid", note: "Payment received via Tabby" },
+          },
+        },
+        { new: true }
+      ).populate("orderItems.product");
+
+      if (order) {
+        const user = await User.findById(order.user);
+        if (user) await sendOrderConfirmationEmail(user, order);
+      }
+    }
+
+    res.status(200).json({ received: true });
+  })
+);
+
+/**
+ * POST /api/payments/webhook/tamara
+ * Tamara callback — authenticated by a static `tamara-token` header that
+ * we configure in their dashboard and compare against TAMARA_NOTIFICATION_TOKEN.
+ */
+router.post(
+  "/webhook/tamara",
+  controllerWrapper("tamaraWebhook", async (req, res) => {
+    const token = req.headers["tamara-token"] || req.headers["x-tamara-token"];
+
+    if (process.env.TAMARA_NOTIFICATION_TOKEN) {
+      if (!verifyTamaraWebhook(token)) {
+        console.warn("[Tamara Webhook] Rejected: invalid token");
+        return res.status(401).json({ received: false, error: "Invalid token" });
+      }
+    } else {
+      console.warn(
+        "[Tamara Webhook] TAMARA_NOTIFICATION_TOKEN not set — accepting WITHOUT verification. Set this before going live."
+      );
+    }
+
+    const orderId = req.body?.order_reference_id;
+    const status = req.body?.order_status; // "approved" / "authorised" / "fully_captured" / "declined" / "expired"
+    const paid =
+      status === "authorised" ||
+      status === "fully_captured" ||
+      status === "approved";
+
+    if (orderId && paid) {
+      const order = await Order.findByIdAndUpdate(
+        orderId,
+        {
+          isPaid: true,
+          paidAt: new Date(),
+          paymentResult: {
+            id: String(req.body?.order_id || ""),
+            status: "succeeded",
+            update_time: new Date().toISOString(),
+          },
+          $push: {
+            statusTimeline: { status: "paid", note: "Payment received via Tamara" },
+          },
+        },
+        { new: true }
+      ).populate("orderItems.product");
+
+      if (order) {
+        const user = await User.findById(order.user);
+        if (user) await sendOrderConfirmationEmail(user, order);
       }
     }
 
