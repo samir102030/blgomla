@@ -215,6 +215,45 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
     );
   }
 
+  // ── Promo strip (no image, gradient background) ──
+  if (position === "banner") {
+    return (
+      <div
+        onClick={handleClick}
+        dir={isRtl ? "rtl" : "ltr"}
+        className={`relative w-full my-6 rounded-2xl overflow-hidden cursor-pointer group bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] shadow-lg hover:shadow-xl transition-shadow`}
+      >
+        <div
+          className={`flex flex-col sm:flex-row items-center justify-between gap-4 px-6 md:px-10 py-6 md:py-7 ${
+            isRtl ? "sm:flex-row-reverse" : ""
+          }`}
+        >
+          <div className={`flex flex-col gap-1 ${isRtl ? "items-end text-right" : "items-start text-left"}`}>
+            {title && (
+              <h2 className="text-lg md:text-2xl font-extrabold text-white leading-tight drop-shadow">
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p className="text-white/85 text-sm md:text-base">{subtitle}</p>
+            )}
+          </div>
+          <span className="shrink-0 inline-flex items-center gap-2 font-semibold rounded-xl bg-white text-[#E8530A] shadow px-5 py-2.5 text-sm group-hover:scale-105 transition-transform whitespace-nowrap">
+            {t("View Deals")}
+            <svg
+              className={`w-4 h-4 group-hover:translate-x-1 transition-transform ${isRtl ? "rotate-180" : ""}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   const isHero = position === "hero";
   const isSidebar = position === "sidebar";
   const isStrip = position === "category-strip";
