@@ -155,6 +155,7 @@ const ProductRail: React.FC<ProductRailProps> = ({
                   <ProductCard
                     id={product._id}
                     name={product.name}
+                    nameAr={product.nameAr}
                     price={getBaseUnitPrice(product)}
                     currency="EGP"
                     originalPrice={product.saleActive ? product.price : undefined}

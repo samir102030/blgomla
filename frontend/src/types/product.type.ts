@@ -28,10 +28,12 @@ export interface BulkPricingRule {
 export interface Product {
   _id: string;
   name: string;
+  nameAr?: string;
   description?: string;
+  descriptionAr?: string;
   price: number;
-  category?: string | { _id: string; name: string; slug?: string }; // ObjectId or populated
-  brand?: string | { _id: string; name: string; slug?: string; logo?: string }; // ObjectId or populated
+  category?: string | { _id: string; name: string; nameAr?: string; slug?: string }; // ObjectId or populated
+  brand?: string | { _id: string; name: string; nameAr?: string; slug?: string; logo?: string }; // ObjectId or populated
   stock: number;
   images: ProductImage[];
   salePercentage: number;

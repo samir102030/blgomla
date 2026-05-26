@@ -24,7 +24,7 @@ import ProductGallery from "../components/ProductGallery";
 import { cldImg } from "../lib/cldImage";
 
 const ProductDetailPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [tab, setTab] = useState("description");
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
@@ -323,6 +323,8 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
+  const productName = i18n.language === "ar" && product.nameAr ? product.nameAr : product.name;
+
   // Use images array from product, fallback to empty array
   const productImages =
     product.images && product.images.length > 0
@@ -451,10 +453,10 @@ const ProductDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--surface)]">
       <SEO
-        title={product.name}
+        title={productName}
         description={
-          product.description?.slice(0, 160) ||
-          `${product.name} — available on Belgomla, Egypt's IT & networking marketplace.`
+          (i18n.language === "ar" && product.descriptionAr ? product.descriptionAr : product.description)?.slice(0, 160) ||
+          `${productName} — available on Belgomla, Egypt's IT & networking marketplace.`
         }
         image={product.images?.[0]?.url}
         type="product"
@@ -492,12 +494,12 @@ const ProductDetailPage: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Product Images */}
-            <ProductGallery images={productImages} alt={product.name} />
+            <ProductGallery images={productImages} alt={productName} />
 
             {/* Product Info */}
             <div>
               <h1 className="text-3xl font-bold text-[var(--text)] mb-4">
-                {product.name}
+                {productName}
               </h1>
 
               {/* Rating */}
@@ -719,7 +721,7 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Share */}
               <div className="mt-4 pt-4 border-t border-[var(--border)]">
-                <ShareButtons title={product.name} />
+                <ShareButtons title={productName} />
               </div>
             </div>
           </div>
@@ -987,14 +989,14 @@ const ProductDetailPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
           <img
             src={cldImg(productImages[0], { w: 96 })}
-            alt={product.name}
+            alt={productName}
             className="w-12 h-12 rounded-lg object-contain bg-[var(--surface-2)] shrink-0 hidden sm:block"
             loading="lazy"
             decoding="async"
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-[var(--text)] truncate">
-              {product.name}
+              {productName}
             </p>
             <div className="flex items-center gap-2">
               <span className="text-base font-bold text-[var(--text)]">

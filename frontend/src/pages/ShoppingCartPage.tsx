@@ -38,7 +38,9 @@ interface CartItemWithProduct {
 }
 
 const ShoppingCartPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const pickName = (p?: { name?: string; nameAr?: string }) =>
+    !p ? "" : (i18n.language === "ar" && p.nameAr ? p.nameAr : p.name) || "";
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([]);
   const [updatingItem, setUpdatingItem] = useState<string | null>(null);
@@ -679,7 +681,7 @@ const ShoppingCartPage: React.FC = () => {
                           >
                             <img
                               src={cldImg(item.productDetails?.images?.[0]?.url, { w: 160 })}
-                              alt={item.productDetails?.name || t("Product")}
+                              alt={pickName(item.productDetails) || t("Product")}
                               loading="lazy"
                               decoding="async"
                               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg"
@@ -707,8 +709,8 @@ const ShoppingCartPage: React.FC = () => {
                           </div>
                         ) : (
                           <div className="text-xs sm:text-sm font-medium text-[var(--text)]">
-                            {item.productDetails?.name ||
-                              "Product Name Not Available"}
+                            {pickName(item.productDetails) ||
+                              t("Product Name Not Available")}
                           </div>
                         )}
                       </td>

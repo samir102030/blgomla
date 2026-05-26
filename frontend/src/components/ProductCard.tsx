@@ -9,6 +9,7 @@ import { cldImg, cldSrcSet } from "../lib/cldImage";
 interface ProductCardProps {
   id: string;
   name: string;
+  nameAr?: string;
   price: number;
   currency?: string;
   originalPrice?: number;
@@ -29,6 +30,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({
   id,
   name,
+  nameAr,
   price,
   currency = "EGP",
   originalPrice,
@@ -44,7 +46,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isInStock,
   priority = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayName = i18n.language === "ar" && nameAr ? nameAr : name;
   const navigate = useNavigate();
   const { user, toggleLoveProduct, getLovedProducts } = useUserStore();
   const compareIds = useCompareStore((s) => s.ids);
@@ -210,7 +213,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             src={cldImg(image, { w: 400 })}
             srcSet={cldSrcSet(image, 200)}
             sizes="(min-width: 1024px) 176px, (min-width: 640px) 144px, 112px"
-            alt={name}
+            alt={displayName}
             loading={priority ? "eager" : "lazy"}
             fetchPriority={priority ? "high" : "auto"}
             decoding="async"
@@ -247,7 +250,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-4 sm:p-5 flex flex-col flex-grow">
         <Link to={`/product/${id}`}>
           <h3 className="text-sm sm:text-base font-semibold text-[var(--text)] mb-1.5 line-clamp-2 min-h-[2.5rem] sm:min-h-[2.75rem] hover:text-[var(--brand-primary)] transition-colors cursor-pointer leading-snug">
-            {name}
+            {displayName}
           </h3>
         </Link>
         {/* Honest social proof from real data */}

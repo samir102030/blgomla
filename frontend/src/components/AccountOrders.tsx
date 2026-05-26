@@ -6,7 +6,9 @@ import { Link } from "react-router-dom";
 import { cldImg } from "../lib/cldImage";
 
 const AccountOrders: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const pickName = (p: { name: string; nameAr?: string }) =>
+    i18n.language === "ar" && p.nameAr ? p.nameAr : p.name;
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderDetailsLoading, setOrderDetailsLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -178,7 +180,7 @@ const AccountOrders: React.FC = () => {
                             {product.images && product.images.length > 0 ? (
                               <img
                                 src={cldImg(product.images?.[0]?.url, { w: 120 })}
-                                alt={product.name}
+                                alt={pickName(product)}
                                 loading="lazy"
                                 decoding="async"
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
@@ -188,7 +190,7 @@ const AccountOrders: React.FC = () => {
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-[var(--text)] truncate">
-                              {product.name}
+                              {pickName(product)}
                               {product.collectionName && <span className="ml-1.5 text-[10px] text-[var(--text-subtle)]">({product.collectionName})</span>}
                             </p>
                             <p className="text-xs text-[var(--text-subtle)]">{t("account.qty", "Qty")}: {product.quantity}</p>

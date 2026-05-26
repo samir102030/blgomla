@@ -80,6 +80,7 @@ const DealsPage: React.FC = () => {
                     key={product._id}
                     id={product._id}
                     name={product.name}
+                    nameAr={product.nameAr}
                     price={discounted}
                     currency="EGP"
                     originalPrice={product.saleActive ? product.price : undefined}

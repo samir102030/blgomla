@@ -21,7 +21,9 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const pickName = (p: { name: string; nameAr?: string }) =>
+    i18n.language === "ar" && p.nameAr ? p.nameAr : p.name;
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -205,7 +207,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
                         {product.images?.[0]?.url ? (
                           <img
                             src={cldImg(product.images[0].url, { w: 120 })}
-                            alt={product.name}
+                            alt={pickName(product)}
                             loading="lazy"
                             decoding="async"
                             onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
@@ -217,7 +219,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
                       </div>
                       <div className="flex-grow min-w-0">
                         <p className="text-sm font-medium text-[var(--text)] truncate">
-                          {product.name}
+                          {pickName(product)}
                         </p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-sm font-bold text-[var(--text)]">

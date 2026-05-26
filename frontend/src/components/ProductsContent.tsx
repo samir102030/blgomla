@@ -434,6 +434,7 @@ const ProductsContent: React.FC = () => {
                     key={product._id}
                     id={product._id!}
                     name={product.name}
+                    nameAr={product.nameAr}
                     price={getBaseUnitPrice(product)}
                     originalPrice={product.saleActive ? product.price : undefined}
                     image={product.images?.[0]?.url || ""}
