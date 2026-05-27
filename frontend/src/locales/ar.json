@@ -3384,5 +3384,12 @@
   "…": "…",
   "Hi! I have a question about a product on Belgomla.": "مرحبًا! لدي سؤال عن منتج على بلجملة.",
   "Chat with us on WhatsApp": "تواصل معنا على واتساب",
-  "Back to top": "العودة إلى الأعلى"
+  "Back to top": "العودة إلى الأعلى",
+  "admin.role.super_admin": "مشرف عام",
+  "admin.role.admin": "مشرف",
+  "admin.role.store": "بائع",
+  "admin.role.vendor": "بائع",
+  "admin.role.customer": "عميل",
+  "admin.role.staff": "موظف",
+  "admin.fallbackName": "مشرف"
 }

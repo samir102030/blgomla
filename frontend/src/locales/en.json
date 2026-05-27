@@ -3384,5 +3384,12 @@
   "…": "…",
   "Hi! I have a question about a product on Belgomla.": "Hi! I have a question about a product on Belgomla.",
   "Chat with us on WhatsApp": "Chat with us on WhatsApp",
-  "Back to top": "Back to top"
+  "Back to top": "Back to top",
+  "admin.role.super_admin": "Super Admin",
+  "admin.role.admin": "Admin",
+  "admin.role.store": "Vendor",
+  "admin.role.vendor": "Vendor",
+  "admin.role.customer": "Customer",
+  "admin.role.staff": "Staff",
+  "admin.fallbackName": "Admin"
 }

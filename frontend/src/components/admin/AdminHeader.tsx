@@ -110,12 +110,14 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               className="flex items-center gap-2 p-1 sm:pl-1 sm:pr-2 rounded-md hover:bg-[var(--surface-2)] transition-colors"
             >
-              <div className="hidden sm:block text-right leading-tight">
+              <div className="hidden sm:block ltr:text-right rtl:text-left leading-tight">
                 <p className="text-sm font-medium text-[var(--text)]">
-                  {user?.name || "Admin"}
+                  {user?.name || t("admin.fallbackName")}
                 </p>
-                <p className="text-[11px] text-[var(--text-muted)]">
-                  {user?.role || "admin"}
+                <p className="text-[11px] text-[var(--text-muted)] capitalize">
+                  {t(`admin.role.${user?.role || "admin"}`, {
+                    defaultValue: (user?.role || "admin").replace(/_/g, " "),
+                  })}
                 </p>
               </div>
               <div
@@ -127,13 +129,18 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
               <ChevronDownIcon className="hidden sm:block w-4 h-4 text-[var(--text-subtle)]" />
             </button>
             {showUserDropdown && (
-              <div className="absolute right-0 mt-2 w-52 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="absolute ltr:right-0 rtl:left-0 mt-2 w-52 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 overflow-hidden">
                 <div className="px-3 py-3 border-b border-[var(--border)]">
                   <p className="text-sm font-semibold text-[var(--text)] truncate">
-                    {user?.name || "Admin"}
+                    {user?.name || t("admin.fallbackName")}
                   </p>
                   <p className="text-xs text-[var(--text-muted)] truncate">
                     {user?.email}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[var(--text-subtle)] uppercase tracking-wide">
+                    {t(`admin.role.${user?.role || "admin"}`, {
+                      defaultValue: (user?.role || "admin").replace(/_/g, " "),
+                    })}
                   </p>
                 </div>
                 <div className="py-1">
