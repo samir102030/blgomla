@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import DeliveryEstimate from "../components/DeliveryEstimate";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import { useCouponStore } from "../stores/coupon.store";
@@ -1177,6 +1178,9 @@ const ShoppingCartPage: React.FC = () => {
                   <span className="font-medium text-[var(--text)]">
                     {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                   </span>
+                </div>
+                <div className="pt-1">
+                  <DeliveryEstimate compact />
                 </div>
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-xs sm:text-sm text-green-500">

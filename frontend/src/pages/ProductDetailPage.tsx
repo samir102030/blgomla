@@ -21,6 +21,8 @@ import { useTranslation } from "react-i18next";
 import type { ProductReview } from "../types/product.type";
 import { getBulkPricing } from "../lib/pricing";
 import ProductGallery from "../components/ProductGallery";
+import DeliveryEstimate from "../components/DeliveryEstimate";
+import { ProductDetailSkeleton } from "../components/Skeleton";
 import { cldImg } from "../lib/cldImage";
 
 const ProductDetailPage: React.FC = () => {
@@ -292,8 +294,9 @@ const ProductDetailPage: React.FC = () => {
 
   if (loading && !product) {
     return (
-      <div className="min-h-screen bg-[var(--surface)] flex items-center justify-center">
-        <span className="text-lg text-[var(--text-muted)]">{t("Loading...")}</span>
+      <div className="min-h-screen bg-[var(--surface)]">
+        <Header />
+        <ProductDetailSkeleton />
       </div>
     );
   }
@@ -545,6 +548,9 @@ const ProductDetailPage: React.FC = () => {
                         {(baseUnitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                       </span>
                     )}
+                </div>
+                <div className="mt-3">
+                  <DeliveryEstimate />
                 </div>
                 {product.saleActive &&
                   product.saleEndsAt &&

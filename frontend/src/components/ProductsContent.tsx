@@ -4,6 +4,7 @@ import ProductFilterSidebar from "./ProductFilterSidebar";
 import AdvertisementBanner from "./AdvertisementBanner";
 import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
+import { ProductCardSkeleton } from "./Skeleton";
 import { useProductStore } from "../stores/product.store";
 import { useCategoryStore } from "../stores/category.store";
 import { useTranslation } from "react-i18next";
@@ -416,12 +417,7 @@ const ProductsContent: React.FC = () => {
             }>
               {loading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-4 animate-pulse">
-                    <div className="aspect-square bg-[var(--surface-2)] rounded-xl mb-3" />
-                    <div className="h-4 bg-[var(--surface-2)] rounded w-3/4 mb-2" />
-                    <div className="h-3 bg-[var(--surface-2)] rounded w-1/2 mb-3" />
-                    <div className="h-5 bg-[var(--surface-2)] rounded w-1/3" />
-                  </div>
+                  <ProductCardSkeleton key={i} />
                 ))
               ) : error ? (
                 <div className="col-span-full text-center py-12">

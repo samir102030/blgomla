@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import PleaseLogin from "../components/PleaseLogin";
+import DeliveryEstimate from "../components/DeliveryEstimate";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
@@ -1088,6 +1089,12 @@ const CheckoutPage: React.FC = () => {
                     <div className="flex justify-between text-xs sm:text-sm">
                       <span>{t("Shipping Fee")}</span>
                       <span>{(shippingFee).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
+                    </div>
+                    <div className="pt-1">
+                      <DeliveryEstimate
+                        compact
+                        governorate={selectedAddress?.state || selectedAddress?.city}
+                      />
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between text-xs sm:text-sm text-green-600">

@@ -7,6 +7,10 @@ const zoneSchema = new mongoose.Schema(
   {
     governorate: { type: String, required: true, trim: true },
     fee: { type: Number, required: true, min: 0 },
+    // Optional per-zone overrides for the storefront delivery-estimate badge.
+    // Falls back to top-level deliveryDaysMin/Max when null/0.
+    deliveryDaysMin: { type: Number, min: 0, default: null },
+    deliveryDaysMax: { type: Number, min: 0, default: null },
   },
   { _id: false }
 );
@@ -18,6 +22,11 @@ const shippingSettingsSchema = new mongoose.Schema(
     defaultFee: { type: Number, default: 0, min: 0 },
     // Orders at/above this subtotal ship free. 0 disables the threshold.
     freeShippingThreshold: { type: Number, default: 0, min: 0 },
+    // Storefront delivery-estimate window (business days). Drives the
+    // "🚚 Get it by …" badge on PDP / cart / checkout. Pure UI hint;
+    // does not influence the actual fee logic.
+    deliveryDaysMin: { type: Number, default: 2, min: 0 },
+    deliveryDaysMax: { type: Number, default: 5, min: 0 },
     zones: { type: [zoneSchema], default: [] },
   },
   { timestamps: true }
