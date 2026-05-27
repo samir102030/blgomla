@@ -1,9 +1,29 @@
 import mongoose from "mongoose";
 
-// `collection` is a reserved schema pathname in Mongoose. We use it intentionally
-// on the User model (a vendor's owned store collection). The warning is noisy on
-// every boot; silence it once globally rather than touching every schema.
+/**
+ * Serverless-friendly Mongo connection.
+ *
+ * Vercel Functions run as warm Lambda-like containers: code is loaded once
+ * and reused across invocations until the container is recycled. We must:
+ *   1. Cache the connection on globalThis so consecutive invocations share
+ *      the same pool (Mongoose's internal cache is per-import, which broke
+ *      with Vercel's dev/edge bundlers).
+ *   2. Reset the cached promise on failure, otherwise a single transient
+ *      DNS hiccup pins the rejection on every future request until the
+ *      container is recycled.
+ *   3. Disable mongoose command buffering — when bufferCommands is on, a
+ *      slow connection turns into a 30-second hang on every query.
+ *      Failing fast lets the user retry instead of waiting.
+ *   4. Keep the pool tiny: each warm Lambda holds its own connections, so
+ *      with maxPoolSize: 10 across 50 concurrent invocations you'd open
+ *      500 sockets to Atlas and hit the cluster's connection cap.
+ */
+
 mongoose.set("strictQuery", true);
+mongoose.set("bufferCommands", false);
+
+// `collection` is a reserved schema pathname in Mongoose. We use it
+// intentionally on the User model. Silence the noisy boot warning.
 process.removeAllListeners("warning");
 process.on("warning", (warning) => {
   if (
@@ -15,35 +35,83 @@ process.on("warning", (warning) => {
   console.warn(warning);
 });
 
+// One unhandled-rejection logger per process. Without this, a stray
+// `.then(...)` with no `.catch` silently swallows DB errors.
+if (!globalThis.__rejectHandlerInstalled) {
+  globalThis.__rejectHandlerInstalled = true;
+  process.on("unhandledRejection", (reason) => {
+    console.error("[unhandledRejection]", reason);
+  });
+}
+
+/**
+ * @typedef {Object} MongoCache
+ * @property {import("mongoose").Mongoose | null} conn
+ * @property {Promise<import("mongoose").Mongoose> | null} promise
+ */
+/** @type {MongoCache} */
+const cached =
+  globalThis.__mongoose ??
+  (globalThis.__mongoose = { conn: null, promise: null });
+
 const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 30000, // 30 seconds timeout for initial connection
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      maxPoolSize: 10, // Maximum number of socket connections
-      retryWrites: true,
-      retryReads: true,
-    });
-
-    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
-
-    // Connection event listeners
-    mongoose.connection.on("connected", () => {
-      console.log("Mongoose connected to DB");
-    });
-
-    mongoose.connection.on("error", (err) => {
-      console.error("Mongoose connection error:", err);
-    });
-
-    mongoose.connection.on("disconnected", () => {
-      console.warn("Mongoose disconnected from DB");
-    });
-  } catch (error) {
-    console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    console.error("Full error object:", error); // Log full error object
-    process.exit(1);
+  // Reuse an already-good connection across warm Lambda invocations.
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    return cached.conn;
   }
+
+  if (!process.env.MONGO_URI) {
+    throw new Error("MONGO_URI is not set");
+  }
+
+  if (!cached.promise) {
+    cached.promise = mongoose
+      .connect(process.env.MONGO_URI, {
+        // Fail fast — user retries beat a 30-second hang.
+        serverSelectionTimeoutMS: 8000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+
+        // Pool — tuned for serverless. minPoolSize: 0 lets idle Lambdas
+        // shrink to nothing; maxIdleTimeMS recycles sockets the cluster
+        // would have closed anyway.
+        maxPoolSize: 5,
+        minPoolSize: 0,
+        maxIdleTimeMS: 30000,
+
+        // Resilience — driver auto-retries one-shot read/write idempotently.
+        retryWrites: true,
+        retryReads: true,
+
+        // Heartbeat that catches dropped sockets a little sooner.
+        heartbeatFrequencyMS: 10000,
+      })
+      .then((m) => {
+        cached.conn = m;
+        return m;
+      })
+      .catch((err) => {
+        // Reset so the next request retries instead of replaying the
+        // failed promise forever.
+        cached.promise = null;
+        throw err;
+      });
+
+    // Event listeners installed once per process — cached.promise is the
+    // single point of attachment so we don't double-bind on warm starts.
+    mongoose.connection.on("connected", () => {
+      console.log(`✅ MongoDB connected: ${mongoose.connection.host}`);
+    });
+    mongoose.connection.on("error", (err) => {
+      console.error("[mongo] connection error:", err.message);
+    });
+    mongoose.connection.on("disconnected", () => {
+      console.warn("[mongo] disconnected — next request will reconnect");
+      cached.conn = null;
+    });
+  }
+
+  return cached.promise;
 };
 
 export default connectDB;

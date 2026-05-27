@@ -13,22 +13,30 @@ import { captureException } from "./utils/sentry.js";
 
 dotenv.config();
 
-let dbConnectionPromise;
+// Cache the bootstrap promise (DB connect + role seed) so consecutive
+// requests on the same warm Lambda share the same handshake. Reset on
+// failure so a single transient hiccup doesn't pin a rejected promise
+// for the rest of the container's lifetime.
+let dbBootstrapPromise = null;
 const ensureDB = () => {
-  if (!dbConnectionPromise) {
-    dbConnectionPromise = connectDB().then(async () => {
-      // Ensure the built-in roles exist (idempotent; never overwrites edits).
+  if (dbBootstrapPromise) return dbBootstrapPromise;
+  dbBootstrapPromise = connectDB()
+    .then(async () => {
       const { seedRoles } = await import("./models/role.model.js");
       await seedRoles();
+    })
+    .catch((err) => {
+      // Allow the next request to retry the handshake.
+      dbBootstrapPromise = null;
+      throw err;
     });
-  }
-  return dbConnectionPromise;
+  return dbBootstrapPromise;
 };
 
-// Kick off the DB connection at module load so /api/v1/health reports
-// "connected" without needing a prior request to warm it up. Errors are
-// caught to avoid an unhandled rejection — the ensureDB middleware will
-// surface them on the next request.
+// Kick off the DB connection at module load so /api/v1/health can report
+// "connected" without a request first. The .catch keeps the unhandled
+// rejection at bay; ensureDB() itself already resets on failure so the
+// next request will retry from scratch.
 ensureDB().catch((err) => console.error("Initial DB connect failed:", err.message));
 
 const app = express();
@@ -119,6 +127,10 @@ app.use(async (req, res, next) => {
     await ensureDB();
     next();
   } catch (err) {
+    // DB is genuinely unavailable — distinguish 503 from a generic 500
+    // so monitors page on it and clients can present a retry UI.
+    err.status = 503;
+    err.message = "Database temporarily unavailable. Please retry shortly.";
     next(err);
   }
 });
