@@ -90,20 +90,28 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-2">
-          <AdminLanguageToggle />
-          <ThemeToggle showLabel={false} />
-          <NotificationBell />
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {(currentExport || fallbackExport) && (
             <button
               onClick={handleExport}
-              className="hidden sm:inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md text-white shadow-sm hover:opacity-95 transition disabled:opacity-50"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md text-white shadow-sm hover:opacity-95 transition disabled:opacity-50"
               style={{ background: "var(--brand-gradient)" }}
               disabled={exporting}
             >
               {exporting ? t("admin.exporting") : t("admin.exportCsv")}
             </button>
           )}
+
+          {/* Icon cluster — uniform circular buttons, grouped together so the
+              notification badge doesn't visually leak into the export CTA. */}
+          <div className="flex items-center gap-1 ltr:ml-1 rtl:mr-1">
+            <NotificationBell />
+            <ThemeToggle showLabel={false} />
+            <AdminLanguageToggle />
+          </div>
+
+          {/* Divider before the user chip */}
+          <span className="hidden sm:block w-px h-6 bg-[var(--border)] mx-1" aria-hidden="true" />
 
           <div className="relative">
             <button

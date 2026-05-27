@@ -35,12 +35,17 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
       type="button"
       onClick={handleToggle}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors ${className}`}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className={
+        showLabel
+          ? `inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors ${className}`
+          : `inline-flex items-center justify-center w-9 h-9 rounded-full text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors ${className}`
+      }
     >
       {isDark ? (
-        <SunIcon className="h-4 w-4" />
+        <SunIcon className={showLabel ? "h-4 w-4" : "h-5 w-5"} />
       ) : (
-        <MoonIcon className="h-4 w-4" />
+        <MoonIcon className={showLabel ? "h-4 w-4" : "h-5 w-5"} />
       )}
       {showLabel && (
         <span className="text-xs sm:text-sm font-medium">

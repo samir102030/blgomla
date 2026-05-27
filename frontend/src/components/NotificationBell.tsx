@@ -108,11 +108,12 @@ const NotificationBell: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={t("notification.notifications")}
-        className="relative flex items-center justify-center text-gray-800 hover:text-gray-600 transition-colors"
+        title={t("notification.notifications")}
+        className="relative inline-flex items-center justify-center w-9 h-9 rounded-full text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors"
       >
-        <BellIcon className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+        <BellIcon className="w-5 h-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute ltr:-top-1 ltr:-right-1 rtl:-top-1 rtl:-left-1 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
+          <span className="absolute top-0 ltr:right-0 rtl:left-0 -translate-y-1/3 ltr:translate-x-1/3 rtl:-translate-x-1/3 bg-red-500 text-white text-[10px] font-bold leading-none rounded-full min-w-[1.1rem] h-[1.1rem] px-1 inline-flex items-center justify-center shadow ring-2 ring-[var(--surface)]">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}

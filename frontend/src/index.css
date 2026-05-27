@@ -69,12 +69,13 @@ html[dir="rtl"] .lg\:text-right {
    ───────────────────────────────────────────────── */
 
 html, body {
-  /* Hard guard against rogue horizontal overflow on mobile (e.g. fixed-width
-     widgets wider than the viewport, decorative blur orbs that escape their
-     parent, RTL transforms). Without this, users can swipe sideways off the
-     page. overflow-x: clip would be ideal but Safari < 16 falls back to
-     visible, so use hidden for broad support. */
-  overflow-x: hidden;
+  /* Guard against horizontal overflow without breaking `position: sticky`
+     on descendants. `overflow-x: hidden` makes the body itself the
+     scrolling container, which prevents sticky headers from sticking to
+     the viewport. `overflow-x: clip` clips overflow without creating a
+     scroll container, so sticky works correctly. Safari < 16 (very old)
+     falls back to visible — acceptable trade-off. */
+  overflow-x: clip;
 }
 
 body {
