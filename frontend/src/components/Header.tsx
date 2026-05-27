@@ -91,6 +91,8 @@ const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [catMenuOpen, setCatMenuOpen] = useState(false);
+  // Active root category in the mega-menu — drives the right-side subcategory pane.
+  const [catActiveId, setCatActiveId] = useState<string | null>(null);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -342,6 +344,26 @@ const Header: React.FC = () => {
         .slice(0, 12),
     [categories]
   );
+  // Map of root-category id → its direct child categories (full records, so
+  // we get images/nameAr that the populated subCategories array lacks).
+  const childrenByRoot = useMemo(() => {
+    const map = new Map<string, typeof categories>();
+    for (const c of categories || []) {
+      const parentId =
+        typeof c.parentCategory === "string"
+          ? c.parentCategory
+          : (c.parentCategory as { _id?: string } | undefined)?._id;
+      if (!parentId || c.isActive === false || c.deleted) continue;
+      const list = map.get(parentId) || [];
+      list.push(c);
+      map.set(parentId, list);
+    }
+    for (const [k, list] of map) {
+      list.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+      map.set(k, list);
+    }
+    return map;
+  }, [categories]);
   const topBrands = useMemo(
     () =>
       (brands || [])
@@ -794,78 +816,183 @@ const Header: React.FC = () => {
                 />
               </button>
               {catMenuOpen && (
-                <div className="absolute ltr:left-0 rtl:right-0 top-full mt-1 w-[min(92vw,40rem)] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 p-4 animate-fadeInDown">
+                <div className="absolute ltr:left-0 rtl:right-0 top-full mt-1 w-[min(96vw,60rem)] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden animate-fadeInDown">
                   {topCategories.length > 0 ? (
-                    <>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-1">
-                        {topCategories.map((c) => (
-                          <button
-                            key={c._id}
-                            type="button"
-                            onClick={() => {
-                              goToCategory(c._id);
-                              setCatMenuOpen(false);
-                            }}
-                            className="flex items-center gap-2.5 text-left text-sm text-[var(--text)] hover:text-[var(--brand-primary)] hover:bg-[var(--surface-2)] rounded-lg px-3 py-2 transition-colors"
-                          >
-                            <span className="w-8 h-8 shrink-0 rounded-lg bg-[var(--surface-2)] flex items-center justify-center overflow-hidden">
-                              {c.image ? (
-                                <img
-                                  src={cldImg(c.image, { w: 64 })}
-                                  alt=""
-                                  width={32}
-                                  height={32}
-                                  loading="lazy"
-                                  decoding="async"
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-base" aria-hidden="true">
-                                  {getCategoryIcon(c.name)}
-                                </span>
-                              )}
-                            </span>
-                            <span className="truncate">{i18n.language === 'ar' && c.nameAr ? c.nameAr : c.name}</span>
-                          </button>
-                        ))}
-                      </div>
-                      {topBrands.length > 0 && (
-                        <div className="mt-3 pt-3 border-t border-[var(--border)]">
-                          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)] mb-1.5 px-1">
-                            {t("Top brands")}
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {topBrands.map((b) => (
+                    <div className="grid grid-cols-12">
+                      {/* LEFT — root categories list */}
+                      <ul
+                        className="col-span-5 md:col-span-4 border-r border-[var(--border)] bg-[var(--surface-2)]/40 max-h-[28rem] overflow-y-auto py-2"
+                        onMouseLeave={() => setCatActiveId(null)}
+                      >
+                        {topCategories.map((c) => {
+                          const isActive = (catActiveId ?? topCategories[0]._id) === c._id;
+                          return (
+                            <li key={c._id}>
                               <button
-                                key={b._id}
                                 type="button"
+                                onMouseEnter={() => setCatActiveId(c._id)}
+                                onFocus={() => setCatActiveId(c._id)}
                                 onClick={() => {
-                                  goToBrand(b._id);
+                                  goToCategory(c._id);
                                   setCatMenuOpen(false);
                                 }}
-                                className="text-xs px-2.5 py-1 rounded-full border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors"
+                                className={`w-full flex items-center gap-3 text-left text-sm px-4 py-2.5 transition-colors ${
+                                  isActive
+                                    ? "bg-[var(--surface)] text-[var(--brand-primary)] font-medium"
+                                    : "text-[var(--text)] hover:bg-[var(--surface)]"
+                                }`}
                               >
-                                {b.name}
+                                <span className="w-8 h-8 shrink-0 rounded-lg bg-[var(--surface-2)] flex items-center justify-center overflow-hidden">
+                                  {c.image ? (
+                                    <img
+                                      src={cldImg(c.image, { w: 64 })}
+                                      alt=""
+                                      width={32}
+                                      height={32}
+                                      loading="lazy"
+                                      decoding="async"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <span className="text-base" aria-hidden="true">
+                                      {getCategoryIcon(c.name)}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="truncate flex-1">
+                                  {i18n.language === "ar" && c.nameAr ? c.nameAr : c.name}
+                                </span>
+                                <ChevronDownIcon
+                                  className={`w-3.5 h-3.5 shrink-0 text-[var(--text-subtle)] ${
+                                    i18n.language === "ar" ? "rotate-90" : "-rotate-90"
+                                  }`}
+                                />
                               </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      <div className="mt-3 pt-1">
-                        <Link
-                          to="/products"
-                          onClick={() => setCatMenuOpen(false)}
-                          className="text-sm font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] transition-colors"
-                        >
-                          {t("Browse all products")} →
-                        </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+
+                      {/* RIGHT — subcategories of active root, or top brands fallback */}
+                      <div className="col-span-7 md:col-span-8 p-5 max-h-[28rem] overflow-y-auto">
+                        {(() => {
+                          const activeRoot =
+                            topCategories.find((c) => c._id === catActiveId) ||
+                            topCategories[0];
+                          const subs = activeRoot
+                            ? childrenByRoot.get(activeRoot._id) || []
+                            : [];
+                          const activeName = activeRoot
+                            ? i18n.language === "ar" && activeRoot.nameAr
+                              ? activeRoot.nameAr
+                              : activeRoot.name
+                            : "";
+
+                          return (
+                            <>
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                                  {activeName}
+                                </div>
+                                {activeRoot && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      goToCategory(activeRoot._id);
+                                      setCatMenuOpen(false);
+                                    }}
+                                    className="text-xs font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]"
+                                  >
+                                    {t("See all")} →
+                                  </button>
+                                )}
+                              </div>
+
+                              {subs.length > 0 ? (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                  {subs.slice(0, 12).map((s) => (
+                                    <button
+                                      key={s._id}
+                                      type="button"
+                                      onClick={() => {
+                                        goToCategory(s._id);
+                                        setCatMenuOpen(false);
+                                      }}
+                                      className="flex flex-col items-center gap-1.5 text-center p-3 rounded-lg border border-transparent hover:border-[var(--border)] hover:bg-[var(--surface-2)] transition-all group"
+                                    >
+                                      <span className="w-14 h-14 rounded-xl bg-[var(--surface-2)] flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
+                                        {s.image ? (
+                                          <img
+                                            src={cldImg(s.image, { w: 112 })}
+                                            alt=""
+                                            width={56}
+                                            height={56}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="w-full h-full object-cover"
+                                          />
+                                        ) : (
+                                          <span className="text-2xl" aria-hidden="true">
+                                            {getCategoryIcon(s.name)}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="text-xs text-[var(--text)] line-clamp-2 leading-tight">
+                                        {i18n.language === "ar" && s.nameAr
+                                          ? s.nameAr
+                                          : s.name}
+                                      </span>
+                                    </button>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-sm text-[var(--text-subtle)] py-6 text-center">
+                                  {t("Browse all products in this category")}
+                                </div>
+                              )}
+
+                              {topBrands.length > 0 && (
+                                <div className="mt-5 pt-4 border-t border-[var(--border)]">
+                                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)] mb-2">
+                                    {t("Top brands")}
+                                  </div>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {topBrands.map((b) => (
+                                      <button
+                                        key={b._id}
+                                        type="button"
+                                        onClick={() => {
+                                          goToBrand(b._id);
+                                          setCatMenuOpen(false);
+                                        }}
+                                        className="text-xs px-2.5 py-1 rounded-full border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors"
+                                      >
+                                        {b.name}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    <div className="text-sm text-[var(--text-subtle)] px-2 py-3">
+                    <div className="text-sm text-[var(--text-subtle)] px-4 py-6 text-center">
                       {t("No categories yet")}
                     </div>
                   )}
+
+                  <div className="px-5 py-2.5 border-t border-[var(--border)] bg-[var(--surface-2)]/30">
+                    <Link
+                      to="/products"
+                      onClick={() => setCatMenuOpen(false)}
+                      className="text-sm font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] transition-colors"
+                    >
+                      {t("Browse all products")} →
+                    </Link>
+                  </div>
                 </div>
               )}
             </li>
