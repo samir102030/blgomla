@@ -31,12 +31,30 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Vendor chunks — split heavy libs into separate cacheable files
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-ui": ["react-hot-toast", "react-i18next", "i18next"],
-          "vendor-state": ["zustand"],
-          "vendor-network": ["axios"],
+        manualChunks(id) {
+          // Application code ships with the route chunk that imports it.
+          if (!id.includes("node_modules")) return undefined;
+
+          // Per-package vendor chunks — each caches independently so a
+          // bump to axios doesn't invalidate React in the user's cache.
+          if (/[/\\](react|react-dom|react-router-dom|scheduler)[/\\]/.test(id))
+            return "vendor-react";
+          if (/[/\\]@tanstack[/\\]react-query[/\\]/.test(id)) return "vendor-query";
+          if (/[/\\]react-helmet-async[/\\]/.test(id)) return "vendor-helmet";
+          if (/[/\\](@react-oauth|jwt-decode)[/\\]/.test(id)) return "vendor-oauth";
+          if (/[/\\]@sentry[/\\]/.test(id)) return "vendor-sentry";
+          if (/[/\\]@heroicons[/\\]/.test(id)) return "vendor-icons";
+          if (/[/\\](i18next|react-i18next)[/\\]/.test(id)) return "vendor-i18n";
+          if (/[/\\]react-hot-toast[/\\]/.test(id)) return "vendor-toast";
+          if (/[/\\]zustand[/\\]/.test(id)) return "vendor-state";
+          if (/[/\\]axios[/\\]/.test(id)) return "vendor-network";
+          if (/[/\\](socket\.io-client|engine\.io-client)[/\\]/.test(id))
+            return "vendor-socket";
+          if (/[/\\](leaflet|react-leaflet)[/\\]/.test(id)) return "vendor-map";
+
+          // Long-tail node_modules: one shared chunk rather than smearing
+          // tiny packages across every route chunk.
+          return "vendor-misc";
         },
       },
     },
