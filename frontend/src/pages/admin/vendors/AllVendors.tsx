@@ -140,7 +140,7 @@ const AllVendors: React.FC = () => {
               {filteredVendors.map((vendor) => (
                 <tr key={vendor._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-4">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-[var(--brand-primary)] flex items-center justify-center">
                           <span className="text-white font-medium">
@@ -148,7 +148,7 @@ const AllVendors: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="ml-4">
+                      <div>
                         <div className="text-sm font-medium text-gray-900">
                           {vendor.businessName}
                         </div>

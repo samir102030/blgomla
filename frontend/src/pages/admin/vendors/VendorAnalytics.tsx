@@ -78,11 +78,11 @@ const VendorAnalytics: React.FC = () => {
       {/* Overview Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <div className="p-2 bg-[var(--brand-primary)]/10 rounded-lg">
               <span className="text-2xl">🏪</span>
             </div>
-            <div className="ml-4">
+            <div>
               <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.totalVendors')}</p>
               <p className="text-2xl font-bold text-gray-900">{totalVendors}</p>
             </div>
@@ -90,11 +90,11 @@ const VendorAnalytics: React.FC = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <div className="p-2 bg-green-100 rounded-lg">
               <span className="text-2xl">✅</span>
             </div>
-            <div className="ml-4">
+            <div>
               <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.approved')}</p>
               <p className="text-2xl font-bold text-green-600">{statusCounts.approved}</p>
             </div>
@@ -102,11 +102,11 @@ const VendorAnalytics: React.FC = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <div className="p-2 bg-yellow-100 rounded-lg">
               <span className="text-2xl">⏳</span>
             </div>
-            <div className="ml-4">
+            <div>
               <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.pending')}</p>
               <p className="text-2xl font-bold text-yellow-600">{statusCounts.pending}</p>
             </div>
@@ -114,11 +114,11 @@ const VendorAnalytics: React.FC = () => {
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <div className="p-2 bg-red-100 rounded-lg">
               <span className="text-2xl">❌</span>
             </div>
-            <div className="ml-4">
+            <div>
               <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.rejected')}</p>
               <p className="text-2xl font-bold text-red-600">{statusCounts.rejected}</p>
             </div>
@@ -133,48 +133,48 @@ const VendorAnalytics: React.FC = () => {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('vendorAnalytics.statusDistribution')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-green-500 rounded mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-green-500 rounded shrink-0"></div>
                 <span className="text-sm text-gray-600">{t('vendorAnalytics.approved')}</span>
               </div>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.approved}</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-900">{statusCounts.approved}</span>
                 <span className="text-xs text-gray-500">
                   ({totalVendors > 0 ? Math.round((statusCounts.approved / totalVendors) * 100) : 0}%)
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-yellow-500 rounded mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-yellow-500 rounded shrink-0"></div>
                 <span className="text-sm text-gray-600">{t('vendorAnalytics.pending')}</span>
               </div>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.pending}</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-900">{statusCounts.pending}</span>
                 <span className="text-xs text-gray-500">
                   ({totalVendors > 0 ? Math.round((statusCounts.pending / totalVendors) * 100) : 0}%)
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-red-500 rounded mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-red-500 rounded shrink-0"></div>
                 <span className="text-sm text-gray-600">{t('vendorAnalytics.rejected')}</span>
               </div>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.rejected}</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-900">{statusCounts.rejected}</span>
                 <span className="text-xs text-gray-500">
                   ({totalVendors > 0 ? Math.round((statusCounts.rejected / totalVendors) * 100) : 0}%)
                 </span>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-gray-500 rounded mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-4 h-4 bg-gray-500 rounded shrink-0"></div>
                 <span className="text-sm text-gray-600">{t('vendorAnalytics.suspended')}</span>
               </div>
-              <div className="flex items-center">
-                <span className="text-sm font-medium text-gray-900 mr-2">{statusCounts.suspended}</span>
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-900">{statusCounts.suspended}</span>
                 <span className="text-xs text-gray-500">
                   ({totalVendors > 0 ? Math.round((statusCounts.suspended / totalVendors) * 100) : 0}%)
                 </span>
@@ -218,8 +218,8 @@ const VendorAnalytics: React.FC = () => {
               .slice(0, 5)
               .map((vendor, index) => (
                 <div key={vendor._id} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium text-gray-500 mr-3">#{index + 1}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
                     <span className="text-sm text-gray-900">{vendor.businessName}</span>
                   </div>
                   <span className="text-sm font-medium text-[var(--brand-primary)]">

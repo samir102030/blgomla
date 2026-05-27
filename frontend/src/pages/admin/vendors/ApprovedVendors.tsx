@@ -106,13 +106,13 @@ const ApprovedVendors: React.FC = () => {
           <div key={vendor._id} className="bg-white rounded-lg shadow-sm overflow-hidden">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center">
+                <div className="flex items-center gap-3">
+                  <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center shrink-0">
                     <span className="text-white font-bold text-lg">
                       {vendor.businessName.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <div className="ml-3">
+                  <div>
                     <h3 className="text-lg font-semibold text-gray-900">{vendor.businessName}</h3>
                     <p className="text-sm text-gray-500">{vendor.legalEntityType}</p>
                   </div>
@@ -123,17 +123,17 @@ const ApprovedVendors: React.FC = () => {
               </div>
 
               <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 gap-2">
                   <span className="font-medium">{t('approvedVendors.email')}:</span>
-                  <span className="ml-2">{vendor.contactEmail}</span>
+                  <span>{vendor.contactEmail}</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 gap-2">
                   <span className="font-medium">{t('approvedVendors.phone')}:</span>
-                  <span className="ml-2">{vendor.contactPhone}</span>
+                  <span>{vendor.contactPhone}</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-gray-600 gap-2">
                   <span className="font-medium">{t('approvedVendors.joined')}:</span>
-                  <span className="ml-2">{new Date(vendor.createdAt).toLocaleDateString()}</span>
+                  <span>{new Date(vendor.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
 

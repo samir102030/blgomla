@@ -324,19 +324,19 @@ const UsersPage: React.FC = () => {
                   filteredUsers.map((user) => (
                     <tr key={user._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-4">
                           {user.profilePicture ? (
                             <img
-                              className="h-10 w-10 rounded-full object-cover"
+                              className="h-10 w-10 rounded-full object-cover shrink-0"
                               src={user.profilePicture}
                               alt={user.name || "User"}
                              loading="lazy" decoding="async"/>
                           ) : (
-                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
                               <UserIcon className="h-6 w-6 text-gray-500" />
                             </div>
                           )}
-                          <div className="ml-4">
+                          <div>
                             <div className="text-sm font-medium text-gray-900">
                               {user.name || "N/A"}
                             </div>

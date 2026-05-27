@@ -736,10 +736,10 @@ const ProductsPage: React.FC = () => {
                     />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-4">
                       {product.images?.[0]?.url ? (
                         <img
-                          className="h-10 w-10 rounded-lg object-cover"
+                          className="h-10 w-10 rounded-lg object-cover shrink-0"
                           src={product.images?.[0]?.url}
                           alt={product.name}
                          loading="lazy" decoding="async"/>
@@ -756,7 +756,7 @@ const ProductsPage: React.FC = () => {
                           </svg>
                         </div>
                       )}
-                      <div className="ml-4">
+                      <div>
                         <div className="text-sm font-medium text-gray-900">
                           {product.name}
                         </div>

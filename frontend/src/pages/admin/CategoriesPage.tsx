@@ -209,10 +209,10 @@ const CategoriesPage: React.FC = () => {
               {filteredCategories.map((category) => (
                 <tr key={category._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+                    <div className="flex items-center gap-4">
                       {category.image && (
                         <img
-                          className="h-10 w-10 rounded-lg object-cover mr-4"
+                          className="h-10 w-10 rounded-lg object-cover shrink-0"
                           src={category.image}
                           alt={category.name}
                          loading="lazy" decoding="async"/>
