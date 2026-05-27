@@ -311,7 +311,7 @@ const CouponsPage: React.FC = () => {
                     <div className="font-medium">
                       {coupon.discountType === "percentage"
                         ? `${coupon.discountValue}%`
-                        : `$${coupon.discountValue}`}
+                        : `${coupon.discountValue} ${t("EGP")}`}
                     </div>
                     {coupon.minimumPurchase && (
                       <div className="text-xs text-gray-500">

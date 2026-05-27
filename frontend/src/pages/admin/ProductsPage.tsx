@@ -636,7 +636,9 @@ const ProductsPage: React.FC = () => {
                     <p className="text-xs text-gray-500 mt-0.5 truncate">{getCategoryName(product)}</p>
                     <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                       <span className="font-medium text-gray-900">
-                        {typeof product.price === "number" ? `$${product.price.toFixed(2)}` : product.price}
+                        {typeof product.price === "number"
+                          ? `${product.price.toLocaleString("en-EG", { maximumFractionDigits: 2 })} ${t("EGP")}`
+                          : product.price}
                       </span>
                       <span className={product.stock < 30 ? "text-red-600" : "text-gray-700"}>
                         Stock: {product.stock}
@@ -769,7 +771,7 @@ const ProductsPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {typeof product.price === "number"
-                      ? `$${product.price.toFixed(2)}`
+                      ? `${product.price.toLocaleString("en-EG", { maximumFractionDigits: 2 })} ${t("EGP")}`
                       : product.price}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

@@ -218,7 +218,7 @@ const AdminDashboard: React.FC = () => {
                   {t("admin.totalRevenue")}
                 </p>
                 <p className="text-lg sm:text-2xl font-bold mt-1 truncate">
-                  ${dashboardStats?.totalRevenue?.toLocaleString() || "0"}
+                  {Number(dashboardStats?.totalRevenue || 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                 </p>
               </div>
               <div className="bg-[var(--brand-primary)] bg-opacity-30 p-2 sm:p-3 rounded-lg flex-shrink-0">
@@ -347,7 +347,7 @@ const AdminDashboard: React.FC = () => {
                             style={{ height: `${Math.max(height, 5)}%` }}
                           >
                             <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] bg-gray-900 text-white px-2 py-1 rounded shadow whitespace-nowrap">
-                              {t("admin.revenue")}: ${point.sales.toFixed(2)}
+                              {t("admin.revenue")}: {point.sales.toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                             </div>
                           </div>
                         </div>
@@ -397,7 +397,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-gray-900">
-                        ${p.sales.toFixed(2)}
+                        {p.sales.toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                       </p>
                     </div>
                   </div>
@@ -447,13 +447,13 @@ const AdminDashboard: React.FC = () => {
                             {s.name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {s.categories || "Store"}
+                            {s.categories || t("Store")}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-gray-900">
-                          ${s.total || s.revenue || 0}
+                          {Number(s.total || s.revenue || 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                         </p>
                         <p className="text-xs text-gray-500">
                           {s.purchases || 0} {t("admin.sales")}
@@ -510,7 +510,7 @@ const AdminDashboard: React.FC = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-gray-900">
-                            ${p.price || 0}
+                            {Number(p.price || 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                           </p>
                           <p className="text-xs text-gray-500">
                             {p.quantity || 0} {t("admin.inStock")}
