@@ -168,7 +168,7 @@ const GeneralSupportChat: React.FC = () => {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-4 left-4 z-50">
+      <div className="fixed bottom-4 right-4 z-50">
         <button
           onClick={() => setIsOpen(true)}
           className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors"
@@ -192,7 +192,7 @@ const GeneralSupportChat: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:right-auto z-50 sm:w-96 h-96 bg-white border border-gray-200 rounded-lg shadow-xl flex flex-col">
+    <div className="fixed bottom-4 left-4 right-4 sm:left-auto z-50 sm:w-96 h-96 bg-white border border-gray-200 rounded-lg shadow-xl flex flex-col">
       {/* Chat Header */}
       <div className="p-4 bg-green-600 text-white rounded-t-lg flex items-center justify-between">
         <div>

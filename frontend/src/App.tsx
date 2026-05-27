@@ -7,6 +7,7 @@ import useNotificationSocket from "./hooks/useNotificationSocket";
 import { useUserStore } from "./stores/user.store";
 import SiteModeGate from "./components/SiteModeGate";
 import CompareBar from "./components/CompareBar";
+import FloatingActions from "./components/FloatingActions";
 import { captureError } from "./lib/sentry";
 
 // ── Eagerly loaded (above-the-fold critical path) ──
@@ -211,6 +212,7 @@ function App() {
       </Suspense>
       </ErrorBoundary>
       <CompareBar />
+      <FloatingActions />
       <Suspense fallback={null}>
         <GeneralSupportChat />
         <InstallPrompt />
