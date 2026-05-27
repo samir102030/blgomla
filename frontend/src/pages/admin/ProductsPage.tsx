@@ -25,7 +25,11 @@ import FilterModal, { type ProductFilters } from "../../components/FilterModal";
 import BulkProductUpload from "../../components/vendor/BulkProductUpload";
 
 const ProductsPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const pickName = (c: { name?: string; nameAr?: string } | null | undefined) => {
+    if (!c) return "";
+    return (i18n.language === "ar" && c.nameAr ? c.nameAr : c.name) || "";
+  };
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [isCreating, setIsCreating] = useState(false);
@@ -132,19 +136,47 @@ const ProductsPage: React.FC = () => {
     if (stock < 30) return "low_stock";
     return "active";
   };
+  // Map an internal status enum to a localized label.
+  const stockStatusLabel = (status: string) => {
+    switch (status) {
+      case "out_of_stock":
+        return t("Out of Stock");
+      case "low_stock":
+        return t("Low Stock");
+      case "active":
+        return t("In Stock");
+      default:
+        return status.replace(/_/g, " ");
+    }
+  };
+  // Same idea for approvalStatus.
+  const approvalLabel = (status: string | undefined) => {
+    switch (status) {
+      case "approved":
+        return t("Approved");
+      case "rejected":
+        return t("Rejected");
+      case "pending":
+        return t("Pending");
+      default:
+        return t("Unknown");
+    }
+  };
 
   // defensive defaults in case stores aren't hydrated yet
   const safeBrands = brands ?? [];
   const safeCategories = categories ?? [];
 
-  // Helper to display category name whether populated or id
+  // Helper to display category name whether populated or id (RTL-aware).
   const getCategoryName = (product: any) => {
     if (!product) return "";
     const cat = product.category;
     if (!cat) return "";
-    return typeof cat === "string"
-      ? safeCategories.find((c) => c._id === cat)?.name || ""
-      : cat?.name || "";
+    if (typeof cat === "string") {
+      const found = safeCategories.find((c) => c._id === cat);
+      return pickName(found);
+    }
+    return pickName(cat);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -641,14 +673,14 @@ const ProductsPage: React.FC = () => {
                           : product.price}
                       </span>
                       <span className={product.stock < 30 ? "text-red-600" : "text-gray-700"}>
-                        Stock: {product.stock}
+                        {t("Stock")}: {product.stock}
                         {product.stock === 0 ? " ❌" : product.stock < 30 ? " ⚠️" : ""}
                       </span>
-                      <span className="text-gray-700">Sold: {product.soldCount ?? 0}</span>
+                      <span className="text-gray-700">{t("Sold")}: {product.soldCount ?? 0}</span>
                     </div>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5">
                       <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${getStatusColor(status)}`}>
-                        {status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                        {stockStatusLabel(status)}
                       </span>
                       <span
                         className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${
@@ -659,9 +691,7 @@ const ProductsPage: React.FC = () => {
                             : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
-                        {product.approvalStatus
-                          ? product.approvalStatus.charAt(0).toUpperCase() + product.approvalStatus.slice(1)
-                          : "Unknown"}
+                        {approvalLabel(product.approvalStatus)}
                       </span>
                     </div>
                     <div className="mt-2 flex items-center gap-3">
@@ -800,9 +830,7 @@ const ProductsPage: React.FC = () => {
                         getStockStatus(product.stock),
                       )}`}
                     >
-                      {getStockStatus(product.stock)
-                        .replace("_", " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      {stockStatusLabel(getStockStatus(product.stock))}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -816,16 +844,13 @@ const ProductsPage: React.FC = () => {
                       }`}
                       title={
                         product.approvalStatus === "pending"
-                          ? "Waiting for admin approval"
+                          ? t("Waiting for admin approval")
                           : product.approvalStatus === "rejected"
-                          ? "Rejected by admin"
-                          : "Approved"
+                          ? t("Rejected by admin")
+                          : t("Approved")
                       }
                     >
-                      {product.approvalStatus
-                        ? product.approvalStatus.charAt(0).toUpperCase() +
-                          product.approvalStatus.slice(1)
-                        : "Unknown"}
+                      {approvalLabel(product.approvalStatus)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -864,9 +889,11 @@ const ProductsPage: React.FC = () => {
       {totalPages > 1 && (
         <div className="bg-white px-4 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="text-sm text-gray-700">
-            Showing <span className="font-medium">{startItem}</span> to{" "}
-            <span className="font-medium">{endItem}</span> of{" "}
-            <span className="font-medium">{totalProducts.toLocaleString()}</span> results
+            {t("Showing {{from}} to {{to}} of {{total}} results", {
+              from: startItem,
+              to: endItem,
+              total: totalProducts.toLocaleString(),
+            })}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button

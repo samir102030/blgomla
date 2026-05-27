@@ -3391,5 +3391,15 @@
   "admin.role.vendor": "بائع",
   "admin.role.customer": "عميل",
   "admin.role.staff": "موظف",
-  "admin.fallbackName": "مشرف"
+  "admin.fallbackName": "مشرف",
+  "Approved": "معتمد",
+  "Rejected": "مرفوض",
+  "Pending": "قيد المراجعة",
+  "Low Stock": "مخزون منخفض",
+  "Stock": "المخزون",
+  "Sold": "المبيعات",
+  "Unknown": "غير معروف",
+  "Waiting for admin approval": "بانتظار موافقة المشرف",
+  "Rejected by admin": "مرفوض من المشرف",
+  "Showing {{from}} to {{to}} of {{total}} results": "عرض {{from}} إلى {{to}} من أصل {{total}} نتيجة"
 }

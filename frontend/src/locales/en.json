@@ -3391,5 +3391,15 @@
   "admin.role.vendor": "Vendor",
   "admin.role.customer": "Customer",
   "admin.role.staff": "Staff",
-  "admin.fallbackName": "Admin"
+  "admin.fallbackName": "Admin",
+  "Approved": "Approved",
+  "Rejected": "Rejected",
+  "Pending": "Pending",
+  "Low Stock": "Low Stock",
+  "Stock": "Stock",
+  "Sold": "Sold",
+  "Unknown": "Unknown",
+  "Waiting for admin approval": "Waiting for admin approval",
+  "Rejected by admin": "Rejected by admin",
+  "Showing {{from}} to {{to}} of {{total}} results": "Showing {{from}} to {{to}} of {{total}} results"
 }
