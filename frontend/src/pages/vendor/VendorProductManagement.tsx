@@ -5,8 +5,10 @@ import { useBrandStore } from "../../stores/brand.store";
 import { useVendorStore } from "../../stores/vendor.store";
 import type { Product, ProductImage } from "../../types/product.type";
 import BulkProductUpload from "../../components/vendor/BulkProductUpload";
+import { useMoney } from "../../lib/money";
 
 const VendorProductManagement: React.FC = () => {
+  const money = useMoney();
   const {
     products,
     loading,
@@ -283,13 +285,19 @@ const VendorProductManagement: React.FC = () => {
               </p>
 
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg font-bold text-gray-900">
-                    ${product.price}
-                  </span>
-                  {product.salePrice && product.salePrice < product.price && (
-                    <span className="text-sm text-gray-500 line-through">
-                      ${product.salePrice}
+                <div className="flex items-center gap-2">
+                  {product.salePrice && product.salePrice < product.price ? (
+                    <>
+                      <span className="text-lg font-bold text-gray-900">
+                        {money(product.salePrice)}
+                      </span>
+                      <span className="text-sm text-gray-500 line-through">
+                        {money(product.price)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-lg font-bold text-gray-900">
+                      {money(product.price)}
                     </span>
                   )}
                 </div>

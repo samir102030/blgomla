@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useMoney } from "../../lib/money";
 import {
   MagnifyingGlassIcon,
   PlusIcon,
@@ -18,6 +19,7 @@ import ViewCouponModal from "../../components/ViewCouponModal";
 
 const CouponsPage: React.FC = () => {
   const { t } = useTranslation();
+  const money = useMoney();
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [selectedCoupon, setSelectedCoupon] = useState<any>(null);
@@ -315,7 +317,8 @@ const CouponsPage: React.FC = () => {
                     </div>
                     {coupon.minimumPurchase && (
                       <div className="text-xs text-gray-500">
-                        {t("coupon.minimumPurchase")}: ${coupon.minimumPurchase}
+                        {t("coupon.minimumPurchase")}:{" "}
+                        {money(coupon.minimumPurchase)}
                       </div>
                     )}
                   </td>

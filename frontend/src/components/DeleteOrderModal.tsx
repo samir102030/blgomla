@@ -5,6 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
+import { useMoney } from "../lib/money";
 
 interface Order {
   _id: string;
@@ -43,6 +44,7 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const { t } = useTranslation();
+  const money = useMoney();
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -120,7 +122,7 @@ const DeleteOrderModal: React.FC<DeleteOrderModalProps> = ({
                 <div className="flex justify-between">
                   <span className="text-gray-600">{t("common.total")}:</span>
                   <span className="font-medium text-gray-900">
-                    ${(order.totalPrice ?? 0).toFixed(2)}
+                    {money(order.totalPrice)}
                   </span>
                 </div>
                 <div className="flex justify-between">

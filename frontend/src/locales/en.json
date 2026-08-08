@@ -3446,5 +3446,13 @@
   "coupon.noSpecificCategories": "No specific categories",
   "coupon.none": "None",
   "coupon.percentOff": "% off",
-  "coupon.amountOff": "EGP off"
+  "coupon.amountOff": "EGP off",
+  "vendor.noOrdersYet": "No orders yet",
+  "vendor.orderStatus.pending": "Pending",
+  "vendor.orderStatus.confirmed": "Confirmed",
+  "vendor.orderStatus.processing": "Processing",
+  "vendor.orderStatus.shipped": "Shipped",
+  "vendor.orderStatus.out_for_delivery": "Out for delivery",
+  "vendor.orderStatus.delivered": "Delivered",
+  "vendor.orderStatus.cancelled": "Cancelled"
 }

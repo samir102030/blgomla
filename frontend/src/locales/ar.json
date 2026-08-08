@@ -3446,5 +3446,13 @@
   "coupon.noSpecificCategories": "لا توجد فئات محددة",
   "coupon.none": "لا يوجد",
   "coupon.percentOff": "٪ خصم",
-  "coupon.amountOff": "ج.م. خصم"
+  "coupon.amountOff": "ج.م. خصم",
+  "vendor.noOrdersYet": "لا توجد طلبات بعد",
+  "vendor.orderStatus.pending": "قيد الانتظار",
+  "vendor.orderStatus.confirmed": "تم التأكيد",
+  "vendor.orderStatus.processing": "قيد التجهيز",
+  "vendor.orderStatus.shipped": "تم الشحن",
+  "vendor.orderStatus.out_for_delivery": "خارج للتوصيل",
+  "vendor.orderStatus.delivered": "تم التسليم",
+  "vendor.orderStatus.cancelled": "ملغي"
 }

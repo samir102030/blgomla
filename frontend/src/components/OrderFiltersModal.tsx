@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { XMarkIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
+import { useMoney } from "../lib/money";
 
 interface FilterOptions {
   status: string[];
@@ -29,6 +30,7 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
 }) => {
   const [filters, setFilters] = useState<FilterOptions>(currentFilters);
   const { t } = useTranslation();
+  const money = useMoney();
 
   React.useEffect(() => {
     setFilters(currentFilters);
@@ -317,12 +319,14 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
                   )}
                   {filters.minAmount && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {t("modal.orderFilters.minAbbrev")}: ${filters.minAmount}
+                      {t("modal.orderFilters.minAbbrev")}:{" "}
+                      {money(Number(filters.minAmount))}
                     </span>
                   )}
                   {filters.maxAmount && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      {t("modal.orderFilters.maxAbbrev")}: ${filters.maxAmount}
+                      {t("modal.orderFilters.maxAbbrev")}:{" "}
+                      {money(Number(filters.maxAmount))}
                     </span>
                   )}
                 </div>

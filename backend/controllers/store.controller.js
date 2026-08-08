@@ -1193,6 +1193,43 @@ export const getStoreStatistics = controllerWrapper(
       rating: p.averageRating || 0,
     }));
 
+    // Active products — live on the storefront (approved, enabled, not deleted)
+    const activeProducts = products.filter(
+      (p) => p.isActive && !p.deleted && p.approvalStatus === "approved"
+    ).length;
+
+    // Pending orders — awaiting the vendor's first action
+    const pendingOrders = allOrders.filter((o) => o.status === "pending").length;
+
+    // Review totals across this store's catalogue. Only visible reviews count,
+    // matching the product model's averageRating virtual.
+    let reviewSum = 0;
+    let totalReviews = 0;
+    for (const p of products) {
+      for (const review of p.reviews || []) {
+        if (review.isVisible === false) continue;
+        reviewSum += review.rating;
+        totalReviews += 1;
+      }
+    }
+    const averageRating = totalReviews > 0 ? reviewSum / totalReviews : 0;
+
+    // Recent orders — newest first, trimmed to what the dashboard card shows.
+    const recentOrders = [...allOrders]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5)
+      .map((o) => ({
+        id: String(o._id),
+        itemCount: (o.orderItems || []).reduce(
+          (acc, item) => acc + (item.quantity || 0),
+          0
+        ),
+        totalPrice: o.totalPrice,
+        status: o.status,
+        isPaid: o.isPaid,
+        createdAt: o.createdAt,
+      }));
+
     // Sales change (compare with previous period)
     const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const prevMonthOrders = await Order.find({
@@ -1220,6 +1257,11 @@ export const getStoreStatistics = controllerWrapper(
         totalUsers,
         totalProducts,
         monthlyRevenue,
+        activeProducts,
+        pendingOrders,
+        averageRating,
+        totalReviews,
+        recentOrders,
         topProducts,
         topCountries,
         bestSellers,

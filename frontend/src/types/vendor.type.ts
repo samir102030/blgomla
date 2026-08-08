@@ -262,6 +262,14 @@ export interface VendorDashboardStats {
   activeProducts: number;
   pendingOrders: number;
   totalReviews: number;
+  recentOrders: Array<{
+    id: string;
+    itemCount: number;
+    totalPrice: number;
+    status: string;
+    isPaid: boolean;
+    createdAt: string;
+  }>;
   topProducts: Array<{
     name: string;
     sales: number;

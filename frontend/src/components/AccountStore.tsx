@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useMoney } from "../lib/money";
 import { useVendorStore } from "../stores/vendor.store";
 import { axiosInstance } from "../lib/axios";
 
 const AccountStore: React.FC = () => {
   const { t } = useTranslation();
+  const money = useMoney();
   const {
     vendorStore,
     dashboardStats,
@@ -809,7 +811,7 @@ const AccountStore: React.FC = () => {
                 {t("Total Sales")}
               </label>
               <p className="text-gray-900">
-                ${dashboardStats?.totalSales || 0}
+                {money(dashboardStats?.totalSales)}
               </p>
             </div>
             <div>

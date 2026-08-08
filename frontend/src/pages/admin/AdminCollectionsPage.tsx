@@ -282,7 +282,9 @@ const AdminCollectionsPage: React.FC = () => {
                       <p className="text-xs text-gray-500">
                         {product.store.name}
                       </p>
-                      <p className="text-xs text-gray-600">${product.price}</p>
+                      <p className="text-xs text-gray-600">
+                        {money(product.price)}
+                      </p>
                     </div>
                     <input
                       type="number"

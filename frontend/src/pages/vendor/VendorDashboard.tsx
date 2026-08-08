@@ -2,9 +2,11 @@ import React, { useEffect } from 'react';
 import { useVendorStore } from '../../stores/vendor.store';
 import { useUserStore } from '../../stores/user.store';
 import { useTranslation } from 'react-i18next';
+import { useMoney } from '../../lib/money';
 
 const VendorDashboard: React.FC = () => {
   const { t } = useTranslation();
+  const money = useMoney();
   const { user } = useUserStore();
   const {
     dashboardStats,
@@ -20,6 +22,26 @@ const VendorDashboard: React.FC = () => {
       fetchVendorStore();
     }
   }, [user, fetchDashboardStats, fetchVendorStore]);
+
+  const recentOrders = dashboardStats?.recentOrders ?? [];
+
+  // Mirrors the order status enum on the backend.
+  const orderStatusStyle = (status: string) => {
+    switch (status) {
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'shipped':
+      case 'out_for_delivery':
+        return 'bg-blue-100 text-blue-800';
+      case 'confirmed':
+      case 'processing':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
+  };
 
   if (loading && !dashboardStats) {
     return (
@@ -85,7 +107,7 @@ const VendorDashboard: React.FC = () => {
             <div className="min-w-0">
               <p className="text-xs sm:text-sm font-medium text-gray-600">{t('vendor.totalRevenue')}</p>
               <p className="text-lg sm:text-2xl font-bold text-gray-900">
-                ${dashboardStats?.totalRevenue?.toLocaleString() || '0'}
+                {money(dashboardStats?.totalRevenue)}
               </p>
             </div>
           </div>
@@ -165,40 +187,44 @@ const VendorDashboard: React.FC = () => {
             </button>
           </div>
           <div className="space-y-2 sm:space-y-4">
-            {/* Placeholder for recent orders */}
-            <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-blue-600 text-xs sm:text-sm font-medium">#001</span>
+            {recentOrders.length > 0 ? (
+              recentOrders.map((order, index) => (
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2"
+                >
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-blue-600 text-xs sm:text-sm font-medium">
+                        #{index + 1}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">
+                        {t('vendor.order')} #{order.id.slice(-6).toUpperCase()}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {order.itemCount}{' '}
+                        {order.itemCount === 1 ? t('vendor.item') : t('vendor.items')}
+                        {' • '}
+                        {money(order.totalPrice)}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2 py-1 text-xs font-medium rounded-full flex-shrink-0 ${orderStatusStyle(
+                      order.status
+                    )}`}
+                  >
+                    {t(`vendor.orderStatus.${order.status}`, order.status)}
+                  </span>
                 </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-xs sm:text-sm text-gray-900">{t('vendor.order')} #12345</p>
-                  <p className="text-xs text-gray-500">2 {t('vendor.items')} • 45.99 {t('EGP')}</p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm">{t('vendor.noOrdersYet')}</p>
               </div>
-              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex-shrink-0">
-                {t('vendor.pending')}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
-              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <div className="w-8 sm:w-10 h-8 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-green-600 text-xs sm:text-sm font-medium">#002</span>
-                </div>
-                <div className="min-w-0">
-                  <p className="font-medium text-xs sm:text-sm text-gray-900">{t('vendor.order')} #12344</p>
-                  <p className="text-xs text-gray-500">1 {t('vendor.item')} • 29.99 {t('EGP')}</p>
-                </div>
-              </div>
-              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full flex-shrink-0">
-                {t('vendor.completed')}
-              </span>
-            </div>
-
-            <div className="text-center py-4">
-              <p className="text-gray-500 text-sm">{t('vendor.noMoreOrders')}</p>
-            </div>
+            )}
           </div>
         </div>
 
@@ -241,7 +267,7 @@ const VendorDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-600">{t('vendor.monthlyRevenue')}</span>
               <span className="text-sm font-bold text-gray-900">
-                ${dashboardStats?.monthlyRevenue?.toLocaleString() || '0'}
+                {money(dashboardStats?.monthlyRevenue)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
