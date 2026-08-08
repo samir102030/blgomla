@@ -1,5 +1,7 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useMoney } from "../lib/money";
 
 interface ViewCouponModalProps {
   isOpen: boolean;
@@ -12,6 +14,15 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
   onClose,
   coupon,
 }) => {
+  const { t, i18n } = useTranslation();
+  const money = useMoney();
+  const locale = i18n.language === "ar" ? "ar-EG" : "en-EG";
+
+  const pickName = (c: { name?: string; nameAr?: string } | null | undefined) => {
+    if (!c) return "";
+    return (i18n.language === "ar" && c.nameAr ? c.nameAr : c.name) || "";
+  };
+
   if (!isOpen || !coupon) return null;
 
   const getStatusColor = (coupon: any) => {
@@ -30,10 +41,10 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
     const startDate = new Date(coupon.startDate);
     const endDate = new Date(coupon.endDate);
 
-    if (!coupon.isActive) return "Inactive";
-    if (now < startDate) return "Scheduled";
-    if (now > endDate) return "Expired";
-    return "Active";
+    if (!coupon.isActive) return t("coupon.inactive");
+    if (now < startDate) return t("coupon.scheduled");
+    if (now > endDate) return t("coupon.expired");
+    return t("coupon.active");
   };
 
   return (
@@ -41,7 +52,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
       <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900">
-            Coupon Details
+            {t("coupon.detailsTitle")}
           </h2>
           <button
             onClick={onClose}
@@ -67,7 +78,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
             {/* Code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Coupon Code
+                {t("coupon.couponCode")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 font-mono">
                 {coupon.code}
@@ -77,59 +88,65 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
             {/* Discount Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Discount Type
+                {t("coupon.discountType")}
               </label>
-              <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900 capitalize">
-                {coupon.discountType}
+              <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
+                {coupon.discountType === "percentage"
+                  ? t("coupon.typePercentage")
+                  : t("coupon.typeFixed")}
               </div>
             </div>
 
             {/* Discount Value */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Discount Value
+                {t("coupon.discountValue")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
                 {coupon.discountType === "percentage"
                   ? `${coupon.discountValue}%`
-                  : `$${coupon.discountValue}`}
+                  : money(coupon.discountValue)}
               </div>
             </div>
 
             {/* Minimum Purchase */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Purchase
+                {t("coupon.minimumPurchaseLabel")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                {coupon.minimumPurchase ? `$${coupon.minimumPurchase}` : "None"}
+                {coupon.minimumPurchase
+                  ? money(coupon.minimumPurchase)
+                  : t("coupon.none")}
               </div>
             </div>
 
             {/* Maximum Discount */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Maximum Discount
+                {t("coupon.maximumDiscount")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                {coupon.maximumDiscount ? `$${coupon.maximumDiscount}` : "None"}
+                {coupon.maximumDiscount
+                  ? money(coupon.maximumDiscount)
+                  : t("coupon.none")}
               </div>
             </div>
 
             {/* Usage Limit */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Usage Limit
+                {t("coupon.usageLimit")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                {coupon.usageLimit || "Unlimited"}
+                {coupon.usageLimit || t("coupon.unlimited")}
               </div>
             </div>
 
             {/* Usage Count */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Times Used
+                {t("coupon.timesUsed")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
                 {coupon.usageCount || 0}
@@ -139,20 +156,20 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
             {/* Start Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Start Date
+                {t("coupon.startDate")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                {new Date(coupon.startDate).toLocaleString()}
+                {new Date(coupon.startDate).toLocaleString(locale)}
               </div>
             </div>
 
             {/* End Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                End Date
+                {t("coupon.endDate")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
-                {new Date(coupon.endDate).toLocaleString()}
+                {new Date(coupon.endDate).toLocaleString(locale)}
               </div>
             </div>
           </div>
@@ -161,7 +178,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
           {coupon.description && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
+                {t("Description")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
                 {coupon.description}
@@ -172,7 +189,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
           {/* Applicable Products */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Applicable Products
+              {t("coupon.applicableProducts")}
             </label>
             <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
               {coupon.applicableProducts &&
@@ -189,13 +206,13 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
                         key={product._id}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                       >
-                        {product.name}
+                        {pickName(product)}
                       </span>
                     ))}
                 </div>
               ) : (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  No specific products
+                  {t("coupon.noSpecificProducts")}
                 </span>
               )}
             </div>
@@ -204,7 +221,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
           {/* Applicable Categories */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Applicable Categories
+              {t("coupon.applicableCategories")}
             </label>
             <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
               {coupon.applicableCategories &&
@@ -221,13 +238,13 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
                         key={category._id}
                         className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"
                       >
-                        {category.name}
+                        {pickName(category)}
                       </span>
                     ))}
                 </div>
               ) : (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                  No specific categories
+                  {t("coupon.noSpecificCategories")}
                 </span>
               )}
             </div>
@@ -237,7 +254,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
           {coupon.store && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Store
+                {t("Store")}
               </label>
               <div className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-900">
                 {coupon.store.name}
@@ -262,7 +279,7 @@ const ViewCouponModal: React.FC<ViewCouponModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
             >
-              Close
+              {t("Close")}
             </button>
           </div>
         </div>

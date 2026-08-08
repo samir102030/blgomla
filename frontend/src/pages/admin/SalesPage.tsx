@@ -6,9 +6,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAnalyticsStore } from "../../stores/analytics.store";
 import { useTranslation } from "react-i18next";
+import { useMoney } from "../../lib/money";
 
 const SalesPage: React.FC = () => {
   const { t } = useTranslation();
+  const money = useMoney();
   const [dateRange, setDateRange] = useState("7days");
   const [chartPeriod, setChartPeriod] = useState("daily");
   const [showModal, setShowModal] = useState(false);
@@ -51,24 +53,24 @@ const SalesPage: React.FC = () => {
 
   const salesData = [
     {
-      period: "Current Period",
-      sales: salesOverview ? `$${salesOverview.current.toFixed(2)}` : "$0.00",
+      period: t("sales.currentPeriod"),
+      sales: money(salesOverview?.current),
       change: salesOverview
         ? `${salesOverview.changePercent.toFixed(1)}%`
         : "0.0%",
       isPositive: salesOverview ? salesOverview.changePercent >= 0 : true,
     },
     {
-      period: "Previous Period",
-      sales: salesOverview ? `$${salesOverview.previous.toFixed(2)}` : "$0.00",
+      period: t("sales.previousPeriod"),
+      sales: money(salesOverview?.previous),
       change: salesOverview
         ? `${salesOverview.changePercent.toFixed(1)}%`
         : "0.0%",
       isPositive: salesOverview ? salesOverview.changePercent >= 0 : true,
     },
     {
-      period: "Change",
-      sales: salesOverview ? `$${salesOverview.change.toFixed(2)}` : "$0.00",
+      period: t("sales.change"),
+      sales: money(salesOverview?.change),
       change: salesOverview
         ? `${salesOverview.changePercent.toFixed(1)}%`
         : "0.0%",
@@ -95,35 +97,43 @@ const SalesPage: React.FC = () => {
       let filename = "";
 
       if (type === "sales" && salesTrend) {
-        reportData.push(["Sales Trend Data"]);
-        reportData.push(["Date", "Sales", "Orders"]);
+        reportData.push([t("sales.salesTrendDetails")]);
+        reportData.push([
+          t("sales.tableDate"),
+          t("sales.tableSales"),
+          t("sales.tableOrders"),
+        ]);
         salesTrend.forEach((data) => {
           reportData.push([
             data.date,
-            `$${data.sales.toFixed(2)}`,
+            money(data.sales),
             data.orders.toString(),
           ]);
         });
         filename = `sales-trend-${new Date().toISOString().split("T")[0]}.csv`;
       } else if (type === "products" && topProducts) {
-        reportData.push(["Top Products Data"]);
-        reportData.push(["Product Name", "Units Sold", "Sales Amount"]);
+        reportData.push([t("sales.topProductsDetails")]);
+        reportData.push([
+          t("sales.productName"),
+          t("sales.unitsColumn"),
+          t("sales.salesAmount"),
+        ]);
         topProducts.forEach((product) => {
           reportData.push([
             product.name,
             product.units.toString(),
-            `$${product.sales.toFixed(2)}`,
+            money(product.sales),
           ]);
         });
         filename = `top-products-${new Date().toISOString().split("T")[0]}.csv`;
       } else if (type === "transactions" && recentTransactions) {
-        reportData.push(["Recent Transactions Data"]);
+        reportData.push([t("sales.recentTransactionsDetails")]);
         reportData.push([
-          "Transaction ID",
-          "Customer",
-          "Amount",
-          "Status",
-          "Date",
+          t("sales.transactionId"),
+          t("sales.transactionCustomer"),
+          t("sales.transactionAmount"),
+          t("sales.transactionStatus"),
+          t("sales.transactionDate"),
         ]);
         recentTransactions.forEach((transaction) => {
           reportData.push([
@@ -138,37 +148,41 @@ const SalesPage: React.FC = () => {
           new Date().toISOString().split("T")[0]
         }.csv`;
       } else if (type === "revenue" && revenueBreakdown) {
-        reportData.push(["Revenue Breakdown Data"]);
-        reportData.push(["Category", "Amount", "Percentage"]);
+        reportData.push([t("sales.revenueBreakdownDetails")]);
+        reportData.push([
+          t("sales.category"),
+          t("sales.transactionAmount"),
+          t("sales.percentage"),
+        ]);
         const total =
           revenueBreakdown.productSales +
           revenueBreakdown.shipping +
           revenueBreakdown.taxes +
           revenueBreakdown.other;
         reportData.push([
-          "Product Sales",
-          `$${revenueBreakdown.productSales.toFixed(2)}`,
+          t("sales.productSales"),
+          money(revenueBreakdown.productSales),
           total > 0
             ? `${((revenueBreakdown.productSales / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
         reportData.push([
-          "Shipping",
-          `$${revenueBreakdown.shipping.toFixed(2)}`,
+          t("sales.shipping"),
+          money(revenueBreakdown.shipping),
           total > 0
             ? `${((revenueBreakdown.shipping / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
         reportData.push([
-          "Taxes",
-          `$${revenueBreakdown.taxes.toFixed(2)}`,
+          t("sales.taxes"),
+          money(revenueBreakdown.taxes),
           total > 0
             ? `${((revenueBreakdown.taxes / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
         reportData.push([
-          "Other",
-          `$${revenueBreakdown.other.toFixed(2)}`,
+          t("sales.other"),
+          money(revenueBreakdown.other),
           total > 0
             ? `${((revenueBreakdown.other / total) * 100).toFixed(1)}%`
             : "0%",
@@ -177,33 +191,37 @@ const SalesPage: React.FC = () => {
           new Date().toISOString().split("T")[0]
         }.csv`;
       } else if (type === "metrics" && performanceMetrics) {
-        reportData.push(["Performance Metrics Data"]);
-        reportData.push(["Metric", "Value", "Description"]);
+        reportData.push([t("sales.performanceMetricsDetails")]);
         reportData.push([
-          "Conversion Rate",
+          t("sales.metric"),
+          t("sales.value"),
+          t("sales.description"),
+        ]);
+        reportData.push([
+          t("sales.conversionRate"),
           `${performanceMetrics.conversionRate.toFixed(1)}%`,
-          "Percentage of visitors who make a purchase",
+          t("sales.conversionRateDesc"),
         ]);
         reportData.push([
-          "Average Order Value",
-          `$${performanceMetrics.avgOrderValue.toFixed(2)}`,
-          "Average amount spent per order",
+          t("sales.avgOrderValue"),
+          money(performanceMetrics.avgOrderValue),
+          t("sales.avgOrderValueDesc"),
         ]);
         reportData.push([
-          "Items per Order",
+          t("sales.itemsPerOrder"),
           performanceMetrics.itemsPerOrder.toFixed(1),
-          "Average number of items in each order",
+          t("sales.itemsPerOrderDesc"),
         ]);
         reportData.push([
-          "Customer Satisfaction",
+          t("sales.customerSatisfaction"),
           `${performanceMetrics.customerSatisfaction}%`,
-          "Overall customer satisfaction rating",
+          t("sales.customerSatisfactionDesc"),
         ]);
         filename = `performance-metrics-${
           new Date().toISOString().split("T")[0]
         }.csv`;
       } else {
-        alert("No data available to export.");
+        alert(t("sales.noDataToExport"));
         return;
       }
 
@@ -225,7 +243,7 @@ const SalesPage: React.FC = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error exporting modal data:", error);
-      alert("Failed to export data. Please try again.");
+      alert(t("sales.exportFailed"));
     }
   };
 
@@ -234,35 +252,35 @@ const SalesPage: React.FC = () => {
       const reportData = [];
 
       // Add header
-      reportData.push(["Sales Analytics Report"]);
-      reportData.push(["Generated on", new Date().toLocaleString()]);
-      reportData.push(["Date Range", dateRange]);
-      reportData.push(["Chart Period", chartPeriod]);
+      reportData.push([t("sales.salesAnalyticsReport")]);
+      reportData.push([t("sales.generatedOn"), new Date().toLocaleString()]);
+      reportData.push([t("sales.dateRange"), dateRange]);
+      reportData.push([t("sales.chartPeriod"), chartPeriod]);
       reportData.push([""]);
 
       // Sales Overview
-      reportData.push(["SALES OVERVIEW"]);
+      reportData.push([t("sales.salesOverview")]);
       if (salesOverview) {
         reportData.push([
-          "Current Period Sales",
-          `$${salesOverview.current.toFixed(2)}`,
+          t("sales.currentPeriod"),
+          money(salesOverview.current),
         ]);
         reportData.push([
-          "Previous Period Sales",
-          `$${salesOverview.previous.toFixed(2)}`,
+          t("sales.previousPeriod"),
+          money(salesOverview.previous),
         ]);
-        reportData.push(["Change", `$${salesOverview.change.toFixed(2)}`]);
+        reportData.push([t("sales.change"), money(salesOverview.change)]);
         reportData.push([
-          "Change Percent",
+          t("sales.changePercent"),
           `${salesOverview.changePercent.toFixed(2)}%`,
         ]);
       } else {
-        reportData.push(["No sales data available"]);
+        reportData.push([t("sales.noSalesData")]);
       }
       reportData.push([""]);
 
       // Revenue Breakdown
-      reportData.push(["REVENUE BREAKDOWN"]);
+      reportData.push([t("sales.revenueBreakdown")]);
       if (revenueBreakdown) {
         const total =
           revenueBreakdown.productSales +
@@ -270,102 +288,110 @@ const SalesPage: React.FC = () => {
           revenueBreakdown.taxes +
           revenueBreakdown.other;
         reportData.push([
-          "Product Sales",
-          `$${revenueBreakdown.productSales.toFixed(2)}`,
+          t("sales.productSales"),
+          money(revenueBreakdown.productSales),
           total > 0
             ? `${((revenueBreakdown.productSales / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
         reportData.push([
-          "Shipping",
-          `$${revenueBreakdown.shipping.toFixed(2)}`,
+          t("sales.shipping"),
+          money(revenueBreakdown.shipping),
           total > 0
             ? `${((revenueBreakdown.shipping / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
         reportData.push([
-          "Taxes",
-          `$${revenueBreakdown.taxes.toFixed(2)}`,
+          t("sales.taxes"),
+          money(revenueBreakdown.taxes),
           total > 0
             ? `${((revenueBreakdown.taxes / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
         reportData.push([
-          "Other",
-          `$${revenueBreakdown.other.toFixed(2)}`,
+          t("sales.other"),
+          money(revenueBreakdown.other),
           total > 0
             ? `${((revenueBreakdown.other / total) * 100).toFixed(1)}%`
             : "0%",
         ]);
       } else {
-        reportData.push(["No revenue breakdown data available"]);
+        reportData.push([t("sales.noRevenueData")]);
       }
       reportData.push([""]);
 
       // Performance Metrics
-      reportData.push(["PERFORMANCE METRICS"]);
+      reportData.push([t("sales.performanceMetrics")]);
       if (performanceMetrics) {
         reportData.push([
-          "Conversion Rate",
+          t("sales.conversionRate"),
           `${performanceMetrics.conversionRate.toFixed(1)}%`,
         ]);
         reportData.push([
-          "Average Order Value",
-          `$${performanceMetrics.avgOrderValue.toFixed(2)}`,
+          t("sales.avgOrderValue"),
+          money(performanceMetrics.avgOrderValue),
         ]);
         reportData.push([
-          "Items per Order",
+          t("sales.itemsPerOrder"),
           performanceMetrics.itemsPerOrder.toFixed(1),
         ]);
         reportData.push([
-          "Customer Satisfaction",
+          t("sales.customerSatisfaction"),
           `${performanceMetrics.customerSatisfaction}%`,
         ]);
       } else {
-        reportData.push(["No performance metrics available"]);
+        reportData.push([t("sales.noMetricsData")]);
       }
       reportData.push([""]);
 
       // Sales Trend
-      reportData.push(["SALES TREND"]);
-      reportData.push(["Date", "Sales", "Orders"]);
+      reportData.push([t("sales.salesTrend")]);
+      reportData.push([
+        t("sales.tableDate"),
+        t("sales.tableSales"),
+        t("sales.tableOrders"),
+      ]);
       if (salesTrend && salesTrend.length > 0) {
         salesTrend.forEach((data) => {
           reportData.push([
             data.date,
-            `$${data.sales.toFixed(2)}`,
+            money(data.sales),
             data.orders.toString(),
           ]);
         });
       } else {
-        reportData.push(["No sales trend data available"]);
+        reportData.push([t("sales.noTrendData")]);
       }
       reportData.push([""]);
 
       // Top Products
-      reportData.push(["TOP PRODUCTS"]);
-      reportData.push(["Product Name", "Units Sold", "Sales Amount"]);
+      reportData.push([t("sales.topProducts")]);
+      reportData.push([
+        t("sales.productName"),
+        t("sales.unitsColumn"),
+        t("sales.salesAmount"),
+      ]);
       if (topProducts && topProducts.length > 0) {
         topProducts.forEach((product) => {
           reportData.push([
             product.name,
             product.units.toString(),
-            `$${product.sales.toFixed(2)}`,
+            money(product.sales),
           ]);
         });
       } else {
-        reportData.push(["No top products data available"]);
+        reportData.push([t("sales.noProductsData")]);
       }
       reportData.push([""]);
 
       // Recent Transactions
-      reportData.push(["RECENT TRANSACTIONS"]);
+      reportData.push([t("sales.recentTransactions")]);
       reportData.push([
-        "Transaction ID",
-        "Customer",
-        "Amount",
-        "Status",
-        "Date",
+        t("sales.transactionId"),
+        t("sales.transactionCustomer"),
+        t("sales.transactionAmount"),
+        t("sales.transactionStatus"),
+        t("sales.transactionDate"),
       ]);
       if (recentTransactions && recentTransactions.length > 0) {
         recentTransactions.forEach((transaction) => {
@@ -378,7 +404,7 @@ const SalesPage: React.FC = () => {
           ]);
         });
       } else {
-        reportData.push(["No recent transactions data available"]);
+        reportData.push([t("sales.noTransactionsData")]);
       }
 
       // Convert to CSV
@@ -406,7 +432,7 @@ const SalesPage: React.FC = () => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error exporting report:", error);
-      alert("Failed to export report. Please try again.");
+      alert(t("sales.exportFailed"));
     }
   };
 
@@ -457,11 +483,11 @@ const SalesPage: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">{item.period}</p>
                 <p className="text-2xl font-bold text-gray-900">{item.sales}</p>
-                <div className="flex items-center mt-2">
+                <div className="flex items-center gap-1 mt-2">
                   {item.isPositive ? (
-                    <ArrowUpIcon className="h-4 w-4 text-green-500 mr-1" />
+                    <ArrowUpIcon className="h-4 w-4 text-green-500" />
                   ) : (
-                    <ArrowDownIcon className="h-4 w-4 text-red-500 mr-1" />
+                    <ArrowDownIcon className="h-4 w-4 text-red-500" />
                   )}
                   <span
                     className={`text-sm ${
@@ -536,7 +562,8 @@ const SalesPage: React.FC = () => {
                             style={{ height: `${Math.max(height, 3)}%` }}
                           >
                             <div className="opacity-0 group-hover:opacity-100 bg-black text-white text-xs rounded px-2 py-1 absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10">
-                              ${data.sales.toFixed(2)} ({data.orders} orders)
+                              {money(data.sales)} (
+                              {t("sales.ordersCount", { n: data.orders })})
                             </div>
                           </div>
                           <span className="text-xs text-gray-600 mt-2 text-center leading-tight">
@@ -558,12 +585,15 @@ const SalesPage: React.FC = () => {
                   </div>
                   <div className="text-center mt-4">
                     <p className="text-sm text-gray-600">
-                      Sales Trend - Last {salesTrend.slice(-10).length}{" "}
-                      {chartPeriod === "daily"
-                        ? "days"
-                        : chartPeriod === "weekly"
-                          ? "weeks"
-                          : "months"}
+                      {t("sales.salesTrendLast", {
+                        n: salesTrend.slice(-10).length,
+                        unit:
+                          chartPeriod === "daily"
+                            ? t("sales.days")
+                            : chartPeriod === "weekly"
+                              ? t("sales.weeks")
+                              : t("sales.months"),
+                      })}
                     </p>
                   </div>
                 </div>
@@ -571,8 +601,10 @@ const SalesPage: React.FC = () => {
             ) : (
               <div className="text-center">
                 <div className="text-4xl mb-2">📊</div>
-                <p className="text-gray-600">Loading sales trend...</p>
-                <p className="text-sm text-gray-500">Chart will appear here</p>
+                <p className="text-gray-600">{t("sales.loadingTrend")}</p>
+                <p className="text-sm text-gray-500">
+                  {t("sales.chartPlaceholder")}
+                </p>
               </div>
             )}
           </div>
@@ -596,18 +628,14 @@ const SalesPage: React.FC = () => {
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full"></div>
                 <span className="text-sm text-gray-700">
                   {t("sales.productSales")}
                 </span>
               </div>
               <span className="text-sm font-medium">
-                $
-                {revenueBreakdown
-                  ? revenueBreakdown.productSales.toFixed(2)
-                  : "0.00"}{" "}
-                (
+                {money(revenueBreakdown?.productSales)} (
                 {revenueBreakdown &&
                 revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
@@ -627,18 +655,14 @@ const SalesPage: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-gray-700">
                   {t("sales.shipping")}
                 </span>
               </div>
               <span className="text-sm font-medium">
-                $
-                {revenueBreakdown
-                  ? revenueBreakdown.shipping.toFixed(2)
-                  : "0.00"}{" "}
-                (
+                {money(revenueBreakdown?.shipping)} (
                 {revenueBreakdown &&
                 revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
@@ -658,15 +682,14 @@ const SalesPage: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                 <span className="text-sm text-gray-700">
                   {t("sales.taxes")}
                 </span>
               </div>
               <span className="text-sm font-medium">
-                ${revenueBreakdown ? revenueBreakdown.taxes.toFixed(2) : "0.00"}{" "}
-                (
+                {money(revenueBreakdown?.taxes)} (
                 {revenueBreakdown &&
                 revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
@@ -686,15 +709,14 @@ const SalesPage: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full mr-3"></div>
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-[var(--brand-primary)] rounded-full"></div>
                 <span className="text-sm text-gray-700">
                   {t("sales.other")}
                 </span>
               </div>
               <span className="text-sm font-medium">
-                ${revenueBreakdown ? revenueBreakdown.other.toFixed(2) : "0.00"}{" "}
-                (
+                {money(revenueBreakdown?.other)} (
                 {revenueBreakdown &&
                 revenueBreakdown.productSales +
                   revenueBreakdown.shipping +
@@ -751,7 +773,7 @@ const SalesPage: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-900">
-                      ${product.sales.toFixed(2)}
+                      {money(product.sales)}
                     </p>
                   </div>
                 </div>
@@ -835,10 +857,7 @@ const SalesPage: React.FC = () => {
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">
-              $
-              {performanceMetrics
-                ? performanceMetrics.avgOrderValue.toFixed(2)
-                : "0.00"}
+              {money(performanceMetrics?.avgOrderValue)}
             </div>
             <div className="text-sm text-gray-600">
               {t("sales.avgOrderValue")}
@@ -914,13 +933,13 @@ const SalesPage: React.FC = () => {
                       <table className="min-w-full table-auto">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="px-4 py-2 text-left">
+                            <th className="px-4 py-2 text-start">
                               {t("sales.tableDate")}
                             </th>
-                            <th className="px-4 py-2 text-left">
+                            <th className="px-4 py-2 text-start">
                               {t("sales.tableSales")}
                             </th>
-                            <th className="px-4 py-2 text-left">
+                            <th className="px-4 py-2 text-start">
                               {t("sales.tableOrders")}
                             </th>
                           </tr>
@@ -930,7 +949,7 @@ const SalesPage: React.FC = () => {
                             <tr key={index} className="border-t">
                               <td className="px-4 py-2">{data.date}</td>
                               <td className="px-4 py-2">
-                                ${data.sales.toFixed(2)}
+                                {money(data.sales)}
                               </td>
                               <td className="px-4 py-2">{data.orders}</td>
                             </tr>
@@ -960,7 +979,7 @@ const SalesPage: React.FC = () => {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-lg">
-                              ${product.sales.toFixed(2)}
+                              {money(product.sales)}
                             </p>
                           </div>
                         </div>
@@ -972,7 +991,7 @@ const SalesPage: React.FC = () => {
                 {modalType === "transactions" && recentTransactions && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">
-                      Recent Transactions
+                      {t("sales.recentTransactions")}
                     </h3>
                     <div className="space-y-4">
                       {recentTransactions.map((transaction, index) => (
@@ -1010,22 +1029,30 @@ const SalesPage: React.FC = () => {
                 {modalType === "revenue" && revenueBreakdown && (
                   <div>
                     <h3 className="text-lg font-semibold mb-4">
-                      Revenue Breakdown
+                      {t("sales.revenueBreakdown")}
                     </h3>
                     <div className="overflow-x-auto">
                       <table className="min-w-full table-auto">
                         <thead>
                           <tr className="bg-gray-50">
-                            <th className="px-4 py-2 text-left">Category</th>
-                            <th className="px-4 py-2 text-left">Amount</th>
-                            <th className="px-4 py-2 text-left">Percentage</th>
+                            <th className="px-4 py-2 text-start">
+                              {t("sales.category")}
+                            </th>
+                            <th className="px-4 py-2 text-start">
+                              {t("sales.transactionAmount")}
+                            </th>
+                            <th className="px-4 py-2 text-start">
+                              {t("sales.percentage")}
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr className="border-t">
-                            <td className="px-4 py-2">Product Sales</td>
                             <td className="px-4 py-2">
-                              ${revenueBreakdown.productSales.toFixed(2)}
+                              {t("sales.productSales")}
+                            </td>
+                            <td className="px-4 py-2">
+                              {money(revenueBreakdown.productSales)}
                             </td>
                             <td className="px-4 py-2">
                               {revenueBreakdown.productSales +
@@ -1048,7 +1075,7 @@ const SalesPage: React.FC = () => {
                           <tr className="border-t">
                             <td className="px-4 py-2">{t("sales.shipping")}</td>
                             <td className="px-4 py-2">
-                              ${revenueBreakdown.shipping.toFixed(2)}
+                              {money(revenueBreakdown.shipping)}
                             </td>
                             <td className="px-4 py-2">
                               {revenueBreakdown.productSales +
@@ -1071,7 +1098,7 @@ const SalesPage: React.FC = () => {
                           <tr className="border-t">
                             <td className="px-4 py-2">{t("sales.taxes")}</td>
                             <td className="px-4 py-2">
-                              ${revenueBreakdown.taxes.toFixed(2)}
+                              {money(revenueBreakdown.taxes)}
                             </td>
                             <td className="px-4 py-2">
                               {revenueBreakdown.productSales +
@@ -1094,7 +1121,7 @@ const SalesPage: React.FC = () => {
                           <tr className="border-t">
                             <td className="px-4 py-2">{t("sales.other")}</td>
                             <td className="px-4 py-2">
-                              ${revenueBreakdown.other.toFixed(2)}
+                              {money(revenueBreakdown.other)}
                             </td>
                             <td className="px-4 py-2">
                               {revenueBreakdown.productSales +
@@ -1142,7 +1169,7 @@ const SalesPage: React.FC = () => {
                           {t("sales.avgOrderValue")}
                         </h4>
                         <p className="text-2xl font-bold text-green-600">
-                          ${performanceMetrics.avgOrderValue.toFixed(2)}
+                          {money(performanceMetrics.avgOrderValue)}
                         </p>
                         <p className="text-sm text-gray-600">
                           {t("sales.avgOrderValueDesc")}

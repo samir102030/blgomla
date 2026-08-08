@@ -5,6 +5,7 @@ import { useUserStore } from "../stores/user.store";
 import { useVendorStore } from "../stores/vendor.store";
 import { useProductStore } from "../stores/product.store";
 import { useCategoryStore } from "../stores/category.store";
+import { useTranslation } from "react-i18next";
 
 interface AddCouponModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ const AddCouponModal: React.FC<AddCouponModalProps> = ({
   onClose,
   onCouponCreated,
 }) => {
-  console.log("AddCouponModal render, isOpen:", isOpen);
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     code: "",
     description: "",
@@ -194,7 +195,9 @@ const AddCouponModal: React.FC<AddCouponModalProps> = ({
                 required
               />
               <p className="text-xs text-gray-500 mt-1">
-                {formData.discountType === "percentage" ? "% off" : "$ off"}
+                {formData.discountType === "percentage"
+                  ? t("coupon.percentOff")
+                  : t("coupon.amountOff")}
               </p>
             </div>
 
