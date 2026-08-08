@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { useBrandStore } from "../stores/brand.store";
+import { useMoney } from "../lib/money";
 
 interface ProductDetailsModalProps {
   isOpen: boolean;
@@ -14,7 +15,8 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
   onClose,
   product,
 }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const money = useMoney();
   const [selectedImage, setSelectedImage] = useState(0);
   const brands = useBrandStore((state: any) => state.brands);
 
@@ -218,18 +220,18 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
                   {product.saleActive && salePercentage > 0 ? (
                     <div className="flex items-center space-x-3">
                     <span className="text-4xl font-bold text-gray-900 dark:text-gray-50">
-                      ${effectiveSalePrice?.toFixed(2) ?? price.toFixed(2)}
+                      {money(effectiveSalePrice ?? price)}
                     </span>
                     <span className="text-2xl text-gray-500 dark:text-gray-400 line-through">
-                      ${price.toFixed(2)}
+                      {money(price)}
                     </span>
                     <span className="bg-red-100 dark:bg-red-500/15 text-red-800 dark:text-red-200 text-sm font-semibold px-3 py-1 rounded-full">
-                      -{salePercentage}% OFF
+                      -{salePercentage}% {t("OFF")}
                     </span>
                   </div>
                 ) : (
                   <span className="text-4xl font-bold text-gray-900 dark:text-gray-50">
-                    ${price.toFixed(2)}
+                    {money(price)}
                   </span>
                 )}
               </div>

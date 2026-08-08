@@ -4,6 +4,7 @@ import { useCollectionStore } from "../../stores/collection.store";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
 import { useUserStore } from "../../stores/user.store";
+import { useMoney } from "../../lib/money";
 
 interface Product {
   _id: string;
@@ -18,6 +19,7 @@ interface Product {
 
 const AdminCollectionsPage: React.FC = () => {
   const { t } = useTranslation();
+  const money = useMoney();
   const user = useUserStore((state) => state.user);
   const {
     collections,
@@ -312,22 +314,22 @@ const AdminCollectionsPage: React.FC = () => {
                         {product.name} x{items[product._id]}
                       </span>
                       <span>
-                        $
-                        {(
+                        {money(
                           (product.saleActive
                             ? product.price * (1 - product.salePercentage / 100)
                             : product.price) * items[product._id]
-                        ).toFixed(2)}
+                        )}
                       </span>
                     </div>
                   ))}
                   <div className="border-t pt-2 flex justify-between font-medium">
                     <span>
-                      {t("adminCollections.totalOriginal")}: ${totalOriginalPrice.toFixed(2)}
+                      {t("adminCollections.totalOriginal")}:{" "}
+                      {money(totalOriginalPrice)}
                     </span>
                     <span>
-                      {t("adminCollections.bundle")}: $
-                      {parseFloat(formState.bundlePrice || "0").toFixed(2)}
+                      {t("adminCollections.bundle")}:{" "}
+                      {money(parseFloat(formState.bundlePrice || "0"))}
                     </span>
                   </div>
                 </div>
@@ -394,7 +396,7 @@ const AdminCollectionsPage: React.FC = () => {
                     {collection.items.length} {t("adminCollections.productsCount")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    ${collection.bundlePrice.toFixed(2)}
+                    {money(collection.bundlePrice)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {typeof collection.store === "string"

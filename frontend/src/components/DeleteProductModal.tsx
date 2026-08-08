@@ -5,6 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useBrandStore } from "../stores/brand.store";
 import { useTranslation } from "react-i18next";
+import { useMoney } from "../lib/money";
 
 interface DeleteProductModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
   const [deleting, setDeleting] = useState(false);
   const brands = useBrandStore((state: any) => state.brands);
   const { t, i18n } = useTranslation();
+  const money = useMoney();
 
   const getLocalizedText = (value: any) => {
     if (value === null || value === undefined) return "";
@@ -139,12 +141,11 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
                 </p>
                 <p>
                   <span className="font-medium">{t("modal.common.price")}</span>{" "}
-                  {(() => {
-                    const raw = product?.price;
-                    const num =
-                      typeof raw === "number" ? raw : Number(raw ?? 0);
-                    return `$${num.toFixed(2)}`;
-                  })()}
+                  {money(
+                    typeof product?.price === "number"
+                      ? product.price
+                      : Number(product?.price ?? 0)
+                  )}
                 </p>
                 <p>
                   <span className="font-medium">{t("modal.common.brand")}</span>{" "}

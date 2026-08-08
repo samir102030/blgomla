@@ -5,6 +5,7 @@ import { useUserStore } from "../stores/user.store";
 import { useVendorStore } from "../stores/vendor.store";
 import { useProductStore } from "../stores/product.store";
 import { useTranslation } from "react-i18next";
+import { useMoney } from "../lib/money";
 // import { useCategoryStore } from "../stores/category.store";
 
 interface EditCouponModalProps {
@@ -21,6 +22,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
   coupon,
 }) => {
   const { t } = useTranslation();
+  const money = useMoney();
   const [formData, setFormData] = useState({
     code: "",
     description: "",
@@ -388,7 +390,7 @@ const EditCouponModal: React.FC<EditCouponModalProps> = ({
                       )}
                     </div>
                     <span className="text-sm text-gray-600">
-                      ${product.price.toFixed(2)}
+                      {money(product.price)}
                     </span>
                   </label>
                 ))

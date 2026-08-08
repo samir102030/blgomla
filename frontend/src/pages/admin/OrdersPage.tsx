@@ -13,6 +13,7 @@ import OrderDetailsModal from "../../components/OrderDetailsModal";
 import EditOrderModal from "../../components/EditOrderModal";
 import DeleteOrderModal from "../../components/DeleteOrderModal";
 import OrderFiltersModal from "../../components/OrderFiltersModal";
+import { useMoney } from "../../lib/money";
 
 interface Order {
   _id: string;
@@ -64,6 +65,7 @@ interface Order {
 
 const OrdersPage: React.FC = () => {
   const { t } = useTranslation();
+  const money = useMoney();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [orders, setOrders] = useState<Order[]>([]);
@@ -299,10 +301,12 @@ const OrdersPage: React.FC = () => {
                 {t("order.totalRevenue")}
               </p>
               <p className="text-2xl font-bold text-[#333333]">
-                $
-                {filteredOrders
-                  .reduce((total, order) => total + order.totalPrice, 0)
-                  .toFixed(2)}
+                {money(
+                  filteredOrders.reduce(
+                    (total, order) => total + order.totalPrice,
+                    0
+                  )
+                )}
               </p>
             </div>
             <div className="bg-[#002B5B]/10 p-3 rounded-full">
@@ -474,10 +478,10 @@ const OrdersPage: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {order.orderItems.length} items
+                    {order.orderItems.length} {t("items")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${order.totalPrice.toFixed(2)}
+                    {money(order.totalPrice)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {order.paymentMethod}

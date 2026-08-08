@@ -3,6 +3,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import OrderTimeline from "./OrderTimeline";
 import { cldImg } from "../lib/cldImage";
+import { useMoney } from "../lib/money";
 
 interface TimelineEvent {
   status: string;
@@ -73,6 +74,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const money = useMoney();
   if (!isOpen || !order) return null;
 
   const getStatusColor = (status: string) => {
@@ -364,7 +366,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-semibold text-gray-900">
-                            ${((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}
+                            {money((item.price ?? 0) * (item.quantity ?? 0))}
                           </p>
                           {item.couponDiscount && item.couponDiscount > 0 && (
                             <p className="text-xs text-green-600">
@@ -375,7 +377,10 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           )}
                           {item.salePercentage > 0 && (
                             <p className="text-xs text-gray-500 line-through">
-                              ${((item.product?.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}
+                              {money(
+                                (item.product?.price ?? 0) *
+                                  (item.quantity ?? 0)
+                              )}
                             </p>
                           )}
                         </div>
@@ -395,8 +400,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         {t("Subtotal")}:
                       </span>
                       <span className="text-sm font-medium text-gray-900">
-                        $
-                        {(order.itemsPrice ?? order.totalPrice ?? 0).toFixed(2)}
+                        {money(order.itemsPrice ?? order.totalPrice ?? 0)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -404,13 +408,13 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         {t("Shipping")}:
                       </span>
                       <span className="text-sm font-medium text-gray-900">
-                        ${order.shippingPrice?.toFixed(2) || "0.00"}
+                        {money(order.shippingPrice)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">{t("Tax")}:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        ${order.taxPrice?.toFixed(2) || "0.00"}
+                        {money(order.taxPrice)}
                       </span>
                     </div>
                     {order.couponDiscount && order.couponDiscount > 0 && (
@@ -421,7 +425,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           })}
                         </span>
                         <span className="text-sm font-medium text-green-600">
-                          -${(order.couponDiscount ?? 0).toFixed(2)}
+                          -{money(order.couponDiscount)}
                         </span>
                       </div>
                     )}
@@ -430,7 +434,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                         {t("Total")}:
                       </span>
                       <span className="text-lg font-bold text-gray-900">
-                        ${(order.totalPrice ?? 0).toFixed(2)}
+                        {money(order.totalPrice)}
                       </span>
                     </div>
                   </div>
