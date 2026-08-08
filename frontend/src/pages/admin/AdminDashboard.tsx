@@ -24,6 +24,7 @@ const AdminDashboard: React.FC = () => {
   const { user } = useUserStore();
   const isAdminLike =
     user?.role === "admin" || user?.role === "super_admin";
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);
   const [combineFiles, setCombineFiles] = useState(true);
@@ -32,7 +33,6 @@ const AdminDashboard: React.FC = () => {
     useAnalyticsStore();
   const {
     dashboardStats,
-    loading,
     error,
     fetchDashboardStats,
     fetchVendorStore,
@@ -43,15 +43,26 @@ const AdminDashboard: React.FC = () => {
   useEffect(() => {
     // If logged in user is a store owner, fetch their store & stats.
     // If admin, fetch platform-level stats and vendors list.
-    if (user?.role === "store") {
-      fetchVendorStore().catch(() => {});
-      fetchDashboardStats().catch(() => {});
-    } else if (isAdminLike) {
-      // admin dashboard - backend should return platform-wide stats
-      fetchDashboardStats().catch(() => {});
-      fetchVendors({ page: 1, limit: 10 }).catch(() => {});
-    }
-  }, [user, fetchDashboardStats, fetchVendorStore, fetchVendors]);
+    let cancelled = false;
+    const requests =
+      user?.role === "store"
+        ? [fetchVendorStore(), fetchDashboardStats()]
+        : isAdminLike
+          ? [fetchDashboardStats(), fetchVendors({ page: 1, limit: 10 })]
+          : [];
+
+    // allSettled, not all: one failing request must not keep the dashboard on
+    // its loading screen. The store's `loading` flag is shared by every action
+    // on it, so gating the page on that alone leaves it spinning forever if
+    // any single call is slow or errors.
+    Promise.allSettled(requests).then(() => {
+      if (!cancelled) setInitialLoadDone(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isAdminLike, fetchDashboardStats, fetchVendorStore, fetchVendors]);
 
   useEffect(() => {
     fetchSalesTrend("monthly", "1year").catch(() => {});
@@ -124,7 +135,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  if (loading && !dashboardStats) {
+  if (!initialLoadDone && !dashboardStats) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-4 border-[var(--brand-primary)] border-t-transparent"></div>

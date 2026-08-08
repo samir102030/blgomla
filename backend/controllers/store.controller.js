@@ -1080,18 +1080,43 @@ export const getStoreStatistics = controllerWrapper(
       orderFilter = { store: { $in: storeIds } };
     }
 
-    // Calculate basic stats
-    const paidOrders = await Order.find({ ...orderFilter, isPaid: true });
+    // Load only the fields the stats below actually read. Previously these
+    // three queries pulled every full Order and Product document — including
+    // each product's embedded reviews array — into the function's memory. For
+    // an admin the filters are empty, so that meant the entire catalogue and
+    // order history on every dashboard load, which is slow enough on a cold
+    // serverless start to look like the page is hanging.
+    const paidOrders = await Order.find({ ...orderFilter, isPaid: true })
+      .select("totalPrice")
+      .lean();
     const totalRevenue = paidOrders.reduce(
-      (acc, order) => acc + order.totalPrice,
+      (acc, order) => acc + (order.totalPrice || 0),
       0
     );
 
-    const allOrders = await Order.find(orderFilter);
+    const allOrders = await Order.find(orderFilter)
+      .select("totalPrice isPaid status createdAt orderItems.quantity")
+      .lean();
     const totalOrders = allOrders.length;
 
-    const products = await Product.find(productFilter);
+    const products = await Product.find(productFilter)
+      .select(
+        "name price stock status isActive deleted approvalStatus reviews.rating reviews.isVisible"
+      )
+      .lean();
     const totalProducts = products.length;
+
+    // averageRating is a schema virtual, which .lean() strips — compute the
+    // same value here from the reviews we already loaded.
+    const visibleAverageRating = (product) => {
+      const visible = (product.reviews || []).filter(
+        (review) => review.isVisible !== false
+      );
+      if (visible.length === 0) return 0;
+      return (
+        visible.reduce((acc, review) => acc + review.rating, 0) / visible.length
+      );
+    };
 
     // Total users (customers who placed orders)
     const uniqueCustomers = await Order.distinct("user", orderFilter);
@@ -1104,7 +1129,9 @@ export const getStoreStatistics = controllerWrapper(
       ...orderFilter,
       isPaid: true,
       createdAt: { $gte: startOfMonth },
-    });
+    })
+      .select("totalPrice")
+      .lean();
     const monthlyRevenue = monthlyOrders.reduce(
       (acc, order) => acc + order.totalPrice,
       0
@@ -1190,7 +1217,7 @@ export const getStoreStatistics = controllerWrapper(
       quantity: p.stock || 0,
       status: p.status || "active",
       revenue: 0, // placeholder, would need to calculate
-      rating: p.averageRating || 0,
+      rating: visibleAverageRating(p),
     }));
 
     // Active products — live on the storefront (approved, enabled, not deleted)
@@ -1236,7 +1263,9 @@ export const getStoreStatistics = controllerWrapper(
       ...orderFilter,
       isPaid: true,
       createdAt: { $gte: prevMonth, $lt: startOfMonth },
-    });
+    })
+      .select("totalPrice")
+      .lean();
     const prevMonthlyRevenue = prevMonthOrders.reduce(
       (acc, order) => acc + order.totalPrice,
       0

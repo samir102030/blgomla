@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useVendorStore } from '../../stores/vendor.store';
 import { useUserStore } from '../../stores/user.store';
 import { useTranslation } from 'react-i18next';
@@ -8,19 +8,28 @@ const VendorDashboard: React.FC = () => {
   const { t } = useTranslation();
   const money = useMoney();
   const { user } = useUserStore();
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const {
     dashboardStats,
     vendorStore,
-    loading,
     fetchDashboardStats,
     fetchVendorStore
   } = useVendorStore();
 
   useEffect(() => {
-    if (user?.role === 'store') {
-      fetchDashboardStats();
-      fetchVendorStore();
+    if (user?.role !== 'store') {
+      setInitialLoadDone(true);
+      return;
     }
+    let cancelled = false;
+    // allSettled so a single failing call can't pin the page on its spinner —
+    // the store's `loading` flag is shared across all of its actions.
+    Promise.allSettled([fetchDashboardStats(), fetchVendorStore()]).then(() => {
+      if (!cancelled) setInitialLoadDone(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user, fetchDashboardStats, fetchVendorStore]);
 
   const recentOrders = dashboardStats?.recentOrders ?? [];
@@ -43,7 +52,7 @@ const VendorDashboard: React.FC = () => {
     }
   };
 
-  if (loading && !dashboardStats) {
+  if (!initialLoadDone && !dashboardStats) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
