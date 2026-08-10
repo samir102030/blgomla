@@ -109,6 +109,12 @@ app.get("/api/v1/health", async (req, res) => {
     service: "halafawyStore-backend",
     uptime: Math.round(process.uptime()),
     db: ["disconnected", "connected", "connecting", "disconnecting"][dbState] ?? "unknown",
+    // Which commit is actually serving. Vercel injects these at build time.
+    // Without it there is no way to tell a successful deploy from a failed one
+    // that left the previous build running — the symptom that cost us an
+    // afternoon of chasing a "deployed" fix that was never live.
+    commit: (process.env.VERCEL_GIT_COMMIT_SHA || "unknown").slice(0, 7),
+    env: process.env.VERCEL_ENV || "local",
     ts: new Date().toISOString(),
   });
 });
