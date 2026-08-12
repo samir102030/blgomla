@@ -9,7 +9,11 @@ import User from "../models/user.model.js";
 // deploy previews, which is what the wildcard was there for.
 //
 // The ngrok wildcard is a local-tunnel convenience, never trusted in prod.
-const isProductionDeploy = process.env.VERCEL_ENV === "production";
+// Checks NODE_ENV as well as VERCEL_ENV so this still holds when the app is
+// hosted somewhere other than Vercel, where VERCEL_ENV simply doesn't exist.
+const isProductionDeploy =
+  process.env.VERCEL_ENV === "production" ||
+  process.env.NODE_ENV === "production";
 
 export const CLIENT_ORIGINS = [
   "http://localhost:5173",
