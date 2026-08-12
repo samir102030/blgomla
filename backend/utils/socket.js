@@ -2,21 +2,31 @@ import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
+// Scoped to this project's own deploys. The previous `https://*.netlify.app`
+// entry admitted every site hosted on Netlify — and this list is also what
+// app.js trusts for credentialed CORS, so it was an open door for anyone with
+// a free Netlify account. `*--belgomla.netlify.app` still covers Netlify
+// deploy previews, which is what the wildcard was there for.
+//
+// The ngrok wildcard is a local-tunnel convenience, never trusted in prod.
+const isProductionDeploy = process.env.VERCEL_ENV === "production";
+
 export const CLIENT_ORIGINS = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:5175",
-  "https://*.netlify.app",
-  "https://68935717a16f60000867bbf9--belgomla.netlify.app",
-  "https://*.ngrok-free.app",
+  "https://belgomla.netlify.app",
+  "https://*--belgomla.netlify.app",
+  ...(isProductionDeploy ? [] : ["https://*.ngrok-free.app"]),
 ];
 
 let io;
 
+// `[^.]*` rather than `.*` so a wildcard only ever spans one DNS label.
 const normalizeWildcard = (value) =>
   value
     .replace(/\./g, "\\.")
-    .replace(/\*/g, ".*")
+    .replace(/\*/g, "[^.]*")
     .replace(/\//g, "\\/");
 
 const isOriginAllowed = (origin) => {

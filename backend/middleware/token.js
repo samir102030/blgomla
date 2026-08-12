@@ -62,15 +62,31 @@ export const generateRefreshToken = (userId) => {
   return token;
 };
 
+// Single definition of the cookie attributes. `res.clearCookie` only clears a
+// cookie when the attributes match the ones it was set with, so set and clear
+// must read from the same place — otherwise logout silently leaves the session
+// cookie in the browser in production (secure + sameSite=none).
+export const authCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+  path: "/",
+});
+
+export const ACCESS_TOKEN_MAX_AGE = 5 * 60 * 60 * 1000; // five hours
+export const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+export const clearAuthCookies = (res) => {
+  res.clearCookie("accessToken", authCookieOptions());
+  res.clearCookie("refreshToken", authCookieOptions());
+};
+
 export const generateTokenAndSetCookie = (res, userId) => {
   const token = generateToken(userId, "5h");
 
   res.cookie("accessToken", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-    maxAge: 5 * 60 * 60 * 1000, // five hours
-    path: "/", // Restrict cookie to the application root
+    ...authCookieOptions(),
+    maxAge: ACCESS_TOKEN_MAX_AGE,
   });
 
   return token;
@@ -81,17 +97,13 @@ export const generateTokensAndSetCookies = (res, userId) => {
   const refreshToken = generateRefreshToken(userId);
 
   res.cookie("accessToken", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-    maxAge: 5 * 60 * 60 * 1000, // five hours
+    ...authCookieOptions(),
+    maxAge: ACCESS_TOKEN_MAX_AGE,
   });
 
   res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    ...authCookieOptions(),
+    maxAge: REFRESH_TOKEN_MAX_AGE,
   });
 
   return { accessToken, refreshToken };

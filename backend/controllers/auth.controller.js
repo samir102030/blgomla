@@ -6,6 +6,9 @@ import { paginateQuery } from "../utils/pagination.js";
 import {
   generateTokensAndSetCookies,
   generateToken,
+  clearAuthCookies,
+  authCookieOptions,
+  ACCESS_TOKEN_MAX_AGE,
 } from "../middleware/token.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import Store from "../models/store.model.js";
@@ -14,11 +17,33 @@ import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
 import { logAudit, diff } from "../utils/audit.js";
-import { getUserPermissions } from "../utils/permissions.js";
+import { getUserPermissions, userCan } from "../utils/permissions.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const isSuperAdmin = (user) => user?.role === "super_admin";
+
+// Emails are matched case-insensitively via regex (legacy rows predate the
+// lowercasing pre-save hook). User input must be escaped first — an
+// unescaped `.*` matches every row, and nested quantifiers cause ReDoS.
+const escapeRegex = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const emailMatch = (email) => new RegExp(`^${escapeRegex(email)}$`, "i");
+
+// Fields that must never reach an admin list view. `totpSecret` and
+// `pushSubscriptions` are already `select: false` on the schema; these are not.
+const SENSITIVE_USER_FIELDS =
+  "-password -resetPasswordToken -resetPasswordExpiresAt -verificationToken -verificationTokenExpiresAt";
+
+// Password-reset tokens are stored hashed, never in plaintext.
+const hashResetToken = (token) =>
+  crypto.createHash("sha256").update(String(token)).digest("hex");
+
+// Roles that can never be handed out over the API. Admin accounts are minted
+// out-of-band; without this an actor holding only `users.edit` could promote
+// themselves straight to super_admin.
+const PRIVILEGED_ROLES = ["admin", "super_admin"];
 
 const guardSuperAdminMutation = async (targetUserId, actor) => {
   const targetUser = await User.findById(targetUserId);
@@ -37,7 +62,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
   const { email, password, name, phoneNumber, role, storeDescription, referralCode } =
     req.body;
 
-  if (await User.findOne({ email: new RegExp(`^${email}$`, "i") }))
+  if (await User.findOne({ email: emailMatch(email) }))
     return res
       .status(400)
       .json({ success: false, message: "User already exists" });
@@ -73,16 +98,20 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     lastLogin: new Date(),
     active: true, // Set active to true by default
   });
+  await user.save();
+
+  // Created after the user so a failed save (duplicate email, validation)
+  // doesn't leave an orphan store behind. Declared out here because the
+  // response below reports it back to the vendor.
+  let store;
   if (role === "store") {
-    const store = new Store({
+    store = new Store({
       name: user.name,
       owner: user._id,
       description: storeDescription || "Store description",
     });
     await store.save();
   }
-
-  await user.save();
 
   logAudit(req, "user.registered", "user", user._id, {
     role: user.role,
@@ -159,9 +188,7 @@ export const reSendVerificationEmail = controllerWrapper(
         .status(400)
         .json({ success: false, message: "Email is required" });
     }
-    const user = await User.findOne({
-      email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
-    });
+    const user = await User.findOne({ email: emailMatch(email) });
 
     // Don't reveal whether the email exists — return the same response
     // either way to prevent account enumeration via this endpoint.
@@ -208,9 +235,7 @@ export const verifyEmail = controllerWrapper(
     // Email lookup is also case-insensitive since the DB pre-save hook
     // lowercases new emails but we can't assume that's true of legacy rows.
     const normalizedCode = String(code).trim().toUpperCase();
-    const user = await User.findOne({
-      email: new RegExp(`^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
-    });
+    const user = await User.findOne({ email: emailMatch(email) });
     if (!user || !user.verificationToken) {
       return res.status(400).json({
         success: false,
@@ -274,7 +299,7 @@ export const login = controllerWrapper("login", async (req, res) => {
   let user;
   if (email)
     user = await User.findOne({
-      email: new RegExp(`^${email}$`, "i"),
+      email: emailMatch(email),
     }).select("+totpSecret").populate("love");
   if (phone) user = await User.findOne({ phoneNumber: phone }).select("+totpSecret");
   if (!user) {
@@ -374,7 +399,7 @@ export const login = controllerWrapper("login", async (req, res) => {
 });
 
 export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) => {
-  const { credential } = req.body;
+  const { credential, totpCode } = req.body;
   if (!credential) {
     return res.status(400).json({
       success: false,
@@ -414,7 +439,7 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
   const lang = acceptLang.startsWith("ar") ? "ar" : "en";
 
   let user = await User.findOne({
-    $or: [{ googleId }, { email: new RegExp(`^${email}$`, "i") }],
+    $or: [{ googleId }, { email: emailMatch(email) }],
   });
 
   if (user) {
@@ -443,12 +468,35 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
     );
   }
 
+  // Second factor, mirroring the password login flow: the client re-posts the
+  // same Google credential together with the 6-digit code. Previously this
+  // branch returned TOTP_REQUIRED but the handler accepted no code, so anyone
+  // who enrolled in 2FA could never sign in with Google again.
   if (user.twoFactorEnabled) {
-    return res.status(401).json({
-      success: false,
-      code: "TOTP_REQUIRED",
-      message: "Enter the 6-digit code from your authenticator app.",
-    });
+    if (!totpCode) {
+      return res.status(401).json({
+        success: false,
+        code: "TOTP_REQUIRED",
+        message: "Enter the 6-digit code from your authenticator app.",
+      });
+    }
+    const { verifyTOTP } = await import("../utils/totp.js");
+    const enrolled = await User.findById(user._id).select("+totpSecret");
+    if (!verifyTOTP(enrolled?.totpSecret, totpCode)) {
+      logAudit(
+        req,
+        "auth.login_failed",
+        "auth",
+        user._id,
+        { email: user.email, reason: "totp_invalid", method: "google" },
+        { status: "failure", severity: "warning", category: "security", actor: user }
+      );
+      return res.status(401).json({
+        success: false,
+        code: "TOTP_INVALID",
+        message: "Invalid authenticator code.",
+      });
+    }
   }
 
   generateTokensAndSetCookies(res, user._id);
@@ -475,8 +523,7 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
 });
 
 export const logout = controllerWrapper("logout", async (req, res) => {
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
+  clearAuthCookies(res);
   if (req.user) {
     logAudit(req, "auth.logout", "auth", req.user._id, {}, { category: "security" });
   }
@@ -491,20 +538,30 @@ export const refreshToken = controllerWrapper(
     // This will be called after verifyRefreshToken middleware
     const userId = req.userId;
 
+    // A valid refresh token is not enough on its own — it stays valid for 7
+    // days, so without this check a deleted or deactivated account could keep
+    // minting fresh sessions for a week after being locked out. (Admin-window
+    // expiry is enforced per-request by protectRoute.)
+    const user = await User.findById(userId).select("active deleted");
+    if (!user || user.deleted || !user.active) {
+      clearAuthCookies(res);
+      return res.status(401).json({
+        success: false,
+        message: "Session is no longer valid. Please log in again.",
+      });
+    }
+
     // Generate new access token
     const newAccessToken = generateToken(userId, "5h");
 
     res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-      maxAge: 5 * 60 * 60 * 1000, // five hours
+      ...authCookieOptions(),
+      maxAge: ACCESS_TOKEN_MAX_AGE,
     });
 
     return res.status(200).json({
       success: true,
       message: "Token refreshed successfully",
-      accessToken: newAccessToken, // Optionally send in response for client-side storage if needed
     });
   },
 );
@@ -522,16 +579,16 @@ export const forgotPassword = controllerWrapper(
       return res.status(200).json(genericResponse);
     }
 
-    const escaped = email.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const user = await User.findOne({ email: new RegExp(`^${escaped}$`, "i") });
+    const user = await User.findOne({ email: emailMatch(email.trim()) });
 
     if (!user) {
-      console.log("[forgotPassword] no account for:", email);
       return res.status(200).json(genericResponse);
     }
 
+    // Only the hash is persisted — a leaked DB snapshot then can't be used to
+    // take over accounts. The raw token goes out in the email and nowhere else.
     const resetToken = crypto.randomBytes(20).toString("hex");
-    user.resetPasswordToken = resetToken;
+    user.resetPasswordToken = hashResetToken(resetToken);
     user.resetPasswordExpiresAt = Date.now() + 1 * 60 * 60 * 1000;
     await user.save();
 
@@ -550,7 +607,7 @@ export const resetPassword = controllerWrapper(
     const { password } = req.body;
 
     const user = await User.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: hashResetToken(token),
       resetPasswordExpiresAt: { $gt: Date.now() },
     });
 
@@ -587,7 +644,9 @@ export const getAllUsers = controllerWrapper(
   "getAllUsers",
   async (req, res) => {
     const { page, limit, role } = req.query;
-    const query = role ? User.find({ role }) : User.find({});
+    const query = (role ? User.find({ role }) : User.find({})).select(
+      SENSITIVE_USER_FIELDS
+    );
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);
@@ -597,8 +656,10 @@ export const getAllUsers = controllerWrapper(
 export const getAllUsersType = controllerWrapper(
   "getAllUsersType",
   async (req, res) => {
-    const { page, limit, type } = req.body;
-    const query = User.find({ role: type });
+    // Read from the query string: this is mounted as a GET, and a GET body is
+    // not something browsers/axios send.
+    const { page, limit, type } = req.query;
+    const query = User.find({ role: type }).select(SENSITIVE_USER_FIELDS);
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);
@@ -634,6 +695,25 @@ export const updateUser = controllerWrapper("updateUser", async (req, res) => {
   if (guard.status) return res.status(guard.status).json(guard.body);
 
   const before = guard.targetUser;
+
+  // Role is a privileged field. This endpoint is gated on `users.edit`, which
+  // is a weaker permission than the dedicated `users.role` — so re-check it
+  // here rather than letting an editor rewrite the access-control graph.
+  if (filteredData.role !== undefined && filteredData.role !== before.role) {
+    if (!(await userCan(req.user, "users.role"))) {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied - changing a role requires the users.role permission",
+      });
+    }
+    if (PRIVILEGED_ROLES.includes(String(filteredData.role).toLowerCase())) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change role to ${filteredData.role}`,
+      });
+    }
+  }
+
   const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
     new: true,
     runValidators: true,
@@ -723,8 +803,8 @@ export const changeUserRole = controllerWrapper(
   async (req, res) => {
   const { userId } = req.params;
   const { role } = req.body;
-  if (role === "admin")
-    return res.status(400).json({ message: "Cannot change role to admin" });
+  if (PRIVILEGED_ROLES.includes(String(role).toLowerCase()))
+    return res.status(400).json({ message: `Cannot change role to ${role}` });
   if (!userId || !role)
       return res.status(400).json({ message: "User ID and role are required" });
 
@@ -905,7 +985,7 @@ export const getDeletedUsers = controllerWrapper(
   async (req, res) => {
     // use pagination by paginateQuery
     const { page, limit } = req.query;
-    const query = User.find({ deleted: true });
+    const query = User.find({ deleted: true }).select(SENSITIVE_USER_FIELDS);
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);

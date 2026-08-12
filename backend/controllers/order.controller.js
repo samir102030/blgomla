@@ -501,23 +501,43 @@ export const createOrder = controllerWrapper(
         message: "Order created successfully",
       });
 
-      // Send order confirmation email (non-blocking, after response)
-      const customer = await User.findById(savedOrder.user);
-      if (customer) {
-        const populatedOrder = await Order.findById(savedOrder._id).populate("orderItems.product");
-        sendOrderConfirmationEmail(customer, populatedOrder).catch((err) =>
-          console.error("Failed to send order confirmation email:", err)
-        );
-        if (customer.phoneNumber) {
-          const orderNum = savedOrder._id.toString().slice(-8).toUpperCase();
-          sendSMS(customer.phoneNumber, orderSmsText(customer.lang, "confirmed", orderNum));
+      // Confirmation email + SMS are best-effort and run after the response.
+      // They must not share the try/catch above: the order is already
+      // committed and answered, so a failure here has to stay contained.
+      // Previously a throw landed in that catch, which tried to abort an
+      // already-committed transaction and then write a 500 onto a response
+      // whose headers were long gone — crashing the function on what should
+      // have been a successful order.
+      try {
+        const customer = await User.findById(savedOrder.user);
+        if (customer) {
+          const populatedOrder = await Order.findById(savedOrder._id).populate(
+            "orderItems.product"
+          );
+          sendOrderConfirmationEmail(customer, populatedOrder).catch((err) =>
+            console.error("Failed to send order confirmation email:", err)
+          );
+          if (customer.phoneNumber) {
+            const orderNum = savedOrder._id.toString().slice(-8).toUpperCase();
+            sendSMS(
+              customer.phoneNumber,
+              orderSmsText(customer.lang, "confirmed", orderNum)
+            );
+          }
         }
+      } catch (notifyError) {
+        console.error("Post-order notification failed:", notifyError);
       }
     } catch (error) {
       // Abort transaction on any error
-      await session.abortTransaction();
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
       console.error("Error creating order:", error);
 
+      if (res.headersSent) {
+        return;
+      }
       res.status(500).json({
         success: false,
         message: "Failed to create order",

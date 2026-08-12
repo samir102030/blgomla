@@ -46,13 +46,36 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+// A 401 from these endpoints means "these credentials are wrong", not "your
+// session expired" — there is nothing to refresh. Retrying them kicked the
+// user out mid-login: the 2FA flow answers the first POST /users/login with
+// 401 + code:"TOTP_REQUIRED" so the UI can prompt for the 6-digit code, and
+// the interceptor was treating that as a dead session, calling logout() and
+// hard-redirecting to /login before the code could ever be entered.
+const NO_REFRESH_PATHS = [
+  "/users/login",
+  "/users/google",
+  "/users/signup",
+  "/users/refresh",
+  "/users/verifyEmail",
+  "/users/forgotPassword",
+  "/users/resetPassword",
+];
+
+const shouldAttemptRefresh = (error: any) => {
+  if (error.response?.status !== 401) return false;
+  if (error.response?.data?.code === "TOTP_REQUIRED") return false;
+  const url: string = error.config?.url || "";
+  return !NO_REFRESH_PATHS.some((path) => url.startsWith(path));
+};
+
 // Response interceptor to handle token refresh
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (shouldAttemptRefresh(error) && !originalRequest._retry) {
       if (isRefreshing) {
         // If refresh is already in progress, queue the request
         return new Promise((resolve, reject) => {

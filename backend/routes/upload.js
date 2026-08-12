@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
+import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -35,24 +36,13 @@ router.get("/test", (req, res) => {
   res.json({ success: true, message: "Cloudinary route is working" });
 });
 
-router.post("/upload", upload.single("image"), async (req, res) => {
+// Authenticated users only. Every caller in the app is already logged in —
+// customers uploading a profile picture, vendors uploading store/product
+// media, admins uploading banners. Leaving this open let anyone on the
+// internet burn the Cloudinary quota with 100MB uploads.
+router.post("/upload", protectRoute, upload.single("image"), async (req, res) => {
   try {
-    console.log("=== UPLOAD REQUEST STARTED ===");
-    console.log("Request body:", req.body);
-    console.log(
-      "Request file:",
-      req.file
-        ? {
-            fieldname: req.file.fieldname,
-            originalname: req.file.originalname,
-            mimetype: req.file.mimetype,
-            size: req.file.size,
-          }
-        : "No file"
-    );
-
     if (!req.file) {
-      console.log("ERROR: No file uploaded");
       return res.status(400).json({
         success: false,
         message: "No file uploaded.",
@@ -118,7 +108,9 @@ export const deleteFromCloudInary = async (
   return result;
 };
 
-router.delete("/delete", async (req, res) => {
+// Admin-only: this destroys an arbitrary Cloudinary asset by public_id, so an
+// open route let anyone wipe the store's media library.
+router.delete("/delete", protectRoute, adminRoute, async (req, res) => {
   try {
     const { public_id, resource_type = "image" } = req.body; // or req.query.public_id
     if (!public_id)

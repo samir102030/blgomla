@@ -144,20 +144,20 @@ router.post(
     const { obj } = req.body;
     const hmac = req.query.hmac || req.body.hmac;
 
-    // HMAC verification is enforced only when PAYMOB_HMAC_SECRET is set.
-    // While the Paymob integration is still being provisioned the secret
-    // is absent, so we accept the callback but warn loudly so the gap is
-    // visible in logs. Once the secret is added in Vercel env, this branch
-    // automatically starts rejecting forged/missing-signature callbacks.
-    if (process.env.PAYMOB_HMAC_SECRET) {
-      if (!obj || !hmac || !verifyPaymobHmac(obj, hmac)) {
-        console.warn("[Paymob Webhook] Rejected: invalid or missing HMAC");
-        return res.status(401).json({ received: false, error: "Invalid HMAC" });
-      }
-    } else {
-      console.warn(
-        "[Paymob Webhook] PAYMOB_HMAC_SECRET not set — accepting callback WITHOUT signature verification. Set this env var before going live."
+    // Fail closed. A missing secret is a misconfiguration, not a licence to
+    // trust the caller — without it anyone can POST {obj:{success:true}} and
+    // mark any order paid.
+    if (!process.env.PAYMOB_HMAC_SECRET) {
+      console.error(
+        "[Paymob Webhook] PAYMOB_HMAC_SECRET not set — rejecting callback. Set this env var before taking Paymob payments."
       );
+      return res
+        .status(503)
+        .json({ received: false, error: "Webhook verification not configured" });
+    }
+    if (!obj || !hmac || !verifyPaymobHmac(obj, hmac)) {
+      console.warn("[Paymob Webhook] Rejected: invalid or missing HMAC");
+      return res.status(401).json({ received: false, error: "Invalid HMAC" });
     }
 
     if (obj?.success === true) {
@@ -210,15 +210,18 @@ router.post(
   controllerWrapper("tabbyWebhook", async (req, res) => {
     const sig = req.headers["x-tabby-signature"] || req.headers["tabby-signature"];
 
-    if (process.env.TABBY_WEBHOOK_SECRET || process.env.TABBY_SECRET_KEY) {
-      if (!verifyTabbyWebhook(req.body, sig)) {
-        console.warn("[Tabby Webhook] Rejected: invalid signature");
-        return res.status(401).json({ received: false, error: "Invalid signature" });
-      }
-    } else {
-      console.warn(
-        "[Tabby Webhook] TABBY_WEBHOOK_SECRET / TABBY_SECRET_KEY not set — accepting WITHOUT signature verification. Set this before going live."
+    // Fail closed — see the Paymob handler above for the reasoning.
+    if (!process.env.TABBY_WEBHOOK_SECRET && !process.env.TABBY_SECRET_KEY) {
+      console.error(
+        "[Tabby Webhook] TABBY_WEBHOOK_SECRET / TABBY_SECRET_KEY not set — rejecting callback."
       );
+      return res
+        .status(503)
+        .json({ received: false, error: "Webhook verification not configured" });
+    }
+    if (!verifyTabbyWebhook(req.body, sig)) {
+      console.warn("[Tabby Webhook] Rejected: invalid signature");
+      return res.status(401).json({ received: false, error: "Invalid signature" });
     }
 
     let payload;
@@ -270,15 +273,18 @@ router.post(
   controllerWrapper("tamaraWebhook", async (req, res) => {
     const token = req.headers["tamara-token"] || req.headers["x-tamara-token"];
 
-    if (process.env.TAMARA_NOTIFICATION_TOKEN) {
-      if (!verifyTamaraWebhook(token)) {
-        console.warn("[Tamara Webhook] Rejected: invalid token");
-        return res.status(401).json({ received: false, error: "Invalid token" });
-      }
-    } else {
-      console.warn(
-        "[Tamara Webhook] TAMARA_NOTIFICATION_TOKEN not set — accepting WITHOUT verification. Set this before going live."
+    // Fail closed — see the Paymob handler above for the reasoning.
+    if (!process.env.TAMARA_NOTIFICATION_TOKEN) {
+      console.error(
+        "[Tamara Webhook] TAMARA_NOTIFICATION_TOKEN not set — rejecting callback."
       );
+      return res
+        .status(503)
+        .json({ received: false, error: "Webhook verification not configured" });
+    }
+    if (!verifyTamaraWebhook(token)) {
+      console.warn("[Tamara Webhook] Rejected: invalid token");
+      return res.status(401).json({ received: false, error: "Invalid token" });
     }
 
     const orderId = req.body?.order_reference_id;

@@ -41,6 +41,14 @@ ensureDB().catch((err) => console.error("Initial DB connect failed:", err.messag
 
 const app = express();
 
+// Vercel puts the function behind its edge proxy, so req.ip is the proxy's
+// address unless we trust one hop. Without this every visitor shares a single
+// rate-limit bucket — 10 failed logins from anyone would lock out the whole
+// site via the auth limiter. `1` (not `true`) because express-rate-limit
+// rejects a fully permissive setting, which would let clients spoof
+// X-Forwarded-For and bypass the limiter entirely.
+app.set("trust proxy", 1);
+
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -53,20 +61,40 @@ const extraOrigins = (process.env.CLIENT_URL || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+// The old entry here was `https://*.vercel.app`, which matches every
+// deployment on Vercel — not just ours. Combined with credentials: true, any
+// person who deployed anything to Vercel could make authenticated
+// cross-origin calls with a logged-in customer's cookies.
+//
+// Preview deploys still need a wildcard, so scope it to this project's
+// prefix: that covers production (halafawystore-frontend.vercel.app) and
+// every preview (halafawystore-frontend-<hash>-<team>.vercel.app) without
+// admitting strangers. Override with VERCEL_PROJECT_PREFIX if the project is
+// ever renamed.
+const vercelProjectPrefix =
+  process.env.VERCEL_PROJECT_PREFIX || "halafawystore-frontend";
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:5175",
+  // Live storefront. Listed explicitly rather than relying solely on
+  // CLIENT_URL so a missing env var can't take the site down.
+  "https://belgmla.com",
+  "https://www.belgmla.com",
   ...extraOrigins,
   ...CLIENT_ORIGINS,
-  "https://*.vercel.app",
+  `https://${vercelProjectPrefix}*.vercel.app`,
 ].filter(Boolean);
 
 const isOriginAllowed = (origin) => {
   return allowedOrigins.some((allowed) => {
     if (allowed.includes("*")) {
+      // `[^.]*` keeps the wildcard inside a single DNS label, so
+      // `https://evil.attacker.com.vercel.app` can't slip through a pattern
+      // that was only meant to match one more level of subdomain.
       const regex = new RegExp(
-        "^" + allowed.replace(/\./g, "\\.").replace(/\*/g, ".*") + "$",
+        "^" + allowed.replace(/\./g, "\\.").replace(/\*/g, "[^.]*") + "$",
       );
       return regex.test(origin);
     }
