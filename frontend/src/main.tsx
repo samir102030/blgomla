@@ -8,9 +8,11 @@ import "./lib/i18n";
 import App from "./App.tsx";
 import { applyInitialTheme } from "./lib/theme";
 import { initSentry } from "./lib/sentry";
+import { installImageFallback } from "./lib/imageFallback";
 
 initSentry();
 applyInitialTheme();
+installImageFallback();
 
 // When a new deploy replaces the hashed asset files, a tab still running the
 // old build fails to lazy-load chunks ("Failed to fetch dynamically imported

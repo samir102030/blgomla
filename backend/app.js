@@ -10,6 +10,7 @@ import { CLIENT_ORIGINS } from "./utils/socket.js";
 import { trackVisitor } from "./middleware/analytics.middleware.js";
 import { comingSoonGate } from "./middleware/comingSoon.middleware.js";
 import { captureException } from "./utils/sentry.js";
+import { MongoRateLimitStore } from "./utils/rateLimitStore.js";
 
 dotenv.config();
 
@@ -153,6 +154,9 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
+  // Shared across instances — the default memory store gives every warm
+  // Lambda its own counter, which makes the limit meaningless on Vercel.
+  store: new MongoRateLimitStore({ prefix: "rl:global" }),
 });
 app.use(limiter);
 

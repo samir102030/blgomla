@@ -8,6 +8,7 @@ import { useUserStore } from "./stores/user.store";
 import SiteModeGate from "./components/SiteModeGate";
 import CompareBar from "./components/CompareBar";
 import FloatingActions from "./components/FloatingActions";
+import RequireDashboardAccess from "./components/RequireDashboardAccess";
 import { captureError } from "./lib/sentry";
 
 // ── Eagerly loaded (above-the-fold critical path) ──
@@ -203,10 +204,24 @@ function App() {
           />
 
           {/* Dashboard Routes */}
-          <Route path="/dashboard/*" element={<AdminRoutes />} />
+          <Route
+            path="/dashboard/*"
+            element={
+              <RequireDashboardAccess>
+                <AdminRoutes />
+              </RequireDashboardAccess>
+            }
+          />
 
           {/* Vendor Routes */}
-          <Route path="/vendor/*" element={<VendorRoutes />} />
+          <Route
+            path="/vendor/*"
+            element={
+              <RequireDashboardAccess>
+                <VendorRoutes />
+              </RequireDashboardAccess>
+            }
+          />
         </Routes>
         </SiteModeGate>
       </Suspense>

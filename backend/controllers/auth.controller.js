@@ -40,6 +40,15 @@ const SENSITIVE_USER_FIELDS =
 const hashResetToken = (token) =>
   crypto.createHash("sha256").update(String(token)).digest("hex");
 
+// Compare secrets without short-circuiting on the first differing byte.
+// Hashing both sides first sidesteps timingSafeEqual's equal-length
+// requirement, which would otherwise leak the expected length.
+const secretsMatch = (a, b) => {
+  const digest = (value) =>
+    crypto.createHash("sha256").update(String(value ?? "")).digest();
+  return crypto.timingSafeEqual(digest(a), digest(b));
+};
+
 // Roles that can never be handed out over the API. Admin accounts are minted
 // out-of-band; without this an actor holding only `users.edit` could promote
 // themselves straight to super_admin.
@@ -242,7 +251,7 @@ export const verifyEmail = controllerWrapper(
         message: "Invalid verification code or User not found",
       });
     }
-    if (String(user.verificationToken).toUpperCase() !== normalizedCode) {
+    if (!secretsMatch(String(user.verificationToken).toUpperCase(), normalizedCode)) {
       return res.status(400).json({
         success: false,
         message: "Invalid verification code",
@@ -296,12 +305,20 @@ export const verifyEmail = controllerWrapper(
 
 export const login = controllerWrapper("login", async (req, res) => {
   const { email, phone, password, totpCode } = req.body;
+  // Email takes precedence when both are supplied. Previously the phone
+  // lookup ran second and overwrote an email match, and only the email branch
+  // populated `love`, so the same account came back with different shapes
+  // depending on which field the client happened to send.
   let user;
-  if (email)
-    user = await User.findOne({
-      email: emailMatch(email),
-    }).select("+totpSecret").populate("love");
-  if (phone) user = await User.findOne({ phoneNumber: phone }).select("+totpSecret");
+  if (email) {
+    user = await User.findOne({ email: emailMatch(email) })
+      .select("+totpSecret")
+      .populate("love");
+  } else if (phone) {
+    user = await User.findOne({ phoneNumber: phone })
+      .select("+totpSecret")
+      .populate("love");
+  }
   if (!user) {
     logAudit(
       req,
@@ -314,6 +331,24 @@ export const login = controllerWrapper("login", async (req, res) => {
     return res.status(400).json({
       success: false,
       message: "Invalid credentials",
+    });
+  }
+
+  // Google-only accounts have no password hash. bcrypt.compare throws on an
+  // undefined hash, which surfaced as a 500 instead of a clean rejection.
+  if (!user.password) {
+    logAudit(
+      req,
+      "auth.login_failed",
+      "auth",
+      user._id,
+      { email: user.email, reason: "no_password_set" },
+      { status: "failure", severity: "warning", category: "security", actor: user }
+    );
+    return res.status(400).json({
+      success: false,
+      code: "USE_GOOGLE_SIGNIN",
+      message: "This account signs in with Google. Use the Google button instead.",
     });
   }
 

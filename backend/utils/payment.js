@@ -401,9 +401,16 @@ export const createTamaraCheckout = async ({
 };
 
 // Tamara authenticates webhooks with a static token in `tamara-token`.
-export const verifyTamaraWebhook = (token) =>
-  Boolean(process.env.TAMARA_NOTIFICATION_TOKEN) &&
-  String(token || "") === String(process.env.TAMARA_NOTIFICATION_TOKEN);
+// Compared in constant time, like the Tabby signature above: `===` on a
+// shared secret short-circuits at the first differing byte and leaks the
+// secret's prefix through response timing.
+export const verifyTamaraWebhook = (token) => {
+  const expected = process.env.TAMARA_NOTIFICATION_TOKEN;
+  if (!expected) return false;
+  const a = Buffer.from(String(expected));
+  const b = Buffer.from(String(token || ""));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
 
 /* ─────────────────────────────────────────────────
    PAYMENT GATEWAY ROUTER

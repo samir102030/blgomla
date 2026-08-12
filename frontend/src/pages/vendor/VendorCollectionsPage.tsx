@@ -299,15 +299,17 @@ const VendorCollectionsPage: React.FC = () => {
                       {collection.name}
                     </h4>
                     <p className="text-xs text-gray-500 mt-1 break-words">
-                      {collection.items
+                      {(collection.items || [])
                         .map(
                           (item) =>
-                            `${item.product.name} x${item.quantity}`
+                            // `product` is null when the product behind a
+                            // bundle line has since been deleted.
+                            `${item.product?.name ?? t("vendorCollections.removedProduct", "Removed product")} x${item.quantity}`
                         )
                         .join(" + ")}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {t("vendorCollections.bundlePrice")}: EGP {collection.bundlePrice.toFixed(2)}
+                      {t("vendorCollections.bundlePrice")}: EGP {(collection.bundlePrice ?? 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -477,7 +479,7 @@ const VendorCollectionsPage: React.FC = () => {
                             {product.name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            EGP {product.price.toFixed(2)} · {t("vendorCollections.stock")}{" "}
+                            EGP {(product.price ?? 0).toFixed(2)} · {t("vendorCollections.stock")}{" "}
                             {product.stock}
                           </p>
                         </div>
@@ -629,7 +631,7 @@ const VendorCollectionsPage: React.FC = () => {
               <div>
                 <p className="text-xs text-gray-500">{t("vendorCollections.bundlePrice")}</p>
                 <p className="text-lg font-semibold text-[#002B5B]">
-                  EGP {selectedCollection.bundlePrice.toFixed(2)}
+                  EGP {(selectedCollection.bundlePrice ?? 0).toFixed(2)}
                 </p>
               </div>
               <button
@@ -758,7 +760,7 @@ const VendorCollectionsPage: React.FC = () => {
                             {product.name}
                           </p>
                           <p className="text-xs text-gray-500">
-                            EGP {product.price.toFixed(2)} · {t("vendorCollections.stock")}{" "}
+                            EGP {(product.price ?? 0).toFixed(2)} · {t("vendorCollections.stock")}{" "}
                             {product.stock}
                           </p>
                         </div>

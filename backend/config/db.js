@@ -54,6 +54,33 @@ const cached =
   globalThis.__mongoose ??
   (globalThis.__mongoose = { conn: null, promise: null });
 
+/**
+ * Attach the connection listeners exactly once per process.
+ *
+ * These used to be registered inside the `if (!cached.promise)` branch, on
+ * the theory that the branch runs once. It doesn't: the `.catch` below resets
+ * `cached.promise` to null so the next request can retry, which means every
+ * failed attempt re-entered the branch and bound another three listeners.
+ * During a Mongo outage that climbs until Node starts printing
+ * MaxListenersExceededWarning, and each stale listener keeps its closure
+ * alive. A module-level flag is the thing that's actually once-per-process.
+ */
+const installConnectionListeners = () => {
+  if (globalThis.__mongoListenersInstalled) return;
+  globalThis.__mongoListenersInstalled = true;
+
+  mongoose.connection.on("connected", () => {
+    console.log(`✅ MongoDB connected: ${mongoose.connection.host}`);
+  });
+  mongoose.connection.on("error", (err) => {
+    console.error("[mongo] connection error:", err.message);
+  });
+  mongoose.connection.on("disconnected", () => {
+    console.warn("[mongo] disconnected — next request will reconnect");
+    cached.conn = null;
+  });
+};
+
 const connectDB = async () => {
   // Reuse an already-good connection across warm Lambda invocations.
   if (cached.conn && mongoose.connection.readyState === 1) {
@@ -97,18 +124,7 @@ const connectDB = async () => {
         throw err;
       });
 
-    // Event listeners installed once per process — cached.promise is the
-    // single point of attachment so we don't double-bind on warm starts.
-    mongoose.connection.on("connected", () => {
-      console.log(`✅ MongoDB connected: ${mongoose.connection.host}`);
-    });
-    mongoose.connection.on("error", (err) => {
-      console.error("[mongo] connection error:", err.message);
-    });
-    mongoose.connection.on("disconnected", () => {
-      console.warn("[mongo] disconnected — next request will reconnect");
-      cached.conn = null;
-    });
+    installConnectionListeners();
   }
 
   return cached.promise;

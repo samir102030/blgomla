@@ -7,6 +7,7 @@ import {
   superAdminRoute,
 } from "../middleware/auth.middleware.js";
 import { verifyRefreshToken } from "../middleware/token.js";
+import { MongoRateLimitStore } from "../utils/rateLimitStore.js";
 
 // Strict limiter for credential-handling endpoints. The global limiter in
 // app.js is 1000/15min — far too permissive for brute-force protection on
@@ -21,6 +22,10 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
+  // Must be shared: with the default per-process memory store an attacker
+  // gets a fresh 10-attempt budget from every warm Lambda, which is the
+  // opposite of what a brute-force limiter is for.
+  store: new MongoRateLimitStore({ prefix: "rl:auth" }),
 });
 import { translateResponse } from "../middleware/translation.middleware.js";
 import {
