@@ -21,8 +21,14 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
+      # `tsc -b`, not `tsc --noEmit`. The root tsconfig.json is solution-style
+      # ("files": [] plus references), so --noEmit resolves zero input files,
+      # checks nothing, and exits 0. This step passed for months with type
+      # errors sitting in the tree, and let a ReferenceError reach the browser
+      # — vite build strips types without checking them, so it caught nothing
+      # either. Build mode follows the references and actually reads src/.
       - name: TypeScript typecheck
-        run: npx tsc --noEmit
+        run: npx tsc -b --force
       - name: Production build
         run: npm run build
         env:

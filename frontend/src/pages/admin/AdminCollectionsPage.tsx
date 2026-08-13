@@ -19,7 +19,6 @@ interface Product {
 const AdminCollectionsPage: React.FC = () => {
   const { t } = useTranslation();
   const money = useMoney();
-  const user = useUserStore((state) => state.user);
   const {
     collections,
     loading,

@@ -102,6 +102,7 @@ const AddCouponModal: React.FC<AddCouponModalProps> = ({
         usageLimit: "",
         applicableProducts: [],
         applicableCategories: [],
+        isPublic: false,
       });
     }
   };

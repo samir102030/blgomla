@@ -46,6 +46,9 @@ interface SuggestProduct {
 interface SuggestRef {
   _id: string;
   name: string;
+  // Suggestions come back raw, so the Arabic name arrives alongside the
+  // English one and the dropdown picks between them by locale.
+  nameAr?: string;
   slug?: string;
   logo?: string;
 }
