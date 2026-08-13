@@ -31,10 +31,17 @@ async function seed() {
   console.log("🗑️  Cleared all collections");
 
   // ── Users ──
+  // Field names must match user.model.js exactly. They previously didn't:
+  // `firstName`/`lastName`, `phone` and `verified` are not schema paths, and
+  // Mongoose's default strict mode drops unknown keys without complaining. So
+  // every seeded user landed with no name, no phone, and — because the real
+  // field is `isVerified`, which defaults to false — a login that was refused
+  // with EMAIL_NOT_VERIFIED. Phone numbers are stored E.164, which is what the
+  // schema validator requires.
   const [admin, storeOwner, customer] = await User.create([
-    { firstName: "Admin", lastName: "Belgomla", email: "admin@belgomla.com", password: "Admin@123", phone: "01009353639", role: "super_admin", active: true, verified: true },
-    { firstName: "Ahmed", lastName: "Hassan", email: "store@belgomla.com", password: "Store@123", phone: "01112223344", role: "store", active: true, verified: true },
-    { firstName: "Mohamed", lastName: "Ali", email: "customer@belgomla.com", password: "Customer@123", phone: "01223344556", role: "customer", active: true, verified: true },
+    { name: "Admin Belgomla", email: "admin@belgomla.com", password: "Admin@123", phoneNumber: "+201009353639", role: "super_admin", active: true, isVerified: true },
+    { name: "Ahmed Hassan", email: "store@belgomla.com", password: "Store@123", phoneNumber: "+201112223344", role: "store", active: true, isVerified: true },
+    { name: "Mohamed Ali", email: "customer@belgomla.com", password: "Customer@123", phoneNumber: "+201223344556", role: "customer", active: true, isVerified: true },
   ]);
   console.log("👤 Created 3 users");
 

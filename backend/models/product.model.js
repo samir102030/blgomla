@@ -405,6 +405,12 @@ productSchema.pre("save", function (next) {
 });
 
 // ── Auto-generate SKU if not provided ──
+// The suffix is the tail of _id, not just a timestamp. `Date.now()` only has
+// millisecond resolution, so two products sharing the first three letters of
+// their name and created in the same millisecond produced the *same* SKU and
+// collided on the unique index — which is precisely what a bulk insert does.
+// It broke seeding and the vendor Excel upload alike. _id is unique by
+// construction, and the slug hook above already uses it the same way.
 productSchema.pre("save", function (next) {
   if (!this.sku && this.isNew) {
     const prefix = (this.name || "PRD")
@@ -412,7 +418,8 @@ productSchema.pre("save", function (next) {
       .toUpperCase()
       .replace(/[^A-Z]/g, "X");
     const ts = Date.now().toString(36).toUpperCase();
-    this.sku = `${prefix}-${ts}`;
+    const unique = this._id.toString().slice(-6).toUpperCase();
+    this.sku = `${prefix}-${ts}-${unique}`;
   }
   next();
 });
