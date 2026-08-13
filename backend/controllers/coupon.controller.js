@@ -5,6 +5,29 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { logAudit } from "../utils/audit.js";
 
+/**
+ * Coupon access is scoped by store, not by role name.
+ *
+ * Every management handler below now sits behind a `coupons.*` permission
+ * check on the route, so the only question left here is reach: a vendor may
+ * touch their own store's coupons, and an operator — an admin, a super_admin,
+ * or any custom role granted the permission — may touch all of them.
+ *
+ * These checks used to read `req.user.role !== "admin"`, which silently
+ * treated a super_admin as a vendor: the lookup found no store owned by them
+ * and refused them their own coupon pages. `req.store` is set by protectRoute
+ * only for vendors, which is the distinction actually being drawn.
+ */
+const actingAsVendor = (req) => Boolean(req.store);
+
+/** 403 body when the caller may not touch this coupon, otherwise null. */
+const denyUnlessOwned = (req, coupon, action) => {
+  if (!actingAsVendor(req)) return null;
+  const owner = coupon.store?._id ?? coupon.store;
+  if (String(owner) === String(req.store._id)) return null;
+  return { success: false, message: `Unauthorized to ${action} this coupon` };
+};
+
 // Public: list coupons advertised on the storefront (collectible strip).
 export const getPublicCoupons = controllerWrapper(
   "getPublicCoupons",
@@ -56,28 +79,22 @@ export const createCoupon = controllerWrapper(
 
     // Get store based on user role
     let storeId;
-    if (req.user.role === "admin") {
+    if (actingAsVendor(req)) {
+      storeId = req.store._id;
+    } else {
       storeId = req.body.storeId;
       if (!storeId) {
         return res.status(400).json({
           success: false,
-          message: "Store ID is required for admin",
+          message: "Store ID is required when creating a coupon for a store",
         });
       }
-    } else if (req.user.role === "store") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (!store) {
-        return res.status(404).json({
-          success: false,
-          message: "Store not found for this user",
-        });
+      const target = await Store.findById(storeId).select("_id deleted");
+      if (!target || target.deleted) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Store not found" });
       }
-      storeId = store._id;
-    } else {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized to create coupons",
-      });
     }
 
     // Check if coupon code already exists for this store
@@ -130,16 +147,14 @@ export const getAllCoupons = controllerWrapper(
     const { page = 1, limit = 20, search, storeId, isActive } = req.query;
     let query = {};
 
-    // Filter by store based on user role
-    if (req.user.role === "admin") {
-      if (storeId) query.store = storeId;
-    } else if (req.user.role === "store") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (store) {
-        query.store = store._id;
-      } else {
-        return res.status(200).json({ success: true, data: [], total: 0 });
-      }
+    // Scope by store. Note the previous version had no final `else`: a caller
+    // who was neither admin nor store fell through with an empty query and got
+    // every coupon in the system, codes included. The route now demands
+    // coupons.view, and a vendor is pinned to their own store here.
+    if (actingAsVendor(req)) {
+      query.store = req.store._id;
+    } else if (storeId) {
+      query.store = storeId;
     }
 
     if (search) query.code = { $regex: search, $options: "i" };
@@ -175,15 +190,8 @@ export const getCouponById = controllerWrapper(
     }
 
     // Check permissions
-    if (req.user.role !== "admin") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (!store || store._id.toString() !== coupon.store._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized to view this coupon",
-        });
-      }
-    }
+    const denied = denyUnlessOwned(req, coupon, "view");
+    if (denied) return res.status(403).json(denied);
 
     res.status(200).json({ success: true, coupon });
   }
@@ -208,15 +216,8 @@ export const getCouponByCode = controllerWrapper(
     }
 
     // Check permissions - users can only see coupons from their store or all if admin
-    if (req.user.role !== "admin") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (!store || store._id.toString() !== coupon.store._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized to view this coupon",
-        });
-      }
-    }
+    const denied = denyUnlessOwned(req, coupon, "view");
+    if (denied) return res.status(403).json(denied);
 
     res.status(200).json({ success: true, coupon });
   }
@@ -238,15 +239,8 @@ export const updateCoupon = controllerWrapper(
     }
 
     // Check permissions
-    if (req.user.role !== "admin") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (!store || store._id.toString() !== coupon.store._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized to update this coupon",
-        });
-      }
-    }
+    const denied = denyUnlessOwned(req, coupon, "update");
+    if (denied) return res.status(403).json(denied);
 
     // Validate dates if provided
     if (updateData.startDate && updateData.endDate) {
@@ -302,15 +296,8 @@ export const deleteCoupon = controllerWrapper(
     }
 
     // Check permissions
-    if (req.user.role !== "admin") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (!store || store._id.toString() !== coupon.store._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized to delete this coupon",
-        });
-      }
-    }
+    const denied = denyUnlessOwned(req, coupon, "delete");
+    if (denied) return res.status(403).json(denied);
 
     // Check if coupon has been used
     if (coupon.usageCount > 0) {
@@ -438,14 +425,11 @@ export const getStoreCoupons = controllerWrapper(
     const { page = 1, limit = 20, isActive } = req.query;
 
     // Check permissions
-    if (req.user.role !== "admin") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (!store || store._id.toString() !== storeId) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized to view coupons for this store",
-        });
-      }
+    if (actingAsVendor(req) && String(req.store._id) !== String(storeId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized to view coupons for this store",
+      });
     }
 
     let query = { store: storeId };
@@ -476,15 +460,8 @@ export const toggleCouponStatus = controllerWrapper(
     }
 
     // Check permissions
-    if (req.user.role !== "admin") {
-      const store = await Store.findOne({ owner: req.user._id });
-      if (!store || store._id.toString() !== coupon.store._id.toString()) {
-        return res.status(403).json({
-          success: false,
-          message: "Unauthorized to update this coupon",
-        });
-      }
-    }
+    const denied = denyUnlessOwned(req, coupon, "update");
+    if (denied) return res.status(403).json(denied);
 
     // Toggle the isActive status
     coupon.isActive = !coupon.isActive;

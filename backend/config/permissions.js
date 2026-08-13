@@ -228,10 +228,9 @@ const STORE_PERMISSIONS = [
   "returns.manage",
   "collections.view",
   "collections.manage",
-  "coupons.view",
-  "coupons.create",
-  "coupons.edit",
-  "coupons.delete",
+  // Coupons are a platform-level lever, not a vendor one — discounting is
+  // decided centrally. Admins keep the full set; an individual store can be
+  // granted it again from Roles & Access without touching this file.
   "brands.view",
   "brands.manage",
   "reviews.view",
