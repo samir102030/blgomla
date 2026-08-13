@@ -3,7 +3,6 @@ import {
   protectRoute,
   requirePermission,
   adminRoute,
-  storeRoute,
   requireProductAccess,
 } from "../middleware/auth.middleware.js";
 import {
@@ -116,7 +115,13 @@ router.delete("/cart/:productId", protectRoute, removeFromCart);
 // ═══════════════════════════════════════════════
 // ADMIN / STORE: Product management
 // ═══════════════════════════════════════════════
-router.post("/", protectRoute, storeRoute, validateCreateProduct, createProduct);
+// `storeRoute` is literally role === "store", so admins and even super_admins
+// were refused with "Access denied" — on the one route in this block whose own
+// heading says ADMIN / STORE. createProduct has always branched on
+// `req.user.role === "store"` to decide whether a product needs approval, so
+// it was written for both; only the gate disagreed. This now matches every
+// sibling route below: a permission check rather than a role check.
+router.post("/", protectRoute, requirePermission("products.create"), validateCreateProduct, createProduct);
 router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
 router.get("/approvals", protectRoute, requirePermission("products.approve"), getProductApprovals);
 router.get("/pricing-insights", protectRoute, requirePermission("products.view"), getPricingInsights);
