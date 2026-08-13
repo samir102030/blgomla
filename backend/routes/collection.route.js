@@ -15,7 +15,7 @@ import {
   validateCreateCollection,
   validateUpdateCollection,
 } from "../validations/collection.validate.js";
-import { protectRoute, storeRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import { cacheHeaders } from "../middleware/cache.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 
@@ -26,11 +26,14 @@ const publicCache = cacheHeaders(60, 300);
 // Public collections list
 router.get("/", publicCache, translateResponse, getCollections);
 
-// Vendor collections (raw — vendors need to see/edit both languages)
-router.get("/vendor/my-collections", protectRoute, storeRoute, getMyCollections);
-router.post("/", protectRoute, storeRoute, validateCreateCollection, createCollection);
-router.put("/:id", protectRoute, storeRoute, validateUpdateCollection, updateCollection);
-router.delete("/:id", protectRoute, storeRoute, deleteCollection);
+// Management (raw — both languages, since vendors edit them side by side).
+// These were gated on `storeRoute`, i.e. role === "store" exactly, which shut
+// admins out of the collections page entirely. A permission check lets both
+// through; the controllers keep vendors scoped to their own store.
+router.get("/vendor/my-collections", protectRoute, requirePermission("collections.manage"), getMyCollections);
+router.post("/", protectRoute, requirePermission("collections.manage"), validateCreateCollection, createCollection);
+router.put("/:id", protectRoute, requirePermission("collections.manage"), validateUpdateCollection, updateCollection);
+router.delete("/:id", protectRoute, requirePermission("collections.manage"), deleteCollection);
 
 // Collection detail (public)
 router.get("/:id", translateResponse, validateCollectionIdParam, getCollectionById);

@@ -16,6 +16,12 @@ interface CollectionStore {
     description?: string;
     bundlePrice: number;
     items: CollectionItemInput[];
+    /**
+     * Which store the bundle belongs to. Sent by operators (admins), who have
+     * no store of their own; ignored for vendors, whom the server pins to
+     * their own store regardless of what arrives here.
+     */
+    store?: string;
   }) => Promise<Collection | null>;
   updateCollection: (
     id: string,

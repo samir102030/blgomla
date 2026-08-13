@@ -37,6 +37,12 @@ export const validateCreateCollection = validate([
   body("bundlePrice")
     .isFloat({ min: 0 })
     .withMessage("Bundle price must be a positive number"),
+  // Only sent by operators, who have no store of their own. Vendors are
+  // pinned to their own store server-side and this is ignored for them.
+  body("store")
+    .optional()
+    .custom((value) => mongoose.Types.ObjectId.isValid(value))
+    .withMessage("Invalid store ID format"),
 ]);
 
 export const validateUpdateCollection = validate([

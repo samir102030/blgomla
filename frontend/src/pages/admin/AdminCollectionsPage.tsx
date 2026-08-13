@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useCollectionStore } from "../../stores/collection.store";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
-import { useUserStore } from "../../stores/user.store";
 import { useMoney } from "../../lib/money";
 
 interface Product {
@@ -41,23 +40,6 @@ const AdminCollectionsPage: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Check if user has admin access
-  if (!user || user.role !== "admin") {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="text-6xl mb-4">🚫</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {t("adminCollections.accessDenied")}
-          </h1>
-          <p className="text-gray-600">
-            {t("adminCollections.notAuthorized")}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   useEffect(() => {
     fetchCollections();
   }, [fetchCollections]);
@@ -93,6 +75,25 @@ const AdminCollectionsPage: React.FC = () => {
     }, 0);
   }, [selectedProducts, items]);
 
+  // A bundle belongs to exactly one store, and every product in it must come
+  // from that store. Vendors get this for free — they only ever see their own
+  // products. An operator sees the whole catalogue, so the store is derived
+  // from what they picked rather than asked for in a separate dropdown, and a
+  // mixed selection is caught here instead of as a server-side error.
+  const selectedStoreIds = useMemo(() => {
+    return Array.from(
+      new Set(selectedProducts.map((p) => p.store?._id).filter(Boolean))
+    );
+  }, [selectedProducts]);
+
+  const selectedStoreName = useMemo(() => {
+    if (selectedStoreIds.length !== 1) return null;
+    return (
+      selectedProducts.find((p) => p.store?._id === selectedStoreIds[0])?.store
+        ?.name ?? null
+    );
+  }, [selectedProducts, selectedStoreIds]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -111,11 +112,24 @@ const AdminCollectionsPage: React.FC = () => {
       return;
     }
 
+    if (selectedStoreIds.length > 1) {
+      toast.error(
+        t(
+          "adminCollections.singleStoreOnly",
+          "All products in a bundle must come from the same store"
+        )
+      );
+      return;
+    }
+
     const data = {
       name: formState.name.trim(),
       description: formState.description.trim(),
       bundlePrice,
       items: collectionItems,
+      // Ignored for vendors — the server pins them to their own store — and
+      // required for operators, who have none.
+      store: selectedStoreIds[0],
     };
 
     let success = false;
@@ -334,6 +348,23 @@ const AdminCollectionsPage: React.FC = () => {
                       {money(parseFloat(formState.bundlePrice || "0"))}
                     </span>
                   </div>
+
+                  {/* The owning store is inferred from the picked products, so
+                      say which one it landed on — and refuse a mixed basket
+                      before the server has to. */}
+                  {selectedStoreIds.length > 1 ? (
+                    <div className="border-t pt-2 text-sm text-red-600">
+                      {t(
+                        "adminCollections.singleStoreOnly",
+                        "All products in a bundle must come from the same store"
+                      )}
+                    </div>
+                  ) : selectedStoreName ? (
+                    <div className="border-t pt-2 text-sm text-gray-600">
+                      {t("adminCollections.belongsToStore", "Store")}:{" "}
+                      <span className="font-medium">{selectedStoreName}</span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             )}

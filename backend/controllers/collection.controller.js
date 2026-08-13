@@ -1,5 +1,6 @@
 import Collection from "../models/collection.model.js";
 import Product from "../models/product.model.js";
+import Store from "../models/store.model.js";
 import User from "../models/user.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 
@@ -9,29 +10,71 @@ const getUnitPrice = (product) => {
     : product.price;
 };
 
-const validateCollectionItems = async (items, storeId) => {
+// These are caller mistakes, not server faults. Thrown bare, controllerWrapper
+// classified them as 500s — which in production replaces the message with
+// "Internal Server Error", so the one person who could fix the request was the
+// one person not told what was wrong. Tagging `status` makes them 400s that
+// keep their text.
+const badRequest = (message) => {
+  const error = new Error(message);
+  error.status = 400;
+  return error;
+};
+
+const validateCollectionItems = async (items, storeId, { ownStore = true } = {}) => {
   const products = await Product.find({
     _id: { $in: items.map((item) => item.product) },
   });
 
   if (products.length !== items.length) {
-    throw new Error("One or more products were not found");
+    throw badRequest("One or more products were not found");
   }
 
   const storeProducts = products.filter(
     (product) => String(product.store) === String(storeId)
   );
   if (storeProducts.length !== products.length) {
-    throw new Error("All products must belong to your store");
+    throw badRequest(
+      ownStore
+        ? "All products must belong to your store"
+        : "All products must belong to the selected store"
+    );
   }
 
   return products;
 };
 
+/**
+ * Who is acting, and on whose behalf.
+ *
+ * A collection is always owned by a store — `store` is required on the model,
+ * and a bundle's products must all come from that one store. Vendors are
+ * therefore pinned to their own store. Anyone else who reaches these handlers
+ * has passed a `collections.manage` check, so they act as an operator: they
+ * may touch any store's collections, and they must name the store explicitly
+ * when creating one, since they have none of their own.
+ *
+ * This is what previously made the admin collections page unusable. The
+ * handlers read `req.store` and nothing else, so an admin — who never has one
+ * — was rejected before any of the real work started.
+ */
+const resolveActor = (req, explicitStoreId) => {
+  const ownStore = req.store?._id;
+  if (ownStore) {
+    return { storeId: ownStore, isVendor: true, canManageAny: false };
+  }
+  return {
+    storeId: explicitStoreId || null,
+    isVendor: false,
+    canManageAny: true,
+  };
+};
+
 export const createCollection = controllerWrapper(
   "createCollection",
   async (req, res) => {
-    const { name, nameAr, description, descriptionAr, items, bundlePrice } = req.body;
+    const { name, nameAr, description, descriptionAr, items, bundlePrice, store } =
+      req.body;
 
     if (!Array.isArray(items) || items.length < 2) {
       return res.status(400).json({
@@ -40,15 +83,27 @@ export const createCollection = controllerWrapper(
       });
     }
 
-    const storeId = req.store?._id;
+    const { storeId, isVendor } = resolveActor(req, store);
     if (!storeId) {
       return res.status(400).json({
         success: false,
-        message: "Store not found for this user",
+        message: "Choose which store this collection belongs to",
       });
     }
 
-    const products = await validateCollectionItems(items, storeId);
+    // An operator naming someone else's store must name a real one.
+    if (!isVendor) {
+      const target = await Store.findById(storeId).select("_id deleted");
+      if (!target || target.deleted) {
+        return res
+          .status(404)
+          .json({ success: false, message: "Store not found" });
+      }
+    }
+
+    const products = await validateCollectionItems(items, storeId, {
+      ownStore: isVendor,
+    });
 
     const originalTotal = items.reduce((total, item) => {
       const product = products.find(
@@ -113,17 +168,16 @@ export const getCollectionById = controllerWrapper(
 export const getMyCollections = controllerWrapper(
   "getMyCollections",
   async (req, res) => {
-    const storeId = req.store?._id;
-    if (!storeId) {
-      return res.status(400).json({
-        success: false,
-        message: "Store not found for this user",
-      });
-    }
+    // "Mine" means this vendor's collections. An operator has no store of
+    // their own, so for them the honest answer is the whole catalogue —
+    // which is what the admin collections page needs to render.
+    const { storeId, isVendor } = resolveActor(req, null);
+    const query = isVendor ? { store: storeId } : {};
 
-    const collections = await Collection.find({ store: storeId }).populate(
-      "items.product"
-    );
+    const collections = await Collection.find(query)
+      .populate("items.product")
+      .populate("store", "name")
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, collections });
   }
 );
@@ -140,16 +194,21 @@ export const updateCollection = controllerWrapper(
         .json({ success: false, message: "Collection not found" });
     }
 
-    const storeId = req.store?._id;
-    if (!storeId || String(collection.store) !== String(storeId)) {
+    const { storeId, isVendor, canManageAny } = resolveActor(req, collection.store);
+    if (isVendor && String(collection.store) !== String(storeId)) {
       return res.status(403).json({
         success: false,
         message: "You don't have permission to update this collection",
       });
     }
 
+    // Items always have to come from the store that owns the collection —
+    // an operator editing on a vendor's behalf doesn't get to mix in another
+    // store's products.
     if (Array.isArray(items) && items.length > 0) {
-      await validateCollectionItems(items, storeId);
+      await validateCollectionItems(items, collection.store, {
+        ownStore: !canManageAny,
+      });
       collection.items = items;
     }
 
@@ -176,8 +235,8 @@ export const deleteCollection = controllerWrapper(
         .json({ success: false, message: "Collection not found" });
     }
 
-    const storeId = req.store?._id;
-    if (!storeId || String(collection.store) !== String(storeId)) {
+    const { storeId, isVendor } = resolveActor(req, collection.store);
+    if (isVendor && String(collection.store) !== String(storeId)) {
       return res.status(403).json({
         success: false,
         message: "You don't have permission to delete this collection",
