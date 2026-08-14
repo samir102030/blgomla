@@ -803,7 +803,12 @@ const Header: React.FC = () => {
               className="relative"
               ref={catMenuRef}
               onMouseEnter={() => setCatMenuOpen(true)}
-              onMouseLeave={() => setCatMenuOpen(false)}
+              onMouseLeave={() => {
+                setCatMenuOpen(false);
+                // Reset here, on leaving the whole flyout, so the next open
+                // starts fresh — moving between its two columns doesn't.
+                setCatActiveId(null);
+              }}
             >
               <button
                 type="button"
@@ -823,9 +828,16 @@ const Header: React.FC = () => {
                   {topCategories.length > 0 ? (
                     <div className="grid grid-cols-12">
                       {/* LEFT — root categories list */}
+                      {/* No onMouseLeave here. Clearing the selection when the
+                          pointer left this column fired the moment someone
+                          moved toward the panel on the right — the only way to
+                          reach the subcategories they had just opened. With
+                          `catActiveId` back at null, both the highlight below
+                          and the panel itself fall back to topCategories[0],
+                          so the menu snapped to the first category mid-reach.
+                          The flyout as a whole already resets on leaving. */}
                       <ul
                         className="col-span-5 md:col-span-4 border-r border-[var(--border)] bg-[var(--surface-2)]/40 max-h-[28rem] overflow-y-auto py-2"
-                        onMouseLeave={() => setCatActiveId(null)}
                       >
                         {topCategories.map((c) => {
                           const isActive = (catActiveId ?? topCategories[0]._id) === c._id;
