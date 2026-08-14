@@ -42,7 +42,6 @@ import {
   getProfile,
   getReferralInfo,
   googleSignIn,
-  appleSignIn,
   login,
   logout,
   loveProduct,
@@ -78,7 +77,6 @@ const router = express.Router();
 router.post("/signup", authLimiter, validateSignup, signup);
 router.post("/login", authLimiter, validateLogin, login);
 router.post("/google", authLimiter, googleSignIn);
-router.post("/apple", authLimiter, appleSignIn);
 router.post("/logout", logout);
 router.post("/refresh", verifyRefreshToken, refreshToken);
 

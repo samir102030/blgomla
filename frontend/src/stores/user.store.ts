@@ -32,12 +32,6 @@ interface UserStore {
     totpCode?: string;
   }) => Promise<{ user?: User; totpRequired?: boolean; emailNotVerified?: boolean }>;
   googleSignIn: (credential: string) => Promise<{ user?: User; totpRequired?: boolean }>;
-  appleSignIn: (payload: {
-    identityToken: string;
-    nonce: string;
-    fullName?: { givenName?: string; familyName?: string };
-    totpCode?: string;
-  }) => Promise<{ user?: User; totpRequired?: boolean }>;
   logout: () => Promise<void>;
   updateUser: (
     userId: string,
@@ -202,29 +196,6 @@ export const useUserStore = create<UserStore>()(
             success: boolean;
             user: User;
           }>(`/users/google`, { credential });
-          set({ user: res.data.user, loading: false });
-          return { user: res.data.user };
-        } catch (error: any) {
-          const code = error?.response?.data?.code;
-          if (code === "TOTP_REQUIRED") {
-            set({ error: undefined, loading: false });
-            return { totpRequired: true };
-          }
-          set({
-            error: error?.response?.data?.message || error.message,
-            loading: false,
-          });
-          return {};
-        }
-      },
-
-      appleSignIn: async (payload) => {
-        set({ loading: true, error: undefined });
-        try {
-          const res = await axiosInstance.post<{
-            success: boolean;
-            user: User;
-          }>(`/users/apple`, payload);
           set({ user: res.data.user, loading: false });
           return { user: res.data.user };
         } catch (error: any) {

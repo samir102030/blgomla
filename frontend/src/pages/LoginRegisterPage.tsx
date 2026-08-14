@@ -6,7 +6,6 @@ import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { GoogleLogin } from "@react-oauth/google";
-import AppleSignInButton from "../components/AppleSignInButton";
 
 type AuthMode = "login" | "register";
 
@@ -33,34 +32,7 @@ const LoginRegisterPage: React.FC = () => {
   const login = useUserStore((s) => s.login);
   const signup = useUserStore((s) => s.signup);
   const googleSignIn = useUserStore((s) => s.googleSignIn);
-  const appleSignIn = useUserStore((s) => s.appleSignIn);
   const loading = useUserStore((s) => s.loading);
-
-  const handleAppleSuccess = async (payload: {
-    identityToken: string;
-    nonce: string;
-    fullName?: { givenName?: string; familyName?: string };
-  }) => {
-    setLoginError(null);
-    setRegisterError(null);
-    const result = await appleSignIn(payload);
-    if (result.user) {
-      navigate("/");
-    } else if (result.totpRequired) {
-      // Apple's popup can't be reopened to collect a code, and re-authorising
-      // wouldn't return the name a second time. Password login carries the
-      // second factor properly.
-      setLoginError(
-        t(
-          "login.appleTotpUnsupported",
-          "This account has 2FA enabled. Please sign in with email and password."
-        )
-      );
-    } else {
-      const latest = useUserStore.getState().error;
-      setLoginError(latest || t("login.appleFailed", "Apple sign-in failed."));
-    }
-  };
 
   const handleGoogleSuccess = async (credential?: string) => {
     setLoginError(null);
@@ -294,7 +266,7 @@ const LoginRegisterPage: React.FC = () => {
                     <div className="flex-1 h-px bg-[var(--border)]" />
                   </div>
 
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex justify-center">
                     <GoogleLogin
                       onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
                       onError={() => setLoginError(t("login.googleFailed", "Google sign-in failed."))}
@@ -302,10 +274,6 @@ const LoginRegisterPage: React.FC = () => {
                       theme="outline"
                       size="large"
                       width="320"
-                    />
-                    <AppleSignInButton
-                      onSuccess={handleAppleSuccess}
-                      onError={(message) => setLoginError(message)}
                     />
                   </div>
 
@@ -395,7 +363,7 @@ const LoginRegisterPage: React.FC = () => {
                     <div className="flex-1 h-px bg-[var(--border)]" />
                   </div>
 
-                  <div className="flex flex-col items-center gap-3">
+                  <div className="flex justify-center">
                     <GoogleLogin
                       onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
                       onError={() => setRegisterError(t("login.googleFailed", "Google sign-in failed."))}
@@ -404,10 +372,6 @@ const LoginRegisterPage: React.FC = () => {
                       size="large"
                       text="signup_with"
                       width="320"
-                    />
-                    <AppleSignInButton
-                      onSuccess={handleAppleSuccess}
-                      onError={(message) => setRegisterError(message)}
                     />
                   </div>
 
