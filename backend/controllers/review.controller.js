@@ -1,6 +1,7 @@
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
+import { reachesAllStores } from "../utils/permissions.js";
 
 // Get all reviews with role-based filtering
 export const getAllReviews = controllerWrapper(
@@ -155,7 +156,7 @@ export const toggleReviewVisibility = controllerWrapper(
     const user = req.user;
 
     // Only admins can hide reviews
-    if (user.role !== "admin") {
+    if (!(await reachesAllStores(user))) {
       return res.status(403).json({
         success: false,
         message: "Only admins can hide reviews",
@@ -198,7 +199,7 @@ export const deleteReview = controllerWrapper(
     const user = req.user;
 
     // Only admins can delete reviews
-    if (user.role !== "admin") {
+    if (!(await reachesAllStores(user))) {
       return res.status(403).json({
         success: false,
         message: "Only admins can delete reviews",
@@ -658,7 +659,7 @@ export const getReviewRequests = controllerWrapper(
     const user = req.user;
 
     // Only admins can view requests
-    if (user.role !== "admin") {
+    if (!(await reachesAllStores(user))) {
       return res.status(403).json({
         success: false,
         message: "Only admins can view review requests",
@@ -751,7 +752,7 @@ export const approveReviewRequest = controllerWrapper(
     const user = req.user;
 
     // Only admins can approve
-    if (user.role !== "admin") {
+    if (!(await reachesAllStores(user))) {
       return res.status(403).json({
         success: false,
         message: "Only admins can approve review requests",
@@ -819,7 +820,7 @@ export const rejectReviewRequest = controllerWrapper(
     const user = req.user;
 
     // Only admins can reject
-    if (user.role !== "admin") {
+    if (!(await reachesAllStores(user))) {
       return res.status(403).json({
         success: false,
         message: "Only admins can reject review requests",

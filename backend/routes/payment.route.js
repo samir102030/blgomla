@@ -1,6 +1,7 @@
 import express from "express";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { verifyToken } from "../middleware/auth.middleware.js";
+import { reachesAllStores } from "../utils/permissions.js";
 import {
   createPayment,
   verifyStripeWebhook,
@@ -338,7 +339,7 @@ router.get(
 
     if (
       order.user.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      !(await reachesAllStores(req.user))
     ) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }

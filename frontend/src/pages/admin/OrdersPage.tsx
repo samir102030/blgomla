@@ -8,6 +8,7 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
+import { useIsPlatformStaff } from "../../lib/permissions";
 import { axiosInstance } from "../../lib/axios";
 import OrderDetailsModal from "../../components/OrderDetailsModal";
 import EditOrderModal from "../../components/EditOrderModal";
@@ -72,6 +73,9 @@ const OrdersPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const user = useUserStore((state) => state.user);
+  // Staff — admin, super_admin, or a custom back-office role. Not `role ===
+  // "admin"`, which left super_admins out of every branch on this page.
+  const isStaff = useIsPlatformStaff();
 
   // Modal states
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -100,14 +104,11 @@ const OrdersPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      let response;
-      if (user?.role === "admin") {
-        // Admin gets all orders with store information
-        response = await axiosInstance.get("/orders");
-      } else if (user?.role === "store") {
-        // Store gets only their orders
-        response = await axiosInstance.get("/orders");
-      }
+      // Both branches called the same endpoint — the server scopes the result
+      // by who is asking — but a super_admin matched neither, so `response`
+      // stayed undefined and the page reported a failure for a request it
+      // never made. There is nothing to branch on here.
+      const response = await axiosInstance.get("/orders");
 
       if (response?.data?.success) {
         setOrders(response.data.orders);
@@ -200,7 +201,7 @@ const OrdersPage: React.FC = () => {
       order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user?.role === "admin" &&
+      (isStaff &&
         order.store?.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // Basic status filter
@@ -285,7 +286,7 @@ const OrdersPage: React.FC = () => {
               : t("order.manageAllOrders")}
           </p>
         </div>
-        {user?.role === "admin" && (
+        {isStaff && (
           <button className="bg-[#002B5B] text-white px-4 py-2 rounded-lg hover:bg-[#001a3d] transition-colors">
             {t("order.exportOrders")}
           </button>
@@ -415,7 +416,7 @@ const OrdersPage: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("order.orderNumber")}
                 </th>
-                {user?.role === "admin" && (
+                {isStaff && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("common.store")}
                   </th>
@@ -449,7 +450,7 @@ const OrdersPage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--brand-primary)]">
                     #{order._id.slice(-8).toUpperCase()}
                   </td>
-                  {user?.role === "admin" && (
+                  {isStaff && (
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {order.store?.name || "N/A"}
                     </td>

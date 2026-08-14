@@ -1,11 +1,13 @@
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useUserStore } from "../../stores/user.store";
 import { useReturnStore } from "../../stores/return.store";
+import { useIsPlatformStaff } from "../../lib/permissions";
 
 const ReturnsPage: React.FC = () => {
   const { t } = useTranslation();
-  const user = useUserStore((state) => state.user);
+  // Staff, not `role === "admin"` — that excluded super_admins from the
+  // approve/reject controls on this page.
+  const isStaff = useIsPlatformStaff();
   const { returns, loading, error, fetchReturns, updateReturnStatus } =
     useReturnStore();
 
@@ -78,12 +80,12 @@ const ReturnsPage: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("returns.colOrderId")}
                 </th>
-                {user?.role === "admin" && (
+                {isStaff && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("returns.colCustomer")}
                   </th>
                 )}
-                {user?.role === "admin" && (
+                {isStaff && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     {t("returns.colStore")}
                   </th>
@@ -118,12 +120,12 @@ const ReturnsPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {orderId || "N/A"}
                     </td>
-                    {user?.role === "admin" && (
+                    {isStaff && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {customer?.name || "N/A"}
                       </td>
                     )}
-                    {user?.role === "admin" && (
+                    {isStaff && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {store?.name || "N/A"}
                       </td>

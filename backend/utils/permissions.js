@@ -49,3 +49,25 @@ export const userCan = async (user, key) => {
   if (!user) return false;
   return permsAllow(await getUserPermissions(user), key);
 };
+
+/**
+ * Does this caller see across every store, or only their own slice of one?
+ *
+ * Handlers over store-scoped data — orders, reviews, coupons — need to answer
+ * this before they can build a query, and they all used to answer it with
+ * `req.user.role === "admin"`. That string comparison quietly excluded
+ * super_admins, who then fell through to whatever branch came last: in
+ * getOrders that was the customer branch, so a super_admin opening the orders
+ * page was served only the orders they had personally placed. Usually none.
+ *
+ * Vendors are identified by their role, since they are pinned to the store
+ * they own. Customers are identified by not holding dashboard access —
+ * `dashboard.view` is the key that separates staff from shoppers, and it is
+ * absent from the customer role and present on store, admin and super_admin.
+ * Everyone else is staff of some kind, including custom roles created in
+ * Roles & Access, which the old check had no way to recognise.
+ */
+export const reachesAllStores = async (user) => {
+  if (!user || user.role === "store") return false;
+  return userCan(user, "dashboard.view");
+};

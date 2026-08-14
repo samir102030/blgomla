@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import Store from "../models/store.model.js";
 import mongoose from "mongoose";
 import { controllerWrapper } from "../utils/wrappers.js";
+import { reachesAllStores } from "../utils/permissions.js";
 import Notification from "../models/notification.model.js";
 import Coupon from "../models/coupon.model.js";
 import Collection from "../models/collection.model.js";
@@ -177,6 +178,20 @@ export const createOrder = controllerWrapper(
           return res.status(404).json({
             success: false,
             message: `Product ${item.product} not found`,
+          });
+        }
+
+        // An order belongs to exactly one store. The checkout page already
+        // refuses a mixed cart, and the collection branch below already
+        // rejects a bundle from another store — but nothing checked loose
+        // products, so a request could name one store and carry another's
+        // items. That order then showed up for both vendors, each seeing the
+        // other's products, prices and the buyer's contact details.
+        if (String(product.store) !== String(store)) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: `${product.name} does not belong to the store this order is for`,
           });
         }
 
@@ -553,9 +568,13 @@ export const getOrders = controllerWrapper("getOrders", async (req, res) => {
   let query = {};
   let populateOptions = ["user", "orderItems.product", "shippingAddress"];
 
-  // Handle different user roles
-  if (req.user.role === "admin") {
-    // Admin gets all orders
+  // Handle different user roles. This asks whether the caller reaches every
+  // store rather than testing for the literal role "admin": that test matched
+  // neither super_admins nor custom staff roles, and both then fell through to
+  // the customer branch below and were served only orders they placed
+  // themselves — an empty list, for staff who don't shop here.
+  if (await reachesAllStores(req.user)) {
+    // Staff get all orders
     query = {};
   } else if (req.user.role === "store") {
     // Store/vendor gets orders that contain products from their store(s)
@@ -569,20 +588,13 @@ export const getOrders = controllerWrapper("getOrders", async (req, res) => {
       return res.status(200).json({ success: true, orders: [] });
     }
 
-    // Find orders where the store field matches one of the vendor's stores
-    // OR where any order item product belongs to one of the vendor's stores
-    query = {
-      $or: [
-        { store: { $in: storeIds } },
-        {
-          "orderItems.product": {
-            $in: await Product.find({ store: { $in: storeIds } }).distinct(
-              "_id"
-            ),
-          },
-        },
-      ],
-    };
+    // Orders the vendor's store owns. This used to be an $or that also matched
+    // any order merely *containing* one of their products, which is how a
+    // vendor ended up reading another vendor's order — total, line items and
+    // the buyer's name, email and phone — whenever the two got mixed into one
+    // order. Ownership is the `store` field, and createOrder now guarantees
+    // every line in an order comes from it.
+    query = { store: { $in: storeIds } };
   } else {
     // Regular customers get only their own orders
     query = { user: req.user._id };
@@ -846,9 +858,10 @@ export const deleteOrder = controllerWrapper(
         .status(404)
         .json({ success: false, message: "Order not found" });
 
-    // Check permissions based on user role
-    if (req.user.role === "admin") {
-      // Admin can delete any order
+    // Check permissions based on user role. Same reasoning as getOrders — a
+    // literal "admin" test excluded super_admins and custom staff roles.
+    if (await reachesAllStores(req.user)) {
+      // Staff can delete any order
     } else if (req.user.role === "store") {
       // Store/vendor can only delete orders that contain products from their stores
       const vendorStores = await Store.find({ owner: req.user._id }).select(

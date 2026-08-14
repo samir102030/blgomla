@@ -1,6 +1,7 @@
 // import { controllerWrapper } from "../utils/wrappers";
 import mongoose from "mongoose";
 import { paginateQuery } from "../utils/pagination.js";
+import { reachesAllStores } from "../utils/permissions.js";
 import Store from "../models/store.model.js";
 import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
@@ -805,7 +806,7 @@ export const updateStore = controllerWrapper(
         .json({ success: false, message: "Store not found" });
     if (
       store.owner.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      !(await reachesAllStores(req.user))
     )
       return res.status(403).json({
         success: false,
@@ -829,7 +830,7 @@ export const deleteStore = controllerWrapper(
         .json({ success: false, message: "Store not found" });
     if (
       store.owner._id.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
+      !(await reachesAllStores(req.user))
     )
       return res.status(403).json({
         success: false,

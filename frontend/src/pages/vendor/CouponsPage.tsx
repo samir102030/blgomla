@@ -47,7 +47,10 @@ const CouponsPage: React.FC = () => {
   useEffect(() => {
     if (user?.role === "store" && vendorStore?._id) {
       fetchCoupons({ storeId: vendorStore._id });
-    } else if (user?.role === "admin") {
+    } else {
+      // Anyone who isn't a vendor asks for the unscoped list. This was
+      // `else if (role === "admin")`, so a super_admin fetched nothing at all
+      // and the page sat empty. The API gates this on coupons.view.
       fetchCoupons();
     }
   }, [user?.role, vendorStore?._id, fetchCoupons]);
@@ -104,7 +107,10 @@ const CouponsPage: React.FC = () => {
     // Refresh coupons
     if (user?.role === "store" && vendorStore?._id) {
       fetchCoupons({ storeId: vendorStore._id });
-    } else if (user?.role === "admin") {
+    } else {
+      // Anyone who isn't a vendor asks for the unscoped list. This was
+      // `else if (role === "admin")`, so a super_admin fetched nothing at all
+      // and the page sat empty. The API gates this on coupons.view.
       fetchCoupons();
     }
   };
@@ -112,7 +118,10 @@ const CouponsPage: React.FC = () => {
   const refreshCoupons = () => {
     if (user?.role === "store" && vendorStore?._id) {
       fetchCoupons({ storeId: vendorStore._id });
-    } else if (user?.role === "admin") {
+    } else {
+      // Anyone who isn't a vendor asks for the unscoped list. This was
+      // `else if (role === "admin")`, so a super_admin fetched nothing at all
+      // and the page sat empty. The API gates this on coupons.view.
       fetchCoupons();
     }
   };
