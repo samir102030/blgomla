@@ -61,13 +61,67 @@ export const getStripePaymentIntent = async (paymentIntentId) => {
 const PAYMOB_BASE = "https://accept.paymob.com/api";
 
 /**
+ * Which Paymob channel should serve this payment method.
+ *
+ * Prefers the channel an admin marked active in the dashboard; falls back to
+ * the environment variables that were the only source before, so a deployment
+ * with no channels configured keeps working exactly as it did.
+ *
+ * Only ever returns *which* gateway and page to use. The amount and the order
+ * reference are computed per order by the caller and travel to Paymob with
+ * the payment key — a channel cannot influence either, which is what keeps
+ * the customer charged their real total and the webhook able to find the
+ * order it belongs to.
+ */
+const resolvePaymobChannel = async (method) => {
+  const envFallback =
+    method === "installment"
+      ? {
+          integrationId: process.env.PAYMOB_INSTALLMENT_INTEGRATION_ID,
+          iframeId:
+            process.env.PAYMOB_INSTALLMENT_IFRAME_ID || process.env.PAYMOB_IFRAME_ID,
+        }
+      : {
+          integrationId: process.env.PAYMOB_INTEGRATION_ID,
+          iframeId: process.env.PAYMOB_IFRAME_ID,
+        };
+
+  try {
+    const { default: PaymobChannel } = await import(
+      "../models/paymobChannel.model.js"
+    );
+    const channel = await PaymobChannel.findOne({ method, isActive: true }).select(
+      "+apiKeyEnc integrationId iframeId"
+    );
+    if (!channel) return envFallback;
+
+    let apiKey;
+    if (channel.apiKeyEnc) {
+      const { decryptSecret } = await import("./secretBox.js");
+      apiKey = decryptSecret(channel.apiKeyEnc);
+    }
+
+    return {
+      integrationId: channel.integrationId,
+      iframeId: channel.iframeId,
+      apiKey,
+    };
+  } catch (err) {
+    // A database hiccup here must not take checkout down with it — the
+    // environment values still describe a working gateway.
+    console.error("[paymob] channel lookup failed, using env config:", err.message);
+    return envFallback;
+  }
+};
+
+/**
  * Step 1: Get Paymob authentication token
  */
-const getPaymobAuthToken = async () => {
+const getPaymobAuthToken = async (apiKey) => {
   const res = await fetch(`${PAYMOB_BASE}/auth/tokens`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ api_key: process.env.PAYMOB_API_KEY }),
+    body: JSON.stringify({ api_key: apiKey || process.env.PAYMOB_API_KEY }),
   });
   const data = await res.json();
   return data.token;
@@ -139,12 +193,16 @@ export const createPaymobPayment = async (
   orderId,
   billingData,
   items = [],
-  { integrationId, iframeId } = {}
+  { integrationId, iframeId, apiKey } = {}
 ) => {
-  if (!process.env.PAYMOB_API_KEY) throw new Error("Paymob is not configured");
+  // A channel may carry its own merchant credentials; otherwise the shared
+  // environment key applies.
+  if (!apiKey && !process.env.PAYMOB_API_KEY) {
+    throw new Error("Paymob is not configured");
+  }
 
   // Step 1: Auth
-  const authToken = await getPaymobAuthToken();
+  const authToken = await getPaymobAuthToken(apiKey);
 
   // Step 2: Create order
   const paymobOrder = await createPaymobOrder(authToken, amount, orderId, items);
@@ -430,17 +488,24 @@ export const createPayment = async (method, { amount, orderId, billingData, item
     case "paymob":
       return {
         gateway: "paymob",
-        ...(await createPaymobPayment(amount, orderId, billingData, items)),
+        ...(await createPaymobPayment(
+          amount,
+          orderId,
+          billingData,
+          items,
+          await resolvePaymobChannel("card")
+        )),
       };
     case "paymob_installment":
       return {
         gateway: "paymob_installment",
-        ...(await createPaymobPayment(amount, orderId, billingData, items, {
-          integrationId: process.env.PAYMOB_INSTALLMENT_INTEGRATION_ID,
-          iframeId:
-            process.env.PAYMOB_INSTALLMENT_IFRAME_ID ||
-            process.env.PAYMOB_IFRAME_ID,
-        })),
+        ...(await createPaymobPayment(
+          amount,
+          orderId,
+          billingData,
+          items,
+          await resolvePaymobChannel("installment")
+        )),
       };
     case "tabby": {
       const base = (process.env.CLIENT_URL || "https://belgmla.com").replace(/\/$/, "");

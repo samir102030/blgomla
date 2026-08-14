@@ -31,6 +31,7 @@ import roleRoutes from "./role.route.js";
 import emailPrefsRoutes from "./emailPreferences.route.js";
 import payoutRoutes from "./payout.route.js";
 import layoutRoutes from "./pageLayout.route.js";
+import paymobChannelRoutes from "./paymobChannel.route.js";
 
 const router = express.Router();
 
@@ -65,6 +66,7 @@ router.use("/roles", roleRoutes);
 router.use("/emails", emailPrefsRoutes);
 router.use("/payouts", payoutRoutes);
 router.use("/layouts", layoutRoutes);
+router.use("/paymob-channels", paymobChannelRoutes);
 
 // ops module owns: /analytics, /audit-logs, /site-mode, /cron
 router.use("/", opsRoutes);

@@ -128,6 +128,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       children: [
         { name: t("admin.salesOverview"), href: "/dashboard/sales", perm: "analytics.view" },
         { name: t("admin.payments"), href: "/dashboard/payments", roles: ["admin"] },
+        { name: t("admin.paymobChannels", "Paymob channels"), href: "/dashboard/paymob-channels", perm: "payments.channels" },
         { name: t("admin.customerAnalytics"), href: "/dashboard/customers", roles: ["admin"] },
         { name: t("admin.visitorAnalytics"), href: "/dashboard/visitors", roles: ["admin"] },
       ],

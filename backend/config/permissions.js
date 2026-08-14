@@ -143,6 +143,11 @@ export const PERMISSION_GROUPS = [
     actions: [{ key: "manage", label: "Arrange page sections" }],
   },
   {
+    resource: "payments",
+    label: "Payment Gateways",
+    actions: [{ key: "channels", label: "Manage Paymob channels" }],
+  },
+  {
     resource: "shipping",
     label: "Shipping",
     actions: [

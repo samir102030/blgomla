@@ -21,6 +21,7 @@ import MosaicPage from "../pages/admin/MosaicPage";
 import LayoutPage from "../pages/admin/LayoutPage";
 import ProductApprovalsPage from "../pages/admin/ProductApprovalsPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
+import PaymobChannelsPage from "../pages/admin/PaymobChannelsPage";
 import InventoryAlertsPage from "../pages/admin/InventoryAlertsPage";
 import CustomerAnalyticsPage from "../pages/admin/CustomerAnalyticsPage";
 import VisitorAnalyticsPage from "../pages/admin/VisitorAnalyticsPage";
@@ -102,6 +103,14 @@ const AdminRoutes: React.FC = () => {
         {/* Sales & Analytics */}
         <Route path="/sales" element={<SalesPage />} />
         <Route path="/payments" element={<PaymentManagementPage />} />
+        <Route
+          path="/paymob-channels"
+          element={
+            <RequirePermission perm="payments.channels">
+              <PaymobChannelsPage />
+            </RequirePermission>
+          }
+        />
         <Route path="/inventory" element={<InventoryAlertsPage />} />
         <Route path="/customers" element={<CustomerAnalyticsPage />} />
         <Route path="/visitors" element={<VisitorAnalyticsPage />} />
