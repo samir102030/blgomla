@@ -214,6 +214,25 @@ export const createOrder = controllerWrapper(
           salePercentage: product.saleActive ? product.salePercentage : 0,
           couponDiscount: 0,
         });
+
+        // Same rule as bundles: the price comes from the product, and asking
+        // for fitting on something that doesn't offer it costs nothing rather
+        // than erroring — the rest of the order is still perfectly valid.
+        const productFee = installationFee(
+          product,
+          item.installation,
+          item.quantity
+        );
+        if (productFee > 0) {
+          installationPrice += productFee;
+          installationFor.push({
+            kind: "product",
+            product: product._id,
+            name: product.name,
+            quantity: item.quantity,
+            price: productFee,
+          });
+        }
       }
 
       for (const bundle of collectionItems) {
@@ -287,8 +306,9 @@ export const createOrder = controllerWrapper(
         if (fee > 0) {
           installationPrice += fee;
           installationFor.push({
+            kind: "collection",
             collection: collection._id,
-            collectionName: collection.name,
+            name: collection.name,
             quantity: collectionQty,
             price: fee,
           });
@@ -445,6 +465,9 @@ export const createOrder = controllerWrapper(
         taxPrice,
         installationPrice,
         installationFor,
+        // An order with fitting joins the queue the moment it is placed;
+        // everything else stays out of it.
+        installationStatus: installationPrice > 0 ? "pending" : "none",
         totalPrice,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         couponDiscount,
@@ -637,6 +660,128 @@ export const getOrders = controllerWrapper("getOrders", async (req, res) => {
 
   res.status(200).json({ success: true, orders });
 });
+
+/**
+ * Which stores this caller's view of orders is limited to.
+ *
+ * `null` means "no limit" — platform staff. Returns an empty array for a
+ * vendor with no store, which callers must treat as "show nothing" rather than
+ * as "show everything"; an empty `$in` matches nothing, so that falls out
+ * correctly, but it is worth naming.
+ */
+/** The statuses that mean "this is a real fitting job". "none" is not one. */
+const JOB_STATUSES = [
+  "pending",
+  "scheduled",
+  "in_progress",
+  "completed",
+  "cancelled",
+];
+
+const storeScopeFor = async (user) => {
+  if (await reachesAllStores(user)) return null;
+  const stores = await Store.find({ owner: user._id }).select("_id");
+  return stores.map((s) => s._id);
+};
+
+/**
+ * The fitting queue: orders where the buyer asked us to install.
+ *
+ * Gated on `installations.view`. Vendors see only their own store's jobs —
+ * the same scoping as the orders list, for the same reason: an order carries
+ * the buyer's name, phone and address.
+ */
+export const getInstallationOrders = controllerWrapper(
+  "getInstallationOrders",
+  async (req, res) => {
+    const { status } = req.query;
+
+    // An explicit allowlist, not `$ne: "none"`. In Mongo `$ne` also matches
+    // documents where the field is absent, so every order placed before this
+    // field existed answered to it and the queue filled with orders that have
+    // no fitting on them at all.
+    const query = { installationStatus: { $in: JOB_STATUSES } };
+    if (status && status !== "all") query.installationStatus = status;
+
+    const scope = await storeScopeFor(req.user);
+    if (scope) query.store = { $in: scope };
+
+    const orders = await Order.find(query)
+      .populate("user", "name email phoneNumber")
+      .populate("shippingAddress")
+      .populate("store", "name")
+      .sort({ installationScheduledAt: 1, createdAt: -1 });
+
+    // Counts per status for the filter tabs, over the same scope so a vendor's
+    // badges match a vendor's list.
+    const countScope = scope ? { store: { $in: scope } } : {};
+    const rows = await Order.aggregate([
+      { $match: { ...countScope, installationStatus: { $in: JOB_STATUSES } } },
+      { $group: { _id: "$installationStatus", n: { $sum: 1 } } },
+    ]);
+    const counts = rows.reduce((acc, r) => ({ ...acc, [r._id]: r.n }), {});
+
+    res.status(200).json({ success: true, orders, counts });
+  }
+);
+
+/**
+ * Move a fitting job along, and optionally book a date or leave a note.
+ * Gated on `installations.manage`.
+ */
+export const updateInstallation = controllerWrapper(
+  "updateInstallation",
+  async (req, res) => {
+    const { status, scheduledAt, notes } = req.body;
+    const ALLOWED = JOB_STATUSES;
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    // "none" is not a job, and neither is a missing value on an order placed
+    // before the field existed. Letting either be edited would quietly add an
+    // order with no fitting to the queue, where the team would expect to
+    // turn up.
+    if (!JOB_STATUSES.includes(order.installationStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "This order has no installation",
+      });
+    }
+
+    const scope = await storeScopeFor(req.user);
+    if (scope && !scope.some((id) => String(id) === String(order.store))) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update this installation",
+      });
+    }
+
+    if (status !== undefined) {
+      if (!ALLOWED.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Status must be one of: ${ALLOWED.join(", ")}`,
+        });
+      }
+      order.installationStatus = status;
+    }
+    if (scheduledAt !== undefined) {
+      order.installationScheduledAt = scheduledAt ? new Date(scheduledAt) : null;
+    }
+    if (notes !== undefined) order.installationNotes = String(notes).slice(0, 1000);
+
+    await order.save();
+
+    logAudit(req, "installation.update", "order", order._id, {
+      status: order.installationStatus,
+      scheduledAt: order.installationScheduledAt,
+    });
+
+    res.status(200).json({ success: true, order });
+  }
+);
 
 export const getOrderById = controllerWrapper(
   "getOrderById",

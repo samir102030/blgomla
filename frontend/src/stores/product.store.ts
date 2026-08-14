@@ -53,8 +53,16 @@ interface ProductStore {
   deleteProduct: (productId: string) => Promise<boolean>;
   // Cart actions
   fetchCart: () => Promise<void>;
-  addToCart: (productId: string, quantity?: number) => Promise<void>;
-  updateCartItem: (cartItemId: string, quantity: number) => Promise<void>;
+  addToCart: (
+    productId: string,
+    quantity?: number,
+    installation?: boolean
+  ) => Promise<void>;
+  updateCartItem: (
+    cartItemId: string,
+    quantity: number,
+    installation?: boolean
+  ) => Promise<void>;
   removeFromCart: (cartItemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   // Review actions
@@ -97,12 +105,12 @@ export const useProductStore = create<ProductStore>()(
         }
       },
 
-      addToCart: async (productId: string, quantity = 1) => {
+      addToCart: async (productId: string, quantity = 1, installation = false) => {
         set({ loading: true, error: undefined });
         try {
           const { data } = await axiosInstance.post<{ cart: CartItem[] }>(
             "/products/cart",
-            { productId, quantity }
+            { productId, quantity, installation }
           );
           set({ cart: data.cart, loading: false });
           trackBehavior("add_to_cart", { product: productId });
@@ -114,12 +122,19 @@ export const useProductStore = create<ProductStore>()(
         }
       },
 
-      updateCartItem: async (cartItemId: string, quantity: number) => {
+      updateCartItem: async (
+        cartItemId: string,
+        quantity: number,
+        installation?: boolean
+      ) => {
         set({ loading: true, error: undefined });
         try {
           const { data } = await axiosInstance.put<{ cart: CartItem[] }>(
             `/products/cart/${cartItemId}`,
-            { quantity }
+            {
+              quantity,
+              ...(installation === undefined ? {} : { installation }),
+            }
           );
           set({ cart: data.cart, loading: false });
         } catch (error: any) {

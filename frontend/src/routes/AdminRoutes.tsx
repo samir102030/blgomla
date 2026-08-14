@@ -26,6 +26,7 @@ import InventoryAlertsPage from "../pages/admin/InventoryAlertsPage";
 import CustomerAnalyticsPage from "../pages/admin/CustomerAnalyticsPage";
 import VisitorAnalyticsPage from "../pages/admin/VisitorAnalyticsPage";
 import QuotationsPage from "../pages/admin/QuotationsPage";
+import InstallationOrdersPage from "../pages/admin/InstallationOrdersPage";
 import { useUserStore } from "../stores/user.store";
 import AdminsPage from "../pages/admin/AdminsPage";
 import SiteModePage from "../pages/admin/SiteModePage";
@@ -114,7 +115,22 @@ const AdminRoutes: React.FC = () => {
         <Route path="/inventory" element={<InventoryAlertsPage />} />
         <Route path="/customers" element={<CustomerAnalyticsPage />} />
         <Route path="/visitors" element={<VisitorAnalyticsPage />} />
-        <Route path="/quotations" element={<QuotationsPage />} />
+        <Route
+          path="/quotations"
+          element={
+            <RequirePermission perm="quotations.view">
+              <QuotationsPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/installations"
+          element={
+            <RequirePermission perm="installations.view">
+              <InstallationOrdersPage />
+            </RequirePermission>
+          }
+        />
         <Route
           path="/report"
           element={

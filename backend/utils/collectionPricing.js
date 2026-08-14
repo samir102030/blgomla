@@ -49,14 +49,17 @@ export const collectionItemsTotal = (items = [], products = null) => {
 };
 
 /**
- * Installation charge for `quantity` bundles.
+ * Installation charge for `quantity` units.
  *
- * Charged per bundle, not per order: two full setups is twice the fitting
- * work. Returns 0 unless the collection offers it and the customer asked —
- * never trust the client's flag alone, since the price lives on the server.
+ * Takes anything carrying an `installation` block — a Collection or a Product,
+ * which is why the parameter isn't named for either.
+ *
+ * Charged per unit, not per order: two full setups is twice the fitting work.
+ * Returns 0 unless the seller offers it and the buyer asked — the client's
+ * flag can only say whether, never how much, because the price is read here.
  */
-export const installationFee = (collection, wantsInstallation, quantity = 1) => {
+export const installationFee = (offeredBy, wantsInstallation, quantity = 1) => {
   if (!wantsInstallation) return 0;
-  if (!collection?.installation?.offered) return 0;
-  return (collection.installation.price || 0) * quantity;
+  if (!offeredBy?.installation?.offered) return 0;
+  return (offeredBy.installation.price || 0) * quantity;
 };

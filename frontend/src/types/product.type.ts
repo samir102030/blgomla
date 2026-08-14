@@ -56,6 +56,13 @@ export interface Product {
   features: string[];
   attributes: ProductAttribute[];
   bulkPricing?: BulkPricingRule[];
+  /** Optional on-site fitting the buyer can opt into. Mirrors Collection. */
+  installation?: {
+    offered: boolean;
+    price: number;
+    note?: string;
+    noteAr?: string;
+  };
   createdAt?: string;
   updatedAt?: string;
   salePrice?: number;

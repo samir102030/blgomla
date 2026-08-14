@@ -31,6 +31,7 @@ const ProductDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { productId } = useParams<{ productId: string }>();
   const [quantity, setQuantity] = useState(1);
+  const [wantsInstallation, setWantsInstallation] = useState(false);
 
   // Sticky add-to-cart bar — shown once the main buy box scrolls out of view.
   const actionButtonsRef = useRef<HTMLDivElement>(null);
@@ -279,7 +280,7 @@ const ProductDetailPage: React.FC = () => {
     }
 
     try {
-      await addToCart(productId, quantity);
+      await addToCart(productId, quantity, wantsInstallation);
       await fetchCart(); // Update user store cart
       toast.success(t("Product added to cart successfully!"));
     } catch (error) {
@@ -677,6 +678,40 @@ const ProductDetailPage: React.FC = () => {
                   )}
                 </div>
               </div>
+
+              {/* ═══ Installation opt-in ═══ */}
+              {product?.installation?.offered && !isProductInCart() && (
+                <label
+                  className={`flex items-start gap-3 rounded-xl border p-3.5 mb-6 cursor-pointer transition-all ${
+                    wantsInstallation
+                      ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
+                      : "border-[var(--border)] hover:border-[var(--brand-primary)]/40"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={wantsInstallation}
+                    onChange={(e) => setWantsInstallation(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-[var(--brand-primary)] shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[var(--text)]">
+                      🔧 {t("Do you want us to install it for you?")}
+                    </span>
+                    <span className="block text-xs text-[var(--text-muted)] mt-0.5">
+                      {product.installation.note
+                        ? product.installation.note
+                        : Number(product.installation.price) > 0
+                          ? `${t("Adds")} ${Number(
+                              product.installation.price
+                            ).toLocaleString("en-EG")} ${t("EGP")}${
+                              quantity > 1 ? ` × ${quantity}` : ""
+                            }`
+                          : t("Included at no extra cost")}
+                    </span>
+                  </span>
+                </label>
+              )}
 
               {/* Action Buttons */}
               <div ref={actionButtonsRef} className="flex space-x-4 mb-8">

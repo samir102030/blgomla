@@ -76,17 +76,36 @@ const orderSchema = new mongoose.Schema(
     // this order. Kept out of itemsPrice: it is labour, not stock, so it must
     // not be discounted by a coupon or dragged into per-item allocation.
     installationPrice: { type: Number, default: 0 },
-    // Which bundles it covers, so the warehouse and the invoice can say what
-    // was actually promised rather than showing an unexplained line.
+    // What it covers, so the fitting queue and the invoice can say what was
+    // actually promised rather than showing an unexplained line. Either a
+    // bundle or a single product can carry fitting, hence `kind`.
     installationFor: [
       {
         _id: false,
+        kind: {
+          type: String,
+          enum: ["collection", "product"],
+          default: "collection",
+        },
         collection: { type: mongoose.Schema.Types.ObjectId, ref: "Collection" },
-        collectionName: String,
+        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        name: String,
         quantity: { type: Number, default: 1 },
         price: { type: Number, default: 0 },
       },
     ],
+    // Where the fitting job has got to. "none" keeps orders without fitting out
+    // of the queue without needing a null check at every call site, and makes
+    // the list query a plain equality match rather than a scan on price.
+    installationStatus: {
+      type: String,
+      enum: ["none", "pending", "scheduled", "in_progress", "completed", "cancelled"],
+      default: "none",
+      index: true,
+    },
+    // When the fitter is due on site, and anything the team needs to know.
+    installationScheduledAt: { type: Date, default: null },
+    installationNotes: { type: String, trim: true, maxlength: 1000, default: "" },
     totalPrice: { type: Number, required: true },
     couponCode: { type: String }, // Applied coupon code
     couponDiscount: { type: Number, default: 0 }, // Total coupon discount

@@ -106,6 +106,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { name: t("admin.allOrders"), href: "/dashboard/order", perm: "orders.view" },
         { name: t("admin.returns"), href: "/dashboard/returns", perm: "returns.view" },
         { name: t("admin.quotations"), href: "/dashboard/quotations", perm: "quotations.view" },
+        { name: t("admin.installations", "Installation jobs"), href: "/dashboard/installations", perm: "installations.view" },
         { name: t("admin.inventoryAlerts"), href: "/dashboard/inventory", perm: "products.view" },
       ],
     },

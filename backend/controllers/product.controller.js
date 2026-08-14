@@ -1555,7 +1555,7 @@ export const getProductsByIds = controllerWrapper(
 export const addProductToCart = controllerWrapper(
   "addProductToCart",
   async (req, res) => {
-    const { productId, quantity = 1 } = req.body;
+    const { productId, quantity = 1, installation = false } = req.body;
     const userId = req.user._id;
 
     // Validate product exists
@@ -1583,15 +1583,23 @@ export const addProductToCart = controllerWrapper(
         item.product.toString() === productId
     );
 
+    // Only honour the flag if this product actually offers fitting, so a
+    // hand-made request can't attach a service that was never published.
+    const wantsInstallation = !!installation && !!product.installation?.offered;
+
     if (existingItemIndex > -1) {
       // Update quantity if exists
       user.cart[existingItemIndex].quantity += quantity;
+      // Adding it again with fitting ticked upgrades the line; it never
+      // silently drops fitting the customer already asked for.
+      if (wantsInstallation) user.cart[existingItemIndex].installation = true;
     } else {
       // Add new item if doesn't exist
       user.cart.push({
         type: "product",
         product: productId, // Note: using 'product' not 'productId'
         quantity,
+        installation: wantsInstallation,
       });
     }
 
@@ -1617,15 +1625,13 @@ export const getCart = controllerWrapper("getCart", async (req, res) => {
 
 // Update Cart
 export const updateCart = controllerWrapper("updateCart", async (req, res) => {
-  const { quantity } = req.body;
+  const { quantity, installation } = req.body;
   const { productId } = req.params;
   const userId = req.user._id;
   const user = await User.findById(userId);
   if (!user)
     return res.status(404).json({ success: false, message: "User not found" });
-  // Update cart logic here
-  // Assuming you have a User model with a cart field
-  console.log(user.cart[0].product.toString());
+
   const cartItemIndex = user.cart.findIndex(
     (item) =>
       (item.type === "product" || !item.type) &&
@@ -1637,7 +1643,17 @@ export const updateCart = controllerWrapper("updateCart", async (req, res) => {
       message: "Product not found in cart",
     });
 
-  user.cart[cartItemIndex].quantity = quantity;
+  if (quantity !== undefined) user.cart[cartItemIndex].quantity = quantity;
+
+  // Lets the customer tick fitting on or off from the cart, not only at the
+  // moment they add the product. Re-checked against the product because the
+  // seller may have withdrawn the service since it was added.
+  if (installation !== undefined) {
+    const product = await Product.findById(productId).select("installation");
+    user.cart[cartItemIndex].installation =
+      !!installation && !!product?.installation?.offered;
+  }
+
   await user.save();
   res.status(200).json({ success: true, cart: user.cart });
 });

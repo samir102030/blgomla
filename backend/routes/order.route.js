@@ -30,6 +30,8 @@ import {
   markOrderPaid,
   updateOrderStatus,
   cancelOrder,
+  getInstallationOrders,
+  updateInstallation,
 } from "../controllers/order.controller.js";
 import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
@@ -50,6 +52,21 @@ router.get(
 
 // Get my orders (authenticated user)
 router.get("/my-orders", protectRoute, translateResponse, getMyOrders);
+
+// The fitting queue. Declared before "/:id" — Express matches in order, so
+// registering it after would make "installations" be read as an order id.
+router.get(
+  "/installations",
+  protectRoute,
+  requirePermission("installations.view"),
+  getInstallationOrders
+);
+router.put(
+  "/:id/installation",
+  protectRoute,
+  requirePermission("installations.manage"),
+  updateInstallation
+);
 
 // Get a single order by ID
 router.get("/:id", protectRoute, translateResponse, getOrderById);

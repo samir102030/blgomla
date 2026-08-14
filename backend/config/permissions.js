@@ -128,6 +128,14 @@ export const PERMISSION_GROUPS = [
     ],
   },
   {
+    resource: "installations",
+    label: "Installation Jobs",
+    actions: [
+      { key: "view", label: "View the fitting queue" },
+      { key: "manage", label: "Schedule / update job status" },
+    ],
+  },
+  {
     resource: "advertisements",
     label: "Advertisements",
     actions: [{ key: "manage", label: "Manage" }],
@@ -247,6 +255,10 @@ const STORE_PERMISSIONS = [
   "reviews.manage",
   "analytics.view",
   "payouts.view",
+  // A bundle belongs to a store, so that store is who turns up to fit it.
+  // Scoped to their own orders by the same store filter the orders list uses.
+  "installations.view",
+  "installations.manage",
 ];
 
 // Admin = everything except the two super-admin-only powers.

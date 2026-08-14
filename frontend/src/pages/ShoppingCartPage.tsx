@@ -25,6 +25,8 @@ interface CartItemWithProduct {
   product?: string; // Product ID
   collection?: string; // Collection ID
   quantity: number;
+  /** The customer asked us to fit this line. */
+  installation?: boolean;
   productDetails?: {
     _id: string;
     name: string;
@@ -34,9 +36,62 @@ interface CartItemWithProduct {
     saleActive: boolean;
     bulkPricing?: Array<{ minQty: number; unitPrice: number }>;
     images: Array<{ url: string; alt?: string }>;
+    installation?: { offered: boolean; price: number; note?: string };
   };
   collectionDetails?: Collection;
 }
+
+/** The fitting a line offers, whichever kind of line it is. */
+const installConfigOf = (item: CartItemWithProduct) =>
+  item.type === "collection"
+    ? item.collectionDetails?.installation
+    : item.productDetails?.installation;
+
+/**
+ * The yes/no fitting choice for one cart line. Renders nothing at all for a
+ * line whose seller doesn't offer fitting, so the cart stays quiet for the
+ * ordinary case.
+ */
+const InstallationToggle: React.FC<{
+  item: CartItemWithProduct;
+  onToggle: (item: CartItemWithProduct, want: boolean) => void;
+}> = ({ item, onToggle }) => {
+  const { t } = useTranslation();
+  const config = installConfigOf(item);
+  if (!config?.offered) return null;
+
+  const price = Number(config.price) || 0;
+  const on = !!item.installation;
+
+  return (
+    <label
+      className={`flex items-start gap-2.5 rounded-lg border p-2.5 mt-2 cursor-pointer transition-all ${
+        on
+          ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
+          : "border-[var(--border)] hover:border-[var(--brand-primary)]/40"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={on}
+        onChange={(e) => onToggle(item, e.target.checked)}
+        className="mt-0.5 w-4 h-4 accent-[var(--brand-primary)] shrink-0"
+      />
+      <span className="min-w-0">
+        <span className="block text-xs font-semibold text-[var(--text)]">
+          🔧 {t("Do you want us to install it for you?")}
+        </span>
+        <span className="block text-[11px] text-[var(--text-muted)] mt-0.5">
+          {price > 0
+            ? `+${price.toLocaleString("en-EG")} ${t("EGP")}${
+                item.quantity > 1 ? ` × ${item.quantity}` : ""
+              }`
+            : t("Included at no extra cost")}
+        </span>
+      </span>
+    </label>
+  );
+};
 
 const ShoppingCartPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -192,6 +247,7 @@ const ShoppingCartPage: React.FC = () => {
       } else {
         await updateCartItem(itemId, newQuantity);
       }
+
       toast.success(t("Cart updated successfully"));
 
       // Refresh cart data and update local state
@@ -216,6 +272,42 @@ const ShoppingCartPage: React.FC = () => {
       toast.error(t("Cart Update Error: {{msg}}. Please try again", { msg: errorMessage }));
     } finally {
       setUpdatingItem(null);
+    }
+  };
+
+  /**
+   * Tick fitting on or off for one line. The server re-checks the flag against
+   * whatever offers it, so this can only ever say yes or no — the price stays
+   * server-side. Local state updates first so the checkbox doesn't lag.
+   */
+  const toggleInstallation = async (
+    item: CartItemWithProduct,
+    want: boolean
+  ) => {
+    const id = (item.type === "collection" ? item.collection : item.product) || "";
+    if (!id) return;
+    const key = item.type === "collection" ? "collection" : "product";
+
+    setCartItems((prev) =>
+      prev.map((it) => (it[key] === id ? { ...it, installation: want } : it))
+    );
+
+    try {
+      if (item.type === "collection") {
+        await updateCollectionCart(id, item.quantity, want);
+      } else {
+        await updateCartItem(id, item.quantity, want);
+      }
+      await fetchCart();
+    } catch (error: any) {
+      // Put the checkbox back where it was — pretending it saved would send
+      // the customer to checkout expecting a fitter who was never booked.
+      setCartItems((prev) =>
+        prev.map((it) => (it[key] === id ? { ...it, installation: !want } : it))
+      );
+      toast.error(
+        error?.response?.data?.message || t("Failed to update cart")
+      );
     }
   };
 
@@ -491,7 +583,15 @@ const ShoppingCartPage: React.FC = () => {
   };
 
   const couponDiscount = calculateCouponDiscount();
-  const grandTotal = subtotal + shippingCost - couponDiscount;
+  // Fitting the customer ticked, per unit. Added after the coupon, matching
+  // the server: a coupon discounts goods, not labour.
+  const installationTotal = cartItems.reduce((sum, item) => {
+    if (!item.installation) return sum;
+    const config = installConfigOf(item);
+    if (!config?.offered) return sum;
+    return sum + (Number(config.price) || 0) * item.quantity;
+  }, 0);
+  const grandTotal = subtotal + shippingCost + installationTotal - couponDiscount;
 
   // if (loading)
   //   return (
@@ -714,6 +814,9 @@ const ShoppingCartPage: React.FC = () => {
                               t("Product Name Not Available")}
                           </div>
                         )}
+                        <div className="max-w-xs">
+                          <InstallationToggle item={item} onToggle={toggleInstallation} />
+                        </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4">
                         <div className="text-xs sm:text-sm text-[var(--text)]">
@@ -1040,6 +1143,7 @@ const ShoppingCartPage: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                  <InstallationToggle item={item} onToggle={toggleInstallation} />
                   <div className="flex items-center justify-between pt-2 border-t border-[var(--border)]">
                     <span className="text-xs font-medium text-[var(--text)]">
                       {t("Total:")}
@@ -1179,6 +1283,14 @@ const ShoppingCartPage: React.FC = () => {
                     {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                   </span>
                 </div>
+                {installationTotal > 0 && (
+                  <div className="flex justify-between text-xs sm:text-sm">
+                    <span className="text-[var(--text-muted)]">🔧 {t("Installation")}</span>
+                    <span className="font-medium text-[var(--text)]">
+                      {(installationTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
+                    </span>
+                  </div>
+                )}
                 <div className="pt-1">
                   <DeliveryEstimate compact />
                 </div>

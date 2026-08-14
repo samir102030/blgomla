@@ -51,6 +51,9 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
     features: [] as string[],
     attributes: [] as { name: string; value: string }[],
     bulkPricing: [] as { minQty: string; unitPrice: string }[],
+    installationOffered: false,
+    installationPrice: "",
+    installationNote: "",
   });
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -83,6 +86,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               unitPrice: rule.unitPrice?.toString() || "",
             }))
           : [],
+        installationOffered: !!(product as any).installation?.offered,
+        installationPrice: (product as any).installation?.price
+          ? String((product as any).installation.price)
+          : "",
+        installationNote: (product as any).installation?.note || "",
       });
       setFiles([]);
       setPreviews([]);
@@ -171,6 +179,11 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
               rule.minQty >= 1 &&
               rule.unitPrice > 0
           ),
+        installation: {
+          offered: form.installationOffered,
+          price: form.installationOffered ? Number(form.installationPrice) || 0 : 0,
+          note: form.installationNote.trim(),
+        },
       };
       if (form.brand) payload.brand = form.brand;
       if (form.category) payload.category = form.category;
@@ -670,6 +683,65 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       </button>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Installation */}
+            <div>
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.installationOffered}
+                  onChange={(e) =>
+                    setForm({ ...form, installationOffered: e.target.checked })
+                  }
+                  className="mt-0.5 w-4 h-4 accent-amber-500"
+                />
+                <span>
+                  <span className="text-sm font-medium text-gray-700">
+                    {t("modal.editProduct.offerInstallation", "Offer installation for this product")}
+                  </span>
+                  <span className="block text-xs text-gray-500 mt-0.5">
+                    {t(
+                      "modal.editProduct.offerInstallationHint",
+                      "The customer gets a yes/no choice on the product page and in the cart."
+                    )}
+                  </span>
+                </span>
+              </label>
+
+              {form.installationOffered && (
+                <div className="mt-3 ps-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      {t("modal.editProduct.installationPrice", "Installation price (per unit)")}
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={form.installationPrice}
+                      onChange={(e) =>
+                        setForm({ ...form, installationPrice: e.target.value })
+                      }
+                      placeholder="0"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      {t("modal.editProduct.installationNote", "Note for the customer")}
+                    </label>
+                    <input
+                      type="text"
+                      value={form.installationNote}
+                      onChange={(e) =>
+                        setForm({ ...form, installationNote: e.target.value })
+                      }
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300"
+                    />
+                  </div>
                 </div>
               )}
             </div>

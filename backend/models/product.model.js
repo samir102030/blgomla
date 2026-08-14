@@ -185,6 +185,16 @@ const productSchema = new mongoose.Schema(
       default: 1,
       min: [1, "Minimum order quantity must be at least 1"],
     },
+    // Optional on-site fitting for this product, mirroring the block on
+    // Collection so both kinds of line price the same way. `offered` is the
+    // seller's switch; the buyer gets a yes/no on the product page and in the
+    // cart. Priced per unit, and always from here — never from the request.
+    installation: {
+      offered: { type: Boolean, default: false },
+      price: { type: Number, min: 0, default: 0 },
+      note: { type: String, trim: true, maxlength: 500, default: "" },
+      noteAr: { type: String, trim: true, maxlength: 500, default: "" },
+    },
     images: [
       {
         url: { type: String },
