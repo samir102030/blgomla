@@ -138,6 +138,11 @@ export const PERMISSION_GROUPS = [
     actions: [{ key: "manage", label: "Manage" }],
   },
   {
+    resource: "layout",
+    label: "Storefront Layout",
+    actions: [{ key: "manage", label: "Arrange page sections" }],
+  },
+  {
     resource: "shipping",
     label: "Shipping",
     actions: [

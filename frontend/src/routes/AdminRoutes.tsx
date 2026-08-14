@@ -18,6 +18,7 @@ import VendorCollectionsPage from "../pages/vendor/VendorCollectionsPage";
 import AdminCollectionsPage from "../pages/admin/AdminCollectionsPage";
 import AdvertisementsPage from "../pages/admin/AdvertisementsPage";
 import MosaicPage from "../pages/admin/MosaicPage";
+import LayoutPage from "../pages/admin/LayoutPage";
 import ProductApprovalsPage from "../pages/admin/ProductApprovalsPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import InventoryAlertsPage from "../pages/admin/InventoryAlertsPage";
@@ -135,6 +136,14 @@ const AdminRoutes: React.FC = () => {
         {/* Content Management */}
         <Route path="/advertisements" element={<AdvertisementsPage />} />
         <Route path="/mosaic" element={<MosaicPage />} />
+        <Route
+          path="/layout"
+          element={
+            <RequirePermission perm="layout.manage">
+              <LayoutPage />
+            </RequirePermission>
+          }
+        />
         <Route
           path="/gallery"
           element={

@@ -1,4 +1,5 @@
 import React, { useMemo, lazy, Suspense } from "react";
+import { useSectionOrder } from "../layout/useLayout";
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
 import HeroSlider from "../components/HeroSlider";
@@ -184,20 +185,21 @@ const HomePage: React.FC = () => {
       </div>
     );
 
-  return (
-    <div className="min-h-screen bg-[var(--bg)]">
-      <SEO
-        title={t("Home")}
-        description={t("Egypt's premier marketplace for IT, networking, and technology products. Shop routers, switches, cables, servers, cameras, and more at the best prices.")}
-      />
-      <Header />
+  // Which sections this page shows, and in what order — arranged by an admin
+  // in the dashboard rather than fixed here in JSX.
+  const sectionOrder = useSectionOrder("home");
 
-      <main>
+  const sectionNodes: Record<string, React.ReactNode> = {
+    hero: (
+      <>
         {/* ════════════════════════════════════════════
             § 1.  HERO CAROUSEL  — First impression
             ════════════════════════════════════════════ */}
         <HeroSlider />
-
+      </>
+    ),
+    services: (
+      <>
         {/* ════════════════════════════════════════════
             § 2.  TRUST BAR  — Instant credibility
             Place right below the hero so users see
@@ -208,7 +210,10 @@ const HomePage: React.FC = () => {
             <Services />
           </Suspense>
         </ScrollReveal>
-
+      </>
+    ),
+    categoryRail: (
+      <>
         {/* ════════════════════════════════════════════
             § 3.  SHOP BY CATEGORY  — Navigation shortcut
             Lets users self-filter immediately
@@ -263,26 +268,38 @@ const HomePage: React.FC = () => {
             </HScroller>
           </section>
         </ScrollReveal>
-
+      </>
+    ),
+    adCategoryStrip: (
+      <>
         {/* Category-strip promo banner */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Suspense fallback={null}>
             <AdvertisementBanner position="category-strip" />
           </Suspense>
         </div>
-
+      </>
+    ),
+    cardMosaic: (
+      <>
         {/* Card mosaic — admin-curated merchandising grid */}
         <ScrollReveal>
           <Suspense fallback={null}>
             <CardMosaic />
           </Suspense>
         </ScrollReveal>
-
+      </>
+    ),
+    couponStrip: (
+      <>
         {/* Collectible coupons */}
         <ScrollReveal>
           <CouponStrip />
         </ScrollReveal>
-
+      </>
+    ),
+    flashDeals: (
+      <>
         {/* ════════════════════════════════════════════
             § 4.  FLASH DEALS  — Urgency + scarcity
             Countdown timer creates FOMO
@@ -311,7 +328,10 @@ const HomePage: React.FC = () => {
             </section>
           </ScrollReveal>
         )}
-
+      </>
+    ),
+    adHero: (
+      <>
         {/* ════════════════════════════════════════════
             § 5.  PROMOTIONAL BANNER (Hero Position)
             Visual break between product sections.
@@ -322,7 +342,10 @@ const HomePage: React.FC = () => {
             <AdvertisementBanner position="hero" />
           </Suspense>
         </div>
-
+      </>
+    ),
+    featured: (
+      <>
         {/* ════════════════════════════════════════════
             § 6.  FEATURED / EDITOR'S PICKS
             Hand-curated products build trust and
@@ -333,7 +356,10 @@ const HomePage: React.FC = () => {
             <FeaturedProducts />
           </Suspense>
         </ScrollReveal>
-
+      </>
+    ),
+    bestsellers: (
+      <>
         {/* Bestsellers — social proof that nudges undecided buyers */}
         {bestSellers.length > 0 && (
           <ScrollReveal>
@@ -347,7 +373,10 @@ const HomePage: React.FC = () => {
             </Suspense>
           </ScrollReveal>
         )}
-
+      </>
+    ),
+    topRated: (
+      <>
         {/* Top Rated — quality signal from real reviews */}
         {topRated.length > 0 && (
           <ScrollReveal>
@@ -361,14 +390,20 @@ const HomePage: React.FC = () => {
             </Suspense>
           </ScrollReveal>
         )}
-
+      </>
+    ),
+    recentlyViewed: (
+      <>
         {/* Recently Viewed — personalized re-engagement (localStorage-driven) */}
         <ScrollReveal>
           <Suspense fallback={null}>
             <RecentlyViewed />
           </Suspense>
         </ScrollReveal>
-
+      </>
+    ),
+    brandLogos: (
+      <>
         {/* ════════════════════════════════════════════
             § 7.  TRUSTED BRANDS  — Social proof
             Authority logos between product sections
@@ -377,7 +412,10 @@ const HomePage: React.FC = () => {
         <Suspense fallback={null}>
           <BrandLogos />
         </Suspense>
-
+      </>
+    ),
+    newArrivals: (
+      <>
         {/* ════════════════════════════════════════════
             § 8.  NEWEST ARRIVALS  — Freshness signal
             Shows the catalog is alive and updated
@@ -421,7 +459,10 @@ const HomePage: React.FC = () => {
             ) : null}
           </section>
         </ScrollReveal>
-
+      </>
+    ),
+    adBanner: (
+      <>
         {/* ════════════════════════════════════════════
             § 9.  BANNER AD (Secondary Position)
             Wholesale/bulk CTA  — second visual break
@@ -431,7 +472,10 @@ const HomePage: React.FC = () => {
             <AdvertisementBanner position="banner" />
           </Suspense>
         </div>
-
+      </>
+    ),
+    bundleDeals: (
+      <>
         {/* ════════════════════════════════════════════
             § 10. BUNDLE DEALS CTA  — Upsell opportunity
             Promote curated bundles to increase AOV.
@@ -542,7 +586,10 @@ const HomePage: React.FC = () => {
             </section>
           </ScrollReveal>
         )}
-
+      </>
+    ),
+    allProducts: (
+      <>
         {/* ════════════════════════════════════════════
             § 11. ALL PRODUCTS  — Full catalog browse
             Positioned lower so users who scrolled
@@ -570,7 +617,10 @@ const HomePage: React.FC = () => {
             )}
           </section>
         </ScrollReveal>
-
+      </>
+    ),
+    newsletter: (
+      <>
         {/* ════════════════════════════════════════════
             § 12. NEWSLETTER  — Capture engagement
             Last call-to-action before the footer.
@@ -581,6 +631,26 @@ const HomePage: React.FC = () => {
             <Newsletter />
           </Suspense>
         </ScrollReveal>
+      </>
+    ),
+  };
+
+
+  return (
+    <div className="min-h-screen bg-[var(--bg)]">
+      <SEO
+        title={t("Home")}
+        description={t("Egypt's premier marketplace for IT, networking, and technology products. Shop routers, switches, cables, servers, cameras, and more at the best prices.")}
+      />
+      <Header />
+
+      {/* Section order comes from the layout an admin arranges in the
+          dashboard. An unknown key renders nothing rather than throwing, so
+          a section removed from the code cannot take the page down. */}
+      <main>
+        {sectionOrder.map((key) => (
+          <React.Fragment key={key}>{sectionNodes[key]}</React.Fragment>
+        ))}
       </main>
 
       <Footer />
