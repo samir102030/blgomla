@@ -25,6 +25,8 @@ interface CartItemWithProduct {
   product?: string;
   collection?: string;
   quantity: number;
+  /** Collection lines only: the customer asked us to fit it. */
+  installation?: boolean;
   productDetails?: {
     _id: string;
     name: string;
@@ -206,7 +208,20 @@ const CheckoutPage: React.FC = () => {
   };
 
   const discountAmount = calculateCouponDiscount();
-  const totalBeforePoints = Math.max(0, subtotal + shippingFee - discountAmount);
+  // Fitting the customer opted into, per bundle. Added after the coupon, the
+  // same order the server uses — a coupon discounts goods, not labour. If this
+  // were left out, the page would quote one figure and the order would charge
+  // another, and for card payments the gateway takes the order's.
+  const installationFee = cartItems.reduce((sum, item) => {
+    if (item.type !== "collection" || !item.installation) return sum;
+    const config = item.collectionDetails?.installation;
+    if (!config?.offered) return sum;
+    return sum + (Number(config.price) || 0) * item.quantity;
+  }, 0);
+  const totalBeforePoints = Math.max(
+    0,
+    subtotal + shippingFee + installationFee - discountAmount
+  );
   // Loyalty: 1 point = 1 EGP, capped by balance and the remaining total.
   const pointsBalance = Math.max(0, user?.loyaltyPoints || 0);
   const maxRedeemable = Math.min(pointsBalance, Math.floor(totalBeforePoints));
@@ -513,6 +528,10 @@ const CheckoutPage: React.FC = () => {
         .map((item) => ({
           collection: item.collection,
           quantity: item.quantity,
+          // Whether the customer asked us to fit it. The server re-prices this
+          // from the collection, so this flag can only say yes or no — never
+          // how much.
+          installation: !!item.installation,
         }));
 
       const orderData: any = {
@@ -1090,6 +1109,12 @@ const CheckoutPage: React.FC = () => {
                       <span>{t("Shipping Fee")}</span>
                       <span>{(shippingFee).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                     </div>
+                    {installationFee > 0 && (
+                      <div className="flex justify-between text-xs sm:text-sm">
+                        <span>🔧 {t("Installation")}</span>
+                        <span>{(installationFee).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
+                      </div>
+                    )}
                     <div className="pt-1">
                       <DeliveryEstimate
                         compact

@@ -1,14 +1,11 @@
+import mongoose from "mongoose";
 import Collection from "../models/collection.model.js";
 import Product from "../models/product.model.js";
+import Brand from "../models/brand.model.js";
 import Store from "../models/store.model.js";
 import User from "../models/user.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
-
-const getUnitPrice = (product) => {
-  return product.saleActive
-    ? product.price * (1 - product.salePercentage / 100)
-    : product.price;
-};
+import { collectionItemsTotal } from "../utils/collectionPricing.js";
 
 // These are caller mistakes, not server faults. Thrown bare, controllerWrapper
 // classified them as 500s — which in production replaces the message with
@@ -45,6 +42,63 @@ const validateCollectionItems = async (items, storeId, { ownStore = true } = {})
 };
 
 /**
+ * Brands are stored as ids, so a typo would otherwise persist as a dangling
+ * reference that renders as a blank chip on the quote. Verified here instead.
+ */
+const validateBrands = async (brands) => {
+  if (!Array.isArray(brands)) return [];
+  const ids = [...new Set(brands.map(String))].filter((id) =>
+    mongoose.Types.ObjectId.isValid(id)
+  );
+  if (ids.length === 0) return [];
+  const found = await Brand.find({ _id: { $in: ids } }).select("_id");
+  if (found.length !== ids.length) {
+    throw badRequest("One or more brands were not found");
+  }
+  return ids;
+};
+
+/**
+ * Normalises the installation block from a request body.
+ *
+ * Absent means "leave it alone", so this returns undefined rather than a
+ * zeroed object — otherwise editing a name would silently switch installation
+ * off for every collection saved by an older client.
+ */
+const normaliseInstallation = (raw) => {
+  if (raw === undefined || raw === null) return undefined;
+  const price = Number(raw.price);
+  if (raw.offered && (!Number.isFinite(price) || price < 0)) {
+    throw badRequest("Installation price must be zero or more");
+  }
+  return {
+    offered: !!raw.offered,
+    price: Number.isFinite(price) && price > 0 ? price : 0,
+    note: typeof raw.note === "string" ? raw.note.trim() : "",
+    noteAr: typeof raw.noteAr === "string" ? raw.noteAr.trim() : "",
+  };
+};
+
+/**
+ * Strips line prices down to what the model accepts: a number, or null to
+ * follow the catalogue. An empty string from a cleared input means "follow".
+ */
+const normaliseItems = (items) =>
+  items.map((item) => {
+    const raw = item.unitPrice;
+    const blank = raw === "" || raw === null || raw === undefined;
+    const price = blank ? null : Number(raw);
+    if (!blank && (!Number.isFinite(price) || price < 0)) {
+      throw badRequest("Item price must be zero or more");
+    }
+    return {
+      product: item.product,
+      quantity: item.quantity,
+      unitPrice: price,
+    };
+  });
+
+/**
  * Who is acting, and on whose behalf.
  *
  * A collection is always owned by a store — `store` is required on the model,
@@ -73,8 +127,17 @@ const resolveActor = (req, explicitStoreId) => {
 export const createCollection = controllerWrapper(
   "createCollection",
   async (req, res) => {
-    const { name, nameAr, description, descriptionAr, items, bundlePrice, store } =
-      req.body;
+    const {
+      name,
+      nameAr,
+      description,
+      descriptionAr,
+      items,
+      bundlePrice,
+      store,
+      brands,
+      installation,
+    } = req.body;
 
     if (!Array.isArray(items) || items.length < 2) {
       return res.status(400).json({
@@ -105,12 +168,9 @@ export const createCollection = controllerWrapper(
       ownStore: isVendor,
     });
 
-    const originalTotal = items.reduce((total, item) => {
-      const product = products.find(
-        (p) => String(p._id) === String(item.product)
-      );
-      return total + getUnitPrice(product) * item.quantity;
-    }, 0);
+    const normalisedItems = normaliseItems(items);
+    const brandIds = await validateBrands(brands);
+    const originalTotal = collectionItemsTotal(normalisedItems, products);
 
     if (bundlePrice <= 0 || bundlePrice > originalTotal) {
       return res.status(400).json({
@@ -125,7 +185,9 @@ export const createCollection = controllerWrapper(
       nameAr,
       description,
       descriptionAr,
-      items,
+      items: normalisedItems,
+      brands: brandIds,
+      installation: normaliseInstallation(installation),
       bundlePrice,
       store: storeId,
     });
@@ -144,6 +206,7 @@ export const getCollections = controllerWrapper(
 
     const collections = await Collection.find(query)
       .populate("items.product")
+      .populate("brands", "name nameAr logo")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, collections });
@@ -153,9 +216,9 @@ export const getCollections = controllerWrapper(
 export const getCollectionById = controllerWrapper(
   "getCollectionById",
   async (req, res) => {
-    const collection = await Collection.findById(req.params.id).populate(
-      "items.product"
-    );
+    const collection = await Collection.findById(req.params.id)
+      .populate("items.product")
+      .populate("brands", "name nameAr logo");
     if (!collection) {
       return res
         .status(404)
@@ -185,7 +248,17 @@ export const getMyCollections = controllerWrapper(
 export const updateCollection = controllerWrapper(
   "updateCollection",
   async (req, res) => {
-    const { name, nameAr, description, descriptionAr, items, bundlePrice, isActive } = req.body;
+    const {
+      name,
+      nameAr,
+      description,
+      descriptionAr,
+      items,
+      bundlePrice,
+      isActive,
+      brands,
+      installation,
+    } = req.body;
     const collection = await Collection.findById(req.params.id);
 
     if (!collection) {
@@ -205,19 +278,46 @@ export const updateCollection = controllerWrapper(
     // Items always have to come from the store that owns the collection —
     // an operator editing on a vendor's behalf doesn't get to mix in another
     // store's products.
+    let products = null;
     if (Array.isArray(items) && items.length > 0) {
-      await validateCollectionItems(items, collection.store, {
+      products = await validateCollectionItems(items, collection.store, {
         ownStore: !canManageAny,
       });
-      collection.items = items;
+      collection.items = normaliseItems(items);
     }
 
+    if (brands !== undefined) collection.brands = await validateBrands(brands);
     if (name !== undefined) collection.name = name;
     if (nameAr !== undefined) collection.nameAr = nameAr;
     if (description !== undefined) collection.description = description;
     if (descriptionAr !== undefined) collection.descriptionAr = descriptionAr;
     if (bundlePrice !== undefined) collection.bundlePrice = bundlePrice;
     if (isActive !== undefined) collection.isActive = isActive;
+
+    const nextInstallation = normaliseInstallation(installation);
+    if (nextInstallation) collection.installation = nextInstallation;
+
+    // Create enforced "bundle price can't exceed the sum of its parts"; update
+    // never did, so the rule could be walked around by saving twice. It matters
+    // more now that a line price is editable: raising the bundle and dropping a
+    // line in one save would otherwise produce a quote whose discount is
+    // negative, and order creation rejects those at checkout — far too late for
+    // whoever built it to notice.
+    if (items !== undefined || bundlePrice !== undefined) {
+      if (!products) {
+        products = await Product.find({
+          _id: { $in: collection.items.map((i) => i.product) },
+        });
+      }
+      const originalTotal = collectionItemsTotal(collection.items, products);
+      if (collection.bundlePrice <= 0 || collection.bundlePrice > originalTotal) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Bundle price must be greater than 0 and less than or equal to the original total",
+        });
+      }
+    }
 
     await collection.save();
 
@@ -251,7 +351,7 @@ export const deleteCollection = controllerWrapper(
 export const addCollectionToCart = controllerWrapper(
   "addCollectionToCart",
   async (req, res) => {
-    const { collectionId, quantity = 1 } = req.body;
+    const { collectionId, quantity = 1, installation = false } = req.body;
     const userId = req.user._id;
 
     const collection = await Collection.findById(collectionId).populate(
@@ -290,13 +390,23 @@ export const addCollectionToCart = controllerWrapper(
         item.collection?.toString() === collectionId
     );
 
+    // Only honour the flag if this collection actually offers fitting —
+    // otherwise a hand-made request could attach a service the operator never
+    // published, and checkout would price it from a zero.
+    const wantsInstallation =
+      !!installation && !!collection.installation?.offered;
+
     if (existingIndex > -1) {
       user.cart[existingIndex].quantity += quantity;
+      // Adding the same bundle again with fitting ticked upgrades the line;
+      // it never silently removes fitting the customer already chose.
+      if (wantsInstallation) user.cart[existingIndex].installation = true;
     } else {
       user.cart.push({
         type: "collection",
         collection: collectionId,
         quantity,
+        installation: wantsInstallation,
       });
     }
 
@@ -309,7 +419,7 @@ export const addCollectionToCart = controllerWrapper(
 export const updateCollectionCart = controllerWrapper(
   "updateCollectionCart",
   async (req, res) => {
-    const { quantity } = req.body;
+    const { quantity, installation } = req.body;
     const { collectionId } = req.params;
     const userId = req.user._id;
 
@@ -353,6 +463,12 @@ export const updateCollectionCart = controllerWrapper(
     }
 
     user.cart[cartIndex].quantity = quantity;
+    // Lets the customer tick fitting on or off from the cart, not just at the
+    // moment they add the bundle.
+    if (installation !== undefined) {
+      user.cart[cartIndex].installation =
+        !!installation && !!collection.installation?.offered;
+    }
     await user.save();
 
     res.status(200).json({ success: true, cart: user.cart });

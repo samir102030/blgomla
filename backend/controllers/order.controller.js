@@ -19,6 +19,11 @@ import {
 } from "../utils/accurate.js";
 import { emitNotificationCreated } from "../utils/socket.js";
 import { logAudit } from "../utils/audit.js";
+import {
+  collectionItemsTotal,
+  installationFee,
+  lineUnitPrice,
+} from "../utils/collectionPricing.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
 import {
@@ -140,8 +145,10 @@ export const createOrder = controllerWrapper(
       let taxPrice = 0;
       let totalPrice = 0;
       let couponDiscount = 0;
+      let installationPrice = 0;
 
       const validatedItems = [];
+      const installationFor = [];
       const requiredProducts = new Map();
 
       const getBaseUnitPrice = (product) => {
@@ -230,10 +237,11 @@ export const createOrder = controllerWrapper(
         }
 
         const collectionQty = bundle.quantity || 1;
-        const originalTotal = collection.items.reduce((sum, item) => {
-          const unitPrice = getBaseUnitPrice(item.product);
-          return sum + unitPrice * item.quantity;
-        }, 0);
+        // Line overrides win over the catalogue price — see
+        // utils/collectionPricing.js. Computing this any other way here would
+        // let the allocation below disagree with the total the customer was
+        // shown on the collection page.
+        const originalTotal = collectionItemsTotal(collection.items);
 
         if (collection.bundlePrice <= 0 || collection.bundlePrice > originalTotal) {
           await session.abortTransaction();
@@ -248,7 +256,7 @@ export const createOrder = controllerWrapper(
           const totalQty = item.quantity * collectionQty;
           addRequiredProduct(product, totalQty);
 
-          const unitPrice = getBaseUnitPrice(product);
+          const unitPrice = lineUnitPrice(item, product);
           const itemTotal = unitPrice * item.quantity;
           const proportion = originalTotal === 0 ? 0 : itemTotal / originalTotal;
           const allocatedTotal = collection.bundlePrice * proportion;
@@ -265,6 +273,24 @@ export const createOrder = controllerWrapper(
             price: allocatedUnitPrice,
             salePercentage: 0,
             couponDiscount: 0,
+          });
+        }
+
+        // Fitting is priced from the collection, never from the request, so a
+        // hand-made order can't fit itself for free — or bill itself for a
+        // service this bundle doesn't offer.
+        const fee = installationFee(
+          collection,
+          bundle.installation,
+          collectionQty
+        );
+        if (fee > 0) {
+          installationPrice += fee;
+          installationFor.push({
+            collection: collection._id,
+            collectionName: collection.name,
+            quantity: collectionQty,
+            price: fee,
           });
         }
       }
@@ -386,9 +412,12 @@ export const createOrder = controllerWrapper(
           ? liveFee
           : resolveShippingFee(shippingSettings, addressDoc || {}, itemsPrice);
 
-      // Calculate final prices
+      // Calculate final prices. Fitting is added after the discount because a
+      // coupon discounts goods, not labour — folding it into itemsPrice would
+      // quietly hand out a percentage off the fitter's day as well.
       const discountPrice = couponDiscount; // Total discount applied
-      totalPrice = itemsPrice + shippingPrice + taxPrice - discountPrice;
+      totalPrice =
+        itemsPrice + shippingPrice + taxPrice + installationPrice - discountPrice;
 
       // Step 2b: Redeem loyalty points (1 point = POINT_VALUE_EGP). Clamp to the
       // user's balance and to the order total so it can never go negative.
@@ -414,6 +443,8 @@ export const createOrder = controllerWrapper(
         itemsPrice,
         shippingPrice,
         taxPrice,
+        installationPrice,
+        installationFor,
         totalPrice,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         couponDiscount,

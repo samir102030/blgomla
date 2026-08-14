@@ -40,7 +40,11 @@ const lookupStages = (extra = []) => [
       from: "stores",
       localField: "store",
       foreignField: "_id",
-      pipeline: [{ $project: { storeName: 1, logo: 1 } }],
+      // The field on Store is `name`; projecting only `storeName` asked for
+      // something that has never existed, so every list response carried a
+      // store object of just `_id` and any UI showing a seller name rendered
+      // blank. Both are listed because some callers read `storeName`.
+      pipeline: [{ $project: { name: 1, storeName: 1, logo: 1 } }],
       as: "store",
     },
   },

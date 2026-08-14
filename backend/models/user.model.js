@@ -21,6 +21,13 @@ const cartItemSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
+    // Collection lines only: the customer ticked "fit this for me". Priced at
+    // checkout from the collection's own installation price, never from
+    // anything the client sends.
+    installation: {
+      type: Boolean,
+      default: false,
+    },
   },
   { _id: true, suppressReservedKeysWarning: true },
 );

@@ -72,6 +72,21 @@ const orderSchema = new mongoose.Schema(
     itemsPrice: { type: Number, required: true },
     shippingPrice: { type: Number, default: 0 },
     taxPrice: { type: Number, default: 0 },
+    // On-site fitting the customer opted into, summed across the bundles in
+    // this order. Kept out of itemsPrice: it is labour, not stock, so it must
+    // not be discounted by a coupon or dragged into per-item allocation.
+    installationPrice: { type: Number, default: 0 },
+    // Which bundles it covers, so the warehouse and the invoice can say what
+    // was actually promised rather than showing an unexplained line.
+    installationFor: [
+      {
+        _id: false,
+        collection: { type: mongoose.Schema.Types.ObjectId, ref: "Collection" },
+        collectionName: String,
+        quantity: { type: Number, default: 1 },
+        price: { type: Number, default: 0 },
+      },
+    ],
     totalPrice: { type: Number, required: true },
     couponCode: { type: String }, // Applied coupon code
     couponDiscount: { type: Number, default: 0 }, // Total coupon discount

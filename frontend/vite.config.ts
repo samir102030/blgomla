@@ -19,6 +19,67 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    host: true,
+    // Vite rejects Host headers it doesn't recognise (DNS-rebinding defence).
+    // Named suffixes rather than `true`, so only the tunnel providers we
+    // actually use get through and any other hostname is still refused.
+    allowedHosts: [".trycloudflare.com", ".loca.lt", ".ngrok-free.app", ".ngrok.io"],
+    // Serve the API from the same origin as the app. Two wins: no CORS at all,
+    // and the site works over one URL — a phone on the LAN or a temporary
+    // tunnel gets the backend for free instead of asking it for `localhost`.
+    // Needs VITE_API_URL=/api (see .env.local); with the absolute URL still
+    // set, requests skip the proxy and this block does nothing.
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:5000",
+        changeOrigin: true,
+        // Same-origin POST/PUT/DELETE still carry an Origin header, and the
+        // backend's CORS allowlist would reject a tunnel hostname it has
+        // never heard of. Present ourselves as the dev origin it already
+        // trusts, so a new tunnel URL never needs a backend restart.
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            if (proxyReq.getHeader("origin")) {
+              proxyReq.setHeader("origin", "http://localhost:5173");
+            }
+          });
+        },
+      },
+      "/socket.io": {
+        target: "http://127.0.0.1:5000",
+        changeOrigin: true,
+        ws: true,
+      },
+    },
+  },
+  // `vite preview` serves the built bundle. Same proxy and host rules as the
+  // dev server, because the reason to reach for preview is a slow link: the
+  // dev server ships every module as its own request, which is fine locally
+  // and painfully slow through a tunnel. The build collapses that to a handful
+  // of files.
+  preview: {
+    host: true,
+    allowedHosts: [".trycloudflare.com", ".loca.lt", ".ngrok-free.app", ".ngrok.io"],
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:5000",
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            if (proxyReq.getHeader("origin")) {
+              proxyReq.setHeader("origin", "http://localhost:5173");
+            }
+          });
+        },
+      },
+      "/socket.io": {
+        target: "http://127.0.0.1:5000",
+        changeOrigin: true,
+        ws: true,
+      },
+    },
+  },
   build: {
     // Modern target — drop legacy polyfills for smaller bundles
     target: "es2020",

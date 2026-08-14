@@ -17,6 +17,7 @@ const CollectionDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState(false);
+  const [wantsInstallation, setWantsInstallation] = useState(false);
   const addCollectionToCart = useCollectionStore(
     (state) => state.addCollectionToCart,
   );
@@ -77,21 +78,33 @@ const CollectionDetailPage: React.FC = () => {
     loadCollection();
   }, [collectionId]);
 
+  // What one unit of a line costs. A quote can pin a line's price, in which
+  // case it wins over the catalogue — including a deliberate 0 — so this tests
+  // for null rather than falsiness. Mirrors utils/collectionPricing.js on the
+  // server, which is what actually charges the customer.
+  const lineUnitPrice = (item: any) => {
+    if (item?.unitPrice !== null && item?.unitPrice !== undefined) {
+      return Number(item.unitPrice);
+    }
+    const product = item.product;
+    if (!product) return 0;
+    return product.saleActive
+      ? product.price * (1 - product.salePercentage / 100)
+      : product.price;
+  };
+
   const getOriginalTotal = () => {
     if (!collection) return 0;
-    return collection.items.reduce((sum: number, item: any) => {
-      const product = item.product;
-      const unitPrice = product.saleActive
-        ? product.price * (1 - product.salePercentage / 100)
-        : product.price;
-      return sum + unitPrice * item.quantity;
-    }, 0);
+    return collection.items.reduce(
+      (sum: number, item: any) => sum + lineUnitPrice(item) * item.quantity,
+      0
+    );
   };
 
   const handleAddToCart = async () => {
     if (!collectionId) return;
     setAddingToCart(true);
-    const success = await addCollectionToCart(collectionId, 1);
+    const success = await addCollectionToCart(collectionId, 1, wantsInstallation);
     setAddingToCart(false);
     if (success) {
       await fetchCart();
@@ -154,6 +167,10 @@ const CollectionDetailPage: React.FC = () => {
   const originalTotal = getOriginalTotal();
   const savings = Math.max(originalTotal - collection.bundlePrice, 0);
   const savingsPercent = originalTotal > 0 ? Math.round((savings / originalTotal) * 100) : 0;
+  const installOffered = !!collection.installation?.offered;
+  const installPrice = Number(collection.installation?.price) || 0;
+  const installCharge = wantsInstallation && installOffered ? installPrice : 0;
+  const payable = collection.bundlePrice + installCharge;
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -185,6 +202,28 @@ const CollectionDetailPage: React.FC = () => {
               <p className="text-sm text-white/50 max-w-xl leading-relaxed">
                 {collection.description || t("A curated bundle of premium products at an exclusive price.")}
               </p>
+
+              {collection.brands?.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2 mt-4">
+                  {collection.brands.map((brand: any) => (
+                    <span
+                      key={brand._id}
+                      className="inline-flex items-center gap-1.5 bg-white/10 border border-white/10 rounded-full px-2.5 py-1 text-[11px] text-white/70"
+                    >
+                      {brand.logo && (
+                        <img
+                          src={brand.logo}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="w-3.5 h-3.5 object-contain invert opacity-70"
+                        />
+                      )}
+                      {brand.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {savingsPercent > 0 && (
@@ -249,11 +288,18 @@ const CollectionDetailPage: React.FC = () => {
                 </div>
 
                 <div className="text-right shrink-0">
+                  {/* The quoted price, not the shelf price — otherwise the
+                      lines wouldn't add up to the total below them. */}
                   <p className="text-sm font-bold text-[var(--text)]">
-                    EGP {item.product?.price?.toLocaleString()}
+                    EGP {(lineUnitPrice(item) * item.quantity).toLocaleString()}
                   </p>
-                  {item.product?.saleActive && (
-                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  {item.quantity > 1 && (
+                    <span className="text-[10px] text-[var(--text-muted)]">
+                      {item.quantity} × {lineUnitPrice(item).toLocaleString()}
+                    </span>
+                  )}
+                  {item.unitPrice === null && item.product?.saleActive && (
+                    <span className="block text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
                       {item.product.salePercentage}% off
                     </span>
                   )}
@@ -287,14 +333,52 @@ const CollectionDetailPage: React.FC = () => {
                   <span className="text-[var(--text-muted)]">{t("Shipping")}</span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-medium">{t("FREE")}</span>
                 </div>
+                {installCharge > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-[var(--text-muted)]">{t("Installation")}</span>
+                    <span className="text-[var(--text)] font-medium">
+                      +EGP {installCharge.toLocaleString()}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* ═══ Installation opt-in ═══ */}
+              {installOffered && (
+                <label
+                  className={`flex items-start gap-3 rounded-xl border p-3.5 mb-5 cursor-pointer transition-all ${
+                    wantsInstallation
+                      ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
+                      : "border-[var(--border)] hover:border-[var(--brand-primary)]/40"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={wantsInstallation}
+                    onChange={(e) => setWantsInstallation(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-[var(--brand-primary)] shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[var(--text)]">
+                      🔧 {t("Do you want us to install it for you?")}
+                    </span>
+                    <span className="block text-xs text-[var(--text-muted)] mt-0.5">
+                      {collection.installation?.note
+                        ? collection.installation.note
+                        : installPrice > 0
+                          ? `${t("Adds")} EGP ${installPrice.toLocaleString()} ${t("to your order")}`
+                          : t("Included at no extra cost")}
+                    </span>
+                  </span>
+                </label>
+              )}
 
               <div className="border-t border-[var(--border)] pt-4 mb-5">
                 <div className="flex justify-between items-baseline">
                   <span className="text-sm font-semibold text-[var(--text)]">{t("You Pay")}</span>
                   <div className="text-right">
                     <p className="text-2xl font-black text-[var(--text)]">
-                      EGP {collection.bundlePrice.toLocaleString()}
+                      EGP {payable.toLocaleString()}
                     </p>
                     {savings > 0 && (
                       <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios";
 import type {
   Collection,
+  CollectionInstallation,
   CollectionItemInput,
 } from "../types/collection.type";
 
@@ -16,6 +17,8 @@ interface CollectionStore {
     description?: string;
     bundlePrice: number;
     items: CollectionItemInput[];
+    brands?: string[];
+    installation?: CollectionInstallation;
     /**
      * Which store the bundle belongs to. Sent by operators (admins), who have
      * no store of their own; ignored for vendors, whom the server pins to
@@ -28,8 +31,16 @@ interface CollectionStore {
     data: Partial<Omit<Collection, "items">> & { items?: CollectionItemInput[] }
   ) => Promise<Collection | null>;
   deleteCollection: (id: string) => Promise<boolean>;
-  addCollectionToCart: (collectionId: string, quantity?: number) => Promise<boolean>;
-  updateCollectionCart: (collectionId: string, quantity: number) => Promise<boolean>;
+  addCollectionToCart: (
+    collectionId: string,
+    quantity?: number,
+    installation?: boolean
+  ) => Promise<boolean>;
+  updateCollectionCart: (
+    collectionId: string,
+    quantity: number,
+    installation?: boolean
+  ) => Promise<boolean>;
   removeCollectionFromCart: (collectionId: string) => Promise<boolean>;
 }
 
@@ -132,10 +143,14 @@ export const useCollectionStore = create<CollectionStore>((set) => ({
     }
   },
 
-  addCollectionToCart: async (collectionId, quantity = 1) => {
+  addCollectionToCart: async (collectionId, quantity = 1, installation = false) => {
     set({ loading: true, error: undefined });
     try {
-      await axiosInstance.post("/collections/cart", { collectionId, quantity });
+      await axiosInstance.post("/collections/cart", {
+        collectionId,
+        quantity,
+        installation,
+      });
       set({ loading: false });
       return true;
     } catch (error: any) {
@@ -147,10 +162,13 @@ export const useCollectionStore = create<CollectionStore>((set) => ({
     }
   },
 
-  updateCollectionCart: async (collectionId, quantity) => {
+  updateCollectionCart: async (collectionId, quantity, installation) => {
     set({ loading: true, error: undefined });
     try {
-      await axiosInstance.put(`/collections/cart/${collectionId}`, { quantity });
+      await axiosInstance.put(`/collections/cart/${collectionId}`, {
+        quantity,
+        ...(installation === undefined ? {} : { installation }),
+      });
       set({ loading: false });
       return true;
     } catch (error: any) {
