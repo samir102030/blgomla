@@ -18,6 +18,7 @@ import Notification from "../models/notification.model.js";
 import { sendWelcomeEmail, sendVerificationEmail, sendPasswordResetEmail } from "../utils/email.js";
 import { logAudit, diff } from "../utils/audit.js";
 import { getUserPermissions, userCan } from "../utils/permissions.js";
+import { verifyAppleIdentityToken, isAppleConfigured } from "../utils/appleAuth.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -544,6 +545,162 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
   return res.status(200).json({
     success: true,
     message: "Signed in with Google",
+    user: {
+      ...user._doc,
+      password: undefined,
+      totpSecret: undefined,
+      permissions: await getUserPermissions(user),
+      store:
+        user.role === "store"
+          ? await Store.findOne({ owner: user._id })
+          : undefined,
+    },
+  });
+});
+
+/**
+ * Sign in with Apple.
+ *
+ * Two things make this different from the Google flow it otherwise mirrors.
+ *
+ * Apple sends the user's name exactly once — on the very first authorisation,
+ * outside the token, in a separate field the client forwards as `fullName`.
+ * Ask again later and it is gone forever, so it is captured here at account
+ * creation or never.
+ *
+ * And "Hide My Email" gives a working address at privaterelay.appleid.com
+ * that forwards to the real inbox. It is a legitimate address, not something
+ * to reject — but Apple only relays mail from sender domains registered with
+ * them, so transactional email to these users silently disappears until that
+ * is set up. `isPrivateEmail` is stored so the gap is visible rather than
+ * mysterious.
+ */
+export const appleSignIn = controllerWrapper("appleSignIn", async (req, res) => {
+  const { identityToken, nonce, fullName, totpCode } = req.body;
+
+  if (!identityToken) {
+    return res.status(400).json({ success: false, message: "Missing Apple identity token" });
+  }
+  if (!isAppleConfigured()) {
+    return res.status(503).json({
+      success: false,
+      message: "Sign in with Apple is not configured on the server",
+    });
+  }
+
+  let claims;
+  try {
+    claims = await verifyAppleIdentityToken(identityToken, { nonce });
+  } catch (err) {
+    logAudit(
+      req,
+      "auth.login_failed",
+      "auth",
+      undefined,
+      { reason: "apple_token_invalid", detail: err.message },
+      { status: "failure", severity: "warning", category: "security" }
+    );
+    return res
+      .status(err.status || 401)
+      .json({ success: false, message: err.message || "Invalid Apple credential" });
+  }
+
+  const { appleId, email, emailVerified, isPrivateEmail } = claims;
+
+  const acceptLang = String(req.headers["accept-language"] || "").toLowerCase();
+  const lang = acceptLang.startsWith("ar") ? "ar" : "en";
+
+  // Match on the Apple user id first. Falling back to email links an existing
+  // account, but only a verified one — an unverified address is an assertion
+  // nobody has checked, and matching on it would hand over that account.
+  let user = await User.findOne({ appleId });
+  if (!user && email && emailVerified) {
+    user = await User.findOne({ email: emailMatch(email) });
+  }
+
+  if (user) {
+    if (!user.appleId) user.appleId = appleId;
+    if (!user.isVerified && emailVerified) user.isVerified = true;
+    if (isPrivateEmail) user.applePrivateEmail = true;
+    user.lastLogin = new Date();
+    await user.save();
+  } else {
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Apple did not share an email address for this account",
+      });
+    }
+    const name = [fullName?.givenName, fullName?.familyName].filter(Boolean).join(" ").trim();
+    user = await User.create({
+      email,
+      name: name || undefined,
+      appleId,
+      applePrivateEmail: isPrivateEmail,
+      // Apple verifies the address before it ever reaches us, and a relay
+      // address is verified by construction.
+      isVerified: true,
+      role: "customer",
+      active: true,
+      lang,
+      lastLogin: new Date(),
+    });
+    logAudit(req, "user.registered", "user", user._id, { role: "customer", method: "apple" }, {
+      actor: user,
+      target: user,
+      category: "account",
+    });
+    sendWelcomeEmail(user).catch((err) =>
+      console.error("Failed to send welcome email:", err)
+    );
+  }
+
+  if (!user.active || user.deleted) {
+    return res.status(403).json({
+      success: false,
+      message: "Account is inactive or deleted",
+    });
+  }
+
+  // Same second factor as the password and Google paths: the client re-posts
+  // the identity token together with the 6-digit code.
+  if (user.twoFactorEnabled) {
+    if (!totpCode) {
+      return res.status(401).json({
+        success: false,
+        code: "TOTP_REQUIRED",
+        message: "Enter the 6-digit code from your authenticator app.",
+      });
+    }
+    const { verifyTOTP } = await import("../utils/totp.js");
+    const enrolled = await User.findById(user._id).select("+totpSecret");
+    if (!verifyTOTP(enrolled?.totpSecret, totpCode)) {
+      logAudit(
+        req,
+        "auth.login_failed",
+        "auth",
+        user._id,
+        { email: user.email, reason: "totp_invalid", method: "apple" },
+        { status: "failure", severity: "warning", category: "security", actor: user }
+      );
+      return res.status(401).json({
+        success: false,
+        code: "TOTP_INVALID",
+        message: "Invalid authenticator code.",
+      });
+    }
+  }
+
+  generateTokensAndSetCookies(res, user._id);
+
+  logAudit(req, "auth.login", "auth", user._id, { method: "apple" }, {
+    actor: user,
+    category: "security",
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "Signed in with Apple",
     user: {
       ...user._doc,
       password: undefined,

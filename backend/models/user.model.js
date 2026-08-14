@@ -69,6 +69,18 @@ const userSchema = new mongoose.Schema(
       index: true,
       sparse: true,
     },
+    // Apple's stable per-user identifier (the `sub` claim). It is scoped to
+    // our team, so it never changes for this user and never collides with
+    // another app's.
+    appleId: {
+      type: String,
+      index: true,
+      sparse: true,
+    },
+    // Set when the user chose "Hide My Email". Their address is a relay that
+    // only forwards mail from sender domains registered with Apple, so this
+    // flags accounts whose email may not be reachable yet.
+    applePrivateEmail: { type: Boolean, default: false },
     cart: [cartItemSchema],
     // Loyalty points balance. Earned (5%) when orders are delivered, spent at
     // checkout. 1 point = 1 EGP of redeem value (see utils/loyalty.js).
