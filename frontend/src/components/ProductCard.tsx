@@ -133,20 +133,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div className="group relative bg-[var(--surface)] rounded-2xl border border-[var(--border)] card-hover flex flex-col h-full overflow-hidden">
-      {/* Badges */}
-      <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+      {/* Badges — pinned to the reading start so they never collide with the
+          wishlist / compare stack on the opposite corner. */}
+      <div className="absolute top-3 ltr:left-3 rtl:right-3 flex flex-col items-start gap-1.5 z-10">
         {isFeatured && (
-          <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm uppercase tracking-wider">
-            ⭐ {t("Featured")}
+          <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white ps-2 pe-2.5 py-1 text-[10px] font-bold rounded-full shadow-sm">
+            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path d="M10 1.5l2.47 5.005 5.53.804-4 3.898.944 5.507L10 14.115l-4.944 2.6.944-5.508-4-3.898 5.53-.804L10 1.5z" />
+            </svg>
+            {t("Featured")}
           </span>
         )}
         {isNew && (
-          <span className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm uppercase tracking-wider">
+          <span className="text-white px-2.5 py-1 text-[10px] font-bold rounded-full shadow-sm" style={{ background: "var(--brand-gradient)" }}>
             {t("New")}
           </span>
         )}
         {isOnSale && salePercentage && (
-          <span className="bg-gradient-to-r from-red-500 to-rose-500 text-white px-2.5 py-1 text-[10px] font-bold rounded-lg shadow-sm">
+          <span className="bg-gradient-to-r from-red-500 to-rose-500 text-white px-2.5 py-1 text-[10px] font-bold rounded-full shadow-sm tabular-nums">
             -{salePercentage}%
           </span>
         )}
@@ -156,7 +160,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <button
         onClick={toggleWishlist}
         disabled={isLoading}
-        className="absolute top-3 right-3 z-10 w-9 h-9 rounded-xl bg-[var(--surface)]/90 backdrop-blur-sm border border-[var(--border)] flex items-center justify-center hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        className="absolute top-3 ltr:right-3 rtl:left-3 z-10 w-9 h-9 rounded-xl bg-[var(--surface)]/90 backdrop-blur-sm border border-[var(--border)] flex items-center justify-center hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
       >
         {isLoading ? (
           <svg
@@ -191,7 +195,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         onClick={handleCompare}
         title={t("Compare")}
         aria-label={t("Compare")}
-        className={`absolute top-14 right-3 z-10 w-9 h-9 rounded-xl backdrop-blur-sm border flex items-center justify-center transition-all duration-200 shadow-sm ${
+        className={`absolute top-14 ltr:right-3 rtl:left-3 z-10 w-9 h-9 rounded-xl backdrop-blur-sm border flex items-center justify-center transition-all duration-200 shadow-sm ${
           inCompare
             ? "bg-[var(--brand-primary)] border-[var(--brand-primary)] text-white"
             : "bg-[var(--surface)]/90 border-[var(--border)] text-[var(--text-subtle)] hover:border-[var(--brand-primary)]"
@@ -284,30 +288,44 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </p>
         )}
 
-        {/* Price */}
-        <div className="mt-auto pt-3 border-t border-[var(--border)]/50">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-lg sm:text-xl font-bold text-[var(--brand-primary)]">
-              {price.toLocaleString()}{" "}
-              <span className="text-xs font-medium text-[var(--text-muted)]">
-                {currency}
-              </span>
-            </span>
-            {originalPrice && (
-              <span className="text-sm text-[var(--text-subtle)] line-through">
-                {originalPrice.toLocaleString()}
+        {/* Price + availability share one row so the card bottoms line up
+            across a grid regardless of how long the product name ran. */}
+        <div className="mt-auto pt-3 border-t border-[var(--border)]">
+          <div className="flex items-end justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                {/* Full-price items read in the normal text colour; a
+                    discounted price switches to brand orange so the saving is
+                    what catches the eye, not every price on the grid. */}
+                <span
+                  className={`text-lg sm:text-xl font-extrabold tracking-tight tabular-nums ${
+                    originalPrice ? "text-[var(--brand-accent)]" : "text-[var(--text)]"
+                  }`}
+                >
+                  {price.toLocaleString()}
+                </span>
+                <span className="text-[11px] font-semibold text-[var(--text-muted)]">
+                  {currency}
+                </span>
+              </div>
+              {originalPrice && (
+                <span className="text-xs text-[var(--text-subtle)] line-through tabular-nums">
+                  {originalPrice.toLocaleString()} {currency}
+                </span>
+              )}
+            </div>
+            {hasStockInfo && (
+              <span
+                className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold rounded-full ${stockBadgeClasses}`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${hasStock ? "bg-emerald-500" : "bg-red-500"}`}
+                  aria-hidden="true"
+                />
+                {stockLabel}
               </span>
             )}
           </div>
-          {hasStockInfo && (
-            <div className="mt-2">
-              <span
-                className={`inline-flex items-center px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-lg ${stockBadgeClasses}`}
-              >
-                {stockLabel}
-              </span>
-            </div>
-          )}
         </div>
       </div>
     </div>

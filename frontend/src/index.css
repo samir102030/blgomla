@@ -89,15 +89,22 @@ body {
 /* ── Light Theme Tokens ── */
 :root {
   color-scheme: light;
-  --bg: #f4f6fa;
+  --bg: #f6f7fb;
   --surface: #ffffff;
-  --surface-2: #f0f2f7;
-  --surface-3: #e4e8f0;
+  --surface-2: #f1f3f8;
+  --surface-3: #e6eaf2;
   --text: #0f172a;
-  --text-muted: #64748b;
-  --text-subtle: #94a3b8;
-  --border: #e2e8f0;
+  --text-muted: #5b6577;
+  --text-subtle: #8d96a8;
+  --border: #e6eaf2;
   --border-strong: #cbd5e1;
+  /* Hairline used on premium surfaces — softer than --border, reads as a seam
+     rather than a box outline. */
+  --hairline: rgba(15, 23, 42, 0.07);
+  --ring: rgba(255, 106, 26, 0.35);
+  --ink-canvas: #0B0B10;
+  --on-ink: #F5F1EA;
+  --on-ink-muted: rgba(245, 241, 234, 0.68);
 
   /* Brand — Belgomla orange/ink palette (see Logo.tsx BRAND) */
   --brand-primary: #FF6A1A;
@@ -160,6 +167,11 @@ body {
   --text-subtle: #6B6B78;
   --border: #262630;
   --border-strong: #3a3a48;
+  --hairline: rgba(245, 241, 234, 0.08);
+  --ring: rgba(255, 106, 26, 0.45);
+  --ink-canvas: #08080C;
+  --on-ink: #F5F1EA;
+  --on-ink-muted: rgba(245, 241, 234, 0.64);
 
   --brand-primary: #FF6A1A;
   --brand-primary-hover: #FFB382;
@@ -313,6 +325,26 @@ html[dir="rtl"] .brand-marquee-track {
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
+}
+
+/* Autoplay progress fill for the hero pagination bars. */
+@keyframes hero-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Slow drift for the hero's ambient light blobs — large, low-opacity shapes
+   moving just enough to feel alive without pulling focus off the headline. */
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(3%, -4%, 0) scale(1.06); }
+  66% { transform: translate3d(-3%, 3%, 0) scale(0.96); }
+}
+
+/* Sheen sweep across primary buttons / feature cards on hover. */
+@keyframes sheen {
+  from { transform: translateX(-140%) skewX(-18deg); }
+  to { transform: translateX(240%) skewX(-18deg); }
 }
 
 /* ─────────────────────────────────────────────────
@@ -608,4 +640,272 @@ html[dir="rtl"] .brand-marquee-track {
   background: var(--success);
   color: white;
   border-color: var(--success);
+}
+
+/* ─────────────────────────────────────────────────
+   DESIGN SYSTEM v2 — storefront presentation layer
+
+   Shared primitives for the customer-facing pages so
+   sections read as one system: identical gutters,
+   identical vertical rhythm, one heading scale, one
+   button family. Components opt in by class name;
+   nothing here changes an element that doesn't ask
+   for it.
+   ───────────────────────────────────────────────── */
+
+/* ── Layout rhythm ── */
+/* One gutter definition for every storefront section. Sections that used
+   ad-hoc px-3/sm:px-4/md:px-6/lg:px-8 chains can use .shell instead. */
+.shell {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) { .shell { padding-inline: 1.5rem; } }
+@media (min-width: 1024px) { .shell { padding-inline: 2rem; } }
+
+.section-y { padding-block: 2.5rem; }
+@media (min-width: 640px) { .section-y { padding-block: 3.5rem; } }
+@media (min-width: 1024px) { .section-y { padding-block: 4.5rem; } }
+
+/* ── Typography ── */
+/* Fluid display size: scales with the viewport instead of stepping through
+   four breakpoints, so the hero headline never lands awkwardly mid-range. */
+.text-display {
+  font-size: clamp(2.15rem, 1.2rem + 4.2vw, 4.25rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+.text-display-sm {
+  font-size: clamp(1.6rem, 1.1rem + 2vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  font-weight: 800;
+}
+/* Arabic needs the room back — no negative tracking, looser leading. */
+html[dir="rtl"] .text-display,
+html[dir="rtl"] .text-display-sm {
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+/* Small uppercase label above a heading. Latin only — Arabic has no case,
+   and letter-spacing breaks its joins, so RTL gets the plain form. */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--brand-accent);
+}
+html[dir="rtl"] .eyebrow {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.75rem;
+}
+.eyebrow::before {
+  content: '';
+  width: 1.5rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-gradient);
+  flex: none;
+}
+/* Centered headings get a matching rule on the trailing side so the label
+   sits symmetrically over the title. */
+.eyebrow-center::after {
+  content: '';
+  width: 1.5rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-gradient-alt);
+  flex: none;
+}
+
+/* ── Surfaces ── */
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.surface-card:hover {
+  border-color: color-mix(in srgb, var(--brand-primary) 35%, var(--border));
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+/* Frosted panel used over the hero canvas and other imagery. */
+.panel-glass {
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--hairline);
+}
+
+/* Gradient hairline: reads as a seam between sections rather than a hard rule. */
+.hairline-x {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+  opacity: 0.7;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.35rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform var(--transition-fast), box-shadow var(--transition-base),
+    background-color var(--transition-base), border-color var(--transition-base), color var(--transition-base);
+}
+.btn:active { transform: translateY(1px) scale(0.99); }
+.btn-lg { padding: 0.95rem 1.75rem; font-size: 1rem; border-radius: var(--radius-lg); }
+.btn-sm { padding: 0.5rem 0.9rem; font-size: 0.8125rem; }
+
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background: var(--brand-gradient);
+  box-shadow: 0 10px 24px -10px rgba(255, 106, 26, 0.75);
+}
+.btn-primary:hover {
+  box-shadow: 0 16px 34px -12px rgba(255, 106, 26, 0.9);
+  transform: translateY(-2px);
+}
+/* Sheen sweep — a single pass on hover, not a looping animation. */
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  bottom: -50%;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: translateX(-140%) skewX(-18deg);
+  pointer-events: none;
+}
+.btn-primary:hover::after { animation: sheen 750ms ease-out; }
+
+.btn-outline {
+  color: var(--text);
+  background: transparent;
+  border-color: var(--border-strong);
+}
+.btn-outline:hover {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  transform: translateY(-2px);
+}
+
+/* On the dark hero canvas, where --text would disappear. */
+.btn-on-ink {
+  color: var(--on-ink);
+  background: rgba(245, 241, 234, 0.08);
+  border-color: rgba(245, 241, 234, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.btn-on-ink:hover {
+  background: rgba(245, 241, 234, 0.16);
+  border-color: rgba(245, 241, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ── Chips & badges ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+.chip-brand {
+  border-color: color-mix(in srgb, var(--brand-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+  color: var(--brand-accent);
+}
+.chip-on-ink {
+  border-color: rgba(245, 241, 234, 0.18);
+  background: rgba(245, 241, 234, 0.08);
+  color: var(--on-ink);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Icon tile that replaces emoji prefixes in section headings. */
+.icon-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+  color: var(--brand-accent);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 22%, transparent);
+}
+
+/* ── Decorative backgrounds ── */
+/* Brand light mesh — two soft brand-tinted pools behind a section. */
+.mesh-brand {
+  background-image:
+    radial-gradient(60% 60% at 12% 0%, color-mix(in srgb, var(--brand-primary) 14%, transparent), transparent 70%),
+    radial-gradient(55% 55% at 92% 12%, color-mix(in srgb, var(--brand-accent) 12%, transparent), transparent 70%);
+}
+/* Faint engineering grid — gives the ink canvas depth at low cost. */
+.grid-lines {
+  background-image:
+    linear-gradient(to right, var(--hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--hairline) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+.mask-fade-edges {
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.animate-drift { animation: drift 18s ease-in-out infinite; }
+
+/* ── Focus visibility ──
+   Keyboard focus was invisible on most controls because components set
+   focus:outline-none without a replacement. One brand ring, applied only to
+   keyboard focus so pointer users see no change. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Motion preferences ──
+   Ambient loops (drift, float, marquee, shimmer) are decorative; users who
+   ask for reduced motion get the static end state instead. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .scroll-reveal { opacity: 1; transform: none; }
 }

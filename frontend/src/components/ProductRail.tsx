@@ -103,15 +103,21 @@ const ProductRail: React.FC<ProductRailProps> = ({
   if (!loading && items.length === 0) return null;
 
   return (
-    <section className="py-8 sm:py-10">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-        <div className="mb-5 sm:mb-6">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)]">
-            {icon ? `${icon} ` : ""}
-            {t(title)}
-          </h2>
+    <section className="section-y">
+      <div className="shell">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-3">
+            {icon && (
+              <span className="icon-tile text-lg" aria-hidden="true">
+                {icon}
+              </span>
+            )}
+            <h2 className="text-display-sm text-[var(--text)]">{t(title)}</h2>
+          </div>
           {subtitle && (
-            <p className="mt-1 text-sm text-[var(--text-muted)]">{t(subtitle)}</p>
+            <p className="mt-2 text-sm sm:text-base text-[var(--text-muted)] leading-relaxed">
+              {t(subtitle)}
+            </p>
           )}
         </div>
 

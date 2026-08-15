@@ -35,15 +35,21 @@ const FeaturedProducts: React.FC = () => {
   if (!loading && (!products || products.length === 0)) return null;
 
   return (
-    <section className="py-10 sm:py-14 bg-[var(--surface-2)]">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-        <div className="text-center mb-8 lg:mb-10">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[var(--text)] mb-2">
-            ⭐ {t("Featured Products")}
+    <section className="relative section-y bg-[var(--surface-2)] border-y border-[var(--border)] mesh-brand">
+      <div className="relative shell">
+        <div className="text-center mb-9 lg:mb-12">
+          <span className="eyebrow eyebrow-center mb-3">{t("Editor's picks")}</span>
+          <h2 className="text-display-sm text-[var(--text)]">
+            {t("Featured Products")}
           </h2>
-          <p className="text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto">
+          <p className="mt-3 text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto leading-relaxed">
             {t("Hand-picked items our customers love the most")}
           </p>
+          <span
+            className="mt-5 mx-auto block h-1 w-16 rounded-full"
+            style={{ background: "var(--brand-gradient)" }}
+            aria-hidden="true"
+          />
         </div>
 
         {loading ? (

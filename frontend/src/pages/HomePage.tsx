@@ -55,36 +55,50 @@ const CategorySkeleton: React.FC = () => (
   </div>
 );
 
-/* ─── Section Header ─── */
+/* ─── Section Header ───
+   One heading treatment for every home section: an optional eyebrow, the
+   title, an optional subtitle, and a "view all" pill pinned to the end of the
+   row. Emoji prefixes were doing the work of an icon badly — `icon` takes a
+   node and renders it in a brand tile instead. */
 const SectionHeader: React.FC<{
   title: string;
+  eyebrow?: string;
   subtitle?: string;
+  icon?: React.ReactNode;
   viewAllLink?: string;
   viewAllLabel?: string;
   extra?: React.ReactNode;
-}> = ({ title, subtitle, viewAllLink, viewAllLabel, extra }) => {
+}> = ({ title, eyebrow, subtitle, icon, viewAllLink, viewAllLabel, extra }) => {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 lg:mb-8 gap-3">
-      <div>
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text)]">
-          {title}
-        </h2>
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 lg:mb-9 gap-4">
+      <div className="min-w-0">
+        {eyebrow && <span className="eyebrow mb-2.5">{eyebrow}</span>}
+        <div className="flex items-center gap-3">
+          {icon && <span className="icon-tile">{icon}</span>}
+          <h2 className="text-display-sm text-[var(--text)]">{title}</h2>
+        </div>
         {subtitle && (
-          <p className="text-sm sm:text-base text-[var(--text-muted)] mt-1">
+          <p className="text-sm sm:text-base text-[var(--text-muted)] mt-2 max-w-2xl leading-relaxed">
             {subtitle}
           </p>
         )}
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4 shrink-0">
         {extra}
         {viewAllLink && (
           <Link
             to={viewAllLink}
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand-nav)] dark:text-[var(--brand-accent)] hover:gap-2.5 transition-all whitespace-nowrap group"
+            className="group inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--text)] whitespace-nowrap transition-all hover:border-[var(--brand-primary)] hover:text-[var(--brand-accent)] hover:shadow-[var(--shadow-md)]"
           >
             {viewAllLabel || t("View All")}
-            <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg
+              className="w-4 h-4 transition-transform group-hover:translate-x-0.5 rtl:-scale-x-100 rtl:group-hover:-translate-x-0.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
@@ -92,6 +106,35 @@ const SectionHeader: React.FC<{
       </div>
     </div>
   );
+};
+
+/* Inline icons for the section headers — 20px stroke icons sized by the tile. */
+const Ico = {
+  grid: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 5.5A1.5 1.5 0 015.5 4h4A1.5 1.5 0 0111 5.5v4A1.5 1.5 0 019.5 11h-4A1.5 1.5 0 014 9.5v-4zm9 0A1.5 1.5 0 0114.5 4h4A1.5 1.5 0 0120 5.5v4a1.5 1.5 0 01-1.5 1.5h-4A1.5 1.5 0 0113 9.5v-4zm-9 9A1.5 1.5 0 015.5 13h4a1.5 1.5 0 011.5 1.5v4A1.5 1.5 0 019.5 20h-4A1.5 1.5 0 014 18.5v-4zm9 0a1.5 1.5 0 011.5-1.5h4a1.5 1.5 0 011.5 1.5v4a1.5 1.5 0 01-1.5 1.5h-4a1.5 1.5 0 01-1.5-1.5v-4z" />
+    </svg>
+  ),
+  bolt: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  sparkles: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    </svg>
+  ),
+  box: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>
+  ),
+  catalog: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
+  ),
 };
 
 /* ─── Bundle Themes ─── */
@@ -224,9 +267,12 @@ const HomePage: React.FC = () => {
             Lets users self-filter immediately
             ════════════════════════════════════════════ */}
         <ScrollReveal>
-          <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10">
+          <section className="shell section-y">
             <SectionHeader
-              title={`📁 ${t("Shop by Category")}`}
+              eyebrow={t("Categories")}
+              title={t("Shop by Category")}
+              subtitle={t("Jump straight to the gear you came for")}
+              icon={Ico.grid}
               viewAllLink="/categories"
               viewAllLabel={t("All Categories")}
             />
@@ -278,7 +324,7 @@ const HomePage: React.FC = () => {
     adCategoryStrip: (
       <>
         {/* Category-strip promo banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           <Suspense fallback={null}>
             <AdvertisementBanner position="category-strip" />
           </Suspense>
@@ -316,10 +362,12 @@ const HomePage: React.FC = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)]/8 via-transparent to-[var(--brand-accent)]/5" />
               <div className="absolute inset-0 bg-[var(--surface)]/60 dark:bg-[var(--bg)]/70 backdrop-blur-sm" />
 
-              <div className="relative max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+              <div className="relative shell">
                 <SectionHeader
-                  title={`🔥 ${t("Flash Deals")}`}
+                  eyebrow={t("Limited time")}
+                  title={t("Flash Deals")}
                   subtitle={t("Limited time offers — grab them before they're gone!")}
+                  icon={Ico.bolt}
                   viewAllLink="/products?sale=true"
                   extra={
                     <CountdownTimer
@@ -342,7 +390,7 @@ const HomePage: React.FC = () => {
             Visual break between product sections.
             Full-width promo creates rhythm.
             ════════════════════════════════════════════ */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           <Suspense fallback={null}>
             <AdvertisementBanner position="hero" />
           </Suspense>
@@ -426,10 +474,12 @@ const HomePage: React.FC = () => {
             Shows the catalog is alive and updated
             ════════════════════════════════════════════ */}
         <ScrollReveal>
-          <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10">
+          <section className="shell section-y">
             <SectionHeader
-              title={`✨ ${t("Just Arrived")}`}
+              eyebrow={t("New in")}
+              title={t("Just Arrived")}
               subtitle={t("The latest additions to our catalog")}
+              icon={Ico.sparkles}
               viewAllLink="/products?sort=newest"
             />
             {loadingNewest ? (
@@ -472,7 +522,7 @@ const HomePage: React.FC = () => {
             § 9.  BANNER AD (Secondary Position)
             Wholesale/bulk CTA  — second visual break
             ════════════════════════════════════════════ */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           <Suspense fallback={null}>
             <AdvertisementBanner position="banner" />
           </Suspense>
@@ -488,11 +538,13 @@ const HomePage: React.FC = () => {
             ════════════════════════════════════════════ */}
         {(collections || []).length > 0 && (
           <ScrollReveal>
-            <section className="py-10 sm:py-14">
-              <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <section className="section-y">
+              <div className="shell">
                 <SectionHeader
-                  title={`📦 ${t("Save with Bundles")}`}
+                  eyebrow={t("Bundles")}
+                  title={t("Save with Bundles")}
                   subtitle={t("Curated tech bundles at exclusive prices — save up to 25%")}
+                  icon={Ico.box}
                   viewAllLink="/collections"
                   viewAllLabel={t("View All Bundles")}
                 />
@@ -601,9 +653,12 @@ const HomePage: React.FC = () => {
             this far are engaged enough to explore more
             ════════════════════════════════════════════ */}
         <ScrollReveal>
-          <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8 sm:py-10 lg:py-14">
+          <section className="shell section-y">
             <SectionHeader
+              eyebrow={t("Catalog")}
               title={t("All Products")}
+              subtitle={t("Browse the full range — filter by category, brand, or price")}
+              icon={Ico.catalog}
               viewAllLink="/products"
             />
             {renderProductGrid(allProducts, loadingAll, 8)}

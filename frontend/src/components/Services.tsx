@@ -45,23 +45,31 @@ const Services: React.FC = () => {
   ];
 
   return (
-    <section className="py-12 sm:py-16 border-t border-[var(--border)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 stagger-children">
+    <section className="shell py-10 sm:py-12">
+      {/* One bordered slab split into four cells instead of four floating
+          cards — fewer competing outlines, and the guarantees read as a single
+          statement the store makes. */}
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--border)] shadow-[var(--shadow-sm)] overflow-hidden">
+        {/* gap-px lets the container's border-coloured background show through
+            as hairline separators — correct at every breakpoint and in RTL,
+            with none of the per-cell border bookkeeping. */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px">
           {services.map((service) => (
             <div
               key={service.id}
-              className="group text-center p-5 sm:p-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-primary)]/30 hover:shadow-md transition-all duration-300"
+              className="group relative flex items-start gap-4 bg-[var(--surface)] p-5 sm:p-6 transition-colors duration-300 hover:bg-[var(--surface-2)]"
             >
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-[var(--brand-primary)]/8 mb-3 sm:mb-4 group-hover:bg-[var(--brand-primary)]/15 group-hover:scale-110 transition-all duration-300">
-                <service.Icon className="w-6 h-6 sm:w-7 sm:h-7 text-[var(--brand-primary)]" />
+              <span className="icon-tile shrink-0 transition-transform duration-300 group-hover:scale-105">
+                <service.Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </span>
+              <div className="min-w-0">
+                <h3 className="text-sm sm:text-[0.95rem] font-semibold text-[var(--text)]">
+                  {service.title}
+                </h3>
+                <p className="mt-1 text-xs sm:text-[0.8125rem] text-[var(--text-muted)] leading-relaxed">
+                  {service.description}
+                </p>
               </div>
-              <h3 className="text-sm sm:text-base font-semibold text-[var(--text)] mb-1.5">
-                {service.title}
-              </h3>
-              <p className="text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                {service.description}
-              </p>
             </div>
           ))}
         </div>

@@ -3514,5 +3514,20 @@
   "Add to cart": "Add to cart",
   "Adds": "Adds",
   "to your order": "to your order",
-  "upload.notConfigured": "Image uploads aren't set up on this server yet. Add the Cloudinary keys to the server settings and try again."
+  "upload.notConfigured": "Image uploads aren't set up on this server yet. Add the Cloudinary keys to the server settings and try again.",
+  "Laptops & IT gear": "Laptops & IT gear",
+  "Cameras & lenses": "Cameras & lenses",
+  "Routers, switches & access points": "Routers, switches & access points",
+  "Flagship smartphones": "Flagship smartphones",
+  "Browse Categories": "Browse Categories",
+  "Featured collections": "Featured collections",
+  "Previous slide": "Previous slide",
+  "Next slide": "Next slide",
+  "Jump straight to the gear you came for": "Jump straight to the gear you came for",
+  "Limited time": "Limited time",
+  "New in": "New in",
+  "Catalog": "Catalog",
+  "Browse the full range — filter by category, brand, or price": "Browse the full range — filter by category, brand, or price",
+  "Editor's picks": "Editor's picks",
+  "We accept": "We accept"
 }
