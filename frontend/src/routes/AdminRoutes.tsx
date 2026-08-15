@@ -27,6 +27,7 @@ import CustomerAnalyticsPage from "../pages/admin/CustomerAnalyticsPage";
 import VisitorAnalyticsPage from "../pages/admin/VisitorAnalyticsPage";
 import QuotationsPage from "../pages/admin/QuotationsPage";
 import InstallationOrdersPage from "../pages/admin/InstallationOrdersPage";
+import StorefrontVisibilityPage from "../pages/admin/StorefrontVisibilityPage";
 import { useUserStore } from "../stores/user.store";
 import AdminsPage from "../pages/admin/AdminsPage";
 import SiteModePage from "../pages/admin/SiteModePage";
@@ -69,6 +70,14 @@ const AdminRoutes: React.FC = () => {
         {/* E-commerce */}
         <Route path="/category" element={<CategoriesPage />} />
         <Route path="/brands" element={<BrandsPage />} />
+        <Route
+          path="/storefront-visibility"
+          element={
+            <RequirePermission perm="categories.manage">
+              <StorefrontVisibilityPage />
+            </RequirePermission>
+          }
+        />
         <Route path="/coupons" element={<CouponsPage />} />
         <Route
           path="/attributes"

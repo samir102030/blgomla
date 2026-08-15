@@ -65,6 +65,13 @@ const brandSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Whether this brand appears in the storefront's brand strip and menu.
+    // Same split as Category: live in the catalogue is not the same decision
+    // as featured in the chrome.
+    showInMenu: {
+      type: Boolean,
+      default: true,
+    },
     deleted: {
       type: Boolean,
       default: false,

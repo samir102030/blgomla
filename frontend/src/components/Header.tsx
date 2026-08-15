@@ -337,14 +337,24 @@ const Header: React.FC = () => {
     }
   };
 
-  // Top-level categories only, keeps the flyout slim. Falls back to a flat
-  // list when the taxonomy has no parent/child structure.
+  // Roots make up the menu; their children appear inside each flyout. What
+  // shows and in what order is now an editorial decision, taken in the
+  // dashboard under Storefront visibility.
+  //
+  // `showInMenu` replaces a hard `.slice(0, 12)`: the thirteenth root category
+  // used to vanish for a reason nothing in the admin could explain. It
+  // defaults to true, so an existing catalogue looks exactly as it did.
   const topCategories = useMemo(
     () =>
       (categories || [])
-        .filter((c) => !c.parentCategory && c.isActive !== false && !c.deleted)
-        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
-        .slice(0, 12),
+        .filter(
+          (c) =>
+            !c.parentCategory &&
+            c.isActive !== false &&
+            !c.deleted &&
+            (c as { showInMenu?: boolean }).showInMenu !== false
+        )
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
     [categories]
   );
   // Map of root-category id → its direct child categories (full records, so
@@ -357,6 +367,7 @@ const Header: React.FC = () => {
           ? c.parentCategory
           : (c.parentCategory as { _id?: string } | undefined)?._id;
       if (!parentId || c.isActive === false || c.deleted) continue;
+      if ((c as { showInMenu?: boolean }).showInMenu === false) continue;
       const list = map.get(parentId) || [];
       list.push(c);
       map.set(parentId, list);

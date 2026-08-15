@@ -117,7 +117,21 @@ const HomePage: React.FC = () => {
   const newestProducts: Product[] = feed?.newestProducts ?? [];
   const bestSellers: Product[] = feed?.bestSellers ?? [];
   const topRated: Product[] = feed?.topRated ?? [];
-  const categories: Category[] = feed?.categories ?? [];
+  // Hidden means hidden everywhere, not just in the menu — the home strip
+  // showed every category the API returned, so switching one off in the
+  // dashboard would have left it sitting on the front page. Ordered by the
+  // arrangement set under Storefront visibility.
+  const categories: Category[] = useMemo(
+    () =>
+      ((feed?.categories ?? []) as Category[])
+        .filter((c) => (c as { isActive?: boolean }).isActive !== false)
+        .sort(
+          (a, b) =>
+            ((a as { sortOrder?: number }).sortOrder ?? 0) -
+            ((b as { sortOrder?: number }).sortOrder ?? 0)
+        ),
+    [feed?.categories]
+  );
   const collections: any[] = feed?.collections ?? [];
   const loadingAll = feedLoading;
   const loadingSale = feedLoading;

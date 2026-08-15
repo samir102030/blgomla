@@ -17,10 +17,13 @@ import {
 } from "../controllers/brand.controller.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import { cacheHeaders } from "../middleware/cache.middleware.js";
-import { cache, clearCache } from "../middleware/cache.js";
+import { cache } from "../middleware/cache.js";
+import { invalidateStorefront } from "../utils/storefrontCache.js";
 
 const router = express.Router();
-const headerCache = cacheHeaders(60, 300, 60);
+// maxAge 0 for the same reason as categories: whoever changes what the
+// storefront shows has to see the result on their next refresh.
+const headerCache = cacheHeaders(60, 300, 0);
 const memCache = cache({ namespace: "brands", ttl: 60_000 });
 
 // Public routes (static before dynamic)
@@ -29,7 +32,9 @@ router.get("/slug/:slug", headerCache, memCache, translateResponse, getBrandBySl
 router.get("/category/:categoryId", headerCache, memCache, translateResponse, getBrandsByCategory);
 
 // Invalidate the brand list cache after any write.
-const invalidate = (req, res, next) => { clearCache("brands"); next(); };
+// Also clears the home feed — the brand strip on the front page is served
+// from there, not from this namespace.
+const invalidate = invalidateStorefront("brands");
 
 // Admin / Store routes
 router.post("/", protectRoute, requirePermission("brands.manage"), invalidate, createBrand);

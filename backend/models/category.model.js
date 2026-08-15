@@ -77,6 +77,16 @@ const categorySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Whether this one appears in the storefront's top category menu.
+    // Separate from `isActive`: a category can be perfectly live — browsable,
+    // holding products, linked from a card — without needing a slot in a menu
+    // that only has room for a handful. The menu used to be "top-level ones,
+    // first twelve", which is why a category added under a parent could be
+    // saved successfully and still never appear anywhere the customer looks.
+    showInMenu: {
+      type: Boolean,
+      default: true,
+    },
     deleted: {
       type: Boolean,
       default: false,

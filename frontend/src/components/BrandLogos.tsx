@@ -25,9 +25,24 @@ const BrandLogos: React.FC = () => {
     Corsair: "https://cdn.simpleicons.org/corsair/000000",
   };
 
+  // Honour the arrangement set under Storefront visibility. Without the
+  // filter, a brand switched off in the dashboard kept scrolling past on the
+  // front page — which is the one place a visitor is most likely to see it.
+  const visibleBrands = brands
+    .filter(
+      (b) =>
+        (b as { isActive?: boolean }).isActive !== false &&
+        (b as { showInMenu?: boolean }).showInMenu !== false
+    )
+    .sort(
+      (a, b) =>
+        ((a as { sortOrder?: number }).sortOrder ?? 0) -
+        ((b as { sortOrder?: number }).sortOrder ?? 0)
+    );
+
   const brandItems =
-    brands.length > 0
-      ? brands.map((b) => ({
+    visibleBrands.length > 0
+      ? visibleBrands.map((b) => ({
           name: b.name,
           logo: b.logo || brandLogos[b.name] || "",
         }))

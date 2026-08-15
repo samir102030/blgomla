@@ -90,6 +90,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { name: t("admin.products"), href: "/dashboard/products", perm: "products.view" },
         { name: t("admin.category"), href: "/dashboard/category", perm: "categories.manage" },
         { name: t("admin.brands"), href: "/dashboard/brands", perm: "brands.manage" },
+        { name: t("admin.storefrontVisibility", "Storefront visibility"), href: "/dashboard/storefront-visibility", perm: "categories.manage" },
         { name: t("admin.collections"), href: "/dashboard/collections", perm: "collections.view" },
         { name: t("admin.coupons"), href: "/dashboard/coupons", perm: "coupons.view" },
         { name: t("admin.advertisements"), href: "/dashboard/advertisements", perm: "advertisements.manage" },

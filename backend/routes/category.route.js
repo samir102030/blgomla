@@ -16,14 +16,23 @@ import {
 } from "../controllers/category.controller.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import { cacheHeaders } from "../middleware/cache.middleware.js";
-import { cache, clearCache } from "../middleware/cache.js";
+import { cache } from "../middleware/cache.js";
+import { invalidateStorefront } from "../utils/storefrontCache.js";
 
 const router = express.Router();
 
-// Categories rarely change — give them a longer CDN window than products.
-const publicCache = cacheHeaders(300, 1800, 300);
+// Categories rarely change, so the CDN window stays generous. The *browser*
+// window does not: max-age was 300, so an operator who added or hid a category
+// watched their own storefront ignore them for five minutes and reasonably
+// concluded it had not saved. maxAge 0 makes the browser revalidate every
+// time — cheap, because the response is small and the server answers it from
+// memory, and stale-while-revalidate means no visitor waits on it.
+const publicCache = cacheHeaders(60, 300, 0);
 const memCache = cache({ namespace: "categories", ttl: 5 * 60_000 });
-const invalidate = (req, res, next) => { clearCache("categories"); next(); };
+// Clears the home feed too — it is built from categories and cached
+// separately, so clearing only this namespace left the front page showing the
+// catalogue as it was before the edit.
+const invalidate = invalidateStorefront("categories");
 
 // Public (static before dynamic)
 router.get("/", publicCache, memCache, translateResponse, getAllCategories);

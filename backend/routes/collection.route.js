@@ -18,10 +18,20 @@ import {
 import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import { cacheHeaders } from "../middleware/cache.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
+import { invalidateStorefront } from "../utils/storefrontCache.js";
 
 const router = express.Router();
 
-const publicCache = cacheHeaders(60, 300);
+// maxAge 0: a bundle added, edited or deleted has to be visible on the next
+// refresh. It was 60, which is how a freshly created bundle could be missing
+// from the listing and a deleted one could still be shown — and clicking that
+// stale card 404s.
+const publicCache = cacheHeaders(60, 300, 0);
+
+// The home feed carries the bundle rail and is cached under its own
+// namespace, so writes here have to clear it or the front page keeps showing
+// the bundles as they were.
+const invalidate = invalidateStorefront("collections");
 
 // Public collections list
 router.get("/", publicCache, translateResponse, getCollections);
@@ -31,9 +41,9 @@ router.get("/", publicCache, translateResponse, getCollections);
 // admins out of the collections page entirely. A permission check lets both
 // through; the controllers keep vendors scoped to their own store.
 router.get("/vendor/my-collections", protectRoute, requirePermission("collections.manage"), getMyCollections);
-router.post("/", protectRoute, requirePermission("collections.manage"), validateCreateCollection, createCollection);
-router.put("/:id", protectRoute, requirePermission("collections.manage"), validateUpdateCollection, updateCollection);
-router.delete("/:id", protectRoute, requirePermission("collections.manage"), deleteCollection);
+router.post("/", protectRoute, requirePermission("collections.manage"), invalidate, validateCreateCollection, createCollection);
+router.put("/:id", protectRoute, requirePermission("collections.manage"), invalidate, validateUpdateCollection, updateCollection);
+router.delete("/:id", protectRoute, requirePermission("collections.manage"), invalidate, deleteCollection);
 
 // Collection detail (public)
 router.get("/:id", translateResponse, validateCollectionIdParam, getCollectionById);
