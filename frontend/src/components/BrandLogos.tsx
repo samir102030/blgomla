@@ -28,7 +28,11 @@ const BrandLogos: React.FC = () => {
   // Honour the arrangement set under Storefront visibility. Without the
   // filter, a brand switched off in the dashboard kept scrolling past on the
   // front page — which is the one place a visitor is most likely to see it.
-  const visibleBrands = brands
+  //
+  // Guarded rather than trusting the hook's type: a malformed response used to
+  // degrade to the fallback logos below, and turning that into a thrown
+  // TypeError would take the whole home page down with it.
+  const visibleBrands = (Array.isArray(brands) ? brands : [])
     .filter(
       (b) =>
         (b as { isActive?: boolean }).isActive !== false &&

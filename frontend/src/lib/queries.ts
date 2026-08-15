@@ -61,7 +61,13 @@ export const useBrands = () => {
     queryKey: queryKeys.brands(i18n.language),
     queryFn: async () => {
       const { data } = await axiosInstance.get("/brands");
-      return data?.data ?? data ?? [];
+      // This endpoint answers with `{ success, brands }` — there is no `data`
+      // key, so `data?.data ?? data` handed back the whole response object.
+      // Every consumer then saw a non-array: `.length` on it is undefined, so
+      // the brand strip quietly fell back to its hardcoded logo list and no
+      // real brand has ever appeared there. Anything reaching for `.filter`
+      // threw outright.
+      return data?.brands ?? data?.data ?? [];
     },
     staleTime: 5 * 60_000,
   });
@@ -73,7 +79,9 @@ export const useCategories = () => {
     queryKey: queryKeys.categories(i18n.language),
     queryFn: async () => {
       const { data } = await axiosInstance.get("/categories");
-      return data?.data ?? data ?? [];
+      // `?? data` was a trap here too: it only ever helped by accident, and
+      // when it fired it returned an object where the caller expected a list.
+      return data?.data ?? data?.categories ?? [];
     },
     staleTime: 5 * 60_000,
   });
