@@ -83,11 +83,14 @@ async function seed() {
     { name: "HP", logo: "https://cdn.simpleicons.org/hp/0096D6" },
     { name: "Lenovo", logo: "https://cdn.simpleicons.org/lenovo/E2231A" },
     { name: "ASUS", logo: "https://cdn.simpleicons.org/asus/000000" },
-    { name: "Canon", logo: "https://cdn.simpleicons.org/canon/BC0024" },
+    // Simple Icons no longer serves Canon or Logitech, so seeding their old
+    // slugs only bought a 404 per page load. They seed without a logo and the
+    // storefront shows the name instead, until a real one is uploaded.
+    { name: "Canon", logo: "" },
     { name: "Sony", logo: "https://cdn.simpleicons.org/sony/000000" },
     { name: "Nikon", logo: "https://cdn.simpleicons.org/nikon/FFE100" },
     { name: "TP-Link", logo: "https://cdn.simpleicons.org/tplink/4ACBD6" },
-    { name: "Logitech", logo: "https://cdn.simpleicons.org/logitech/00B8FC" },
+    { name: "Logitech", logo: "" },
     { name: "Samsung", logo: "https://cdn.simpleicons.org/samsung/1428A0" },
     { name: "MSI", logo: "https://cdn.simpleicons.org/msi/FF0000" },
     { name: "NVIDIA", logo: "https://cdn.simpleicons.org/nvidia/76B900" },

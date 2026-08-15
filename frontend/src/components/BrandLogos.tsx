@@ -6,19 +6,23 @@ const BrandLogos: React.FC = () => {
   const { t } = useTranslation();
   const { data: brands = [] } = useBrands();
 
-  // Fallback brand data with logos
+  // Fallback brand data with logos.
+  //
+  // Simple Icons drops a brand mark when the rights holder asks it to, and it
+  // has dropped Canon and Logitech. Pointing at a slug it no longer serves
+  // costs every visitor a 404 on every page load and still ends up showing the
+  // name-only card below — so those two are simply listed without a logo. A
+  // real logo uploaded from the brands page wins over this map anyway.
   const brandLogos: Record<string, string> = {
     Apple: "https://cdn.simpleicons.org/apple/000000",
     Dell: "https://cdn.simpleicons.org/dell/007DB8",
     HP: "https://cdn.simpleicons.org/hp/0096D6",
     Lenovo: "https://cdn.simpleicons.org/lenovo/E2231A",
     ASUS: "https://cdn.simpleicons.org/asus/000000",
-    Canon: "https://cdn.simpleicons.org/canon/BC0024",
     Sony: "https://cdn.simpleicons.org/sony/000000",
     Nikon: "https://cdn.simpleicons.org/nikon/FFE100",
     Samsung: "https://cdn.simpleicons.org/samsung/1428A0",
     MSI: "https://cdn.simpleicons.org/msi/FF0000",
-    Logitech: "https://cdn.simpleicons.org/logitech/00B8FC",
     "TP-Link": "https://cdn.simpleicons.org/tplink/4ACBD6",
     NVIDIA: "https://cdn.simpleicons.org/nvidia/76B900",
     AMD: "https://cdn.simpleicons.org/amd/ED1C24",
