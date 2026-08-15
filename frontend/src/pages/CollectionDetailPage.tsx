@@ -4,10 +4,9 @@ import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { axiosInstance } from "../lib/axios";
-import { useCollectionStore } from "../stores/collection.store";
-import { useUserStore } from "../stores/user.store";
 import toast from "react-hot-toast";
 import { cldImg } from "../lib/cldImage";
+import AddBundleDialog from "../components/AddBundleDialog";
 
 const CollectionDetailPage: React.FC = () => {
   const { t } = useTranslation();
@@ -16,13 +15,7 @@ const CollectionDetailPage: React.FC = () => {
   const [collection, setCollection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [addingToCart, setAddingToCart] = useState(false);
-  const [wantsInstallation, setWantsInstallation] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const addCollectionToCart = useCollectionStore(
-    (state) => state.addCollectionToCart,
-  );
-  const fetchCart = useUserStore((state) => state.fetchCart);
 
   // Quotation modal state
   const [showQuotationModal, setShowQuotationModal] = useState(false);
@@ -104,26 +97,9 @@ const CollectionDetailPage: React.FC = () => {
 
   // The button opens the confirmation rather than adding straight away: a
   // bundle is a bigger commitment than a single item, and the fitting question
-  // has to be answered before it goes in, not discovered in the cart.
-  const openConfirm = () => {
-    setWantsInstallation(false);
-    setShowConfirm(true);
-  };
-
-  const handleAddToCart = async () => {
-    if (!collectionId) return;
-    setAddingToCart(true);
-    const success = await addCollectionToCart(collectionId, 1, wantsInstallation);
-    setAddingToCart(false);
-    if (success) {
-      setShowConfirm(false);
-      await fetchCart();
-      toast.success(t("collections.addedToCart"));
-      navigate("/cart");
-    } else {
-      toast.error(t("collections.failedToAdd"));
-    }
-  };
+  // has to be answered before it goes in, not discovered in the cart. The
+  // dialog itself is shared with the bundles listing and the home page.
+  const openConfirm = () => setShowConfirm(true);
 
   if (loading) {
     return (
@@ -179,8 +155,9 @@ const CollectionDetailPage: React.FC = () => {
   const savingsPercent = originalTotal > 0 ? Math.round((savings / originalTotal) * 100) : 0;
   const installOffered = !!collection.installation?.offered;
   const installPrice = Number(collection.installation?.price) || 0;
-  const installCharge = wantsInstallation && installOffered ? installPrice : 0;
-  const payable = collection.bundlePrice + installCharge;
+  // The sidebar shows the bundle on its own. Fitting is chosen in the
+  // confirmation, and its effect on the total is shown there.
+  const payable = collection.bundlePrice;
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -377,7 +354,6 @@ const CollectionDetailPage: React.FC = () => {
 
               <button
                 onClick={openConfirm}
-                disabled={addingToCart}
                 className="w-full bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white py-3.5 rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-3"
               >
                 🛒 {t("Add Bundle to Cart")}
@@ -417,170 +393,14 @@ const CollectionDetailPage: React.FC = () => {
         </div>
       </main>
 
-      {/* ═══ Add-to-cart confirmation ═══ */}
-      {showConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => !addingToCart && setShowConfirm(false)}
-        >
-          <div
-            className="bg-[var(--surface)] rounded-2xl shadow-2xl w-full max-w-md border border-[var(--border)] overflow-hidden max-h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-5 py-4 border-b border-[var(--border)] flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="text-base font-bold text-[var(--text)]">
-                  {t("Confirm your bundle")}
-                </h2>
-                <p className="text-xs text-[var(--text-muted)] mt-0.5 truncate">
-                  {collection.name}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowConfirm(false)}
-                disabled={addingToCart}
-                className="p-1.5 hover:bg-[var(--bg)] rounded-full transition-colors text-[var(--text-muted)] shrink-0 disabled:opacity-40"
-                aria-label={t("Close")}
-              >
-                ✕
-              </button>
-            </div>
+      {/* Add-to-cart confirmation — shared with the bundles listing and home page */}
+      <AddBundleDialog
+        collection={collection}
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onAdded={() => navigate("/cart")}
+      />
 
-            <div className="p-5 space-y-4 overflow-y-auto">
-              {/* what's in it */}
-              <div className="rounded-xl border border-[var(--border)] divide-y divide-[var(--border)]">
-                {collection.items.slice(0, 4).map((item: any, i: number) => (
-                  <div key={i} className="flex items-center gap-2.5 p-2.5">
-                    <img
-                      src={cldImg(item.product?.images?.[0]?.url, { w: 80 })}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="w-9 h-9 rounded-lg object-cover bg-[var(--bg)] shrink-0"
-                    />
-                    <span className="text-xs text-[var(--text)] flex-1 min-w-0 truncate">
-                      {item.product?.name}
-                    </span>
-                    <span className="text-xs text-[var(--text-muted)] shrink-0">
-                      ×{item.quantity}
-                    </span>
-                  </div>
-                ))}
-                {collection.items.length > 4 && (
-                  <p className="p-2.5 text-[11px] text-[var(--text-muted)] text-center">
-                    + {collection.items.length - 4} {t("more items")}
-                  </p>
-                )}
-              </div>
-
-              {/* the fitting question */}
-              {installOffered ? (
-                <div>
-                  <p className="text-sm font-semibold text-[var(--text)] mb-2">
-                    🔧 {t("Do you want us to install it for you?")}
-                  </p>
-                  {collection.installation?.note && (
-                    <p className="text-xs text-[var(--text-muted)] mb-2">
-                      {collection.installation.note}
-                    </p>
-                  )}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setWantsInstallation(true)}
-                      className={`rounded-xl border p-3 text-start transition-all ${
-                        wantsInstallation
-                          ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
-                          : "border-[var(--border)] hover:border-[var(--brand-primary)]/40"
-                      }`}
-                    >
-                      <span className="block text-sm font-semibold text-[var(--text)]">
-                        {t("Yes, install it")}
-                      </span>
-                      <span className="block text-[11px] text-[var(--text-muted)] mt-0.5">
-                        {installPrice > 0
-                          ? `+EGP ${installPrice.toLocaleString()}`
-                          : t("No extra cost")}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setWantsInstallation(false)}
-                      className={`rounded-xl border p-3 text-start transition-all ${
-                        !wantsInstallation
-                          ? "border-[var(--brand-primary)] bg-[var(--brand-primary)]/5"
-                          : "border-[var(--border)] hover:border-[var(--brand-primary)]/40"
-                      }`}
-                    >
-                      <span className="block text-sm font-semibold text-[var(--text)]">
-                        {t("No, thanks")}
-                      </span>
-                      <span className="block text-[11px] text-[var(--text-muted)] mt-0.5">
-                        {t("I'll install it myself")}
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {/* what it comes to */}
-              <div className="rounded-xl bg-[var(--bg)] border border-[var(--border)] p-3.5 space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="text-[var(--text-muted)]">{t("Bundle")}</span>
-                  <span className="text-[var(--text)] font-medium">
-                    EGP {collection.bundlePrice.toLocaleString()}
-                  </span>
-                </div>
-                {installCharge > 0 && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-[var(--text-muted)]">{t("Installation")}</span>
-                    <span className="text-[var(--text)] font-medium">
-                      +EGP {installCharge.toLocaleString()}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between items-baseline border-t border-[var(--border)] pt-1.5 mt-1.5">
-                  <span className="text-sm font-semibold text-[var(--text)]">
-                    {t("Total")}
-                  </span>
-                  <span className="text-lg font-black text-[var(--text)]">
-                    EGP {payable.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-5 pt-0 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setShowConfirm(false)}
-                disabled={addingToCart}
-                className="flex-1 px-4 py-2.5 border border-[var(--border)] rounded-xl text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--bg)] transition-colors disabled:opacity-40"
-              >
-                {t("Cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={addingToCart}
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {addingToCart ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    {t("Adding...")}
-                  </>
-                ) : (
-                  <>🛒 {t("Add to cart")}</>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Quotation Modal */}
       {showQuotationModal && (

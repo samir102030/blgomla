@@ -1,13 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
 import { useCollectionStore } from "../stores/collection.store";
-import { useUserStore } from "../stores/user.store";
-import toast from "react-hot-toast";
 import { cldImg } from "../lib/cldImage";
+import AddBundleDialog from "../components/AddBundleDialog";
 
 /* ─── gradient accents per bundle ─── */
 // Belgomla orange spectrum — keep all tiles on-brand instead of a rainbow.
@@ -22,9 +21,7 @@ const bundleThemes = [
 
 const CollectionsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { collections, loading, error, fetchCollections, addCollectionToCart } =
-    useCollectionStore();
-  const fetchCart = useUserStore((state) => state.fetchCart);
+  const { collections, loading, error, fetchCollections } = useCollectionStore();
 
   useEffect(() => {
     fetchCollections({ activeOnly: true });
@@ -40,15 +37,10 @@ const CollectionsPage: React.FC = () => {
       return sum + unitPrice * item.quantity;
     }, 0);
 
-  const handleAddToCart = async (collectionId: string) => {
-    const success = await addCollectionToCart(collectionId, 1);
-    if (success) {
-      await fetchCart();
-      toast.success(t("collections.addedToCart"));
-    } else {
-      toast.error(t("collections.failedToAdd"));
-    }
-  };
+  // Adding from the listing goes through the same confirmation as the bundle's
+  // own page — the fitting question has to be asked wherever the bundle is
+  // added from, not only where it happens to be easiest to put a checkbox.
+  const [pendingBundle, setPendingBundle] = useState<any | null>(null);
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
@@ -250,7 +242,7 @@ const CollectionsPage: React.FC = () => {
                           {t("Details")} →
                         </Link>
                         <button
-                          onClick={() => handleAddToCart(collection._id)}
+                          onClick={() => setPendingBundle(collection)}
                           className={`bg-gradient-to-r ${theme.gradient} text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap`}
                         >
                           🛒 {t("Add Bundle")}
@@ -291,6 +283,12 @@ const CollectionsPage: React.FC = () => {
           </section>
         )}
       </main>
+
+      <AddBundleDialog
+        collection={pendingBundle}
+        open={!!pendingBundle}
+        onClose={() => setPendingBundle(null)}
+      />
 
       <Footer />
     </div>

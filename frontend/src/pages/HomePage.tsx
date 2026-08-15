@@ -1,15 +1,15 @@
-import React, { useMemo, lazy, Suspense } from "react";
+import React, { useMemo, useState, lazy, Suspense } from "react";
 import { useSectionOrder } from "../layout/useLayout";
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
 import HeroSlider from "../components/HeroSlider";
 import Footer from "../components/Footer";
+import AddBundleDialog from "../components/AddBundleDialog";
 import SEO from "../components/SEO";
 import { getBaseUnitPrice } from "../lib/pricing";
 import CountdownTimer from "../components/CountdownTimer";
 import ScrollReveal from "../components/ScrollReveal";
 import { getCategoryIcon } from "../lib/categoryIcon";
-import { useCollectionStore } from "../stores/collection.store";
 import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -28,7 +28,6 @@ const AdvertisementBanner = lazy(() => import("../components/AdvertisementBanner
 const CardMosaic = lazy(() => import("../components/CardMosaic"));
 import type { Product } from "../types/product.type";
 import type { Category } from "../types/category.type";
-import toast from "react-hot-toast";
 
 /* ─── Skeleton Components ─── */
 const ProductCardSkeleton: React.FC = () => (
@@ -110,8 +109,6 @@ const HomePage: React.FC = () => {
   const { t, i18n } = useTranslation();
   useUserStore((s) => s.user);
 
-  const { addCollectionToCart } = useCollectionStore();
-  const fetchCart = useUserStore((state) => state.fetchCart);
 
   // Single batched fetch (cached + deduped by React Query).
   const { data: feed, isLoading: feedLoading } = useHomeFeed();
@@ -134,15 +131,9 @@ const HomePage: React.FC = () => {
     return d;
   }, []);
 
-  const handleAddBundleToCart = async (collectionId: string) => {
-    const success = await addCollectionToCart(collectionId, 1);
-    if (success) {
-      await fetchCart();
-      toast.success(t("Bundle added to cart!"));
-    } else {
-      toast.error(t("Failed to add bundle"));
-    }
-  };
+  // Same confirmation as the bundles listing and the bundle's own page — the
+  // fitting question follows the bundle, not the page it was added from.
+  const [pendingBundle, setPendingBundle] = useState<any | null>(null);
 
   /* ── Render helpers ── */
   const renderProductGrid = (products: Product[], isLoading: boolean, count = 4) =>
@@ -571,7 +562,7 @@ const HomePage: React.FC = () => {
                               )}
                             </div>
                             <button
-                              onClick={() => handleAddBundleToCart(collection._id)}
+                              onClick={() => setPendingBundle(collection)}
                               className={`text-xs font-semibold text-white px-3 py-1.5 rounded-lg bg-gradient-to-r ${theme.gradient} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
                             >
                               🛒 {t("Add")}
@@ -652,6 +643,12 @@ const HomePage: React.FC = () => {
           <React.Fragment key={key}>{sectionNodes[key]}</React.Fragment>
         ))}
       </main>
+
+      <AddBundleDialog
+        collection={pendingBundle}
+        open={!!pendingBundle}
+        onClose={() => setPendingBundle(null)}
+      />
 
       <Footer />
 
