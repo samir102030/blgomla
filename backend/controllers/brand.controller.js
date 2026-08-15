@@ -1,12 +1,29 @@
 import Brand from "../models/brand.model.js";
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
+import { findByName } from "../utils/findOrCreateByName.js";
 
 // Create Brand
 export const createBrand = controllerWrapper(
   "createBrand",
   async (req, res) => {
     const { name, nameAr, description, descriptionAr, logo, website, country, categories, metaTitle, metaDescription, sortOrder } = req.body;
+
+    // `name` is uniquely indexed, so a second brand of the same name cannot
+    // exist. Adding one used to fail with a raw duplicate-key error, which
+    // reads as "the save broke" when in fact the only sensible outcome — the
+    // brand exists — had already been reached. Return it and say so.
+    // Matched case-insensitively: "tp-link" and "TP-Link" are one brand.
+    const existing = await findByName(Brand, name);
+    if (existing) {
+      return res.status(200).json({
+        success: true,
+        brand: existing,
+        existed: true,
+        message: `"${existing.name}" already exists — using it.`,
+      });
+    }
+
     const brand = new Brand({ name, nameAr, description, descriptionAr, logo, website, country, categories, metaTitle, metaDescription, sortOrder });
     await brand.save();
     res.status(201).json({ success: true, brand });

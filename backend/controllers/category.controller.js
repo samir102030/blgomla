@@ -1,12 +1,25 @@
 import Category from "../models/category.model.js";
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
+import { findByName } from "../utils/findOrCreateByName.js";
 
 // Create Category
 export const createCategory = controllerWrapper(
   "createCategory",
   async (req, res) => {
     const { name, nameAr, description, descriptionAr, image, icon, parentCategory, metaTitle, metaDescription, sortOrder } = req.body;
+
+    // Same as brands: the name is uniquely indexed, so there is one category
+    // by this name and re-adding it is not an error worth reporting as one.
+    const existing = await findByName(Category, name);
+    if (existing) {
+      return res.status(200).json({
+        success: true,
+        category: existing,
+        existed: true,
+        message: `"${existing.name}" already exists — using it.`,
+      });
+    }
 
     const category = new Category({
       name, nameAr, description, descriptionAr, image, icon, parentCategory, metaTitle, metaDescription, sortOrder,

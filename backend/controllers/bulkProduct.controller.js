@@ -3,6 +3,8 @@ import Category from '../models/category.model.js';
 import Brand from '../models/brand.model.js';
 import Store from '../models/store.model.js';
 import { generateProductTemplate, parseProductExcel } from '../utils/excelTemplate.js';
+import { findOrCreateByName } from '../utils/findOrCreateByName.js';
+import { clearStorefrontCaches } from '../utils/storefrontCache.js';
 
 const isAdminUser = (role) => role === 'admin' || role === 'super_admin';
 
@@ -134,29 +136,36 @@ export const bulkUploadProducts = async (req, res) => {
     const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c._id]));
     const brandMap = new Map(brands.map(b => [b.name.toLowerCase(), b._id]));
 
-    // Auto-create category for simple template when missing (only on final run)
-    if (!dryRun && templateType === 'simple' && defaultCategoryName) {
-      const key = defaultCategoryName.toLowerCase();
-      if (!categoryMap.has(key)) {
-        try {
-          const createdCategory = await Category.create({
-            name: defaultCategoryName,
-            description: `Auto-created from bulk upload on ${new Date().toISOString()}`,
-            isActive: true,
-            deleted: false,
-          });
-          categoryMap.set(key, createdCategory._id);
-        } catch (err) {
-          // Handle race with existing category
-          const existing = await Category.findOne({ name: defaultCategoryName });
-          if (existing) {
-            categoryMap.set(key, existing._id);
-          } else {
-            throw err;
-          }
-        }
-      }
-    }
+    // Brands and categories named in the sheet are matched by name and
+    // created when they are new — the same thing adding one by hand does.
+    //
+    // Previously only the simple template's default category was auto-created;
+    // every other unknown name failed its row with `Brand "X" not found`,
+    // which meant a sheet introducing a new brand could not be uploaded at all
+    // until someone created that brand by hand first. Names created here are
+    // ordinary records: they appear on the brands and categories pages, and
+    // can be edited, hidden or reordered like any other.
+    const createdNames = { categories: [], brands: [] };
+
+    const resolveByName = async (Model, map, rawName, kind) => {
+      const key = String(rawName).trim().toLowerCase();
+      if (map.has(key)) return map.get(key);
+
+      // A dry run reports what *would* be created without writing anything.
+      if (dryRun) return null;
+
+      const result = await findOrCreateByName(Model, rawName, {
+        description: `Added automatically from a bulk upload on ${new Date()
+          .toISOString()
+          .slice(0, 10)}`,
+        isActive: true,
+        deleted: false,
+      });
+      if (!result) return null;
+      map.set(key, result.doc._id);
+      if (result.created) createdNames[kind].push(result.doc.name);
+      return result.doc._id;
+    };
 
     const previewProducts = [];
 
@@ -210,37 +219,36 @@ export const bulkUploadProducts = async (req, res) => {
           deleted: false
         };
 
-        // Find category by name
+        // Category by name — created if new.
         let willCreateCategory = false;
         if (productData.categoryName) {
-          const categoryId = categoryMap.get(productData.categoryName.toLowerCase());
+          const categoryId = await resolveByName(
+            Category,
+            categoryMap,
+            productData.categoryName,
+            'categories'
+          );
           if (categoryId) {
             newProduct.category = categoryId;
-          } else if (dryRun && templateType === 'simple' && defaultCategoryName) {
-            // allow preview; category will be created on final run
+          } else if (dryRun) {
+            // Nothing is written during a preview; say it will be created.
             willCreateCategory = true;
-          } else {
-            results.failed.push({
-              row: productData.rowNumber,
-              name: productData.name,
-              errors: [`Category "${productData.categoryName}" not found`]
-            });
-            continue;
           }
         }
 
-        // Find brand by name
+        // Brand by name — created if new.
+        let willCreateBrand = false;
         if (productData.brandName) {
-          const brandId = brandMap.get(productData.brandName.toLowerCase());
+          const brandId = await resolveByName(
+            Brand,
+            brandMap,
+            productData.brandName,
+            'brands'
+          );
           if (brandId) {
             newProduct.brand = brandId;
-          } else {
-            results.failed.push({
-              row: productData.rowNumber,
-              name: productData.name,
-              errors: [`Brand "${productData.brandName}" not found`]
-            });
-            continue;
+          } else if (dryRun) {
+            willCreateBrand = true;
           }
         }
 
@@ -249,7 +257,8 @@ export const bulkUploadProducts = async (req, res) => {
             row: productData.rowNumber,
             name: productData.name,
             productId: null,
-            willCreateCategory
+            willCreateCategory,
+            willCreateBrand
           });
           previewProducts.push({
             row: productData.rowNumber,
@@ -260,7 +269,8 @@ export const bulkUploadProducts = async (req, res) => {
             brand: productData.brandName,
             salePercentage: productData.salePercentage || 0,
             stock: productData.stock || 0,
-            willCreateCategory
+            willCreateCategory,
+            willCreateBrand
           });
         } else {
           // Create product
@@ -282,13 +292,34 @@ export const bulkUploadProducts = async (req, res) => {
       }
     }
 
+    // Anything created here has to show up on the storefront straight away —
+    // the brands and categories lists and the home feed are all cached.
+    if (!dryRun && (createdNames.brands.length || createdNames.categories.length)) {
+      clearStorefrontCaches('brands', 'categories');
+    }
+
+    const createdNote = [
+      createdNames.categories.length
+        ? `${createdNames.categories.length} new categor${createdNames.categories.length === 1 ? 'y' : 'ies'}`
+        : null,
+      createdNames.brands.length
+        ? `${createdNames.brands.length} new brand${createdNames.brands.length === 1 ? '' : 's'}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(' and ');
+
     res.status(200).json({
       success: true,
       dryRun,
       message: dryRun
         ? `Preview generated. ${results.successful.length} valid rows, ${results.failed.length} issues.`
-        : `Bulk upload completed. ${results.successful.length} products created, ${results.failed.length} failed.`,
+        : `Bulk upload completed. ${results.successful.length} products created, ${results.failed.length} failed.` +
+          (createdNote ? ` Also added ${createdNote}.` : ''),
       results,
+      // What the upload brought into existence, so it is visible rather than
+      // a silent side effect.
+      created: createdNames,
       preview: dryRun ? previewProducts : undefined
     });
 
