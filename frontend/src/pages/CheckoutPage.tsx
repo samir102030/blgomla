@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import PageHero from "../components/PageHero";
 import PleaseLogin from "../components/PleaseLogin";
 import DeliveryEstimate from "../components/DeliveryEstimate";
 import { useUserStore } from "../stores/user.store";
@@ -685,37 +686,22 @@ const CheckoutPage: React.FC = () => {
     <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
-      {/* Hero Section */}
-      <div className="relative bg-[var(--surface-2)] py-8 sm:py-12 lg:py-16">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=1200&h=400&fit=crop"
-            alt={t("Camera")}
-            className="w-full h-full object-cover opacity-20"
-           loading="lazy" decoding="async"/>
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--text)] mb-2 sm:mb-4">{t("Checkout")}</h1>
-          <nav className="text-xs sm:text-sm text-[var(--text-muted)]">
-            <Link to="/" className="hover:text-[var(--text)]">
-              {t("Home")}
-            </Link>
-            <span className="mx-2">/</span>
-            <span>{t("Checkout")}</span>
-          </nav>
-        </div>
-        {/* Camera Image positioned on the right */}
-        <div className="absolute right-0 top-0 h-full w-1/2 hidden lg:block">
-          <img
-            src="https://images.unsplash.com/photo-1606983340126-99ab4feaa64a?w=600&h=400&fit=crop"
-            alt={t("Professional Camera")}
-            className="h-full w-full object-contain"
-           loading="lazy" decoding="async"/>
-        </div>
-      </div>
+      {/* Two stock photographs of a camera used to sit behind this heading —
+          fetched from Unsplash on every checkout, unrelated to what is being
+          bought, and pinned to the right so they covered the form in Arabic. */}
+      <PageHero
+        eyebrow={t("Secure Checkout")}
+        title={t("Checkout")}
+        subtitle={t("Review your details and confirm your order.")}
+        breadcrumb={[
+          { label: t("Home"), to: "/" },
+          { label: t("Shopping Cart"), to: "/cart" },
+          { label: t("Checkout") },
+        ]}
+      />
 
       <main className="py-8 sm:py-10 lg:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
               {/* Billing Address */}

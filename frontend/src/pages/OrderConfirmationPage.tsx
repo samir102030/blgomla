@@ -79,22 +79,22 @@ const OrderConfirmationPage: React.FC = () => {
 
   if (loading && !storeOrder) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <span className="text-lg text-gray-600">{t("Loading order details...")}</span>
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+        <span className="text-lg text-[var(--text-muted)]">{t("Loading order details...")}</span>
       </div>
     );
   }
 
   if (!storeOrder) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[var(--bg)]">
         <Header />
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-[var(--text)] mb-4">
               {t("Order Not Found")}
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-[var(--text-muted)] mb-6">
               {t("The order you're looking for doesn't exist.")}
             </p>
             <Link
@@ -111,7 +111,7 @@ const OrderConfirmationPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
       {/* Hero Section */}
@@ -141,10 +141,10 @@ const OrderConfirmationPage: React.FC = () => {
               </svg>
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-[var(--text)] mb-4">
             {t("Order Confirmed!")}
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-[var(--text-muted)]">
             {t("Thank you for your order!")}
           </p>
         </div>
@@ -153,12 +153,12 @@ const OrderConfirmationPage: React.FC = () => {
       <main className="py-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Order Details */}
-          <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
-            <div className="border-b border-gray-200 pb-6 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <div className="bg-[var(--surface)] rounded-lg shadow-sm p-8 mb-8">
+            <div className="border-b border-[var(--border)] pb-6 mb-6">
+              <h2 className="text-2xl font-bold text-[var(--text)] mb-2">
                 {t("Order")} #{order!._id.slice(-8).toUpperCase()}
               </h2>
-              <p className="text-gray-600">
+              <p className="text-[var(--text-muted)]">
                 {t("Placed on")}{" "}
                 {new Date(order!.createdAt || Date.now()).toLocaleDateString()}{" "}
                 {t("at")}{" "}
@@ -173,8 +173,8 @@ const OrderConfirmationPage: React.FC = () => {
 
             {/* Order Status Timeline */}
             {order!.statusTimeline && order!.statusTimeline.length > 0 && (
-              <div className="border-b border-gray-200 pb-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              <div className="border-b border-[var(--border)] pb-6 mb-6">
+                <h3 className="text-lg font-semibold text-[var(--text)] mb-4">
                   {t("Order Tracking")}
                 </h3>
                 <OrderTimeline
@@ -187,7 +187,7 @@ const OrderConfirmationPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Order Items */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-[var(--text)] mb-4">
                   {t("Order Items")}
                 </h3>
                 <div className="space-y-4">
@@ -201,13 +201,13 @@ const OrderConfirmationPage: React.FC = () => {
                         className="w-16 h-16 object-cover rounded-lg"
                       />
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">
+                        <h4 className="font-medium text-[var(--text)]">
                           {item.product.name}
                         </h4>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-[var(--text-muted)]">
                           {t("Quantity:")} {item.quantity}
                         </p>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-[var(--text)]">
                           {((item.product.price * item.quantity)).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                         </p>
                       </div>
@@ -220,7 +220,7 @@ const OrderConfirmationPage: React.FC = () => {
               <div className="space-y-6">
                 {/* Order Summary */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold text-[var(--text)] mb-4">
                     {t("Order Summary")}
                   </h3>
                   <div className="space-y-2">
@@ -247,10 +247,10 @@ const OrderConfirmationPage: React.FC = () => {
 
                 {/* Payment Method */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-[var(--text)] mb-2">
                     {t("Payment Method")}
                   </h3>
-                  <p className="text-gray-600 capitalize">
+                  <p className="text-[var(--text-muted)] capitalize">
                     {order!.paymentMethod === "cod"
                       ? t("Cash on Delivery")
                       : order!.paymentMethod}
@@ -259,10 +259,10 @@ const OrderConfirmationPage: React.FC = () => {
 
                 {/* Shipping Address */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-[var(--text)] mb-2">
                     {t("Shipping Address")}
                   </h3>
-                  <div className="text-gray-600">
+                  <div className="text-[var(--text-muted)]">
                     <p className="font-medium">{order!.shippingAddress.name}</p>
                     <p>{order!.shippingAddress.address}</p>
                     <p>

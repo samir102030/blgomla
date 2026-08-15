@@ -1,41 +1,66 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 
-interface BreadcrumbItem {
+export interface Crumb {
   label: string;
-  href?: string;
+  to?: string;
 }
 
 interface BreadcrumbProps {
-  items: BreadcrumbItem[];
+  items: Crumb[];
+  /** Muted colours flip when the trail sits on the dark brand canvas. */
+  onInk?: boolean;
+  className?: string;
 }
 
-const Breadcrumb: React.FC<BreadcrumbProps> = ({ items }) => {
+/**
+ * The trail back up the page. Separators are drawn, not typed: the pages that
+ * had one wrote "/" between <li>s and spaced them with space-x-*, which is a
+ * physical margin — in Arabic the gaps collapsed onto the wrong side and the
+ * slash pointed the wrong way down the trail.
+ */
+const Breadcrumb: React.FC<BreadcrumbProps> = ({ items, onInk = false, className = "" }) => {
   const { t } = useTranslation();
+  if (!items.length) return null;
 
   return (
-    <nav className="breadcrumb flex items-center flex-wrap gap-0.5 text-sm py-3 animate-fadeIn" aria-label="Breadcrumb">
-      <Link to="/" className="flex items-center gap-1 hover:text-[var(--brand-accent)]">
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-        {t("Home")}
-      </Link>
-      {items.map((item, index) => (
-        <React.Fragment key={index}>
-          <span className="separator">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-          {item.href ? (
-            <Link to={item.href}>{item.label}</Link>
-          ) : (
-            <span className="text-[var(--text)] font-medium">{item.label}</span>
-          )}
-        </React.Fragment>
-      ))}
+    <nav aria-label={t("Breadcrumb")} className={className}>
+      <ol className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm">
+        {items.map((crumb, i) => {
+          const last = i === items.length - 1;
+          return (
+            <li key={`${crumb.label}-${i}`} className="flex items-center gap-1.5 min-w-0">
+              {i > 0 && (
+                <ChevronRightIcon
+                  className="w-3.5 h-3.5 flex-none rtl:rotate-180 opacity-50"
+                  aria-hidden="true"
+                />
+              )}
+              {last || !crumb.to ? (
+                <span
+                  aria-current={last ? "page" : undefined}
+                  className={`font-medium truncate max-w-[16rem] ${
+                    onInk ? "text-[var(--on-ink)]" : "text-[var(--text)]"
+                  }`}
+                >
+                  {crumb.label}
+                </span>
+              ) : (
+                <Link
+                  to={crumb.to}
+                  className={`transition-colors hover:text-[var(--brand-primary)] ${
+                    onInk ? "text-[var(--on-ink-muted)]" : "text-[var(--text-muted)]"
+                  }`}
+                >
+                  {crumb.label}
+                </Link>
+              )}
+            </li>
+          );
+        })}
+      </ol>
     </nav>
   );
 };

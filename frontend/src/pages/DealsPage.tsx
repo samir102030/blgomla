@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
+import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
 import ProductCard from "../components/ProductCard";
@@ -29,34 +30,19 @@ const DealsPage: React.FC = () => {
       <Header />
 
       <main>
-        {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-[#0B0B10] via-[#15151C] to-[#0B0B10] text-white">
-          <div className="absolute inset-0 opacity-20">
-            <div
-              className="absolute w-72 h-72 rounded-full blur-3xl"
-              style={{
-                background: "radial-gradient(circle, #FF6A1A, transparent)",
-                top: "-20%",
-                right: "10%",
-              }}
-            />
-          </div>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-3">
-              🔥 {t("Today's Deals")}
-            </h1>
-            <p className="text-white/70 mb-6 max-w-xl mx-auto">
-              {t("Limited time offers — grab them before they're gone!")}
-            </p>
-            <div className="flex justify-center">
-              <CountdownTimer targetDate={dealEndDate} label={t("Ends in")} />
-            </div>
-          </div>
-        </section>
+        {/* Hero — the countdown moves opposite the title, where it reads as
+            part of the offer rather than as a stray widget under it. */}
+        <PageHero
+          eyebrow={t("Limited time")}
+          title={t("Today's Deals")}
+          subtitle={t("Limited time offers — grab them before they're gone!")}
+          breadcrumb={[{ label: t("Home"), to: "/" }, { label: t("Today's Deals") }]}
+          aside={<CountdownTimer targetDate={dealEndDate} label={t("Ends in")} />}
+        />
 
         <CouponStrip title={t("Today's Coupons")} />
 
-        <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8">
+        <section className="shell py-8">
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (

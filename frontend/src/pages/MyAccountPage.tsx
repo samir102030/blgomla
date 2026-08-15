@@ -83,7 +83,7 @@ const MyAccountPage: React.FC = () => {
                   <span className="text-4xl">{user?.name?.[0]?.toUpperCase() || "👤"}</span>
                 )}
               </div>
-              <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform">✏️</button>
+              <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 -right-1 w-7 h-7 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform">✏️</button>
             </div>
             {/* Info */}
             <div className="text-center sm:text-left">

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import PageHero from "../components/PageHero";
 import DeliveryEstimate from "../components/DeliveryEstimate";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
@@ -690,44 +691,26 @@ const ShoppingCartPage: React.FC = () => {
     <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
-      {/* Hero Section — matches Contact page styling */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] py-10 sm:py-16 lg:py-20">
-        <div className="absolute top-10 left-10 w-72 h-72 bg-[var(--brand-primary)]/10 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute bottom-10 right-10 w-96 h-96 bg-[var(--brand-accent)]/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        />
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
-          }}
-        />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 text-xs sm:text-sm text-white/80 mb-4">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            {t("Your Cart")}
+      {/* The old header was its own purple-to-navy gradient, which belonged to
+          no other page on the site. On the brand canvas it now matches. */}
+      <PageHero
+        eyebrow={t("Your Cart")}
+        title={t("Shopping Cart")}
+        breadcrumb={[{ label: t("Home"), to: "/" }, { label: t("Shopping Cart") }]}
+        aside={
+          <div className="text-start lg:text-end">
+            <div className="text-display-sm text-[var(--on-ink)]">
+              {cartItems.length}
+            </div>
+            <div className="text-xs sm:text-sm text-[var(--on-ink-muted)]">
+              {cartItems.length === 1 ? t("item") : t("items")}
+            </div>
           </div>
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white mb-2 sm:mb-3 leading-tight">
-            {t("Shopping")}{" "}
-            <span className="bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] bg-clip-text text-transparent">
-              {t("Cart")}
-            </span>
-          </h1>
-          <nav className="text-xs sm:text-sm text-white/60">
-            <Link to="/" className="hover:text-white transition-colors">
-              {t("Home")}
-            </Link>
-            <span className="mx-2">/</span>
-            <span>{t("Shopping Cart")}</span>
-          </nav>
-        </div>
-      </section>
+        }
+      />
 
       <main className="py-8 sm:py-10 lg:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           {/* Cart Items Table - Responsive */}
           <div className="bg-[var(--surface)] rounded-lg shadow-sm overflow-hidden mb-6 sm:mb-8">
             {/* Desktop view - table */}

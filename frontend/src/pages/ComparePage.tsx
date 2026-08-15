@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import { axiosInstance } from "../lib/axios";
 import { useCompareStore } from "../stores/compare.store";
@@ -84,21 +85,31 @@ const ComparePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)]">
-            {t("Compare Products")}
-          </h1>
-          {products.length > 0 && (
-            <button
-              onClick={clear}
-              className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] underline"
-            >
+      <PageHero
+        eyebrow={t("Side by side")}
+        title={t("Compare Products")}
+        breadcrumb={[{ label: t("Home"), to: "/" }, { label: t("Compare Products") }]}
+        actions={
+          products.length > 0 ? (
+            <button onClick={clear} className="btn btn-sm btn-on-ink">
               {t("Clear all")}
             </button>
-          )}
-        </div>
-
+          ) : undefined
+        }
+        aside={
+          products.length > 0 ? (
+            <div className="text-start lg:text-end">
+              <div className="text-display-sm text-[var(--on-ink)]">
+                {products.length}
+              </div>
+              <div className="text-xs sm:text-sm text-[var(--on-ink-muted)]">
+                {products.length === 1 ? t("item") : t("items")}
+              </div>
+            </div>
+          ) : undefined
+        }
+      />
+      <main className="shell py-8 sm:py-12">
         {loading ? (
           <p className="text-[var(--text-muted)]">{t("Loading…")}</p>
         ) : products.length === 0 ? (
@@ -138,7 +149,7 @@ const ComparePage: React.FC = () => {
                             alt={p.name}
                             loading="lazy"
                             decoding="async"
-                            className="w-24 h-24 object-contain mx-auto bg-white rounded-lg"
+                            className="w-24 h-24 object-contain mx-auto bg-[var(--surface)] rounded-lg"
                           />
                           <p className="mt-2 text-sm font-medium text-[var(--text)] line-clamp-2 text-center hover:text-[var(--brand-primary)]">
                             {p.name}

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import AdvertisementBanner from "./AdvertisementBanner";
+import PageHero from "./PageHero";
 import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
 import { ProductCardSkeleton } from "./Skeleton";
@@ -283,24 +284,40 @@ const ProductsContent: React.FC = () => {
   if (filters.inStock) activeChips.push({ label: t("In Stock"), onRemove: () => handleFilterChange({ inStock: false }) });
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] py-6 sm:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text)] mb-1">
-            {filters.search
-              ? `${t("Search results for")} "${filters.search}"`
-              : t("All Products")}
-          </h1>
-          <p className="text-sm text-[var(--text-muted)]">
-            {filters.search
-              ? `${totalProducts} ${t("products found")}`
-              : t("Discover all products from our marketplace")}
-          </p>
-        </div>
+    <div className="min-h-screen bg-[var(--bg)]">
+      <PageHero
+        eyebrow={t("Catalog")}
+        title={
+          filters.search
+            ? `${t("Search results for")} "${filters.search}"`
+            : t("All Products")
+        }
+        subtitle={
+          filters.search
+            ? undefined
+            : t("Discover all products from our marketplace")
+        }
+        breadcrumb={[
+          { label: t("Home"), to: "/" },
+          { label: t("All Products") },
+        ]}
+        aside={
+          <div className="text-start lg:text-end">
+            <div className="text-display-sm text-[var(--on-ink)]">
+              {totalProducts.toLocaleString()}
+            </div>
+            <div className="text-xs sm:text-sm text-[var(--on-ink-muted)]">
+              {t("products found")}
+            </div>
+          </div>
+        }
+      />
 
+      <div className="shell pb-10 sm:pb-14">
         {/* Top promo strip */}
-        <AdvertisementBanner position="category-strip" />
+        <div className="pt-6 sm:pt-8">
+          <AdvertisementBanner position="category-strip" />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
           {/* Sidebar — appears above products on mobile (filter trigger),
@@ -327,7 +344,9 @@ const ProductsContent: React.FC = () => {
               <div className="flex flex-col gap-3">
                 {/* Search */}
                 <div className="relative">
-                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {/* Logical insets: pinned with left/right, the icon sat on
+                      top of the caret once the page flipped to Arabic. */}
+                  <svg className="absolute ltr:left-3 rtl:right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                   <input
@@ -335,7 +354,7 @@ const ProductsContent: React.FC = () => {
                     placeholder={t("Search products...")}
                     value={filters.search}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)]/50 focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] text-sm transition-all"
+                    className="w-full ltr:pl-10 ltr:pr-4 rtl:pr-10 rtl:pl-4 py-2.5 border border-[var(--border)] rounded-xl bg-[var(--surface-2)] text-[var(--text)] placeholder:text-[var(--text-muted)]/50 focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] text-sm transition-all"
                   />
                 </div>
 

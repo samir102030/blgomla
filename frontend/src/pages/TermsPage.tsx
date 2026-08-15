@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
+import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
 
@@ -34,16 +35,15 @@ const TermsPage: React.FC = () => {
       />
       <Header />
 
-      <div className="relative bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-accent)] py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">
-            {t("terms.title", "Terms & Conditions")}
-          </h1>
-          <p className="text-white/80 text-sm">
-            {t("terms.lastUpdated", "Last updated")}: {lastUpdated}
-          </p>
-        </div>
-      </div>
+      <PageHero
+        eyebrow={t("Legal")}
+        title={t("terms.title", "Terms & Conditions")}
+        subtitle={`${t("terms.lastUpdated", "Last updated")}: ${lastUpdated}`}
+        breadcrumb={[
+          { label: t("Home"), to: "/" },
+          { label: t("terms.title", "Terms & Conditions") },
+        ]}
+      />
 
       <main className="py-10 sm:py-14">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

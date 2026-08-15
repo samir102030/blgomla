@@ -48,11 +48,11 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-16">
+      <div className="relative bg-[var(--surface-2)] py-16">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=400&fit=crop"
@@ -61,10 +61,10 @@ const ForgotPasswordPage: React.FC = () => {
            loading="lazy" decoding="async"/>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-[var(--text)] mb-4">
             {t("Forgot Password")}
           </h1>
-          <nav className="text-sm text-gray-600">
+          <nav className="text-sm text-[var(--text-muted)]">
             <Link to="/" className="hover:text-gray-900">
               {t("Home")}
             </Link>
@@ -76,13 +76,13 @@ const ForgotPasswordPage: React.FC = () => {
 
       <main className="py-16">
         <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white p-8 rounded-lg shadow-sm">
+          <div className="bg-[var(--surface)] p-8 rounded-lg shadow-sm">
             {!isSubmitted ? (
               <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-[var(--text)] mb-4">
                   {t("Reset Your Password")}
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-[var(--text-muted)] mb-6">
                   {t(
                     "Enter your email address and we'll send you a link to reset your password."
                   )}
@@ -92,7 +92,7 @@ const ForgotPasswordPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-sm font-medium text-[var(--text-muted)] mb-2"
                     >
                       {t("Email Address")}
                     </label>
@@ -101,7 +101,7 @@ const ForgotPasswordPage: React.FC = () => {
                       id="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={t("Enter your email")}
                       required
                     />
@@ -145,14 +145,14 @@ const ForgotPasswordPage: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  <h2 className="text-2xl font-bold text-[var(--text)] mb-4">
                     {t("Check Your Email")}
                   </h2>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-[var(--text-muted)] mb-6">
                     {t("We've sent a password reset link to")}{" "}
                     <span className="font-medium">{email}</span>
                   </p>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-sm text-[var(--text-subtle)] mb-6">
                     {t(
                       "If you don't see the email in your inbox, please check your spam folder."
                     )}
@@ -167,14 +167,14 @@ const ForgotPasswordPage: React.FC = () => {
                     </Link>
                     <button
                       onClick={() => setIsSubmitted(false)}
-                      className="block w-full text-gray-600 hover:text-gray-800 text-sm"
+                      className="block w-full text-[var(--text-muted)] hover:text-gray-800 text-sm"
                     >
                       {t("Didn't receive the email? Try again")}
                     </button>
                     <div className="mt-6">
                       <label
                         htmlFor="token"
-                        className="block text-sm font-medium text-gray-700 mb-2"
+                        className="block text-sm font-medium text-[var(--text-muted)] mb-2"
                       >
                         {t("Reset Token")}
                       </label>
@@ -183,7 +183,7 @@ const ForgotPasswordPage: React.FC = () => {
                         id="token"
                         value={token}
                         onChange={(e) => setToken(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
+                        className="w-full px-4 py-3 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-4"
                         placeholder={t("Enter the reset token")}
                       />
                       <button

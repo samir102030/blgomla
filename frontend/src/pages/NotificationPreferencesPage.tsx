@@ -40,7 +40,7 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; label
       }`}
     >
       <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform mt-0.5 ${
+        className={`inline-block h-5 w-5 transform rounded-full bg-[var(--surface)] shadow transition-transform mt-0.5 ${
           checked ? "translate-x-5" : "translate-x-0.5"
         }`}
       />

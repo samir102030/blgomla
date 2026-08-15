@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
+import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
 import { useCollectionStore } from "../stores/collection.store";
@@ -51,24 +52,15 @@ const CollectionsPage: React.FC = () => {
       <Header />
 
       {/* ═══ Hero ═══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] py-16 sm:py-24">
-        <div className="absolute top-10 right-20 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 left-10 w-96 h-96 bg-cyan-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1.5s" }} />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 text-sm text-white/80 mb-6">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            {t("Curated Tech Bundles")}
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mb-4 leading-tight">
-            {t("Save More with")} <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{t("Bundles")}</span>
-          </h1>
-          <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
-            {t("Hand-picked product bundles at exclusive prices. Each collection is expertly curated to give you the best value.")}
-          </p>
-        </div>
-      </section>
+      {/* Was a purple-to-navy gradient with purple and cyan glows — the only
+          place on the site wearing those colours. */}
+      <PageHero
+        eyebrow={t("Curated Tech Bundles")}
+        title={t("Save More with Bundles")}
+        subtitle={t("Hand-picked product bundles at exclusive prices. Each collection is expertly curated to give you the best value.")}
+        breadcrumb={[{ label: t("Home"), to: "/" }, { label: t("Collections") }]}
+        className="pb-6"
+      />
 
       {/* ═══ Stats Strip ═══ */}
       <section className="relative z-10 -mt-8 max-w-4xl mx-auto px-4">
@@ -87,7 +79,7 @@ const CollectionsPage: React.FC = () => {
       </section>
 
       {/* ═══ Bundles Grid ═══ */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <main className="shell py-12 sm:py-16">
         {loading && collections.length === 0 ? (
           /* Skeleton */
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

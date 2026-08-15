@@ -66,11 +66,11 @@ const ResetPasswordPage: React.FC = () => {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[var(--bg)]">
         <Header />
         <main className="py-16">
           <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white p-8 rounded-lg shadow-sm text-center">
+            <div className="bg-[var(--surface)] p-8 rounded-lg shadow-sm text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                 <svg
                   className="h-6 w-6 text-red-600"
@@ -86,10 +86,10 @@ const ResetPasswordPage: React.FC = () => {
                   />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-[var(--text)] mb-4">
                 {t("Invalid Reset Link")}
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-[var(--text-muted)] mb-6">
                 {t("The password reset link is invalid or has expired.")}
               </p>
               <Link
@@ -107,11 +107,11 @@ const ResetPasswordPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
       {/* Hero Section */}
-      <div className="relative bg-gray-100 py-16">
+      <div className="relative bg-[var(--surface-2)] py-16">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&h=400&fit=crop"
@@ -120,10 +120,10 @@ const ResetPasswordPage: React.FC = () => {
            loading="lazy" decoding="async"/>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl font-bold text-[var(--text)] mb-4">
             {t("Reset Password")}
           </h1>
-          <nav className="text-sm text-gray-600">
+          <nav className="text-sm text-[var(--text-muted)]">
             <Link to="/" className="hover:text-gray-900">
               {t("Home")}
             </Link>
@@ -135,13 +135,13 @@ const ResetPasswordPage: React.FC = () => {
 
       <main className="py-16">
         <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white p-8 rounded-lg shadow-sm">
+          <div className="bg-[var(--surface)] p-8 rounded-lg shadow-sm">
             {!isSuccess ? (
               <>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                <h2 className="text-2xl font-bold text-[var(--text)] mb-4">
                   {t("Set New Password")}
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-[var(--text-muted)] mb-6">
                   {t("Enter your new password below.")}
                 </p>
 
@@ -149,7 +149,7 @@ const ResetPasswordPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="password"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-sm font-medium text-[var(--text-muted)] mb-2"
                     >
                       {t("New Password")}
                     </label>
@@ -158,7 +158,7 @@ const ResetPasswordPage: React.FC = () => {
                       id="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={t("Enter new password")}
                       required
                       minLength={6}
@@ -168,7 +168,7 @@ const ResetPasswordPage: React.FC = () => {
                   <div>
                     <label
                       htmlFor="confirmPassword"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-sm font-medium text-[var(--text-muted)] mb-2"
                     >
                       {t("Confirm New Password")}
                     </label>
@@ -177,7 +177,7 @@ const ResetPasswordPage: React.FC = () => {
                       id="confirmPassword"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={t("Confirm new password")}
                       required
                       minLength={6}
@@ -222,10 +222,10 @@ const ResetPasswordPage: React.FC = () => {
                       />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  <h2 className="text-2xl font-bold text-[var(--text)] mb-4">
                     {t("Password Reset Successful!")}
                   </h2>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-[var(--text-muted)] mb-6">
                     {t(
                       "Your password has been successfully reset. You will be redirected to the login page shortly."
                     )}

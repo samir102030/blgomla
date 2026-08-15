@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
+import Breadcrumb from "../components/Breadcrumb";
 import ShareButtons from "../components/ShareButtons";
 import CountdownTimer from "../components/CountdownTimer";
 import ProductQuestions from "../components/ProductQuestions";
@@ -307,7 +308,7 @@ const ProductDetailPage: React.FC = () => {
       <div className="min-h-screen bg-[var(--surface)]">
         <Header />
         <main className="py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="shell text-center">
             <h1 className="text-2xl font-bold text-[var(--text)] mb-4">
               {t("Product Not Found")}
             </h1>
@@ -469,32 +470,30 @@ const ProductDetailPage: React.FC = () => {
       <Header />
 
       <main className="py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Breadcrumb */}
-          <nav className="flex mb-8" aria-label={t("Breadcrumb")}>
-            <ol className="flex items-center space-x-4">
-              <li>
-                <Link to="/" className="text-[var(--text-subtle)] hover:text-[var(--text)]">
-                  {t("Home")}
-                </Link>
-              </li>
-              <li>
-                <span className="text-[var(--text-subtle)]">/</span>
-              </li>
-              <li>
-                <Link
-                  to="/brands"
-                  className="text-[var(--text-subtle)] hover:text-[var(--text)]"
-                >
-                  {t("Products")}
-                </Link>
-              </li>
-              <li>
-                <span className="text-[var(--text-subtle)]">/</span>
-              </li>
-              <li className="text-[var(--text)] font-medium">{product.name}</li>
-            </ol>
-          </nav>
+        <div className="shell">
+          <Breadcrumb
+            className="mb-8"
+            items={[
+              { label: t("Home"), to: "/" },
+              { label: t("Products"), to: "/products" },
+              ...(product.category
+                ? [
+                    {
+                      label:
+                        typeof product.category === "object"
+                          ? (product.category as { name?: string }).name || t("Category")
+                          : t("Category"),
+                      to:
+                        typeof product.category === "object" &&
+                        (product.category as { _id?: string })._id
+                          ? `/products?category=${(product.category as { _id?: string })._id}`
+                          : undefined,
+                    },
+                  ]
+                : []),
+              { label: product.name },
+            ]}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Product Images */}
@@ -502,7 +501,7 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Product Info */}
             <div>
-              <h1 className="text-3xl font-bold text-[var(--text)] mb-4">
+              <h1 className="text-display-sm text-[var(--text)] mb-4">
                 {productName}
               </h1>
 
@@ -996,7 +995,7 @@ const ProductDetailPage: React.FC = () => {
         </div>
       </main>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <AdvertisementBanner position="pdp" />
       </div>
 

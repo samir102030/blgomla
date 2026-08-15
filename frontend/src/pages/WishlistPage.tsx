@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
@@ -161,7 +162,7 @@ const WishlistPage: React.FC = () => {
           {outOfStock && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="bg-black/70 text-white text-xs font-bold px-3 py-1.5 rounded-full">{t("wishlist.outOfStock", "Out of Stock")}</span></div>}
           {item.stock > 0 && item.stock <= 5 && <div className="absolute top-3 right-3 bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full">{t("wishlist.lowStock", "Low Stock")}</div>}
           <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2 justify-center">
-            <button onClick={() => handleAddToCart(item._id!)} disabled={isAddingToCart || outOfStock} className="flex-1 py-2 rounded-xl text-xs font-bold bg-white text-gray-900 hover:bg-gray-100 transition-all disabled:opacity-50 flex items-center justify-center gap-1">
+            <button onClick={() => handleAddToCart(item._id!)} disabled={isAddingToCart || outOfStock} className="flex-1 py-2 rounded-xl text-xs font-bold bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-all disabled:opacity-50 flex items-center justify-center gap-1">
               {isAddingToCart ? <span className="animate-spin">⟳</span> : <>{t("wishlist.addToCart", "Add to Cart")} 🛒</>}
             </button>
             <button onClick={() => handleToggleLove(item._id!)} disabled={isRemoving} className="p-2 rounded-xl bg-white/90 text-red-500 hover:bg-red-500 hover:text-white transition-all">
@@ -190,44 +191,34 @@ const WishlistPage: React.FC = () => {
       <Header />
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)] via-[var(--brand-accent)] to-[#0B0B10]"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA1Ij48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-60"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-3xl">❤️</span>
-                <h1 className="text-3xl lg:text-4xl font-extrabold text-white">{t("wishlist.title", "My Wishlist")}</h1>
-              </div>
-              <p className="text-white/80 text-sm max-w-md">{t("wishlist.subtitle", "Your curated collection of favorite products. Save items you love and never miss a deal.")}</p>
-              <nav className="flex items-center gap-2 text-xs text-white/60 mt-3">
-                <Link to="/" className="hover:text-white transition-colors">{t("common.home", "Home")}</Link>
-                <span>/</span>
-                <span className="text-white/90">{t("wishlist.title", "Wishlist")}</span>
-              </nav>
+      <PageHero
+        eyebrow={t("wishlist.title", "My Wishlist")}
+        title={t("wishlist.title", "My Wishlist")}
+        subtitle={t("wishlist.subtitle", "Your curated collection of favorite products. Save items you love and never miss a deal.")}
+        breadcrumb={[
+          { label: t("common.home", "Home"), to: "/" },
+          { label: t("wishlist.title", "Wishlist") },
+        ]}
+        aside={
+          user && lovedProducts.length > 0 ? (
+            <div className="flex gap-3 flex-wrap">
+              {[
+                { label: t("wishlist.statItems", "Items"), value: stats.total },
+                { label: t("wishlist.statValue", "Total Value"), value: `${stats.totalValue.toLocaleString()} ${t("EGP")}` },
+                ...(stats.onSale > 0 ? [{ label: t("wishlist.statOnSale", "On Sale"), value: stats.onSale }] : []),
+              ].map((s, i) => (
+                <div key={i} className="panel-glass rounded-xl px-4 py-3 text-center min-w-[6rem]">
+                  <div className="text-[var(--on-ink)] font-bold text-base">{s.value}</div>
+                  <div className="text-[var(--on-ink-muted)] text-[11px] mt-0.5">{s.label}</div>
+                </div>
+              ))}
             </div>
-            {user && lovedProducts.length > 0 && (
-              <div className="flex gap-3 flex-wrap">
-                {[
-                  { label: t("wishlist.statItems", "Items"), value: stats.total, icon: "📦" },
-                  { label: t("wishlist.statValue", "Total Value"), value: `${stats.totalValue.toLocaleString()} EGP`, icon: "💰" },
-                  ...(stats.onSale > 0 ? [{ label: t("wishlist.statOnSale", "On Sale"), value: stats.onSale, icon: "🏷️" }] : []),
-                ].map((s, i) => (
-                  <div key={i} className="bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 text-center min-w-[90px]">
-                    <div className="text-lg">{s.icon}</div>
-                    <div className="text-white font-bold text-sm">{s.value}</div>
-                    <div className="text-white/70 text-[10px]">{s.label}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+          ) : undefined
+        }
+      />
 
       <main className="py-8 lg:py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           {userLoading && lovedProducts.length === 0 ? (
             <div className="text-center py-20">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--surface-2)] mb-4 animate-pulse">
