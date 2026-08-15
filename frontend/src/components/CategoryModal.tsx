@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
+import { uploadErrorMessage } from "../lib/uploadError";
 import { useCategoryStore } from "../stores/category.store";
 import type { Category } from "../types/category.type";
 import { axiosInstance } from "../lib/axios";
@@ -33,6 +34,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  // Why the last upload failed, straight from the server.
+  const uploadError = useRef<string | null>(null);
 
   const { t } = useTranslation();
   const { createCategory, updateCategory, loading } = useCategoryStore();
@@ -105,10 +108,19 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
       const result = response.data;
       if (result.success) {
+        uploadError.current = null;
         return result.url;
       }
-    } catch (error) {
+      uploadError.current = result.message || null;
+    } catch (error: any) {
       console.error("Upload failed:", error);
+      // Same reasoning as BrandModal: the server's message is the only one
+      // that says what actually went wrong.
+      uploadError.current = uploadErrorMessage(
+        error,
+        t,
+        t("categories.failedUpload")
+      );
     } finally {
       setUploading(false);
     }
@@ -120,7 +132,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
     const imageUrl = await uploadImage();
     if (imageFile && !imageUrl) {
-      alert(t("categories.failedUpload"));
+      alert(uploadError.current || t("categories.failedUpload"));
       return;
     }
 

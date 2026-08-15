@@ -3513,5 +3513,6 @@
   "more items": "more items",
   "Add to cart": "Add to cart",
   "Adds": "Adds",
-  "to your order": "to your order"
+  "to your order": "to your order",
+  "upload.notConfigured": "Image uploads aren't set up on this server yet. Add the Cloudinary keys to the server settings and try again."
 }

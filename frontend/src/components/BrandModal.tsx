@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
+import { uploadErrorMessage } from "../lib/uploadError";
 import { useBrandStore } from "../stores/brand.store";
 import type { Brand } from "../types/brand.type";
 import { axiosInstance } from "../lib/axios";
@@ -24,6 +25,9 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  // Why the last upload failed, straight from the server. A ref, not state:
+  // it is read once in the submit handler and must not trigger a re-render.
+  const uploadError = useRef<string | null>(null);
 
   const { createBrand, updateBrand, loading } = useBrandStore();
 
@@ -84,10 +88,20 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
 
       const result = response.data;
       if (result.success) {
+        uploadError.current = null;
         return result.url;
       }
-    } catch (error) {
+      uploadError.current = result.message || null;
+    } catch (error: any) {
       console.error("Upload failed:", error);
+      // Keep why it failed. The server knows — "uploads aren't configured",
+      // "file too large" — and a fixed "Failed to upload logo" throws that
+      // away and leaves the operator with nothing to act on.
+      uploadError.current = uploadErrorMessage(
+        error,
+        t,
+        t("Failed to upload logo")
+      );
     } finally {
       setUploading(false);
     }
@@ -99,7 +113,7 @@ const BrandModal: React.FC<BrandModalProps> = ({ isOpen, onClose, brand }) => {
 
     const logoUrl = await uploadLogo();
     if (logoFile && !logoUrl) {
-      alert(t("Failed to upload logo"));
+      alert(uploadError.current || t("Failed to upload logo"));
       return;
     }
 

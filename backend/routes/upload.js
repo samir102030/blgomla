@@ -31,9 +31,28 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+/**
+ * Whether this server can actually store an upload.
+ *
+ * Missing credentials surfaced as Cloudinary's own "Must supply api_key",
+ * which the route reported as a bare "Server error." and the UI showed as
+ * "Failed to upload logo" — three layers, none of which named the one thing
+ * that was wrong or the one person who could fix it.
+ */
+const uploadsConfigured = () =>
+  Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
+      process.env.CLOUDINARY_API_SECRET
+  );
+
 // Test route to check if the route is working
 router.get("/test", (req, res) => {
-  res.json({ success: true, message: "Cloudinary route is working" });
+  res.json({
+    success: true,
+    message: "Cloudinary route is working",
+    configured: uploadsConfigured(),
+  });
 });
 
 // Authenticated users only. Every caller in the app is already logged in —
@@ -46,6 +65,18 @@ router.post("/upload", protectRoute, upload.single("image"), async (req, res) =>
       return res.status(400).json({
         success: false,
         message: "No file uploaded.",
+      });
+    }
+
+    // Checked before reaching out, so the answer names the cause instead of
+    // relaying a provider error. 503, not 500: nothing is broken, the server
+    // is simply not set up for this yet.
+    if (!uploadsConfigured()) {
+      return res.status(503).json({
+        success: false,
+        message:
+          "Image uploads aren't set up on this server. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET to the server settings, then try again.",
+        code: "UPLOADS_NOT_CONFIGURED",
       });
     }
 

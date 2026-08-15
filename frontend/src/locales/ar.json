@@ -3513,5 +3513,6 @@
   "more items": "منتج كمان",
   "Add to cart": "أضف للسلة",
   "Adds": "بيضيف",
-  "to your order": "على طلبك"
+  "to your order": "على طلبك",
+  "upload.notConfigured": "رفع الصور مش متظبط على السيرفر ده لسه. ضيف مفاتيح Cloudinary في إعدادات السيرفر وجرّب تاني."
 }
