@@ -127,7 +127,10 @@ interface BranchProps {
 const panelScrollClass = (node: CategoryNode) =>
   node.children.some((child) => child.children.length > 0)
     ? ""
-    : "max-h-[26rem] overflow-y-auto";
+    : // Generous, because a real department runs to a dozen-plus entries and
+      // the menu should show them rather than hand back a scrollbar. Still
+      // bounded, so it can never run past the bottom of the window.
+      "max-h-[75vh] overflow-y-auto";
 
 /** One row inside a dropdown, plus its own children off to the side. */
 const DropdownRow: React.FC<BranchProps> = ({ node, onPick }) => {
@@ -149,7 +152,9 @@ const DropdownRow: React.FC<BranchProps> = ({ node, onPick }) => {
         aria-expanded={hasChildren ? open : undefined}
         className="w-full flex items-center gap-2 text-start px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] hover:text-[var(--brand-primary)] transition-colors"
       >
-        <span className="flex-1 truncate">{labelOf(node)}</span>
+        {/* Wraps rather than truncates: "Uninterruptible Power Supply (UPS)"
+            cut off at the panel edge is not a category anyone can identify. */}
+        <span className="flex-1 leading-snug">{labelOf(node)}</span>
         {hasChildren && (
           <ChevronRightIcon className="w-3.5 h-3.5 shrink-0 text-[var(--text-subtle)] rtl:rotate-180" />
         )}
@@ -203,7 +208,10 @@ const RootItem: React.FC<BranchProps> = ({ node, onPick }) => {
         onClick={() => (hasChildren ? setOpen((v) => !v) : pick(node._id))}
         aria-haspopup={hasChildren || undefined}
         aria-expanded={hasChildren ? open : undefined}
-        className={`flex items-center gap-1.5 py-3 px-3 text-sm font-semibold uppercase tracking-wide whitespace-nowrap text-[var(--brand-nav-text)] border-b-2 transition-all ${
+        // Tight on purpose: nine departments is an ordinary catalogue, and
+        // they should sit on one line at a laptop width rather than wrapping
+        // into a second row that reads as a mistake.
+        className={`flex items-center gap-1 py-3 px-2 text-[13px] font-semibold uppercase whitespace-nowrap text-[var(--brand-nav-text)] border-b-2 transition-all ${
           open
             ? "opacity-100 border-[var(--brand-primary)]"
             : "opacity-70 hover:opacity-100 border-transparent"

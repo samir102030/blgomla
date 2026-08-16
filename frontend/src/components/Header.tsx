@@ -768,7 +768,7 @@ const Header: React.FC = () => {
             rather than scrolling sideways, so nothing falls off the end. */}
         <div className="border-t border-[var(--border)]/60">
           <div className="shell">
-            <ul className="flex flex-row flex-wrap items-center gap-x-2">
+            <ul className="flex flex-row flex-wrap items-center">
               {/* Roots sit in the bar itself; each drops its subcategories
                   below it, and those open a third level to the side. */}
               <CategoryNavItems />
