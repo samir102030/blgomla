@@ -282,8 +282,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ({rating.toFixed(1)})
           </span>
         </div>
+        {/* One line only — a taste of the description here, the whole of it on
+            the product page. Two lines used to eat the card and still cut off
+            mid-sentence, and phones were shown nothing at all. */}
         {description && (
-          <p className="text-[var(--text-subtle)] text-xs leading-snug line-clamp-2 min-h-[2.25rem] hidden sm:block mb-3">
+          <p className="text-[var(--text-subtle)] text-xs leading-snug line-clamp-1 min-h-[1.125rem] mb-3">
             {description}
           </p>
         )}

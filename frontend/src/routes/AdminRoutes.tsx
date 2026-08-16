@@ -23,6 +23,7 @@ import ProductApprovalsPage from "../pages/admin/ProductApprovalsPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
 import PaymobChannelsPage from "../pages/admin/PaymobChannelsPage";
 import InventoryAlertsPage from "../pages/admin/InventoryAlertsPage";
+import StockRequestsPage from "../pages/admin/StockRequestsPage";
 import CustomerAnalyticsPage from "../pages/admin/CustomerAnalyticsPage";
 import VisitorAnalyticsPage from "../pages/admin/VisitorAnalyticsPage";
 import QuotationsPage from "../pages/admin/QuotationsPage";
@@ -122,6 +123,7 @@ const AdminRoutes: React.FC = () => {
           }
         />
         <Route path="/inventory" element={<InventoryAlertsPage />} />
+        <Route path="/stock-requests" element={<StockRequestsPage />} />
         <Route path="/customers" element={<CustomerAnalyticsPage />} />
         <Route path="/visitors" element={<VisitorAnalyticsPage />} />
         <Route

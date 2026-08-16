@@ -40,32 +40,8 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
     }
   };
 
-  if (done) {
-    return (
-      <p className="text-sm text-emerald-600 mt-3">
-        ✅ {t("inventory.stockAlert.emailWhenAvailable")}
-      </p>
-    );
-  }
-
-  const label = inStock
-    ? t("inventory.stockAlert.notifyPriceDrop")
-    : t("inventory.stockAlert.notifyRestock");
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="mt-3 text-sm font-medium text-[var(--brand-primary)] hover:underline"
-      >
-        {label}
-      </button>
-    );
-  }
-
-  return (
-    <div className="mt-3 flex flex-col sm:flex-row gap-2 max-w-md">
+  const emailForm = (
+    <div className="flex flex-col sm:flex-row gap-2 max-w-md">
       <input
         type="email"
         value={email}
@@ -83,6 +59,63 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
       </button>
     </div>
   );
+
+  // Out of stock is the moment this matters: the Add to Cart button above is
+  // dead, and this is the only thing left the shopper can do. It gets a panel
+  // of its own rather than the quiet link that suits a price-drop nicety.
+  if (!inStock) {
+    return (
+      <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
+        {done ? (
+          <p className="text-sm font-medium text-emerald-600">
+            ✅ {t("inventory.stockAlert.emailWhenAvailable")}
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-[var(--text)]">
+              📦 {t("inventory.stockAlert.requestTitle")}
+            </p>
+            <p className="mt-1 mb-3 text-xs text-[var(--text-muted)]">
+              {t("inventory.stockAlert.requestHint")}
+            </p>
+            {open ? (
+              emailForm
+            ) : (
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="w-full sm:w-auto rounded-lg bg-[var(--brand-primary)] text-white text-sm font-semibold px-5 py-2.5 hover:bg-[var(--brand-primary-hover)]"
+              >
+                {t("inventory.stockAlert.requestCta")}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  if (done) {
+    return (
+      <p className="text-sm text-emerald-600 mt-3">
+        ✅ {t("inventory.stockAlert.emailWhenAvailable")}
+      </p>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="mt-3 text-sm font-medium text-[var(--brand-primary)] hover:underline"
+      >
+        {t("inventory.stockAlert.notifyPriceDrop")}
+      </button>
+    );
+  }
+
+  return <div className="mt-3">{emailForm}</div>;
 };
 
 export default StockAlert;

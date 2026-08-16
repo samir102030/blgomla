@@ -65,3 +65,144 @@ export const subscribeStockAlert = controllerWrapper(
     });
   }
 );
+
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Admin: the demand log. Every subscription above lands here, so the shop can
+// see which out-of-stock products people are actually asking for — and the
+// email of each person waiting, alongside the product they want.
+export const listStockAlerts = controllerWrapper(
+  "listStockAlerts",
+  async (req, res) => {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 25));
+    const { type, status, q } = req.query;
+
+    const match = {};
+    if (type === "restock" || type === "price_drop") match.type = type;
+    if (status === "pending") match.notified = false;
+    if (status === "notified") match.notified = true;
+
+    // Search spans both columns of the table: the product asked for and the
+    // person asking. It runs after the lookup so a product name is matchable.
+    const search = q?.trim()
+      ? [
+          {
+            $match: {
+              $or: [
+                { email: { $regex: escapeRegex(q.trim()), $options: "i" } },
+                { "product.name": { $regex: escapeRegex(q.trim()), $options: "i" } },
+              ],
+            },
+          },
+        ]
+      : [];
+
+    const withProduct = [
+      {
+        $lookup: {
+          from: "products",
+          localField: "product",
+          foreignField: "_id",
+          as: "product",
+        },
+      },
+      // A product deleted since the request still leaves the email worth seeing.
+      { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+    ];
+
+    const projectRow = {
+      $project: {
+        _id: 0,
+        id: "$_id",
+        email: 1,
+        type: 1,
+        notified: 1,
+        createdAt: 1,
+        priceAtSubscribe: 1,
+        product: {
+          id: "$product._id",
+          name: "$product.name",
+          price: "$product.price",
+          stock: "$product.stock",
+          image: { $ifNull: [{ $first: "$product.images.url" }, null] },
+        },
+      },
+    };
+
+    const [paged, totalAll, pendingRestock, notifiedCount, waitedFor, topProducts] =
+      await Promise.all([
+        StockAlert.aggregate([
+          { $match: match },
+          ...withProduct,
+          ...search,
+          { $sort: { createdAt: -1 } },
+          {
+            $facet: {
+              rows: [{ $skip: (page - 1) * limit }, { $limit: limit }, projectRow],
+              count: [{ $count: "n" }],
+            },
+          },
+        ]),
+        StockAlert.countDocuments({}),
+        StockAlert.countDocuments({ type: "restock", notified: false }),
+        StockAlert.countDocuments({ notified: true }),
+        StockAlert.distinct("product", { type: "restock", notified: false }),
+        // Ranked by how many people are waiting — what to restock first.
+        StockAlert.aggregate([
+          { $match: { type: "restock", notified: false } },
+          {
+            $group: {
+              _id: "$product",
+              requests: { $sum: 1 },
+              lastRequest: { $max: "$createdAt" },
+            },
+          },
+          { $sort: { requests: -1, lastRequest: -1 } },
+          { $limit: 5 },
+          // Not `withProduct`: after the $group the product id is `_id`, so the
+          // lookup has to join on that instead.
+          {
+            $lookup: {
+              from: "products",
+              localField: "_id",
+              foreignField: "_id",
+              as: "product",
+            },
+          },
+          { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+          {
+            $project: {
+              _id: 0,
+              id: "$_id",
+              requests: 1,
+              lastRequest: 1,
+              name: "$product.name",
+              stock: "$product.stock",
+              image: { $ifNull: [{ $first: "$product.images.url" }, null] },
+            },
+          },
+        ]),
+      ]);
+
+    const rows = paged[0]?.rows ?? [];
+    const total = paged[0]?.count?.[0]?.n ?? 0;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        summary: {
+          total: totalAll,
+          pendingRestock,
+          notified: notifiedCount,
+          productsWaitedFor: waitedFor.length,
+        },
+        topProducts,
+        requests: rows,
+        page,
+        pages: Math.max(1, Math.ceil(total / limit)),
+        total,
+      },
+    });
+  }
+);

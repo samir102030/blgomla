@@ -798,10 +798,20 @@ const ProductDetailPage: React.FC = () => {
               </button>
             </div>
             <div className="py-8">
+              {/* The full text lives here — the card upstairs shows one line of
+                  it. `whitespace-pre-line` keeps the seller's own line breaks:
+                  descriptions arrive from the bulk sheet as short bulleted
+                  specs, and collapsing them ran the lot into one paragraph. */}
               {tab === "description" && (
-                <p className="text-[var(--text-muted)] leading-relaxed">
-                  {product.description}
-                </p>
+                product.description?.trim() ? (
+                  <p className="text-[var(--text-muted)] leading-relaxed whitespace-pre-line">
+                    {product.description}
+                  </p>
+                ) : (
+                  <p className="text-[var(--text-subtle)] italic">
+                    {t("No description available")}
+                  </p>
+                )
               )}
               {tab === "reviews" && (
                 <div>
