@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Breadcrumb from "../components/Breadcrumb";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -69,43 +70,54 @@ const MyAccountPage: React.FC = () => {
       <Header />
 
       {/* ===== PROFILE HERO ===== */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand-primary)] via-[var(--brand-accent)] to-[#0B0B10]"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA1Ij48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-60"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-14">
+      {/* Keeps its own layout — the avatar belongs beside the name, not in the
+          shared header's aside slot — but sits on the same canvas as every
+          other page. text-left / ml-auto were physical, so in Arabic the name
+          stayed left-aligned and the quick actions bunched up on the wrong
+          side of the avatar. */}
+      <section className="relative isolate overflow-hidden bg-[var(--ink-canvas)]">
+        <div className="absolute inset-0 grid-lines opacity-[0.5] pointer-events-none" aria-hidden="true" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="absolute -top-32 ltr:-left-20 rtl:-right-20 w-[26rem] h-[26rem] rounded-full bg-[#FF6A1A] opacity-[0.14] blur-[110px] animate-drift" />
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-16 pointer-events-none bg-gradient-to-b from-transparent to-[var(--bg)]" aria-hidden="true" />
+
+        <div className="relative shell py-10 lg:py-14">
+          <Breadcrumb
+            className="mb-6"
+            onInk
+            items={[
+              { label: t("common.home", "Home"), to: "/" },
+              { label: t("account.myAccount", "My Account") },
+            ]}
+          />
           <div className="flex flex-col sm:flex-row items-center gap-5">
             {/* Avatar */}
             <div className="relative group">
-              <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden shadow-xl">
+              <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl panel-glass flex items-center justify-center overflow-hidden shadow-xl">
                 {user?.profilePicture ? (
                   <img loading="lazy" decoding="async" src={user.profilePicture} alt="Profile" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-4xl">{user?.name?.[0]?.toUpperCase() || "👤"}</span>
                 )}
               </div>
-              <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 -right-1 w-7 h-7 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform">✏️</button>
+              <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 ltr:-right-1 rtl:-left-1 w-7 h-7 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform" aria-label={t("account.editProfile", "Edit profile")}>✏️</button>
             </div>
             {/* Info */}
-            <div className="text-center sm:text-left">
-              <h1 className="text-2xl lg:text-3xl font-extrabold text-white">{user?.name}</h1>
-              <p className="text-white/70 text-sm mt-0.5">{user?.email}</p>
-              <div className="flex items-center justify-center sm:justify-start gap-3 mt-2">
-                {memberSince && <span className="text-[10px] bg-white/15 text-white/80 px-2.5 py-1 rounded-full border border-white/10">{t("account.memberSince", "Member since")} {memberSince}</span>}
-                {user.role === "store" && <span className="text-[10px] bg-amber-400/20 text-amber-200 px-2.5 py-1 rounded-full border border-amber-400/20">🏪 {t("account.vendor", "Vendor")}</span>}
+            <div className="text-center sm:text-start">
+              <h1 className="text-display-sm text-[var(--on-ink)]">{user?.name}</h1>
+              <p className="text-[var(--on-ink-muted)] text-sm mt-1">{user?.email}</p>
+              <div className="flex items-center justify-center sm:justify-start gap-2 mt-3">
+                {memberSince && <span className="chip chip-on-ink">{t("account.memberSince", "Member since")} {memberSince}</span>}
+                {user.role === "store" && <span className="chip chip-on-ink">🏪 {t("account.vendor", "Vendor")}</span>}
               </div>
             </div>
             {/* Quick Actions */}
-            <div className="sm:ml-auto flex gap-2">
-              <Link to="/wishlist" className="bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-4 py-2 rounded-xl hover:bg-white/25 transition-all flex items-center gap-1.5">❤️ {t("account.wishlist", "Wishlist")}</Link>
-              <Link to="/cart" className="bg-white/15 backdrop-blur-sm border border-white/20 text-white text-xs font-medium px-4 py-2 rounded-xl hover:bg-white/25 transition-all flex items-center gap-1.5">🛒 {t("account.cart", "Cart")}</Link>
+            <div className="sm:ms-auto flex gap-2">
+              <Link to="/wishlist" className="btn btn-sm btn-on-ink">❤️ {t("account.wishlist", "Wishlist")}</Link>
+              <Link to="/cart" className="btn btn-sm btn-on-ink">🛒 {t("account.cart", "Cart")}</Link>
             </div>
           </div>
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-xs text-white/50 mt-5">
-            <Link to="/" className="hover:text-white transition-colors">{t("common.home", "Home")}</Link>
-            <span>/</span>
-            <span className="text-white/80">{t("account.myAccount", "My Account")}</span>
-          </nav>
         </div>
       </section>
 
@@ -139,7 +151,7 @@ const MyAccountPage: React.FC = () => {
       </div>
 
       <main className="py-6 lg:py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
 
             {/* ===== DESKTOP SIDEBAR ===== */}

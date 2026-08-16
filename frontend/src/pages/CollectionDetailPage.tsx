@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import PageHero from "../components/PageHero";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
@@ -164,64 +165,46 @@ const CollectionDetailPage: React.FC = () => {
       <Header />
 
       {/* ═══ Breadcrumb + Hero ═══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] py-12 sm:py-16">
-        <div className="absolute top-10 right-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-
-        <div className="relative max-w-5xl mx-auto px-4">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-xs text-white/40 mb-6">
-            <Link to="/" className="hover:text-white/70 transition-colors">{t("Home")}</Link>
-            <span>/</span>
-            <Link to="/collections" className="hover:text-white/70 transition-colors">{t("Bundles")}</Link>
-            <span>/</span>
-            <span className="text-white/70">{collection.name}</span>
-          </nav>
-
-          <div className="flex items-start justify-between gap-6 flex-wrap">
-            <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 text-xs text-amber-300 mb-3">
-                📦 {t("Bundle Deal")}
-              </div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2">
-                {collection.name}
-              </h1>
-              <p className="text-sm text-white/50 max-w-xl leading-relaxed">
-                {collection.description || t("A curated bundle of premium products at an exclusive price.")}
-              </p>
-
-              {collection.brands?.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 mt-4">
-                  {collection.brands.map((brand: any) => (
-                    <span
-                      key={brand._id}
-                      className="inline-flex items-center gap-1.5 bg-white/10 border border-white/10 rounded-full px-2.5 py-1 text-[11px] text-white/70"
-                    >
-                      {brand.logo && (
-                        <img
-                          src={brand.logo}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
-                          className="w-3.5 h-3.5 object-contain invert opacity-70"
-                        />
-                      )}
-                      {brand.name}
-                    </span>
-                  ))}
-                </div>
-              )}
+      <PageHero
+        eyebrow={t("Bundle Deal")}
+        title={collection.name}
+        subtitle={collection.description || t("A curated bundle of premium products at an exclusive price.")}
+        breadcrumb={[
+          { label: t("Home"), to: "/" },
+          { label: t("Bundles"), to: "/collections" },
+          { label: collection.name },
+        ]}
+        actions={
+          collection.brands?.length > 0 ? (
+            <>
+              {collection.brands.map((brand: any) => (
+                <span key={brand._id} className="chip chip-on-ink">
+                  {brand.logo && (
+                    <img
+                      src={brand.logo}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="w-3.5 h-3.5 object-contain invert opacity-70"
+                    />
+                  )}
+                  {brand.name}
+                </span>
+              ))}
+            </>
+          ) : undefined
+        }
+        aside={
+          savingsPercent > 0 ? (
+            <div className="flex flex-col items-center justify-center w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-lg shadow-emerald-500/25">
+              <span className="text-2xl font-black leading-none">{savingsPercent}%</span>
+              <span className="text-[10px] font-bold tracking-wide opacity-90 mt-1">
+                {t("Saved")}
+              </span>
             </div>
-
-            {savingsPercent > 0 && (
-              <div className="flex flex-col items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-green-600 text-white shadow-lg shadow-emerald-500/25">
-                <span className="text-xl font-black leading-none">{savingsPercent}%</span>
-                <span className="text-[9px] font-bold uppercase tracking-wide opacity-80">SAVED</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+          ) : undefined
+        }
+      />
 
       {/* ═══ Content ═══ */}
       <main className="max-w-5xl mx-auto px-4 py-10 sm:py-14">

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PageHero from "./PageHero";
 import { useTranslation } from "react-i18next";
 
 interface ContactForm {
@@ -100,29 +101,18 @@ const Contact: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       {/* ═══ Hero Section ═══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] py-16 sm:py-24">
-        {/* Animated orbs */}
-        <div className="absolute top-10 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/8 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
-        {/* Grid overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
-
-        <div className="relative max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/10 rounded-full px-4 py-1.5 text-sm text-white/80 mb-6">
-            <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            {t("We're here to help")}
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white mb-4 leading-tight">
-            {t("Get In")} <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">{t("Touch")}</span>
-          </h1>
-          <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto leading-relaxed">
-            {t("Have questions about our products, wholesale pricing, or need technical support? Our team is ready to assist you.")}
-          </p>
-        </div>
-      </section>
+      {/* Purple-and-cyan gradient before this; the cards below overlap it, so
+          the hero keeps a little extra bottom padding to sit under them. */}
+      <PageHero
+        eyebrow={t("We're here to help")}
+        title={t("Get In Touch")}
+        subtitle={t("Have questions about our products, wholesale pricing, or need technical support? Our team is ready to assist you.")}
+        breadcrumb={[{ label: t("Home"), to: "/" }, { label: t("Contact") }]}
+        className="pb-10"
+      />
 
       {/* ═══ Contact Cards ═══ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10">
+      <section className="shell -mt-12 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {contactCards.map((card, i) => (
             <a
@@ -140,7 +130,17 @@ const Contact: React.FC = () => {
                 {card.title}
               </h3>
               {card.lines.map((line, j) => (
-                <p key={j} className={`text-sm ${j === 0 ? "text-[var(--text)] font-medium" : "text-[var(--text-muted)]"}`}>
+                <p
+                  key={j}
+                  // A phone number or an address written in Latin script inside
+                  // an RTL paragraph gets reordered by the bidi algorithm:
+                  // "+20 100 935 3639" was reading "3639 935 100 20+". Marking
+                  // the run as LTR keeps it in dialling order.
+                  dir={/^[+\d(]|@/.test(line.trim()) ? "ltr" : undefined}
+                  className={`text-sm ${j === 0 ? "text-[var(--text)] font-medium" : "text-[var(--text-muted)]"} ${
+                    /^[+\d(]|@/.test(line.trim()) ? "text-start" : ""
+                  }`}
+                >
                   {line}
                 </p>
               ))}
@@ -150,7 +150,7 @@ const Contact: React.FC = () => {
       </section>
 
       {/* ═══ Form + Map Section ═══ */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+      <section className="shell py-14 sm:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Contact Form */}
           <div className="lg:col-span-3">

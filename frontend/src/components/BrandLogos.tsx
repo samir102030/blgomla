@@ -124,7 +124,7 @@ const BrandLogos: React.FC = () => {
 
   return (
     <section className="py-10 sm:py-14 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+      <div className="shell mb-8">
         <div className="text-center">
           <h2 className="text-xl sm:text-2xl font-bold text-[var(--text)] mb-2">
             {t("Trusted Brands")}

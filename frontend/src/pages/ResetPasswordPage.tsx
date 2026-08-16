@@ -119,7 +119,7 @@ const ResetPasswordPage: React.FC = () => {
             className="w-full h-full object-cover opacity-20"
            loading="lazy" decoding="async"/>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative shell">
           <h1 className="text-4xl font-bold text-[var(--text)] mb-4">
             {t("Reset Password")}
           </h1>

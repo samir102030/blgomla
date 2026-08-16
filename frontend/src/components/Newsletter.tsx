@@ -74,7 +74,7 @@ const Newsletter: React.FC = () => {
         <div className="absolute bottom-10 right-[15%] w-48 h-48 bg-[var(--brand-accent)] rounded-full opacity-[0.05] blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative shell">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* LEFT — value proposition + benefits */}
           <div className="lg:col-span-6 xl:col-span-7">

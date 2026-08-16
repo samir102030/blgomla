@@ -29,7 +29,7 @@ const CouponStrip: React.FC<{ title?: string }> = ({ title }) => {
       : `${c.discountValue} ${t("EGP")} ${t("OFF")}`;
 
   return (
-    <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6">
+    <section className="shell py-6">
       <h2 className="text-lg sm:text-xl font-bold text-[var(--text)] mb-3 flex items-center gap-2">
         <span aria-hidden="true">🏷️</span>
         {title || t("Collect Coupons")}

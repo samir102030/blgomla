@@ -91,7 +91,7 @@ const AboutUsPage: React.FC = () => {
             className="w-full h-full object-cover opacity-30"
            loading="lazy" decoding="async"/>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative shell text-center">
           <h1 className="text-5xl font-bold text-[var(--text)] mb-6">
             {t("About Belgomla")}
           </h1>
@@ -113,7 +113,7 @@ const AboutUsPage: React.FC = () => {
       <main>
         {/* Our Story Section */}
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="shell">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-3xl font-bold text-[var(--text)] mb-6">
@@ -158,7 +158,7 @@ const AboutUsPage: React.FC = () => {
 
         {/* Stats Section */}
         <section className="py-16 bg-[var(--bg)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="shell">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Our Achievements")}
@@ -182,7 +182,7 @@ const AboutUsPage: React.FC = () => {
 
         {/* Values Section */}
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="shell">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Our Values")}
@@ -207,7 +207,7 @@ const AboutUsPage: React.FC = () => {
 
         {/* Team Section */}
         <section className="py-16 bg-[var(--bg)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="shell">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Meet Our Team")}
@@ -246,7 +246,7 @@ const AboutUsPage: React.FC = () => {
 
         {/* Mission Section */}
         <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="shell">
             <div className="bg-blue-600 rounded-2xl p-12 text-center text-white">
               <h2 className="text-3xl font-bold mb-6">{t("Our Mission")}</h2>
               <p className="text-xl mb-8 max-w-4xl mx-auto">
@@ -274,7 +274,7 @@ const AboutUsPage: React.FC = () => {
 
         {/* Why Choose Us Section */}
         <section className="py-16 bg-[var(--bg)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="shell">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-[var(--text)] mb-4">
                 {t("Why Choose Belgomla?")}

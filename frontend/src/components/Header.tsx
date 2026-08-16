@@ -599,7 +599,7 @@ const Header: React.FC = () => {
       }`}
     >
       {/* Main header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="shell">
         <div className="flex items-center justify-between h-16 sm:h-18 gap-4">
           {/* Logo — Belgomla MarkBag (geometric B with bag handle) + wordmark */}
           <Link
@@ -807,7 +807,7 @@ const Header: React.FC = () => {
 
       {/* Desktop Navigation */}
       <nav className="hidden lg:block border-t border-[var(--border)] bg-[var(--brand-nav)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="shell">
           <ul className="flex flex-row items-center gap-1">
             {/* Categories flyout — slim mega-menu (top categories + brands) */}
             <li

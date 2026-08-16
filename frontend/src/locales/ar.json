@@ -1134,7 +1134,7 @@
       "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا المورد؟ لا يمكن التراجع عن هذا الإجراء."
     }
   },
-  "account.returns": "?????????",
+  "account.returns": "المرتجعات",
   "Collections": "المجموعات",
   "collections": {
     "title": "المجموعات",
@@ -3537,5 +3537,6 @@
   "Review your details and confirm your order.": "راجع بياناتك وأكّد طلبك.",
   "Save More with Bundles": "وفّر أكتر مع الحزم",
   "Side by side": "جنب بعض",
-  "Legal": "قانوني"
+  "Legal": "قانوني",
+  "Saved": "وفّرت"
 }
