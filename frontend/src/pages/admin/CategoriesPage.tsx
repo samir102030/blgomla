@@ -317,9 +317,9 @@ const CategoriesPage: React.FC = () => {
         isOpen={modalOpen}
         onClose={handleModalClose}
         category={editingCategory}
-        parentCategories={categories.filter(
-          (c) => c._id !== editingCategory?._id
-        )}
+        // The full list: the modal walks it to build the tree, and drops the
+        // edited category along with everything beneath it.
+        parentCategories={categories}
       />
 
       {/* View Category Modal */}

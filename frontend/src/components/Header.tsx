@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../lib/axios";
 import {
   ArrowRightOnRectangleIcon,
-  ChevronDownIcon,
   ClockIcon,
   GlobeAltIcon,
   HeartIcon,
@@ -21,7 +20,7 @@ import { useBrandStore } from "../stores/brand.store";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
-import { getCategoryIcon } from "../lib/categoryIcon";
+import { CategoryAccordion, CategoryNavItems } from "./CategoryNav";
 import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
 import Logo, { BRAND } from "./Logo";
@@ -93,34 +92,18 @@ const Header: React.FC = () => {
   const [language, setLanguage] = useState(i18n.language);
   const [scrolled, setScrolled] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [catMenuOpen, setCatMenuOpen] = useState(false);
-  // Active root category in the mega-menu — drives the right-side subcategory pane.
-  const [catActiveId, setCatActiveId] = useState<string | null>(null);
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const catMenuRef = useRef<HTMLLIElement>(null);
   const navigate = useNavigate();
 
-  // Load categories/brands once for the Categories flyout (stores are
+  // Load categories/brands once for the category menu and search (stores are
   // persisted, so this is usually a no-op after first visit).
   useEffect(() => {
     if (!categories.length) fetchCategories();
     if (!brands.length) fetchBrands();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Close the Categories flyout on outside click.
-  useEffect(() => {
-    if (!catMenuOpen) return;
-    const onClick = (e: MouseEvent) => {
-      if (catMenuRef.current && !catMenuRef.current.contains(e.target as Node)) {
-        setCatMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, [catMenuOpen]);
 
   useEffect(() => {
     if (!userMenuOpen) return;
@@ -337,55 +320,6 @@ const Header: React.FC = () => {
     }
   };
 
-  // Roots make up the menu; their children appear inside each flyout. What
-  // shows and in what order is now an editorial decision, taken in the
-  // dashboard under Storefront visibility.
-  //
-  // `showInMenu` replaces a hard `.slice(0, 12)`: the thirteenth root category
-  // used to vanish for a reason nothing in the admin could explain. It
-  // defaults to true, so an existing catalogue looks exactly as it did.
-  const topCategories = useMemo(
-    () =>
-      (categories || [])
-        .filter(
-          (c) =>
-            !c.parentCategory &&
-            c.isActive !== false &&
-            !c.deleted &&
-            (c as { showInMenu?: boolean }).showInMenu !== false
-        )
-        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-    [categories]
-  );
-  // Map of root-category id → its direct child categories (full records, so
-  // we get images/nameAr that the populated subCategories array lacks).
-  const childrenByRoot = useMemo(() => {
-    const map = new Map<string, typeof categories>();
-    for (const c of categories || []) {
-      const parentId =
-        typeof c.parentCategory === "string"
-          ? c.parentCategory
-          : (c.parentCategory as { _id?: string } | undefined)?._id;
-      if (!parentId || c.isActive === false || c.deleted) continue;
-      if ((c as { showInMenu?: boolean }).showInMenu === false) continue;
-      const list = map.get(parentId) || [];
-      list.push(c);
-      map.set(parentId, list);
-    }
-    for (const [k, list] of map) {
-      list.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-      map.set(k, list);
-    }
-    return map;
-  }, [categories]);
-  const topBrands = useMemo(
-    () =>
-      (brands || [])
-        .filter((b) => b.isActive !== false && !b.deleted)
-        .slice(0, 8),
-    [brands]
-  );
-
   const role = user?.role;
   const showBecomeVendor = !role || role === "customer";
   const showAdminDashboard =
@@ -401,6 +335,10 @@ const Header: React.FC = () => {
     { label: t("All Products"), path: "/products" },
     { label: t("Deals"), path: "/deals", className: "!text-[var(--brand-accent)] font-semibold" },
     { label: t("Collections"), path: "/collections" },
+    // The old category flyout carried a "Top brands" strip, which was the only
+    // link to the brands page anywhere in the nav. The menu no longer has room
+    // for it, so the page gets a link of its own rather than losing its way in.
+    { label: t("Brands"), path: "/brands" },
     { label: t("Contact"), path: "/contact" },
     {
       label: t("Become a Vendor"),
@@ -808,220 +746,7 @@ const Header: React.FC = () => {
       {/* Desktop Navigation */}
       <nav className="hidden lg:block border-t border-[var(--border)] bg-[var(--brand-nav)]">
         <div className="shell">
-          <ul className="flex flex-row items-center gap-1">
-            {/* Categories flyout — slim mega-menu (top categories + brands) */}
-            <li
-              className="relative"
-              ref={catMenuRef}
-              onMouseEnter={() => setCatMenuOpen(true)}
-              onMouseLeave={() => {
-                setCatMenuOpen(false);
-                // Reset here, on leaving the whole flyout, so the next open
-                // starts fresh — moving between its two columns doesn't.
-                setCatActiveId(null);
-              }}
-            >
-              <button
-                type="button"
-                aria-haspopup="true"
-                aria-expanded={catMenuOpen}
-                onClick={() => setCatMenuOpen((v) => !v)}
-                className="flex items-center gap-1.5 py-3 px-4 text-sm font-medium text-[var(--brand-nav-text)] opacity-70 hover:opacity-100 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all"
-              >
-                <Squares2X2Icon className="w-4 h-4" />
-                {t("Categories")}
-                <ChevronDownIcon
-                  className={`w-3.5 h-3.5 transition-transform ${catMenuOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-              {catMenuOpen && (
-                <div className="absolute ltr:left-0 rtl:right-0 top-full mt-1 w-[min(96vw,60rem)] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 overflow-hidden animate-fadeInDown">
-                  {topCategories.length > 0 ? (
-                    <div className="grid grid-cols-12">
-                      {/* LEFT — root categories list */}
-                      {/* No onMouseLeave here. Clearing the selection when the
-                          pointer left this column fired the moment someone
-                          moved toward the panel on the right — the only way to
-                          reach the subcategories they had just opened. With
-                          `catActiveId` back at null, both the highlight below
-                          and the panel itself fall back to topCategories[0],
-                          so the menu snapped to the first category mid-reach.
-                          The flyout as a whole already resets on leaving. */}
-                      <ul
-                        className="col-span-5 md:col-span-4 border-r border-[var(--border)] bg-[var(--surface-2)]/40 max-h-[28rem] overflow-y-auto py-2"
-                      >
-                        {topCategories.map((c) => {
-                          const isActive = (catActiveId ?? topCategories[0]._id) === c._id;
-                          return (
-                            <li key={c._id}>
-                              <button
-                                type="button"
-                                onMouseEnter={() => setCatActiveId(c._id)}
-                                onFocus={() => setCatActiveId(c._id)}
-                                onClick={() => {
-                                  goToCategory(c._id);
-                                  setCatMenuOpen(false);
-                                }}
-                                className={`w-full flex items-center gap-3 text-left text-sm px-4 py-2.5 transition-colors ${
-                                  isActive
-                                    ? "bg-[var(--surface)] text-[var(--brand-primary)] font-medium"
-                                    : "text-[var(--text)] hover:bg-[var(--surface)]"
-                                }`}
-                              >
-                                <span className="w-8 h-8 shrink-0 rounded-lg bg-[var(--surface-2)] flex items-center justify-center overflow-hidden">
-                                  {c.image ? (
-                                    <img
-                                      src={cldImg(c.image, { w: 64 })}
-                                      alt=""
-                                      width={32}
-                                      height={32}
-                                      loading="lazy"
-                                      decoding="async"
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <span className="text-base" aria-hidden="true">
-                                      {getCategoryIcon(c.name)}
-                                    </span>
-                                  )}
-                                </span>
-                                <span className="truncate flex-1">
-                                  {i18n.language === "ar" && c.nameAr ? c.nameAr : c.name}
-                                </span>
-                                <ChevronDownIcon
-                                  className={`w-3.5 h-3.5 shrink-0 text-[var(--text-subtle)] ${
-                                    i18n.language === "ar" ? "rotate-90" : "-rotate-90"
-                                  }`}
-                                />
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-
-                      {/* RIGHT — subcategories of active root, or top brands fallback */}
-                      <div className="col-span-7 md:col-span-8 p-5 max-h-[28rem] overflow-y-auto">
-                        {(() => {
-                          const activeRoot =
-                            topCategories.find((c) => c._id === catActiveId) ||
-                            topCategories[0];
-                          const subs = activeRoot
-                            ? childrenByRoot.get(activeRoot._id) || []
-                            : [];
-                          const activeName = activeRoot
-                            ? i18n.language === "ar" && activeRoot.nameAr
-                              ? activeRoot.nameAr
-                              : activeRoot.name
-                            : "";
-
-                          return (
-                            <>
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                                  {activeName}
-                                </div>
-                                {activeRoot && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      goToCategory(activeRoot._id);
-                                      setCatMenuOpen(false);
-                                    }}
-                                    className="text-xs font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]"
-                                  >
-                                    {t("See all")} →
-                                  </button>
-                                )}
-                              </div>
-
-                              {subs.length > 0 ? (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                                  {subs.slice(0, 12).map((s) => (
-                                    <button
-                                      key={s._id}
-                                      type="button"
-                                      onClick={() => {
-                                        goToCategory(s._id);
-                                        setCatMenuOpen(false);
-                                      }}
-                                      className="flex flex-col items-center gap-1.5 text-center p-3 rounded-lg border border-transparent hover:border-[var(--border)] hover:bg-[var(--surface-2)] transition-all group"
-                                    >
-                                      <span className="w-14 h-14 rounded-xl bg-[var(--surface-2)] flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform">
-                                        {s.image ? (
-                                          <img
-                                            src={cldImg(s.image, { w: 112 })}
-                                            alt=""
-                                            width={56}
-                                            height={56}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="w-full h-full object-cover"
-                                          />
-                                        ) : (
-                                          <span className="text-2xl" aria-hidden="true">
-                                            {getCategoryIcon(s.name)}
-                                          </span>
-                                        )}
-                                      </span>
-                                      <span className="text-xs text-[var(--text)] line-clamp-2 leading-tight">
-                                        {i18n.language === "ar" && s.nameAr
-                                          ? s.nameAr
-                                          : s.name}
-                                      </span>
-                                    </button>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="text-sm text-[var(--text-subtle)] py-6 text-center">
-                                  {t("Browse all products in this category")}
-                                </div>
-                              )}
-
-                              {topBrands.length > 0 && (
-                                <div className="mt-5 pt-4 border-t border-[var(--border)]">
-                                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)] mb-2">
-                                    {t("Top brands")}
-                                  </div>
-                                  <div className="flex flex-wrap gap-1.5">
-                                    {topBrands.map((b) => (
-                                      <button
-                                        key={b._id}
-                                        type="button"
-                                        onClick={() => {
-                                          goToBrand(b._id);
-                                          setCatMenuOpen(false);
-                                        }}
-                                        className="text-xs px-2.5 py-1 rounded-full border border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors"
-                                      >
-                                        {b.name}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-sm text-[var(--text-subtle)] px-4 py-6 text-center">
-                      {t("No categories yet")}
-                    </div>
-                  )}
-
-                  <div className="px-5 py-2.5 border-t border-[var(--border)] bg-[var(--surface-2)]/30">
-                    <Link
-                      to="/products"
-                      onClick={() => setCatMenuOpen(false)}
-                      className="text-sm font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)] transition-colors"
-                    >
-                      {t("Browse all products")} →
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </li>
+          <ul className="flex flex-row flex-wrap items-center gap-x-1">
             {navigationItems
               .filter((item) => item.condition === undefined || item.condition)
               .map((item) => (
@@ -1035,6 +760,20 @@ const Header: React.FC = () => {
                 </li>
               ))}
           </ul>
+        </div>
+
+        {/* The catalogue gets a row of its own. Sharing one with the standing
+            links meant the two sets wrapped into each other as categories were
+            added, and which row a name landed on read as an accident. Wrapping
+            rather than scrolling sideways, so nothing falls off the end. */}
+        <div className="border-t border-[var(--border)]/60">
+          <div className="shell">
+            <ul className="flex flex-row flex-wrap items-center gap-x-2">
+              {/* Roots sit in the bar itself; each drops its subcategories
+                  below it, and those open a third level to the side. */}
+              <CategoryNavItems />
+            </ul>
+          </div>
         </div>
       </nav>
 
@@ -1089,30 +828,15 @@ const Header: React.FC = () => {
                 ))}
             </ul>
 
-            {topCategories.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-[var(--border)]">
-                <div className="flex items-center gap-1.5 px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                  <Squares2X2Icon className="w-3.5 h-3.5" />
-                  {t("Shop by Category")}
-                </div>
-                <ul className="flex flex-col gap-0.5">
-                  {topCategories.map((c) => (
-                    <li key={c._id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsMenuOpen(false);
-                          goToCategory(c._id);
-                        }}
-                        className="w-full text-left block py-2.5 px-4 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors truncate"
-                      >
-                        {i18n.language === 'ar' && c.nameAr ? c.nameAr : c.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+            <div className="mt-3 pt-3 border-t border-[var(--border)]">
+              <div className="flex items-center gap-1.5 px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                <Squares2X2Icon className="w-3.5 h-3.5" />
+                {t("Shop by Category")}
               </div>
-            )}
+              {/* Same tree as the desktop bar, expanded in place — the drawer
+                  is where the deeper levels were previously unreachable. */}
+              <CategoryAccordion onNavigate={() => setIsMenuOpen(false)} />
+            </div>
           </nav>
         </aside>
       </div>

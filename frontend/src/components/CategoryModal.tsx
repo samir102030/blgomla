@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { uploadErrorMessage } from "../lib/uploadError";
@@ -38,7 +38,48 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const uploadError = useRef<string | null>(null);
 
   const { t } = useTranslation();
-  const { createCategory, updateCategory, loading } = useCategoryStore();
+  const { createCategory, updateCategory, loading, error, clearError } =
+    useCategoryStore();
+
+  /**
+   * The parent choices, ordered as the tree reads and indented by depth.
+   *
+   * A flat alphabetical list of every category gives no clue which of two
+   * similarly named entries is the one under Laptop, which is precisely the
+   * choice being made when a third level is added. Walking the tree also
+   * excludes the category's own descendants: making one of them its parent
+   * would cut the branch loose from every root — the server refuses it, and
+   * offering it here only invites the error.
+   */
+  const parentOptions = useMemo(() => {
+    const parentIdOf = (c: Category) =>
+      typeof c.parentCategory === "object"
+        ? c.parentCategory?._id || null
+        : c.parentCategory || null;
+
+    const childrenOf = new Map<string | null, Category[]>();
+    for (const c of parentCategories) {
+      if (c.deleted) continue;
+      const key = parentIdOf(c);
+      childrenOf.set(key, [...(childrenOf.get(key) || []), c]);
+    }
+    for (const list of childrenOf.values()) {
+      list.sort(
+        (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)
+      );
+    }
+
+    const options: Array<{ id: string; label: string }> = [];
+    const walk = (parentId: string | null, depth: number) => {
+      for (const c of childrenOf.get(parentId) || []) {
+        if (c._id === category?._id) continue; // and, with it, its whole subtree
+        options.push({ id: c._id, label: `${"— ".repeat(depth)}${c.name}` });
+        walk(c._id, depth + 1);
+      }
+    };
+    walk(null, 0);
+    return options;
+  }, [parentCategories, category?._id]);
 
   useEffect(() => {
     if (category) {
@@ -74,6 +115,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       setImagePreview("");
     }
     setImageFile(null);
+    clearError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, isOpen]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,16 +185,15 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       parentCategory: formData.parentCategory || undefined,
     };
 
-    try {
-      if (category) {
-        await updateCategory(category._id, submitData);
-      } else {
-        await createCategory(submitData);
-      }
-      onClose();
-    } catch (error) {
-      console.error("Failed to save category:", error);
-    }
+    // The store catches save failures and parks the reason in `error` rather
+    // than throwing, so closing on the strength of the call having returned
+    // reported a rejected save — a parent that would loop the tree, say — as a
+    // successful one. Only a returned record means it saved.
+    const saved = category
+      ? await updateCategory(category._id, submitData)
+      : await createCategory(submitData);
+
+    if (saved) onClose();
   };
 
   if (!isOpen) return null;
@@ -172,6 +214,12 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {error && (
+            <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -217,13 +265,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">{t("categories.noParent")}</option>
-                {parentCategories
-                  .filter((cat) => cat._id !== category?._id)
-                  .map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </option>
-                  ))}
+                {parentOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

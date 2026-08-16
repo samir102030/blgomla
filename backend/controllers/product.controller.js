@@ -11,6 +11,7 @@ import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import { logEventSafe } from "./event.controller.js";
 import { logAudit, diff } from "../utils/audit.js";
+import { categoryFilterValue } from "../utils/categoryTree.js";
 import mongoose from "mongoose";
 
 // Tokenized, case-insensitive search filter: every word must appear in the
@@ -395,7 +396,10 @@ export const getStorefrontProducts = controllerWrapper(
 
     const searchAnd = buildSearchFilter(search);
     if (searchAnd) query.$and = searchAnd;
-    if (category) query.category = category;
+    // A category selected from the menu may be a branch rather than a leaf, and
+    // products hang off the leaves. Matching the subtree is what makes clicking
+    // "Laptop" show laptops instead of an empty page.
+    if (category) query.category = await categoryFilterValue(category);
     if (brand) query.brand = brand;
     if (inStock === "true") query.stock = { $gt: 0 };
     if (rating) query.rating = { $gte: Number(rating) };
@@ -814,7 +818,7 @@ export const filterProducts = controllerWrapper(
       limit = 20,
     } = req.query;
     let query = {};
-    if (category) query.category = category;
+    if (category) query.category = await categoryFilterValue(category);
     if (brand) query.brand = brand;
     if (store) query.store = store;
     if (featured !== undefined) query.featured = featured;
@@ -867,7 +871,7 @@ export const getProductsByCategory = controllerWrapper(
     const { categoryId } = req.params;
     const { page = 1, limit = 20 } = req.query;
     const query = {
-      category: categoryId,
+      category: await categoryFilterValue(categoryId),
       isActive: true,
       deleted: false,
     };

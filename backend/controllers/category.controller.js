@@ -2,6 +2,7 @@ import Category from "../models/category.model.js";
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { findByName } from "../utils/findOrCreateByName.js";
+import { categoryFilterValue, wouldCreateCycle } from "../utils/categoryTree.js";
 
 // Create Category
 export const createCategory = controllerWrapper(
@@ -143,6 +144,21 @@ export const updateCategory = controllerWrapper(
 
     // Handle parent change
     const oldParent = category.parentCategory?.toString();
+
+    // Refuse a parent that sits beneath this category (or is it). Allowing it
+    // would cut the whole branch loose from every root: it would vanish from
+    // the menu while still existing, and each walk over the tree would need a
+    // guard against looping. Rejecting it here keeps the shape a tree.
+    if ("parentCategory" in req.body && req.body.parentCategory) {
+      if (await wouldCreateCycle(categoryId, req.body.parentCategory)) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A category cannot be moved under itself or under one of its own subcategories",
+        });
+      }
+    }
+
     Object.assign(category, req.body);
     await category.save();
 
@@ -216,8 +232,9 @@ export const getProductsByCategory = controllerWrapper(
     const { categoryId } = req.params;
     const { page = 1, limit = 20 } = req.query;
 
+    const categoryFilter = await categoryFilterValue(categoryId);
     const products = await Product.find({
-      category: categoryId,
+      category: categoryFilter,
       deleted: { $ne: true },
     })
       .populate("brand", "name slug logo")
@@ -226,7 +243,7 @@ export const getProductsByCategory = controllerWrapper(
       .lean();
 
     const total = await Product.countDocuments({
-      category: categoryId,
+      category: categoryFilter,
       deleted: { $ne: true },
     });
 
@@ -263,7 +280,7 @@ export const getBrandsInCategory = controllerWrapper(
   async (req, res) => {
     const { categoryId } = req.params;
     const brandIds = await Product.distinct("brand", {
-      category: categoryId,
+      category: await categoryFilterValue(categoryId),
       deleted: { $ne: true },
       isActive: true,
     });
