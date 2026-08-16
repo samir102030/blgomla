@@ -11,6 +11,8 @@ interface CategoryModalProps {
   onClose: () => void;
   category?: Category;
   parentCategories?: Category[];
+  /** Preselected parent when adding from a row's "add subcategory" action. */
+  defaultParentId?: string;
 }
 
 const CategoryModal: React.FC<CategoryModalProps> = ({
@@ -18,6 +20,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   onClose,
   category,
   parentCategories = [],
+  defaultParentId = "",
 }) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -106,7 +109,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
         description: "",
         descriptionAr: "",
         image: "",
-        parentCategory: "",
+        parentCategory: defaultParentId,
         metaTitle: "",
         metaDescription: "",
         sortOrder: 0,
@@ -117,7 +120,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     setImageFile(null);
     clearError();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, isOpen]);
+  }, [category, isOpen, defaultParentId]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

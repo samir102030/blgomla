@@ -38,8 +38,9 @@ interface Row {
 const SortableRow: React.FC<{
   row: Row;
   isAr: boolean;
+  depth: number;
   onToggle: (id: string, field: "isActive" | "showInMenu", value: boolean) => void;
-}> = ({ row, isAr, onToggle }) => {
+}> = ({ row, isAr, depth, onToggle }) => {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: row._id });
@@ -48,6 +49,10 @@ const SortableRow: React.FC<{
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    // Indented by depth so the list reads as the tree it is. The menu orders
+    // each set of children among themselves, so a row's position matters
+    // relative to its siblings, not to the list as a whole.
+    marginInlineStart: `${depth * 1.5}rem`,
   };
 
   const label = isAr && row.nameAr ? row.nameAr : row.name;
@@ -106,16 +111,11 @@ const SortableRow: React.FC<{
         {t("visibility.live", "Live")}
       </label>
 
-      <label
-        className={`flex items-center gap-1.5 text-[11px] cursor-pointer shrink-0 ${
-          row.parentCategory ? "opacity-40" : "text-[var(--text-muted)]"
-        }`}
-        title={
-          row.parentCategory
-            ? t("visibility.subInFlyout", "Shown inside its parent's menu")
-            : undefined
-        }
-      >
+      {/* Applies at every level now that the menu is a cascade: off takes a
+          root out of the bar, and takes a subcategory out of the dropdown it
+          would have appeared in. It used to be greyed out on children, from
+          when only roots had a menu slot to lose. */}
+      <label className="flex items-center gap-1.5 text-[11px] cursor-pointer shrink-0 text-[var(--text-muted)]">
         <input
           type="checkbox"
           checked={row.showInMenu !== false}
@@ -202,6 +202,31 @@ const StorefrontVisibilityPage: React.FC = () => {
       setSaving(false);
     }
   };
+
+  /**
+   * How deep each row sits, walked from its parent chain.
+   *
+   * The list arrives flat with only the immediate parent populated, so depth
+   * has to be counted here. `seen` stops a broken chain from looping.
+   */
+  const depthById = useMemo(() => {
+    const parentOf = new Map<string, string | null>(
+      rows.map((r) => [r._id, r.parentCategory?._id || null])
+    );
+    const depths = new Map<string, number>();
+    for (const row of rows) {
+      let depth = 0;
+      const seen = new Set<string>([row._id]);
+      let parent = parentOf.get(row._id) || null;
+      while (parent && !seen.has(parent)) {
+        seen.add(parent);
+        depth += 1;
+        parent = parentOf.get(parent) || null;
+      }
+      depths.set(row._id, depth);
+    }
+    return depths;
+  }, [rows]);
 
   const counts = useMemo(() => {
     const live = rows.filter((r) => r.isActive !== false).length;
@@ -298,6 +323,7 @@ const StorefrontVisibilityPage: React.FC = () => {
                   key={row._id}
                   row={row}
                   isAr={isAr}
+                  depth={depthById.get(row._id) || 0}
                   onToggle={toggle}
                 />
               ))}
@@ -318,7 +344,7 @@ const StorefrontVisibilityPage: React.FC = () => {
           <b className="text-[var(--text)]">{t("visibility.inMenu", "In menu")}</b> —{" "}
           {t(
             "visibility.inMenuHelp",
-            "off keeps it browsable but takes it out of the top menu. Sub-categories always appear inside their parent's menu."
+            "off keeps it browsable but takes it out of the category menu — a top-level one loses its slot in the bar, and a sub-category disappears from the dropdown it sits in, along with anything under it."
           )}
         </p>
       </div>
