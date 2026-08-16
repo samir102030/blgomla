@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import { protectRoute, requirePermission } from '../middleware/auth.middleware.js';
-import { downloadTemplate, bulkUploadProducts } from '../controllers/bulkProduct.controller.js';
+import { downloadTemplate, bulkUploadProducts, exportProducts } from '../controllers/bulkProduct.controller.js';
 
 const router = express.Router();
 
@@ -29,6 +29,9 @@ const upload = multer({
 
 // Download template
 router.get('/template', protectRoute, requirePermission("products.bulk"), downloadTemplate);
+
+// Export the current catalogue in the template's shape
+router.get('/export', protectRoute, requirePermission("products.bulk"), exportProducts);
 
 // Upload and process bulk products
 router.post('/upload', protectRoute, requirePermission("products.bulk"), upload.single('file'), bulkUploadProducts);

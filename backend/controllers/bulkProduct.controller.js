@@ -6,7 +6,54 @@ import { generateProductTemplate, parseProductExcel } from '../utils/excelTempla
 import { findOrCreateByName } from '../utils/findOrCreateByName.js';
 import { clearStorefrontCaches } from '../utils/storefrontCache.js';
 
+import { buildProductExport } from '../utils/productExport.js';
+
 const isAdminUser = (role) => role === 'admin' || role === 'super_admin';
+
+/**
+ * Download the whole catalogue as a sheet in the upload template's own shape,
+ * so it can be edited in Excel and uploaded straight back. A vendor gets their
+ * own products; an admin gets everything, or one store's with ?storeId=.
+ */
+export const exportProducts = async (req, res) => {
+  try {
+    const filter = { deleted: false };
+
+    if (req.user.role === 'store') {
+      const store = req.store || (await Store.findOne({ owner: req.user._id }));
+      if (!store) {
+        return res.status(404).json({ success: false, message: 'Store not found' });
+      }
+      filter.store = store._id;
+    } else if (req.query.storeId) {
+      filter.store = req.query.storeId;
+    }
+
+    const products = await Product.find(filter)
+      .populate('category', 'name')
+      .populate('brand', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const buffer = buildProductExport(products);
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader('Content-Disposition', `attachment; filename=products-${stamp}.xlsx`);
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error exporting products:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to export products',
+      error: error.message,
+    });
+  }
+};
 
 /**
  * Download Excel template for bulk product upload
@@ -47,10 +94,6 @@ const validateProductRow = (product) => {
     errors.push('Product name is required');
   }
 
-  if (!product.price || isNaN(product.price) || product.price <= 0) {
-    errors.push('Valid price is required (must be positive)');
-  }
-
   // Optional field validations
   if (product.stock && (isNaN(product.stock) || product.stock < 0)) {
     errors.push('Stock must be a non-negative number');
@@ -61,6 +104,32 @@ const validateProductRow = (product) => {
   }
 
   return errors;
+};
+
+/**
+ * A missing or unusable price no longer fails the row. Rejecting it meant a
+ * sheet of hundreds of products could be turned away over a handful of blank
+ * cells, and the seller had no way to get the rest in.
+ *
+ * Such a row lands at price 0 **and stock 0**. The zero stock is the part that
+ * matters: the storefront reads availability off `stock`, never off `price`, so
+ * price alone would leave the product on sale for nothing. With no stock it
+ * shows as out of stock, which is what a product with no price should be until
+ * someone prices it. Both fields are ordinary — edit the product and it sells.
+ *
+ * Mutates `product` and returns a note for the row, or null when the price was
+ * already usable.
+ */
+const normalizeMissingPrice = (product) => {
+  const price = Number(product.price);
+  if (Number.isFinite(price) && price > 0) {
+    product.price = price;
+    return null;
+  }
+
+  product.price = 0;
+  product.stock = 0;
+  return 'No usable price — imported at 0 and marked out of stock. Set a price to put it on sale.';
 };
 
 /**
@@ -126,6 +195,9 @@ export const bulkUploadProducts = async (req, res) => {
     const results = {
       successful: [],
       failed: [],
+      // Rows that went in without a price. They are successes, listed
+      // separately so they are easy to find and price afterwards.
+      needsPrice: [],
       totalRows: products.length
     };
 
@@ -184,6 +256,9 @@ export const bulkUploadProducts = async (req, res) => {
         }
       }
 
+      // Before validation: the stock rule below reads the value this may zero.
+      const priceNote = normalizeMissingPrice(productData);
+
       const errors = validateProductRow(productData);
 
       if (errors.length > 0) {
@@ -199,7 +274,14 @@ export const bulkUploadProducts = async (req, res) => {
         // Prepare product object
         const newProduct = {
           name: productData.name,
+          // Blank Arabic fields are omitted rather than written as "", so the
+          // model's own defaults apply and the storefront falls back to English.
+          ...(productData.nameAr ? { nameAr: productData.nameAr } : {}),
+          ...(productData.sku ? { sku: productData.sku } : {}),
           description: productData.description,
+          ...(productData.descriptionAr ? { descriptionAr: productData.descriptionAr } : {}),
+          ...(productData.installation ? { installation: productData.installation } : {}),
+          minOrderQty: productData.minOrderQty || 1,
           price: productData.price,
           stock: productData.stock || 0,
           salePercentage: productData.salePercentage || 0,
@@ -283,6 +365,16 @@ export const bulkUploadProducts = async (req, res) => {
           });
         }
 
+        // Only once the row is actually in — a create that threw is a failure,
+        // not something to go back and price.
+        if (priceNote) {
+          results.needsPrice.push({
+            row: productData.rowNumber,
+            name: productData.name,
+            note: priceNote
+          });
+        }
+
       } catch (error) {
         results.failed.push({
           row: productData.rowNumber,
@@ -313,9 +405,15 @@ export const bulkUploadProducts = async (req, res) => {
       success: true,
       dryRun,
       message: dryRun
-        ? `Preview generated. ${results.successful.length} valid rows, ${results.failed.length} issues.`
+        ? `Preview generated. ${results.successful.length} valid rows, ${results.failed.length} issues.` +
+          (results.needsPrice.length
+            ? ` ${results.needsPrice.length} will import without a price.`
+            : '')
         : `Bulk upload completed. ${results.successful.length} products created, ${results.failed.length} failed.` +
-          (createdNote ? ` Also added ${createdNote}.` : ''),
+          (createdNote ? ` Also added ${createdNote}.` : '') +
+          (results.needsPrice.length
+            ? ` ${results.needsPrice.length} imported without a price and are out of stock until priced.`
+            : ''),
       results,
       // What the upload brought into existence, so it is visible rather than
       // a silent side effect.

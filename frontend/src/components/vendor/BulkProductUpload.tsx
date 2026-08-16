@@ -10,6 +10,10 @@ import { useCategoryStore } from '../../stores/category.store';
 interface UploadResult {
   successful: Array<{ row: number; name: string; productId: string | null; willCreateCategory?: boolean }>;
   failed: Array<{ row: number; name: string; errors: string[] }>;
+  // Rows that imported without a usable price — they are in, at price 0 and
+  // out of stock, waiting to be priced. Optional so a response from an older
+  // backend still renders.
+  needsPrice?: Array<{ row: number; name: string; note: string }>;
   totalRows: number;
 }
 
@@ -38,6 +42,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
   const [uploading, setUploading] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [showResults, setShowResults] = useState(false);
@@ -65,6 +70,43 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
     user?.role === 'admin'
       ? (categories || []).map((c) => c.name)
       : vendorStore?.productCategories || [];
+
+  /**
+   * Download the catalogue as it stands, in the template's own shape. Edit the
+   * file and upload it back: names that already exist are updated, so this is
+   * the route for a bulk price change or filling in Arabic names.
+   */
+  const handleExportProducts = async () => {
+    try {
+      setExporting(true);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${apiUrl}/bulk-products/export`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        toast.error(
+          response.status === 403
+            ? t('vendor.bulk.exportDenied')
+            : t('vendor.bulk.exportFailed')
+        );
+        return;
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `products-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error(t('vendor.bulk.exportFailed'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleDownloadTemplate = async () => {
     try {
@@ -316,6 +358,9 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
     }
   };
 
+  // Empty for a response that predates the field, so the section just hides.
+  const needsPriceRows = uploadResult?.needsPrice ?? [];
+
   return (
     <div className="bg-white dark:bg-slate-900 rounded-lg shadow-md p-6 border border-gray-200 dark:border-slate-800">
       <div className="mb-6">
@@ -453,6 +498,20 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
                 </>
               )}
             </button>
+
+            {/* Export sits beside the blank template because it is the better
+                starting point once there is a catalogue: the sheet comes back
+                already filled, and uploading it updates rather than duplicates. */}
+            <button
+              onClick={handleExportProducts}
+              disabled={exporting}
+              className="inline-flex items-center px-4 py-2 ms-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            >
+              {exporting ? t('vendor.bulk.exporting') : `📤 ${t('vendor.bulk.exportProducts')}`}
+            </button>
+            <p className="text-xs text-gray-500 mt-2">
+              {t('vendor.bulk.exportHint')}
+            </p>
           </div>
         </div>
       </div>
@@ -552,7 +611,11 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
           </div>
 
           {/* Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div
+            className={`grid grid-cols-1 gap-4 mb-4 ${
+              needsPriceRows.length > 0 ? 'md:grid-cols-4' : 'md:grid-cols-3'
+            }`}
+          >
             <div className="bg-white dark:bg-slate-800 p-4 rounded-lg border border-gray-200 dark:border-slate-700">
               <p className="text-sm text-gray-600 dark:text-gray-300">{t('vendor.bulk.totalRows')}</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{uploadResult.totalRows}</p>
@@ -565,6 +628,12 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
               <p className="text-sm text-red-600 dark:text-red-300">{t('vendor.bulk.failed')}</p>
               <p className="text-2xl font-bold text-red-700 dark:text-red-200">{uploadResult.failed.length}</p>
             </div>
+            {needsPriceRows.length > 0 && (
+              <div className="bg-amber-50 dark:bg-amber-500/10 p-4 rounded-lg border border-amber-200 dark:border-amber-500/30">
+                <p className="text-sm text-amber-700 dark:text-amber-300">{t('vendor.bulk.needsPrice')}</p>
+                <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">{needsPriceRows.length}</p>
+              </div>
+            )}
           </div>
 
           {/* Preview table */}
@@ -630,6 +699,40 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
                         <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-300 font-mono text-xs">
                           {item.productId || '—'}
                         </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Imported without a price — in, but not sellable until priced */}
+          {needsPriceRows.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-md font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                ⚠️ {t('vendor.bulk.needsPriceProducts')}
+              </h4>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                {t('vendor.bulk.needsPriceHint')}
+              </p>
+              <div className="bg-white dark:bg-slate-800 rounded-lg border border-amber-200 dark:border-amber-500/30 max-h-60 overflow-y-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                  <thead className="bg-amber-50 dark:bg-amber-500/10 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                        {t('vendor.bulk.row')}
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                        {t('vendor.bulk.productName')}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
+                    {needsPriceRows.map((item, index) => (
+                      <tr key={`needs-price-${item.row}-${index}`}>
+                        <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{item.row}</td>
+                        <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{item.name || '-'}</td>
                       </tr>
                     ))}
                   </tbody>
