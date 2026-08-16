@@ -14,6 +14,11 @@ import {
   setCategoryToProduct,
   updateCategory,
 } from "../controllers/category.controller.js";
+import {
+  bulkUploadCategories,
+  downloadCategoryTemplate,
+} from "../controllers/bulkCategory.controller.js";
+import multer from "multer";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import { cacheHeaders } from "../middleware/cache.middleware.js";
 import { cache } from "../middleware/cache.js";
@@ -38,6 +43,35 @@ const invalidate = invalidateStorefront("categories");
 router.get("/", publicCache, memCache, translateResponse, getAllCategories);
 router.get("/tree", publicCache, memCache, translateResponse, getCategoryTree);
 router.get("/slug/:slug", publicCache, memCache, translateResponse, getCategoryBySlug);
+
+// Bulk upload. Registered before "/:categoryId" so "bulk-template" is not read
+// as an id. Excel only, held in memory — the sheet is parsed, never stored.
+const uploadSheet = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+    cb(allowed.includes(file.mimetype) ? null : new Error("Only Excel files (.xlsx, .xls) are allowed"), allowed.includes(file.mimetype));
+  },
+});
+
+router.get(
+  "/bulk-template",
+  protectRoute,
+  requirePermission("categories.manage"),
+  downloadCategoryTemplate
+);
+router.post(
+  "/bulk-upload",
+  protectRoute,
+  requirePermission("categories.manage"),
+  uploadSheet.single("file"),
+  invalidate,
+  bulkUploadCategories
+);
 
 // Admin
 router.post("/", protectRoute, requirePermission("categories.manage"), invalidate, createCategory);

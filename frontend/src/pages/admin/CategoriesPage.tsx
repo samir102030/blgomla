@@ -5,6 +5,7 @@ import {
   ChevronRightIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  ArrowUpTrayIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
@@ -13,6 +14,7 @@ import { useCategoryStore } from "../../stores/category.store";
 import type { Category } from "../../types/category.type";
 import CategoryModal from "../../components/CategoryModal";
 import ViewCategoryModal from "../../components/ViewCategoryModal";
+import BulkCategoryUpload from "../../components/admin/BulkCategoryUpload";
 
 const parentIdOf = (c: Category): string | null => {
   const parent = c.parentCategory;
@@ -34,6 +36,7 @@ const CategoriesPage: React.FC = () => {
   // Set when "add subcategory" is used, so the new category opens with its
   // parent already chosen instead of leaving it to be found in a long list.
   const [addingUnder, setAddingUnder] = useState<string>("");
+  const [bulkOpen, setBulkOpen] = useState(false);
   const {
     categories,
     loading,
@@ -189,14 +192,27 @@ const CategoriesPage: React.FC = () => {
             {t("categories.subtitle")}
           </p>
         </div>
-        <button
-          onClick={handleAddCategory}
-          className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center justify-center gap-2 font-medium w-full sm:w-auto"
-        >
-          <PlusIcon className="h-4 w-4" />
-          {t("categories.addCategory")}
-        </button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setBulkOpen((v) => !v)}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-[#333333] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-medium flex-1 sm:flex-none"
+          >
+            <ArrowUpTrayIcon className="h-4 w-4" />
+            {t("bulkCategory.button")}
+          </button>
+          <button
+            onClick={handleAddCategory}
+            className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center justify-center gap-2 font-medium flex-1 sm:flex-none"
+          >
+            <PlusIcon className="h-4 w-4" />
+            {t("categories.addCategory")}
+          </button>
+        </div>
       </div>
+
+      {/* Bulk upload panel — collapsed until asked for, so the everyday view
+          of the page stays the tree. */}
+      {bulkOpen && <BulkCategoryUpload onDone={fetchCategories} />}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">

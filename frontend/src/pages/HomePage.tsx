@@ -283,7 +283,13 @@ const HomePage: React.FC = () => {
                       <CategorySkeleton />
                     </div>
                   ))
-                : (categories || []).map((cat: Category) => (
+                : // Top level only. Listing every category here stood a
+                  // subcategory on the shelf beside its own parent, so nesting
+                  // two categories made the strip advertise both ways in as
+                  // though they were unrelated ranges.
+                  (categories || [])
+                    .filter((cat: Category) => !cat.parentCategory)
+                    .map((cat: Category) => (
                     <Link
                       to={`/products?category=${cat._id}`}
                       key={cat._id}
