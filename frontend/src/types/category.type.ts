@@ -9,6 +9,9 @@ export interface Category {
   subCategories?: Category[];
   productCount?: number;
   isActive: boolean;
+  // Whether the storefront's category menu lists it. Independent of isActive:
+  // a live, browsable category can still be kept out of the menu.
+  showInMenu?: boolean;
   deleted: boolean;
   slug?: string;
   metaTitle?: string;
