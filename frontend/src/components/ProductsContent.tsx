@@ -35,19 +35,6 @@ const EMPTY_FILTERS: FilterState = {
   inStock: false,
 };
 
-// Recursively collect a category and all its descendants. Visited-set
-// prevents infinite loops if the DB has a parent-child cycle.
-const collectCategoryIds = (
-  rootId: string,
-  all: any[],
-  visited = new Set<string>()
-): string[] => {
-  if (visited.has(rootId)) return [];
-  visited.add(rootId);
-  const children = all.filter((c) => c.parentCategory === rootId);
-  return [rootId, ...children.flatMap((c) => collectCategoryIds(c._id, all, visited))];
-};
-
 // Pick a string id whether the field is a populated object or a raw id.
 const idOf = (field: any): string => {
   if (!field) return "";
@@ -55,26 +42,81 @@ const idOf = (field: any): string => {
   return String(field);
 };
 
+// Recursively collect a category and all its descendants. Visited-set
+// prevents infinite loops if the DB has a parent-child cycle.
+//
+// The parent comparison goes through idOf: the categories endpoint populates
+// `parentCategory`, so matching it against a raw id found nothing and picking
+// a department showed only the products filed directly on it — which, in a
+// tree three levels deep, is usually none.
+const collectCategoryIds = (
+  rootId: string,
+  all: any[],
+  visited = new Set<string>()
+): string[] => {
+  if (visited.has(rootId)) return [];
+  visited.add(rootId);
+  const children = all.filter((c) => idOf(c.parentCategory) === rootId);
+  return [rootId, ...children.flatMap((c) => collectCategoryIds(c._id, all, visited))];
+};
+
+/** The canonical query string for a set of filters — one direction of the URL sync. */
+const toQuery = (filters: FilterState, sortBy: string) => {
+  const next = new URLSearchParams();
+  if (filters.categories[0]) next.set("category", filters.categories[0]);
+  if (filters.brands[0]) next.set("brand", filters.brands[0]);
+  if (filters.minPrice) next.set("min", filters.minPrice);
+  if (filters.maxPrice) next.set("max", filters.maxPrice);
+  if (filters.rating) next.set("rating", filters.rating);
+  if (filters.search) next.set("search", filters.search);
+  if (filters.onSale) next.set("sale", "true");
+  if (filters.inStock) next.set("inStock", "true");
+  if (filters.featured) next.set("featured", "true");
+  if (sortBy && sortBy !== "newest") next.set("sort", sortBy);
+  return next;
+};
+
+/** …and the other. Reading and writing stay symmetrical so they can be compared. */
+const fromQuery = (params: URLSearchParams) => ({
+  filters: {
+    ...EMPTY_FILTERS,
+    categories: params.get("category") ? [params.get("category")!] : [],
+    brands: params.get("brand") ? [params.get("brand")!] : [],
+    minPrice: params.get("min") || "",
+    maxPrice: params.get("max") || "",
+    rating: params.get("rating") || "",
+    search: params.get("search") || "",
+    onSale: params.get("sale") === "true",
+    inStock: params.get("inStock") === "true",
+    featured: params.get("featured") === "true",
+  } as FilterState,
+  sortBy: params.get("sort") || "newest",
+});
+
 const ProductsContent: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read initial state from URL so reload + deep-links preserve filters.
-  const initialFilters: FilterState = {
-    ...EMPTY_FILTERS,
-    categories: searchParams.get("category") ? [searchParams.get("category")!] : [],
-    brands: searchParams.get("brand") ? [searchParams.get("brand")!] : [],
-    minPrice: searchParams.get("min") || "",
-    maxPrice: searchParams.get("max") || "",
-    rating: searchParams.get("rating") || "",
-    search: searchParams.get("search") || "",
-    onSale: searchParams.get("sale") === "true",
-    inStock: searchParams.get("inStock") === "true",
-    featured: searchParams.get("featured") === "true",
-  };
+  /**
+   * The filters are the URL — not a copy of it.
+   *
+   * They used to be state, seeded from the query string at mount and written
+   * back to it on every change. That works until something else changes the
+   * URL: picking a category from the top menu while already on this page
+   * navigates to /products?category=<new one>, the mounted page kept its old
+   * selection, and the write-back effect put the old value straight back. The
+   * bar changed, the products didn't, and the address flicked back. Reading
+   * straight from the query string leaves nothing to disagree with.
+   */
+  const { filters, sortBy } = useMemo(
+    () => fromQuery(searchParams),
+    [searchParams]
+  );
 
-  const [filters, setFilters] = useState<FilterState>(initialFilters);
-  const [sortBy, setSortBy] = useState<string>(searchParams.get("sort") || "newest");
+  /** Every filter change is a URL change. Replace, so filtering doesn't fill history. */
+  const write = (nextFilters: FilterState, nextSort: string) => {
+    setSearchParams(toQuery(nextFilters, nextSort), { replace: true });
+  };
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 12;
@@ -96,21 +138,12 @@ const ProductsContent: React.FC = () => {
     fetchProducts({ isActive: true, deleted: false, approvalStatus: "approved", limit: 1000 });
   }, [fetchBrands, fetchCategories, fetchProducts]);
 
-  // Sync state → URL (replace, not push, so filter changes don't pollute history).
+  // Any change to the filters — from the sidebar or from the menu upstairs —
+  // starts the results again from the first page.
+  const query = searchParams.toString();
   useEffect(() => {
-    const next = new URLSearchParams();
-    if (filters.categories[0]) next.set("category", filters.categories[0]);
-    if (filters.brands[0]) next.set("brand", filters.brands[0]);
-    if (filters.minPrice) next.set("min", filters.minPrice);
-    if (filters.maxPrice) next.set("max", filters.maxPrice);
-    if (filters.rating) next.set("rating", filters.rating);
-    if (filters.search) next.set("search", filters.search);
-    if (filters.onSale) next.set("sale", "true");
-    if (filters.inStock) next.set("inStock", "true");
-    if (filters.featured) next.set("featured", "true");
-    if (sortBy && sortBy !== "newest") next.set("sort", sortBy);
-    setSearchParams(next, { replace: true });
-  }, [filters, sortBy, setSearchParams]);
+    setCurrentPage(1);
+  }, [query]);
 
   // Build category-name lookup once so search can match by category name.
   const categoryNameById = useMemo(() => {
@@ -227,24 +260,19 @@ const ProductsContent: React.FC = () => {
   const currentProducts = sortedProducts.slice(startIndex, endIndex);
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-    setCurrentPage(1);
+    write({ ...filters, ...newFilters }, sortBy);
   };
 
   const handleSearchChange = (search: string) => {
-    setFilters((prev) => ({ ...prev, search }));
-    setCurrentPage(1);
+    write({ ...filters, search }, sortBy);
   };
 
   const handleSortChange = (s: string) => {
-    setSortBy(s);
-    setCurrentPage(1);
+    write(filters, s);
   };
 
   const clearAll = () => {
-    setFilters(EMPTY_FILTERS);
-    setSortBy("newest");
-    setCurrentPage(1);
+    write(EMPTY_FILTERS, "newest");
   };
 
   // Active-filter chips data
