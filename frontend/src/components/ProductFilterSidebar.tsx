@@ -1,8 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Category } from "../types/category.type";
 import type { Brand } from "../types/brand.type";
 import { useTranslation } from "react-i18next";
 import { getCategoryIcon } from "../lib/categoryIcon";
+
+/** Parent id whether the field arrives populated or as a raw id. */
+const parentIdOf = (c: Category): string | null => {
+  const parent = c.parentCategory;
+  if (!parent) return null;
+  return typeof parent === "string" ? parent : parent._id || null;
+};
+
+interface CategoryNode extends Category {
+  children: CategoryNode[];
+}
 
 interface FilterState {
   categories: string[];
@@ -106,8 +117,131 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
     (filters as any).inStock,
   ].filter(Boolean).length;
 
-  // Separate parent and sub categories
-  const parentCategories = categories?.filter((c) => !c.parentCategory) || [];
+  /**
+   * The catalogue as a tree, however deep it goes.
+   *
+   * It used to be two flat passes — roots, then anything whose parent matched
+   * — which stopped at the second level and compared `parentCategory` to an id
+   * even when the API sent it populated, so on a populated response the
+   * subcategories never matched at all.
+   */
+  const categoryTree = useMemo(() => {
+    const nodes = new Map<string, CategoryNode>();
+    for (const c of categories || []) {
+      if (c.deleted || c.isActive === false) continue;
+      nodes.set(c._id, { ...c, children: [] });
+    }
+    const roots: CategoryNode[] = [];
+    for (const node of nodes.values()) {
+      const parentId = parentIdOf(node);
+      const parent = parentId ? nodes.get(parentId) : undefined;
+      // A child whose parent is gone still belongs in the list, at the top —
+      // this is a filter, and a category you cannot reach is one you cannot
+      // filter by.
+      if (parent) parent.children.push(node);
+      else roots.push(node);
+    }
+    const sortDeep = (list: CategoryNode[]) => {
+      list.sort(
+        (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name)
+      );
+      list.forEach((n) => sortDeep(n.children));
+    };
+    sortDeep(roots);
+    return roots;
+  }, [categories]);
+
+  // Which branches are open. Selection and expansion are separate: opening a
+  // department to look inside it used to mean filtering by it first, so there
+  // was no way to see the subcategories without changing the results.
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
+
+  // Arriving with a category already chosen — from the menu, or a shared link
+  // — opens the branch it sits in, so the sidebar shows where the page is
+  // rather than a collapsed list with a tick hidden somewhere inside it.
+  useEffect(() => {
+    if (!filters.categories.length || !categories?.length) return;
+    const byId = new Map((categories || []).map((c) => [c._id, c]));
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      for (const selected of filters.categories) {
+        let parentId = byId.get(selected) ? parentIdOf(byId.get(selected)!) : null;
+        let guard = 0;
+        while (parentId && guard++ < 10) {
+          next.add(parentId);
+          const parent = byId.get(parentId);
+          parentId = parent ? parentIdOf(parent) : null;
+        }
+      }
+      return next;
+    });
+  }, [filters.categories, categories]);
+
+  const toggleCategoryOpen = (id: string) =>
+    setOpenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const renderCategoryNode = (node: CategoryNode, depth: number): React.ReactNode => {
+    const hasChildren = node.children.length > 0;
+    const isOpen = openCategories.has(node._id);
+    const isChecked = filters.categories.includes(node._id);
+
+    return (
+      <div key={node._id}>
+        <div
+          className="flex items-center gap-1"
+          style={{ paddingInlineStart: `${depth * 0.85}rem` }}
+        >
+          <label className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[var(--surface-2)]/60 cursor-pointer transition-colors flex-1 min-w-0">
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => handleCategoryChange(node._id, e.target.checked)}
+              className="w-4 h-4 shrink-0 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
+            />
+            <span className="text-base shrink-0" aria-hidden="true">
+              {getCategoryIcon(node.name)}
+            </span>
+            <span
+              className={`truncate ${
+                depth === 0 ? "text-sm text-[var(--text)]" : "text-xs text-[var(--text-muted)]"
+              } ${isChecked ? "font-semibold text-[var(--brand-primary)]" : ""}`}
+            >
+              {i18n.language === "ar" && node.nameAr ? node.nameAr : node.name}
+            </span>
+          </label>
+          {hasChildren && (
+            <button
+              type="button"
+              onClick={() => toggleCategoryOpen(node._id)}
+              aria-expanded={isOpen}
+              aria-label={node.name}
+              className="w-6 h-6 shrink-0 flex items-center justify-center rounded text-[var(--text-subtle)] hover:bg-[var(--surface-2)]"
+            >
+              <svg
+                className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
+              </svg>
+            </button>
+          )}
+        </div>
+        {hasChildren && isOpen && (
+          <div className="border-l-2 border-[var(--brand-primary)]/15 ms-3">
+            {node.children.map((child) => renderCategoryNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const SectionToggle = ({ section, title, count }: { section: string; title: string; count?: number }) => (
     <button
@@ -216,48 +350,8 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
         <SectionToggle section="category" title={t("Category")} count={filters.categories.length} />
         {expandedSections.category && (
           <div className="px-3 pb-3">
-            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
-              {parentCategories.map((category) => {
-                const subCats = categories?.filter((c) => c.parentCategory === category._id) || [];
-                const isChecked = filters.categories.includes(category._id!);
-                return (
-                  <div key={category._id}>
-                    <label className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[var(--surface-2)]/60 cursor-pointer transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(e) => handleCategoryChange(category._id!, e.target.checked)}
-                        className="w-4 h-4 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
-                      />
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="text-base shrink-0" aria-hidden="true">{getCategoryIcon(category.name)}</span>
-                        <span className="text-sm text-[var(--text)] truncate">{i18n.language === 'ar' && category.nameAr ? category.nameAr : category.name}</span>
-                      </div>
-                    </label>
-                    {subCats.length > 0 && isChecked && (
-                      <div className="ml-7 mt-1 space-y-1 border-l-2 border-[var(--brand-primary)]/20 pl-3">
-                        {subCats.map((sub) => (
-                          <label
-                            key={sub._id}
-                            className="flex items-center gap-2.5 py-1 px-2 rounded-lg hover:bg-[var(--surface-2)]/60 cursor-pointer transition-colors"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={filters.categories.includes(sub._id!)}
-                              onChange={(e) => handleCategoryChange(sub._id!, e.target.checked)}
-                              className="w-3.5 h-3.5 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
-                            />
-                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                              <span className="text-sm shrink-0" aria-hidden="true">{getCategoryIcon(sub.name)}</span>
-                              <span className="text-xs text-[var(--text-muted)]">{i18n.language === 'ar' && sub.nameAr ? sub.nameAr : sub.name}</span>
-                            </div>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="space-y-0.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+              {categoryTree.map((node) => renderCategoryNode(node, 0))}
             </div>
           </div>
         )}
