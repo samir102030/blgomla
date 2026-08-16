@@ -1,0 +1,150 @@
+[
+  {
+    "name": "COMPUTER",
+    "nameAr": "كمبيوتر",
+    "children": [
+      { "name": "PC Components", "nameAr": "مكوّنات الكمبيوتر" },
+      { "name": "Personal Computers", "nameAr": "كمبيوتر شخصي" },
+      { "name": "PC Cables", "nameAr": "كابلات كمبيوتر" },
+      { "name": "Sound Systems", "nameAr": "أنظمة الصوت" },
+      { "name": "Printer & Scanner", "nameAr": "طابعات وماسحات" },
+      { "name": "Conferencing System", "nameAr": "أنظمة المؤتمرات" },
+      { "name": "Data Show", "nameAr": "بروجيكتور" },
+      { "name": "Data Storage", "nameAr": "وحدات التخزين" },
+      { "name": "Graphic Tablet", "nameAr": "تابلت رسم" },
+      { "name": "Interactive Whiteboard", "nameAr": "سبورة تفاعلية" },
+      { "name": "Uninterruptible Power Supply (UPS)", "nameAr": "مانع انقطاع التيار (UPS)" },
+      { "name": "Software", "nameAr": "برامج" },
+      { "name": "Computer Accessories", "nameAr": "إكسسوارات كمبيوتر" },
+      { "name": "Computer Solutions", "nameAr": "حلول الكمبيوتر" }
+    ]
+  },
+  {
+    "name": "LAPTOP",
+    "nameAr": "لاب توب",
+    "children": [
+      { "name": "Laptops", "nameAr": "أجهزة لاب توب" },
+      { "name": "Laptop Accessories", "nameAr": "إكسسوارات لاب توب" },
+      { "name": "Laptop Spare Parts", "nameAr": "قطع غيار لاب توب" },
+      { "name": "Bags", "nameAr": "شنط" }
+    ]
+  },
+  {
+    "name": "MOBILE & TABLET",
+    "nameAr": "موبايل وتابلت",
+    "children": [
+      { "name": "Mobile Phones", "nameAr": "موبايلات" },
+      { "name": "Tablets", "nameAr": "تابلت" },
+      { "name": "Earphone & Headphone", "nameAr": "سماعات" },
+      { "name": "Smart Watches & Bands", "nameAr": "ساعات ذكية وأساور" },
+      { "name": "Watch Accessories", "nameAr": "إكسسوارات الساعات" },
+      { "name": "Cameras", "nameAr": "كاميرات" },
+      { "name": "Camera Accessories", "nameAr": "إكسسوارات الكاميرات" },
+      { "name": "Virtual Reality (VR)", "nameAr": "الواقع الافتراضي (VR)" },
+      { "name": "Digital Watch", "nameAr": "ساعات رقمية" },
+      { "name": "Phone Screen Protector", "nameAr": "واقي شاشة الموبايل" },
+      { "name": "Mobile Accessories", "nameAr": "إكسسوارات الموبايل" }
+    ]
+  },
+  {
+    "name": "HOME APPLIANCES",
+    "nameAr": "أجهزة منزلية",
+    "children": [
+      { "name": "Electric Appliances", "nameAr": "أجهزة كهربائية" },
+      { "name": "Kitchen Appliances", "nameAr": "أجهزة المطبخ" },
+      { "name": "TV & Accessories", "nameAr": "تلفزيونات وإكسسوارات" },
+      { "name": "Video Games", "nameAr": "ألعاب فيديو" },
+      { "name": "Telephones", "nameAr": "تليفونات" },
+      { "name": "Water Filters & Cartridges", "nameAr": "فلاتر مياه وشمعات" },
+      { "name": "Household Supplies", "nameAr": "مستلزمات منزلية" },
+      { "name": "Tools & Home Improvement", "nameAr": "عدد وأدوات منزلية" },
+      { "name": "Smart Home", "nameAr": "المنزل الذكي" },
+      { "name": "Scooters", "nameAr": "سكوتر" }
+    ]
+  },
+  {
+    "name": "CASHIER SYSTEMS",
+    "nameAr": "أنظمة الكاشير",
+    "children": [
+      { "name": "Cash Drawer", "nameAr": "درج نقود" },
+      { "name": "Receipt Printer", "nameAr": "طابعة فواتير" },
+      { "name": "Barcode Reader", "nameAr": "قارئ باركود" },
+      { "name": "Barcode Printer", "nameAr": "طابعة باركود" },
+      { "name": "Cashier Monitor", "nameAr": "شاشة كاشير" },
+      { "name": "Money Counter", "nameAr": "عدّاد نقود" },
+      { "name": "Paper Rolls & Stickers", "nameAr": "رولات ورق وستيكرات" },
+      { "name": "Printer Adapter", "nameAr": "محوّل طابعة" }
+    ]
+  },
+  {
+    "name": "NETWORK",
+    "nameAr": "شبكات",
+    "children": [
+      { "name": "Router", "nameAr": "راوتر" },
+      { "name": "Access Point", "nameAr": "نقطة وصول" },
+      { "name": "Power Line", "nameAr": "باور لاين" },
+      { "name": "Range Extender", "nameAr": "مقوّي إشارة" },
+      { "name": "Switch", "nameAr": "سويتش" },
+      { "name": "Patch Panel", "nameAr": "باتش بانل" },
+      { "name": "Lan Card", "nameAr": "كارت شبكة" },
+      { "name": "Smart Plug", "nameAr": "بلج ذكي" },
+      { "name": "Door Bell", "nameAr": "جرس باب" },
+      { "name": "Intercom", "nameAr": "إنتركوم" },
+      { "name": "Emergency Control", "nameAr": "تحكم الطوارئ" },
+      { "name": "Time Attendance Devices (Fingerprint)", "nameAr": "أجهزة حضور وانصراف (بصمة)" },
+      { "name": "Label Printer", "nameAr": "طابعة ليبل" },
+      { "name": "Network Cables", "nameAr": "كابلات شبكات" },
+      { "name": "Network Rack & Rack Accessories", "nameAr": "راكات الشبكة وإكسسواراتها" },
+      { "name": "Network Accessories", "nameAr": "إكسسوارات الشبكات" }
+    ]
+  },
+  {
+    "name": "SECURITY SYSTEMS",
+    "nameAr": "أنظمة الأمان",
+    "children": [
+      {
+        "name": "Surveillance Cameras",
+        "nameAr": "كاميرات مراقبة",
+        "children": [
+          { "name": "IP CAMERA", "nameAr": "كاميرا IP" },
+          { "name": "PTZ CAMERA", "nameAr": "كاميرا PTZ" }
+        ]
+      },
+      {
+        "name": "DVR",
+        "nameAr": "DVR",
+        "children": [
+          { "name": "4 CHANNEL", "nameAr": "4 قنوات" },
+          { "name": "8 CHANNEL", "nameAr": "8 قنوات" },
+          { "name": "32 CHANNEL", "nameAr": "32 قناة" }
+        ]
+      },
+      { "name": "NVR", "nameAr": "NVR" },
+      { "name": "Security & Surveillance", "nameAr": "الأمن والمراقبة" },
+      { "name": "Security Accessories", "nameAr": "إكسسوارات الأمان" }
+    ]
+  },
+  {
+    "name": "PERSONAL CARE",
+    "nameAr": "العناية الشخصية"
+  },
+  {
+    "name": "USED",
+    "nameAr": "مستعمل",
+    "children": [
+      { "name": "Used Computers", "nameAr": "كمبيوتر مستعمل" },
+      { "name": "Used Ready PC Bundle", "nameAr": "بندل كمبيوتر جاهز مستعمل" },
+      { "name": "Used Laptops", "nameAr": "لاب توب مستعمل" },
+      { "name": "Used Monitors", "nameAr": "شاشات مستعملة" },
+      { "name": "Used Processors", "nameAr": "معالجات مستعملة" },
+      { "name": "Used Hard Disk", "nameAr": "هارد ديسك مستعمل" },
+      { "name": "Used Printer", "nameAr": "طابعات مستعملة" },
+      { "name": "Used Projector", "nameAr": "بروجيكتور مستعمل" },
+      { "name": "Used Motherboard", "nameAr": "مذربورد مستعمل" },
+      { "name": "Used Graphics Card", "nameAr": "كارت شاشة مستعمل" },
+      { "name": "Used Cashier System", "nameAr": "نظام كاشير مستعمل" },
+      { "name": "Used Docking Station", "nameAr": "دوكينج ستيشن مستعمل" },
+      { "name": "Used Accessories", "nameAr": "إكسسوارات مستعملة" }
+    ]
+  }
+]
