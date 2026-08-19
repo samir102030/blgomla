@@ -29,6 +29,8 @@ const StudentsPage: React.FC = () => {
   const publicProgram = useStudentStore((s) => s.publicProgram);
   const myProfile = useStudentStore((s) => s.myProfile);
   const saving = useStudentStore((s) => s.saving);
+  const loading = useStudentStore((s) => s.loading);
+  const loadError = useStudentStore((s) => s.error);
   const fetchPublicProgram = useStudentStore((s) => s.fetchPublicProgram);
   const fetchMyProfile = useStudentStore((s) => s.fetchMyProfile);
   const apply = useStudentStore((s) => s.apply);
@@ -111,6 +113,30 @@ const StudentsPage: React.FC = () => {
 
         <section className="st-body">
           <div className="st-width">
+            {/* The programme could not be read at all. Without this the page
+                rendered a masthead over an empty column — a visitor cannot
+                tell that from a programme with nothing in it. */}
+            {!publicProgram && !loading && (
+              <div className="st-panel">
+                <h2>{t("We could not load the programme")}</h2>
+                <p>
+                  {t(
+                    "Something went wrong on our side, not yours. Refresh the page in a moment, or ask support if it keeps happening.",
+                  )}
+                </p>
+                {loadError && <div className="st-note st-bad">{loadError}</div>}
+                <Link to="/contact" className="st-btn st-btn-ghost" style={{ marginTop: 16 }}>
+                  {t("Contact support")}
+                </Link>
+              </div>
+            )}
+
+            {!publicProgram && loading && (
+              <div className="st-panel">
+                <p style={{ margin: 0 }}>{t("Loading the programme…")}</p>
+              </div>
+            )}
+
             {/* Programme closed — say so plainly rather than showing a form
                 that will only reject them. */}
             {publicProgram && !publicProgram.enabled && (

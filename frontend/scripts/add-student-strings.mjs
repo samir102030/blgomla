@@ -138,6 +138,10 @@ const STRINGS = {
   suspended: "موقوف",
   expired: "منتهي",
   "admin.studentProgram": "برنامج الطلاب",
+  "We could not load the programme": "مقدرناش نحمّل البرنامج",
+  "Something went wrong on our side, not yours. Refresh the page in a moment, or ask support if it keeps happening.":
+    "في حاجة غلط من ناحيتنا مش من ناحيتك. حدّث الصفحة بعد شوية، أو كلّم الدعم لو فضلت تحصل.",
+  "Loading the programme…": "جاري تحميل البرنامج…",
 };
 
 for (const [file, useArabic] of [

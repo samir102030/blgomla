@@ -3871,5 +3871,8 @@
   "rejected": "rejected",
   "suspended": "suspended",
   "expired": "expired",
-  "admin.studentProgram": "admin.studentProgram"
+  "admin.studentProgram": "admin.studentProgram",
+  "We could not load the programme": "We could not load the programme",
+  "Something went wrong on our side, not yours. Refresh the page in a moment, or ask support if it keeps happening.": "Something went wrong on our side, not yours. Refresh the page in a moment, or ask support if it keeps happening.",
+  "Loading the programme…": "Loading the programme…"
 }
