@@ -211,6 +211,17 @@ const ManusHero: React.FC = () => {
       ))}
       <div className="mn-hero-signal" />
 
+      {/* The engineering grid the whole panel is set on, the crop marks that
+          frame it, and the slide coordinate. Decoration in the strict sense —
+          the dots below already announce position to a screen reader — but the
+          reason the page reads as an instrument rather than a shop window. */}
+      <div className="mn-hero-grid" aria-hidden="true" />
+      <div className="mn-hero-marks" aria-hidden="true" />
+      <div className="mn-hero-index" aria-hidden="true">
+        <b>{String(index + 1).padStart(2, "0")}</b>
+        <i>/ {String(SLIDES.length).padStart(2, "0")}</i>
+      </div>
+
       <div className="mn-carousel-arrows">
         <button
           type="button"

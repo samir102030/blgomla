@@ -1,18 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────
-   Arabic typography — Cairo handles vowel marks
-   (shadda, fatha, kasra) and descenders gracefully.
-   Inter clips them at tight line-heights.
+   Arabic typography — IBM Plex Sans Arabic is drawn
+   for Arabic first, so vowel marks (shadda, fatha,
+   kasra) and descenders survive tight line-heights.
+   It replaces Cairo, which did the same job here and
+   was loaded by an @import at the top of this file.
+   The swap is for a single family across both scripts
+   that also has a mono sibling for numerals, not a
+   fix for anything Cairo was getting wrong.
    ───────────────────────────────────────────────── */
 html[lang="ar"] body,
 html[dir="rtl"] body {
-  font-family: 'Cairo', 'Inter', sans-serif;
+  font-family: 'IBM Plex Sans Arabic', sans-serif;
 }
 
 /* Loosen line-height on large headings in RTL so diacritics
@@ -79,7 +82,7 @@ html, body {
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;

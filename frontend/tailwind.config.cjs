@@ -32,8 +32,16 @@ module.exports = {
           900: '#1e3a8a',
         }
       },
+      /* Tailwind's Preflight sets `html { font-family: theme(fontFamily.sans) }`,
+         so this is what the document root resolves to — leaving Inter here
+         while index.html loads something else is how a font swap ends up half
+         applied. `mono` matters just as much: ~28 `font-mono` call sites across
+         the admin screens were rendering in the system mono because no mono key
+         existed to point at the face the page had already downloaded. */
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['IBM Plex Sans Arabic', 'system-ui', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        display: ['Reem Kufi', 'IBM Plex Sans Arabic', 'sans-serif'],
       },
     },
   },

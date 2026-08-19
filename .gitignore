@@ -62,3 +62,6 @@ products/*.pdf
 products/products_data.json
 
 .vercel
+
+# graphify writes its extraction cache here when the repo is scanned as a corpus
+graphify-out/

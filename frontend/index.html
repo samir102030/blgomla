@@ -52,23 +52,32 @@
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 
-    <!-- Google Fonts (Inter) — load asynchronously to avoid 650ms of render-blocking.
-         The "print" trick: stylesheet downloads in background; onload swaps media back to "all". -->
+    <!-- Google Fonts — load asynchronously to avoid 650ms of render-blocking.
+         The "print" trick: stylesheet downloads in background; onload swaps media back to "all".
+         Three faces, each with a job: Reem Kufi is the display voice (geometric
+         kufic, cut for Arabic rather than borrowed from Latin), IBM Plex Sans
+         Arabic carries body copy in both scripts, and IBM Plex Mono sets the
+         numerals and technical labels. This replaces Inter + Cairo + DM Sans,
+         which were three unrelated families loaded from three separate
+         requests — two of them by @import inside CSS, which blocks until the
+         stylesheet itself has parsed. One request now, one family system.
+         Weights stop at 700: nothing in the CSS may ask for 800, or the
+         browser synthesises the bold and the kufic loses its edges. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="preload"
       as="style"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap"
     />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@400..700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" />
     </noscript>
   </head>
   <body>

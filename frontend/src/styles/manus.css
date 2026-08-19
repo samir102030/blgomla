@@ -14,7 +14,7 @@
       uses them across the storefront — unprefixed rules would
       restyle pages nobody asked to touch.
    2. The global `html` / `body` / `*` resets are dropped. They set
-      the whole document to the charcoal ground and Cairo, which
+      the whole document to the charcoal ground and its own type, which
       would drag the admin and every themed page with them. What
       they did is re-applied inside `.mn-scope` instead.
    3. Image URLs point at `/manus/…` in this project's own `public`
@@ -25,7 +25,6 @@
    re-run the same three transforms rather than hand-editing rules.
    ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
 
 /* Belgomla Smart Solutions Preview — "شبكة تعمل بهدوء": dark engineered RTL surfaces, orange conversion moments, and blue data signals. */
 
@@ -55,7 +54,7 @@
 .mn-nav-row { height: 88px; display:flex; align-items:center; gap:26px; }
 .mn-brand { display:flex; align-items:center; gap:10px; flex-shrink:0; }
 .mn-brand-mark { height:48px; width:48px; object-fit:contain; }
-.mn-brand-text { font-family: "DM Sans", "Cairo", sans-serif; font-weight: 800; letter-spacing:-.055em; font-size:24px; line-height:.85; }
+.mn-brand-text { font-family: "IBM Plex Mono", "IBM Plex Sans Arabic", sans-serif; font-weight: 700; letter-spacing:-.055em; font-size:24px; line-height:.85; }
 .mn-brand-text small { display:block; color: var(--blue-soft); font-size:9px; font-weight:700; letter-spacing:.06em; margin-top:7px; }
 .mn-nav-links { display:flex; align-items:center; gap:20px; font-size:13px; color:#d7e0ee; white-space:nowrap; }
 .mn-nav-links a { transition: color 160ms var(--ease); }
@@ -67,10 +66,10 @@
 .mn-search input:focus { border-color:rgba(36,141,255,.9); background:rgba(36,141,255,.07); }
 .mn-search input::placeholder { color:#65758f; }
 .mn-header-action, .mn-icon-btn { border:1px solid var(--line); background:transparent; color:white; transition: transform 160ms var(--ease), border-color 160ms var(--ease), background 160ms var(--ease); }
-.mn-header-action { border-color: rgba(255,91,0,.78); color:#ffb184; border-radius:12px; padding:10px 16px; white-space:nowrap; font-size:12px; font-weight:800; }
+.mn-header-action { border-color: rgba(255,91,0,.78); color:#ffb184; border-radius:12px; padding:10px 16px; white-space:nowrap; font-size:12px; font-weight:700; }
 .mn-icon-btn { width:38px; height:38px; border-radius:11px; display:grid; place-items:center; position:relative; }
 .mn-header-action:hover,.mn-icon-btn:hover { transform:translateY(-2px); border-color:var(--orange); background:rgba(255,91,0,.08); }
-.mn-icon-btn em { position:absolute; left:-4px; top:-5px; width:17px; height:17px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-family:"DM Sans"; font-size:9px; background:var(--orange); color:white; }
+.mn-icon-btn em { position:absolute; left:-4px; top:-5px; width:17px; height:17px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-family:"IBM Plex Mono"; font-size:9px; background:var(--orange); color:white; }
 .mn-mobile-menu { display:none; }
 
 .mn-hero { margin:28px auto 0; min-height:490px; border:1px solid rgba(174,194,224,.16); border-radius:28px; overflow:hidden; position:relative; background: #070b12; display:grid; grid-template-columns: 1fr 1.05fr; isolation:isolate; }
@@ -78,13 +77,13 @@
 .mn-hero-image { background-image: url('/manus/hero-cctv-network.webp'); background-size:cover; background-position:left center; position:absolute; inset:0; z-index:-2; }
 .mn-hero-image::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, transparent 0%, rgba(9,13,20,.12) 37%, rgba(9,13,20,.94) 69%); }
 .mn-hero-content { grid-column:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; padding:54px 6.5vw 54px 48px; position:relative; }
-.mn-eyebrow { color:var(--orange-soft); display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; margin-bottom:16px; }
+.mn-eyebrow { color:var(--orange-soft); display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; margin-bottom:16px; }
 .mn-eyebrow::before { content:""; width:23px; height:2px; background:var(--orange); border-radius:20px; }
-.mn-hero h1 { margin:0; max-width:680px; font-size:clamp(37px, 4vw, 66px); line-height:1.25; letter-spacing:-.04em; font-weight:800; }
+.mn-hero h1 { margin:0; max-width:680px; font-size:clamp(37px, 4vw, 66px); line-height:1.25; letter-spacing:-.04em; font-weight:700; }
 .mn-hero h1 .mn-accent { color:var(--orange); }
 .mn-hero p { max-width:590px; margin:20px 0 29px; color:#a9b8cd; font-size:16px; line-height:2; }
 .mn-action-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.mn-btn { min-height:52px; padding:0 21px; border-radius:13px; display:inline-flex; align-items:center; justify-content:center; gap:9px; font-size:14px; font-weight:800; transition: transform 160ms var(--ease), box-shadow 160ms var(--ease), background 160ms var(--ease); }
+.mn-btn { min-height:52px; padding:0 21px; border-radius:13px; display:inline-flex; align-items:center; justify-content:center; gap:9px; font-size:14px; font-weight:700; transition: transform 160ms var(--ease), box-shadow 160ms var(--ease), background 160ms var(--ease); }
 .mn-btn:active { transform:scale(.97); }
 .mn-btn-primary { border:1px solid var(--orange); background:var(--orange); color:white; box-shadow: 0 12px 30px rgba(255,91,0,.24); }
 .mn-btn-primary:hover { transform:translateY(-2px); background:#ff711f; box-shadow:0 18px 36px rgba(255,91,0,.32); }
@@ -104,7 +103,7 @@
 .mn-hero-service-note strong { display:block; color:white; font-size:11px; }
 .mn-discovery-section { padding-bottom:70px; }
 .mn-discovery-tabs { margin-bottom:18px; padding:6px; display:flex; gap:6px; width:max-content; max-width:100%; overflow-x:auto; border:1px solid var(--line); background:rgba(18,29,44,.55); border-radius:14px; }
-.mn-discovery-tabs button { border:0; background:transparent; color:#95a5bb; border-radius:9px; padding:9px 14px; font-family:"Cairo"; font-size:11px; font-weight:800; white-space:nowrap; transition:color 160ms var(--ease), background 160ms var(--ease), box-shadow 160ms var(--ease); }
+.mn-discovery-tabs button { border:0; background:transparent; color:#95a5bb; border-radius:9px; padding:9px 14px; font-family:"IBM Plex Sans Arabic"; font-size:11px; font-weight:700; white-space:nowrap; transition:color 160ms var(--ease), background 160ms var(--ease), box-shadow 160ms var(--ease); }
 .mn-discovery-tabs button.mn-active { background:var(--orange); color:white; box-shadow:0 7px 16px rgba(255,91,0,.23); }
 .mn-focus-spotlight { min-height:255px; display:grid; grid-template-columns:1.35fr .65fr; border:1px solid var(--line); border-radius:21px; overflow:hidden; background:linear-gradient(110deg, rgba(20,34,53,.82), rgba(10,16,25,.88)); }
 .mn-focus-copy { position:relative; padding:30px 34px; overflow:hidden; }
@@ -115,10 +114,10 @@
 .mn-focus-copy p { max-width:590px; margin:0; color:#aebdd1; font-size:13px; line-height:1.95; }
 .mn-focus-copy .mn-text-link { margin-top:18px; }
 .mn-focus-route { padding:28px 23px; border-right:1px solid var(--line); background:rgba(5,10,16,.28); }
-.mn-focus-route > span { color:var(--blue-soft); font-size:11px; font-weight:800; }
+.mn-focus-route > span { color:var(--blue-soft); font-size:11px; font-weight:700; }
 .mn-focus-route > div { display:flex; gap:11px; padding:15px 0; border-bottom:1px solid rgba(174,194,224,.10); }
 .mn-focus-route > div:last-child { border-bottom:0; }
-.mn-focus-route b { font-family:"DM Sans"; color:var(--orange); font-size:12px; }
+.mn-focus-route b { font-family:"IBM Plex Mono"; color:var(--orange); font-size:12px; }
 .mn-focus-route p { margin:0; color:#b8c5d8; font-size:11px; line-height:1.7; }
 .mn-advice-banner { margin-top:44px; margin-bottom:70px; min-height:250px; padding:42px 47px; border:1px solid rgba(36,141,255,.28); border-radius:24px; background:radial-gradient(400px 220px at 94% 0%, rgba(36,141,255,.22), transparent 65%), linear-gradient(120deg, #101f33, #0c1420 58%); display:flex; justify-content:space-between; align-items:center; gap:30px; position:relative; overflow:hidden; }
 .mn-advice-banner::before { content:""; position:absolute; right:-54px; bottom:-75px; width:250px; height:250px; border:1px solid rgba(255,91,0,.32); border-radius:50%; box-shadow:0 0 0 34px rgba(255,91,0,.035), 0 0 0 68px rgba(255,91,0,.018); }
@@ -159,7 +158,7 @@
 .mn-tech-steps article:last-child { border-left:0; }
 .mn-tech-steps article:hover { background:rgba(36,141,255,.09); }
 .mn-tech-steps > article > svg { color:var(--blue-soft); width:25px; height:25px; margin-top:21px; }
-.mn-tech-number { position:absolute; top:19px; right:20px; color:var(--orange-soft); font-family:"DM Sans"; font-size:11px; font-weight:700; }
+.mn-tech-number { position:absolute; top:19px; right:20px; color:var(--orange-soft); font-family:"IBM Plex Mono"; font-size:11px; font-weight:700; }
 .mn-tech-steps h3 { margin:12px 0 5px; font-size:17px; }
 .mn-tech-steps p { margin:0; color:var(--muted); font-size:11px; line-height:1.85; }
 .mn-explore-showcase { padding:76px 0 0; display:grid; grid-template-columns:1.1fr .95fr .95fr; gap:15px; }
@@ -171,7 +170,7 @@
 .mn-explore-card > * { position:relative; z-index:1; }
 .mn-explore-icon { width:40px; height:40px; display:grid; place-items:center; border-radius:11px; color:var(--orange); background:rgba(255,91,0,.10); }
 .mn-explore-icon svg { width:20px; }
-.mn-explore-card p { margin:19px 0 5px; color:var(--blue-soft); font-size:10px; font-weight:800; }
+.mn-explore-card p { margin:19px 0 5px; color:var(--blue-soft); font-size:10px; font-weight:700; }
 .mn-explore-card h3 { margin:0; font-size:20px; line-height:1.45; }
 .mn-explore-card > span:not(.mn-explore-icon) { margin-top:7px; color:#aebcd0; font-size:11px; line-height:1.8; }
 .mn-explore-card .mn-text-link { margin-top:auto; padding-top:16px; }
@@ -179,11 +178,11 @@
 .mn-section { padding:92px 0; }
 .mn-section-soft { background:linear-gradient(180deg, rgba(18,29,44,.75), rgba(9,13,20,0)); border-top:1px solid rgba(174,194,224,.08); }
 .mn-section-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:20px; margin-bottom:28px; }
-.mn-section-kicker { color:var(--orange-soft); font-size:12px; font-weight:800; display:flex; gap:8px; align-items:center; }
+.mn-section-kicker { color:var(--orange-soft); font-size:12px; font-weight:700; display:flex; gap:8px; align-items:center; }
 .mn-section-kicker::before { content:""; width:16px; height:2px; border-radius:99px; background:var(--orange); }
 .mn-section-heading h2 { margin:8px 0 0; font-size:clamp(25px,2.6vw,39px); letter-spacing:-.035em; line-height:1.35; }
 .mn-section-heading p { max-width:480px; color:var(--muted); line-height:1.9; font-size:13px; margin:0; }
-.mn-text-link { color:var(--blue-soft); font-size:12px; font-weight:800; display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
+.mn-text-link { color:var(--blue-soft); font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:7px; white-space:nowrap; }
 .mn-text-link:hover { color:white; }
 .mn-solutions-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
 .mn-solution-card { position:relative; min-height:270px; border:1px solid var(--line); border-radius:20px; overflow:hidden; padding:27px; display:flex; flex-direction:column; justify-content:flex-end; background:#101a27; transition:transform 230ms var(--ease),border-color 230ms var(--ease), box-shadow 230ms var(--ease); }
@@ -201,7 +200,7 @@
 .mn-solution-card p { margin:0; color:#aebcd0; font-size:12px; line-height:1.85; max-width:310px; }
 .mn-solution-card .mn-text-link { margin-top:16px; }
 .mn-use-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; }
-.mn-use-card { display:flex; align-items:center; justify-content:center; gap:12px; min-height:78px; padding:16px; border:1px solid var(--line); border-radius:15px; background:rgba(18,29,44,.45); font-size:15px; font-weight:800; transition:background 160ms var(--ease), border-color 160ms var(--ease), transform 160ms var(--ease); }
+.mn-use-card { display:flex; align-items:center; justify-content:center; gap:12px; min-height:78px; padding:16px; border:1px solid var(--line); border-radius:15px; background:rgba(18,29,44,.45); font-size:15px; font-weight:700; transition:background 160ms var(--ease), border-color 160ms var(--ease), transform 160ms var(--ease); }
 .mn-use-card:hover { background:rgba(36,141,255,.10); border-color:rgba(36,141,255,.6); transform:translateY(-2px); }
 .mn-use-card svg { color:var(--blue); width:21px; }
 .mn-project-grid { display:grid; grid-template-columns:1.25fr .85fr .85fr; gap:16px; }
@@ -210,11 +209,11 @@
 .mn-project-orb { position:absolute; width:220px; height:220px; left:-45px; top:-40px; border-radius:50%; background:radial-gradient(circle at 35% 35%, rgba(36,141,255,.5), transparent 62%); filter:blur(2px); }
 .mn-project-card h3 { font-size:20px; margin:5px 0; position:relative; }
 .mn-project-card p { position:relative; margin:0; color:var(--muted); font-size:12px; line-height:1.85; }
-.mn-tag { position:relative; display:inline-flex; width:max-content; padding:5px 10px; border-radius:99px; color:var(--blue-soft); background:rgba(36,141,255,.09); border:1px solid rgba(36,141,255,.18); font-size:10px; font-weight:800; }
+.mn-tag { position:relative; display:inline-flex; width:max-content; padding:5px 10px; border-radius:99px; color:var(--blue-soft); background:rgba(36,141,255,.09); border:1px solid rgba(36,141,255,.18); font-size:10px; font-weight:700; }
 .mn-metrics { margin-top:16px; display:flex; gap:20px; position:relative; }
 .mn-metric { padding-left:20px; border-left:1px solid var(--line); }
 .mn-metric:first-child { padding-left:0; border:0; }
-.mn-metric strong { display:block; color:white; font-family:"DM Sans"; font-size:21px; }
+.mn-metric strong { display:block; color:white; font-family:"IBM Plex Mono"; font-size:21px; }
 .mn-metric span { font-size:10px; color:var(--muted); }
 .mn-product-list { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
 .mn-product-card { border:1px solid var(--line); border-radius:16px; padding:17px; background:rgba(18,29,44,.55); display:flex; flex-direction:column; min-height:210px; transition:transform 180ms var(--ease), border-color 180ms var(--ease); }
@@ -262,7 +261,7 @@
 .mn-dash-brand .mn-brand-mark { width:37px; height:37px; }
 .mn-dash-brand strong { font-size:16px; }
 .mn-dash-brand span { display:block; color:var(--blue-soft); font-size:9px; margin-top:2px; }
-.mn-dash-nav-label { color:#62718a; font-size:10px; font-weight:800; padding:15px 10px 8px; }
+.mn-dash-nav-label { color:#62718a; font-size:10px; font-weight:700; padding:15px 10px 8px; }
 .mn-dash-link { height:42px; padding:0 11px; border-radius:10px; display:flex; align-items:center; gap:10px; color:#aebdd2; font-size:12px; margin:3px 0; transition:background 150ms var(--ease),color 150ms var(--ease); }
 .mn-dash-link:hover { background:rgba(255,255,255,.045); color:white; }
 .mn-dash-link.mn-active { background:rgba(255,91,0,.13); color:#ffad7b; }
@@ -277,7 +276,7 @@
 .mn-dash-metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
 .mn-dash-metric { border:1px solid var(--line); border-radius:16px; background:var(--panel); padding:18px; }
 .mn-dash-metric span { color:var(--muted); font-size:11px; }
-.mn-dash-metric strong { display:block; margin-top:10px; font-family:"DM Sans"; font-size:29px; letter-spacing:-.04em; }
+.mn-dash-metric strong { display:block; margin-top:10px; font-family:"IBM Plex Mono"; font-size:29px; letter-spacing:-.04em; }
 .mn-dash-metric em { display:block; margin-top:5px; font-style:normal; color:var(--blue-soft); font-size:10px; }
 .mn-dash-grid { display:grid; grid-template-columns:1.15fr .85fr; gap:16px; margin-top:16px; }
 .mn-dash-panel { border:1px solid var(--line); border-radius:18px; background:var(--panel); overflow:hidden; }
@@ -296,12 +295,12 @@
 .mn-bar-chart { height:210px; padding:20px 18px 14px; display:flex; align-items:flex-end; gap:12px; direction:ltr; }
 .mn-bar { flex:1; min-width:10px; border-radius:5px 5px 0 0; background:linear-gradient(180deg, var(--blue), rgba(36,141,255,.22)); position:relative; }
 .mn-bar:nth-child(3n) { background:linear-gradient(180deg, var(--orange), rgba(255,91,0,.22)); }
-.mn-bar::after { content:attr(data-label); position:absolute; bottom:-22px; left:50%; transform:translateX(-50%); color:#63738c; font-family:"DM Sans"; font-size:9px; }
+.mn-bar::after { content:attr(data-label); position:absolute; bottom:-22px; left:50%; transform:translateX(-50%); color:#63738c; font-family:"IBM Plex Mono"; font-size:9px; }
 .mn-preview-dock { position:fixed; left:20px; bottom:20px; z-index:55; width:min(320px, calc(100vw - 40px)); border:1px solid rgba(174,194,224,.24); border-radius:18px; background:rgba(13,21,33,.90); backdrop-filter:blur(18px); box-shadow:0 18px 50px rgba(0,0,0,.34); overflow:hidden; }
-.mn-preview-dock-toggle { width:100%; border:0; background:transparent; color:white; display:flex; justify-content:space-between; align-items:center; padding:13px 14px; font-family:"Cairo"; font-size:12px; font-weight:800; }
+.mn-preview-dock-toggle { width:100%; border:0; background:transparent; color:white; display:flex; justify-content:space-between; align-items:center; padding:13px 14px; font-family:"IBM Plex Sans Arabic"; font-size:12px; font-weight:700; }
 .mn-preview-dock-toggle span { color:var(--orange-soft); display:inline-flex; align-items:center; gap:7px; font-size:10px; }
 .mn-preview-list { border-top:1px solid var(--line); padding:9px; display:grid; grid-template-columns:1fr 1fr; gap:5px; }
-.mn-preview-list button { border:1px solid transparent; background:rgba(255,255,255,.03); color:#becbe0; min-height:33px; padding:5px 9px; text-align:right; border-radius:8px; font-family:"Cairo"; font-size:10px; transition:background 160ms var(--ease),color 160ms var(--ease); }
+.mn-preview-list button { border:1px solid transparent; background:rgba(255,255,255,.03); color:#becbe0; min-height:33px; padding:5px 9px; text-align:right; border-radius:8px; font-family:"IBM Plex Sans Arabic"; font-size:10px; transition:background 160ms var(--ease),color 160ms var(--ease); }
 .mn-preview-list button:hover,.mn-preview-list button.mn-active { background:rgba(255,91,0,.12); border-color:rgba(255,91,0,.28); color:#ffb184; }
 .mn-notice { position:fixed; top:105px; left:24px; z-index:60; padding:12px 15px; background:#152235; border:1px solid rgba(36,141,255,.55); border-radius:12px; font-size:12px; box-shadow:0 15px 40px rgba(0,0,0,.28); }
 
@@ -385,7 +384,7 @@
 .mn-scope *::after { box-sizing: border-box; }
 
 .mn-scope {
-  font-family: "Cairo", sans-serif;
+  font-family: "IBM Plex Sans Arabic", sans-serif;
   color: #f6f8fc;
 }
 /* The preview set the reading colour on `body`; scoped here instead, and
@@ -441,7 +440,7 @@ html[dir="ltr"] .mn-icon-btn em { left: auto; right: -4px; }
 .mn-trust-pills.mn-hero-trust-pills { position: static; margin-top: 26px; flex-wrap: wrap; }
 
 .mn-hero-brand-strip { margin-top: 20px; display: flex; align-items: center; gap: 9px; flex-wrap: wrap; color: #8fa0b8; font-size: 10px; }
-.mn-hero-brand-strip b { padding: 5px 10px; border: 1px solid rgba(174,194,224,.16); border-radius: 8px; background: rgba(7,11,18,.5); color: #d8e3f2; font-family: "DM Sans", "Cairo", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: -.01em; }
+.mn-hero-brand-strip b { padding: 5px 10px; border: 1px solid rgba(174,194,224,.16); border-radius: 8px; background: rgba(7,11,18,.5); color: #d8e3f2; font-family: "IBM Plex Mono", "IBM Plex Sans Arabic", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: -.01em; }
 
 /* The arrows sit in a flex row that inherits page direction, so the first
    button (previous) lands on the right in Arabic and on the left in English
@@ -452,7 +451,7 @@ html[dir="ltr"] .mn-icon-btn em { left: auto; right: -4px; }
 .mn-carousel-arrow:focus-visible { outline: 2px solid var(--blue-soft); outline-offset: 3px; }
 
 .mn-carousel-controls { margin-top: 26px; display: flex; gap: 13px; flex-wrap: wrap; }
-.mn-carousel-controls button { display: flex; flex-direction: column; gap: 8px; padding: 0; border: 0; background: transparent; color: #8494ab; font-family: "DM Sans", "Cairo", sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .05em; cursor: pointer; transition: color 220ms var(--ease); }
+.mn-carousel-controls button { display: flex; flex-direction: column; gap: 8px; padding: 0; border: 0; background: transparent; color: #8494ab; font-family: "IBM Plex Mono", "IBM Plex Sans Arabic", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .05em; cursor: pointer; transition: color 220ms var(--ease); }
 .mn-carousel-controls button i { display: block; width: 34px; height: 2px; border-radius: 999px; background: rgba(174,194,224,.26); transition: width 260ms var(--ease), background 260ms var(--ease); }
 .mn-carousel-controls button:hover { color: #dbe5f4; }
 .mn-carousel-controls button.mn-active { color: #ffffff; }
@@ -482,4 +481,162 @@ html[dir="ltr"] .mn-icon-btn em { left: auto; right: -4px; }
    way at all into the categories at those widths. */
 @media (max-width: 1120px) {
   .mn-site-header nav .mn-nav-links { display: flex; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BRUTALIST-TECHNICAL PASS — the banner as an instrument panel
+   ──────────────────────────────────────────────────────────────────────
+   The direction, stated so the next person changing this knows what they
+   are changing: hard edges, a visible engineering grid, type cut for
+   Arabic rather than borrowed from Latin, and one decisive reveal on load
+   instead of a scatter of hover tricks. Nothing here is soft — no blurred
+   shadows, no rounded corners on the frame, no gentle fades. What a
+   visitor should remember is that the page looked like a monitoring
+   console for a network that is already running.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.mn-solution-carousel {
+  --rule: rgba(174, 194, 224, .09);
+  --rule-bright: rgba(36, 141, 255, .28);
+  --col: clamp(64px, 7vw, 104px);
+  border-radius: 0;                 /* the corner radius was the last soft thing */
+  border: 1px solid rgba(174, 194, 224, .22);
+  min-height: 600px;
+}
+
+/* The grid. Two repeating gradients rather than an SVG, so it scales with
+   the viewport and costs nothing to paint. */
+.mn-hero-grid {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, var(--rule) 0 1px, transparent 1px var(--col)),
+    repeating-linear-gradient(to bottom, var(--rule) 0 1px, transparent 1px var(--col));
+  mask-image: linear-gradient(to bottom, black 0%, black 62%, transparent 100%);
+}
+/* One brighter column, off-centre on purpose: the grid reads as measured
+   rather than wallpapered. */
+.mn-hero-grid::after {
+  content: ""; position: absolute; inset-block: 0; inset-inline-start: 38%;
+  width: 1px; background: linear-gradient(to bottom, transparent, var(--rule-bright) 30%, transparent);
+}
+
+/* Registration marks at two corners — a printer mark, not a border. */
+.mn-hero-marks { position: absolute; inset: 14px; z-index: 1; pointer-events: none; }
+.mn-hero-marks::before,
+.mn-hero-marks::after {
+  content: ""; position: absolute; width: 26px; height: 26px;
+  border: 1px solid rgba(255, 91, 0, .55);
+}
+.mn-hero-marks::before { top: 0; inset-inline-start: 0; border-inline-end: 0; border-bottom: 0; }
+.mn-hero-marks::after  { bottom: 0; inset-inline-end: 0; border-inline-start: 0; border-top: 0; }
+
+/* The slide coordinate, set big in mono. */
+.mn-hero-index {
+  position: absolute; z-index: 2; bottom: 22px; inset-inline-end: 26px;
+  display: flex; align-items: baseline; gap: 6px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  line-height: 1; pointer-events: none;
+}
+.mn-hero-index b { font-size: clamp(38px, 4.6vw, 64px); font-weight: 600; color: #ffffff; letter-spacing: -.05em; }
+.mn-hero-index i { font-size: 13px; font-style: normal; font-weight: 500; color: #6f8099; letter-spacing: .06em; }
+
+.mn-solution-carousel .mn-hero-content { z-index: 2; }
+
+/* Display type: kufic, tight, and the loudest thing on the panel. */
+.mn-solution-carousel h1 {
+  font-family: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif;
+  font-size: clamp(40px, 5.4vw, 78px);
+  line-height: 1.12;
+  letter-spacing: -.02em;
+  font-weight: 700;
+}
+/* Arabic is connected script: negative tracking breaks the joins, and the
+   diacritics need the extra leading. */
+html[dir="rtl"] .mn-solution-carousel h1 { letter-spacing: 0; line-height: 1.28; }
+
+/* Labels and numerals go mono — the console voice. Uppercase and wide
+   tracking are Latin devices, so RTL opts out of both. */
+.mn-solution-carousel .mn-eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+}
+html[dir="rtl"] .mn-solution-carousel .mn-eyebrow { letter-spacing: .04em; text-transform: none; }
+.mn-solution-carousel .mn-eyebrow::before { width: 34px; height: 1px; border-radius: 0; }
+
+.mn-solution-carousel .mn-btn,
+.mn-solution-carousel .mn-trust-pill,
+.mn-solution-carousel .mn-hero-brand-strip b { border-radius: 0; }
+.mn-solution-carousel .mn-trust-pill { backdrop-filter: none; background: rgba(7, 11, 18, .66); border-color: rgba(174, 194, 224, .2); }
+.mn-solution-carousel .mn-hero-brand-strip b { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .02em; }
+.mn-solution-carousel .mn-hero-brand-strip span { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; font-size: 9px; }
+html[dir="rtl"] .mn-solution-carousel .mn-hero-brand-strip span { letter-spacing: .02em; text-transform: none; font-size: 10px; }
+
+/* A hard offset instead of a blurred shadow. */
+.mn-solution-carousel .mn-btn-primary { box-shadow: 4px 4px 0 rgba(255, 91, 0, .28); transition: box-shadow 140ms var(--ease), transform 140ms var(--ease); }
+.mn-solution-carousel .mn-btn-primary:hover { box-shadow: 6px 6px 0 rgba(255, 91, 0, .42); transform: translate(-1px, -1px); }
+
+.mn-carousel-arrow { border-radius: 0; backdrop-filter: none; background: rgba(7, 11, 18, .72); }
+.mn-carousel-controls button i { border-radius: 0; }
+.mn-carousel-controls button { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+.mn-hero-service-note { border-radius: 0; backdrop-filter: none; background: rgba(7, 11, 18, .78); }
+
+/* Grain: one inlined SVG turbulence, at the opacity where it reads as
+   paper rather than noise. */
+.mn-solution-carousel::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── The reveal ──
+   One staggered entrance on load, wiping upward with a hard edge. It runs
+   once, on mount; slide changes keep the 150ms cross-fade, so the two
+   motions never fight each other. */
+@keyframes mn-wipe-up {
+  from { opacity: 0; transform: translateY(22px); clip-path: inset(0 0 100% 0); }
+  to   { opacity: 1; transform: none;             clip-path: inset(0 0 0 0); }
+}
+@keyframes mn-rule-draw { from { transform: scaleY(0); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+@keyframes mn-mark-in   { from { opacity: 0; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .mn-hero-grid { animation: mn-rule-draw 900ms cubic-bezier(.2,.9,.1,1) both; transform-origin: top; }
+  .mn-hero-marks::before,
+  .mn-hero-marks::after { animation: mn-mark-in 500ms 700ms both; }
+  .mn-hero-index { animation: mn-wipe-up 620ms 640ms cubic-bezier(.2,.9,.1,1) both; }
+  .mn-solution-carousel .mn-hero-content > * { animation: mn-wipe-up 620ms cubic-bezier(.2,.9,.1,1) both; }
+  .mn-solution-carousel .mn-hero-content > *:nth-child(1) { animation-delay: 120ms; }
+  .mn-solution-carousel .mn-hero-content > *:nth-child(2) { animation-delay: 200ms; }
+  .mn-solution-carousel .mn-hero-content > *:nth-child(3) { animation-delay: 280ms; }
+  .mn-solution-carousel .mn-hero-content > *:nth-child(4) { animation-delay: 360ms; }
+  .mn-solution-carousel .mn-hero-content > *:nth-child(5) { animation-delay: 440ms; }
+  .mn-solution-carousel .mn-hero-content > *:nth-child(6) { animation-delay: 520ms; }
+  .mn-solution-carousel .mn-hero-content > *:nth-child(7) { animation-delay: 600ms; }
+}
+
+/* Light mode keeps the panel dark — it is a photograph carrying white type
+   — but the grid has to lift off the image rather than sink into it. */
+.mn-light .mn-solution-carousel { --rule: rgba(255, 255, 255, .1); border-color: rgba(20, 32, 50, .18); }
+
+@media (max-width: 800px) {
+  .mn-solution-carousel { min-height: 700px; --col: 52px; }
+  .mn-hero-index { bottom: 14px; inset-inline-end: 16px; }
+  .mn-hero-index b { font-size: 34px; }
+  .mn-hero-marks { inset: 9px; }
+  .mn-hero-marks::before, .mn-hero-marks::after { width: 18px; height: 18px; }
+}
+
+/* Phone sizing. The display face is generous — Reem Kufi sets Latin wide —
+   so at 375px the headline was wrapping to five lines and the panel grew to
+   829px, taller than the viewport itself: the visitor saw the banner and no
+   evidence that a page continued below it. Everything here buys that back. */
+@media (max-width: 800px) {
+  .mn-solution-carousel h1 { font-size: 30px; line-height: 1.2; }
+  html[dir="rtl"] .mn-solution-carousel h1 { font-size: 32px; line-height: 1.34; }
+  .mn-solution-carousel p { margin: 14px 0 20px; }
+  .mn-solution-carousel .mn-trust-pills.mn-hero-trust-pills { gap: 6px; margin-top: 16px; }
+  .mn-solution-carousel .mn-trust-pill { font-size: 10px; padding: 6px 9px; gap: 6px; }
+  .mn-solution-carousel .mn-trust-pill svg { width: 13px; }
+  .mn-solution-carousel .mn-hero-brand-strip { margin-top: 12px; }
+  .mn-solution-carousel .mn-hero-content { padding-bottom: 24px; }
 }
