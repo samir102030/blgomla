@@ -3,19 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCategoryStore } from "../../stores/category.store";
 import { categoryHref } from "../../lib/categoryLink";
-import {
-  Arrow,
-  AudioLines,
-  Camera,
-  Chevron,
-  Fingerprint,
-  Flame,
-  Headphones,
-  Network,
-  Phone,
-  ShieldCheck,
-  Wrench,
-} from "./icons";
+import { Arrow, AudioLines, Camera, Chevron, Fingerprint, Flame, Network, Phone } from "./icons";
 
 /**
  * The Manus hero, ported from v3 of the design package as the six-slide
@@ -29,10 +17,12 @@ import {
  * see `lib/categoryLink` for why the id, and not the slug, is what the
  * products page needs in the URL.
  *
- * Brands come from the package's brand-to-service mapping, which was built by
- * matching the uploaded product data by category rather than by marketing
- * copy. Fire safety has no brand line for that reason: the catalogue has no
- * fire products whose brands we could show without inventing them.
+ * The panel is deliberately shallow. A banner that fills the fold tells a
+ * visitor the page ends there, so this one carries only what earns its height:
+ * the service, the claim, the two ways in, and the picker. The description,
+ * the trust pills and the brand strip were all cut for that reason — their
+ * copy and the `text`/`brands` fields are kept in the table below so any of
+ * them can come back without re-deriving the content.
  */
 
 type Slide = {
@@ -255,8 +245,6 @@ const ManusHero: React.FC = () => {
           <span className="mn-accent">{t(slide.accent)}</span>
         </h1>
 
-        <p>{t(slide.text)}</p>
-
         <div className="mn-action-row">
           <Link to="/contact" className="mn-btn mn-btn-primary">
             {t("Request a free consultation")} <Arrow rtl={isRtl} />
@@ -264,33 +252,6 @@ const ManusHero: React.FC = () => {
           <Link to={href} className="mn-btn mn-btn-ghost">
             {t(slide.action)}
           </Link>
-        </div>
-
-        <div className="mn-trust-pills mn-hero-trust-pills">
-          <span className="mn-trust-pill">
-            <ShieldCheck /> {t("Genuine warranty")}
-          </span>
-          <span className="mn-trust-pill">
-            <Wrench /> {t("Professional installation")}
-          </span>
-          <span className="mn-trust-pill">
-            <Headphones /> {t("Specialist support")}
-          </span>
-        </div>
-
-        <div className="mn-hero-brand-strip">
-          {slide.brands.length ? (
-            <>
-              <span>{t("Available brands")}</span>
-              {slide.brands.map((brand) => (
-                <b key={`${slide.id}-${brand}`}>{brand}</b>
-              ))}
-            </>
-          ) : (
-            // No fire products have been uploaded with documented brands, so
-            // the strip says so rather than borrowing names from elsewhere.
-            <span>{t("Brands selected to suit the project requirements")}</span>
-          )}
         </div>
 
         {/* Keys pair the slide id with the element: the package's own note is
@@ -315,13 +276,6 @@ const ManusHero: React.FC = () => {
         </div>
       </div>
 
-      <div className="mn-hero-service-note">
-        <SlideIcon size={17} />
-        <span>
-          <strong>{t(slide.eyebrow)}</strong>{" "}
-          {t("Pause on hover, or pick any solution from the dots.")}
-        </span>
-      </div>
     </section>
   );
 };
