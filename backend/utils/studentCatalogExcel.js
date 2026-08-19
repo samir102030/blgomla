@@ -30,6 +30,114 @@ const text = (value) => value?.toString().trim() ?? "";
 
 const write = (workbook) => XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 
+/**
+ * Column headers are matched loosely, and on purpose.
+ *
+ * The sheet somebody has in hand is rarely the one this template produced. It
+ * is the shop's category export, or a supplier's list, or the same file after
+ * Excel decided to capitalise something — all describing the same thing under
+ * a different heading. Matching the header string exactly turns every one of
+ * those into 134 rows that read as empty, with nothing on screen explaining
+ * why.
+ *
+ * So a header is reduced to its letters and digits and compared against a set
+ * of names that mean the same thing, in either language.
+ */
+const headerKey = (value) =>
+  String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9؀-ۿ]/g, "");
+
+/**
+ * The alias list is ordered by preference, and the *first alias that exists*
+ * wins — not the first column that happens to match one.
+ *
+ * That distinction matters on a sheet carrying both "Product Name" and
+ * "Category". Scanning columns and taking the first hit makes the answer
+ * depend on column order, so the same file imports differently depending on
+ * where somebody dragged a column. Scanning aliases makes it depend on what
+ * the reader means, which is the same every time.
+ */
+const readCell = (row, aliases, index) => {
+  for (const alias of aliases) {
+    const column = index.get(alias);
+    if (column !== undefined) return row[column];
+  }
+  return undefined;
+};
+
+const indexColumns = (columns) => {
+  const map = new Map();
+  for (const column of columns) {
+    const key = headerKey(column);
+    if (!map.has(key)) map.set(key, column);
+  }
+  return map;
+};
+
+/** Shared between both sheets — these mean the same thing on either. */
+const COMMON = {
+  nameAr: ["arabicname", "namear", "الاسمبالعربي", "الاسمالعربي", "الاسمعربي"],
+  description: ["description", "الوصف"],
+  descriptionAr: ["arabicdescription", "descriptionar", "الوصفبالعربي", "الوصفالعربي"],
+  image: ["imageurls", "imageurl", "images", "image", "الصور", "الصورة", "رابطالصور", "رابطالصورة"],
+  active: ["active", "isactive", "نشط", "ظاهر", "مفعل"],
+};
+
+const CATEGORY_ALIASES = {
+  ...COMMON,
+  name: ["departmentname", "categoryname", "name", "department", "category", "اسمالقسم", "الاسم", "القسم"],
+  parent: ["parentdepartment", "parentcategory", "parent", "القسمالأب", "القسمالاب", "الأب", "الاب", "القسمالرئيسي"],
+  order: ["order", "sortorder", "sort", "الترتيب"],
+};
+
+const PRODUCT_ALIASES = {
+  ...COMMON,
+  name: ["productname", "name", "اسمالمنتج", "الاسم", "المنتج"],
+  department: ["department", "categoryname", "category", "القسم", "التصنيف"],
+  price: ["price", "السعر"],
+  stock: ["stock", "quantity", "qty", "المخزون", "الكمية"],
+  sku: ["sku", "productcode", "code", "كودالمنتج", "الكود"],
+  tags: ["tags", "keywords", "الوسوم", "الكلمات"],
+  featured: ["featured", "مميز"],
+};
+
+/**
+ * The sheet the rows are actually on.
+ *
+ * A workbook from this template has an Instructions tab beside the data, and
+ * one from somewhere else may have the data on the third tab with two empty
+ * ones in front. Taking `SheetNames[0]` and hoping is how an import reads a
+ * guide page and reports nothing to load, so every sheet is tried and the
+ * first one carrying rows with a usable name wins.
+ */
+const findDataSheet = (workbook, nameAliases) => {
+  let fallback = null;
+
+  for (const sheetName of workbook.SheetNames) {
+    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    if (!rows.length) continue;
+
+    // Columns are collected across rows, not read off the first one: a blank
+    // cell makes `sheet_to_json` drop that key from that row entirely, so a
+    // sheet whose first row has no parent looks like it has no parent column.
+    const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+    const index = indexColumns(columns);
+    if (!fallback) fallback = { rows, columns, index, sheetName };
+
+    if (rows.some((row) => text(readCell(row, nameAliases, index)))) {
+      return { rows, columns, index, sheetName };
+    }
+  }
+  return fallback ?? { rows: [], columns: [], index: new Map(), sheetName: workbook.SheetNames[0] };
+};
+
+/** What the reader could not make sense of, in words a person can act on. */
+export const describeUnreadableSheet = (columns, wanted) =>
+  `The sheet has no column this reader recognises as ${wanted}. It found: ` +
+  `${columns.length ? columns.map((c) => `"${c}"`).join(", ") : "no columns at all"}. ` +
+  `Download the template to see the columns it expects.`;
+
 /* ────────────────────────── departments ────────────────────────── */
 
 const CATEGORY_COLUMNS = [
@@ -123,19 +231,22 @@ export const generateStudentCategoryTemplate = () => {
 
 export const parseStudentCategoryExcel = (fileBuffer) => {
   const workbook = XLSX.read(fileBuffer, { type: "buffer" });
-  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+  const { rows, columns, index: cols } = findDataSheet(workbook, CATEGORY_ALIASES.name);
 
-  return rows.map((row, index) => ({
-    rowNumber: index + 2, // +2: Excel is 1-indexed and row 1 is the header
-    name: text(row["Department Name"]),
-    nameAr: text(row["Arabic Name"]),
-    parentName: text(row["Parent Department"]),
-    description: text(row["Description"]),
-    descriptionAr: text(row["Arabic Description"]),
-    image: text(row["Image URL"]),
-    order: Number.parseInt(row["Order"], 10) || 0,
-    active: parseBool(row["Active"]),
-  }));
+  return {
+    columns,
+    rows: rows.map((row, index) => ({
+      rowNumber: index + 2, // +2: Excel is 1-indexed and row 1 is the header
+      name: text(readCell(row, CATEGORY_ALIASES.name, cols)),
+      nameAr: text(readCell(row, CATEGORY_ALIASES.nameAr, cols)),
+      parentName: text(readCell(row, CATEGORY_ALIASES.parent, cols)),
+      description: text(readCell(row, CATEGORY_ALIASES.description, cols)),
+      descriptionAr: text(readCell(row, CATEGORY_ALIASES.descriptionAr, cols)),
+      image: text(readCell(row, CATEGORY_ALIASES.image, cols)),
+      order: Number.parseInt(readCell(row, CATEGORY_ALIASES.order, cols), 10) || 0,
+      active: parseBool(readCell(row, CATEGORY_ALIASES.active, cols)),
+    })),
+  };
 };
 
 /* ─────────────────────────── products ─────────────────────────── */
@@ -249,30 +360,32 @@ const splitList = (value) =>
 
 export const parseStudentProductExcel = (fileBuffer) => {
   const workbook = XLSX.read(fileBuffer, { type: "buffer" });
-  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+  const { rows, columns, index: cols } = findDataSheet(workbook, PRODUCT_ALIASES.name);
 
-  return rows.map((row, index) => {
-    const rawPrice = row["Price"];
-    const price = Number.parseFloat(rawPrice);
+  return {
+    columns,
+    rows: rows.map((row, index) => {
+      const price = Number.parseFloat(readCell(row, PRODUCT_ALIASES.price, cols));
 
-    return {
-      rowNumber: index + 2,
-      name: text(row["Product Name"]),
-      nameAr: text(row["Arabic Name"]),
-      departmentName: text(row["Department"]),
-      // A blank price is not zero-by-mistake — it means "not priced yet", which
-      // the importer treats as a success that needs following up.
-      price: Number.isFinite(price) ? price : null,
-      stock: Number.parseInt(row["Stock"], 10) || 0,
-      sku: text(row["SKU"]),
-      description: text(row["Description"]),
-      descriptionAr: text(row["Arabic Description"]),
-      images: splitList(row["Image URLs"]).map((url) => ({ url })),
-      tags: splitList(row["Tags"]),
-      featured: parseBool(row["Featured"], false),
-      active: parseBool(row["Active"]),
-    };
-  });
+      return {
+        rowNumber: index + 2,
+        name: text(readCell(row, PRODUCT_ALIASES.name, cols)),
+        nameAr: text(readCell(row, CATEGORY_ALIASES.nameAr, cols)),
+        departmentName: text(readCell(row, PRODUCT_ALIASES.department, cols)),
+        // A blank price is not zero-by-mistake — it means "not priced yet",
+        // which the importer treats as a success that needs following up.
+        price: Number.isFinite(price) ? price : null,
+        stock: Number.parseInt(readCell(row, PRODUCT_ALIASES.stock, cols), 10) || 0,
+        sku: text(readCell(row, PRODUCT_ALIASES.sku, cols)),
+        description: text(readCell(row, CATEGORY_ALIASES.description, cols)),
+        descriptionAr: text(readCell(row, CATEGORY_ALIASES.descriptionAr, cols)),
+        images: splitList(readCell(row, CATEGORY_ALIASES.image, cols)).map((url) => ({ url })),
+        tags: splitList(readCell(row, PRODUCT_ALIASES.tags, cols)),
+        featured: parseBool(readCell(row, PRODUCT_ALIASES.featured, cols), false),
+        active: parseBool(readCell(row, CATEGORY_ALIASES.active, cols)),
+      };
+    }),
+  };
 };
 
 /** The section's products, in the shape its own template reads back. */

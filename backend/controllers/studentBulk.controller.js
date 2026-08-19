@@ -1,6 +1,7 @@
 import Product from "../models/product.model.js";
 import StudentCategory from "../models/studentCategory.model.js";
 import {
+  describeUnreadableSheet,
   exportStudentProductsToExcel,
   generateStudentCategoryTemplate,
   generateStudentProductTemplate,
@@ -56,11 +57,20 @@ export const bulkUploadStudentCategories = async (req, res) => {
     const dryRun = req.query.dryRun === "true" || req.body.dryRun === "true";
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-    const rows = parseStudentCategoryExcel(req.file.buffer);
+    const { rows, columns } = parseStudentCategoryExcel(req.file.buffer);
     if (!rows.length) {
       return res
         .status(400)
-        .json({ success: false, message: "No departments found in the Excel file" });
+        .json({ success: false, message: "The sheet has no rows in it." });
+    }
+    // Every row read blank. Almost always the wrong columns rather than an
+    // empty file, and "nothing found" leaves somebody staring at a sheet they
+    // can see the contents of. Say which columns were there instead.
+    if (!rows.some((row) => row.name)) {
+      return res.status(400).json({
+        success: false,
+        message: describeUnreadableSheet(columns, "a department name"),
+      });
     }
 
     const results = { created: [], updated: [], linked: [], failed: [], totalRows: rows.length };
@@ -249,11 +259,15 @@ export const bulkUploadStudentProducts = async (req, res) => {
     const dryRun = req.query.dryRun === "true" || req.body.dryRun === "true";
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-    const rows = parseStudentProductExcel(req.file.buffer);
+    const { rows, columns } = parseStudentProductExcel(req.file.buffer);
     if (!rows.length) {
-      return res
-        .status(400)
-        .json({ success: false, message: "No products found in the Excel file" });
+      return res.status(400).json({ success: false, message: "The sheet has no rows in it." });
+    }
+    if (!rows.some((row) => row.name)) {
+      return res.status(400).json({
+        success: false,
+        message: describeUnreadableSheet(columns, "a product name"),
+      });
     }
 
     const results = {
