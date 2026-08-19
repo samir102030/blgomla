@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import {
   addProgramDomain,
   applyForStudentProgram,
@@ -27,6 +28,13 @@ import {
   updateStudentCategory,
   updateStudentProduct,
 } from "../controllers/studentCatalog.controller.js";
+import {
+  bulkUploadStudentCategories,
+  bulkUploadStudentProducts,
+  downloadStudentCategoryTemplate,
+  downloadStudentProductTemplate,
+  exportStudentProducts,
+} from "../controllers/studentBulk.controller.js";
 import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import {
   studentMailIpLimiter,
@@ -35,6 +43,22 @@ import {
 } from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
+
+/* Sheets are held in memory and parsed straight through — nothing is written
+   to disk, so there is no upload directory to clean up or to leak. Same limit
+   and same accepted types as the shop's own bulk upload. */
+const uploadSheet = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+    if (allowed.includes(file.mimetype)) cb(null, true);
+    else cb(new Error("Only Excel files (.xlsx, .xls) are allowed"));
+  },
+});
 
 /* ── Public ──
    The portal has to render, and the confirmation link has to work, before and
@@ -94,6 +118,41 @@ router.get("/admin/stats", protectRoute, requirePermission("students.view"), get
    Its departments and its products, kept behind `students.configure`: this is
    what the section sells and what it charges, which is a different level of
    trust from reading the member list. */
+/* Bulk loading. Registered before "/:id" so "bulk-template" is not read as an
+   id, which is the classic way this breaks. */
+router.get(
+  "/admin/catalog/categories/bulk-template",
+  protectRoute,
+  requirePermission("students.configure"),
+  downloadStudentCategoryTemplate,
+);
+router.post(
+  "/admin/catalog/categories/bulk-upload",
+  protectRoute,
+  requirePermission("students.configure"),
+  uploadSheet.single("file"),
+  bulkUploadStudentCategories,
+);
+router.get(
+  "/admin/catalog/products/bulk-template",
+  protectRoute,
+  requirePermission("students.configure"),
+  downloadStudentProductTemplate,
+);
+router.get(
+  "/admin/catalog/products/export",
+  protectRoute,
+  requirePermission("students.view"),
+  exportStudentProducts,
+);
+router.post(
+  "/admin/catalog/products/bulk-upload",
+  protectRoute,
+  requirePermission("students.configure"),
+  uploadSheet.single("file"),
+  bulkUploadStudentProducts,
+);
+
 router
   .route("/admin/catalog/categories")
   .all(protectRoute)
