@@ -72,7 +72,7 @@ export async function paginateProducts({
   // behind most of the storefront's listings, so the student shelf is excluded
   // here for the same reason and on the same default: say nothing about
   // audience and you get the public catalogue.
-  const scoped = filter.audience === undefined ? { ...filter, audience: { $ne: "students" } } : filter;
+  const scoped = filter.audience === undefined ? { ...filter, audience: { $ne: "electronics" } } : filter;
 
   const [result] = await Product.aggregate([
     { $match: scoped },

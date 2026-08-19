@@ -105,15 +105,15 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
     // shop inside the shop, with its own departments, its own shelf and its
     // own members, and every one of those is a page.
     {
-      name: t("admin.studentProgram", "Student programme"),
+      name: t("admin.electronics", "Electronics"),
       icon: AcademicCapIcon,
       children: [
-        { name: t("admin.studentOverview", "Overview"), href: "/dashboard/students", perm: "students.view" },
-        { name: t("admin.studentProducts", "Products"), href: "/dashboard/students/products", perm: "students.configure" },
-        { name: t("admin.studentDepartments", "Departments"), href: "/dashboard/students/categories", perm: "students.configure" },
-        { name: t("admin.studentOffer", "The offer"), href: "/dashboard/students/offer", perm: "students.configure" },
-        { name: t("admin.studentFaculties", "Faculties"), href: "/dashboard/students/faculties", perm: "students.configure" },
-        { name: t("admin.studentMembers", "Members"), href: "/dashboard/students/members", perm: "students.view" },
+        { name: t("admin.studentOverview", "Overview"), href: "/dashboard/electronics", perm: "students.view" },
+        { name: t("admin.studentProducts", "Products"), href: "/dashboard/electronics/products", perm: "students.configure" },
+        { name: t("admin.studentDepartments", "Departments"), href: "/dashboard/electronics/categories", perm: "students.configure" },
+        { name: t("admin.studentOffer", "Student discount"), href: "/dashboard/electronics/offer", perm: "students.configure" },
+        { name: t("admin.studentFaculties", "Faculties"), href: "/dashboard/electronics/faculties", perm: "students.configure" },
+        { name: t("admin.studentMembers", "Students"), href: "/dashboard/electronics/members", perm: "students.view" },
       ],
     },
 

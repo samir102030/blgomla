@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useEffect, lazy, Suspense, Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
@@ -171,7 +171,13 @@ function App() {
           {/* University student programme — a system inside the system. The verify
 
               route takes no session: the link arrives in a faculty mailbox. */}
-          <Route path="/students" element={<StudentsPage />} />
+          {/* The section is Electronics — anyone browses and buys it; students
+              get a discount inside it. `/students` still resolves because
+              confirmation links already sent out point there, and a link in
+              somebody's inbox outlives a rename. */}
+          <Route path="/electronics" element={<StudentsPage />} />
+          <Route path="/students" element={<Navigate to="/electronics" replace />} />
+          <Route path="/electronics/verify/:token" element={<StudentVerifyPage />} />
           <Route path="/students/verify/:token" element={<StudentVerifyPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/compare" element={<ComparePage />} />

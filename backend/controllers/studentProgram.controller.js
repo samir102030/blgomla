@@ -142,7 +142,7 @@ const issueCoupon = async (profile, program) => {
     // The student shelf, whatever is on it today. Naming the audience rather
     // than listing departments means a code minted in September still covers
     // a department added in March, without rewriting every live coupon.
-    applicableAudience: "students",
+    applicableAudience: "electronics",
     applicableCategories: [],
     applicableProducts: [],
     assignedUser: profile.user,

@@ -94,7 +94,7 @@ const AdminRoutes: React.FC = () => {
         {/* Nested under a layout so every page of the module inherits the one
             thing all six of them forgot when the single screen was split: a
             refusal from the server shows up on screen. */}
-        <Route path="/students" element={<StudentsLayout />}>
+        <Route path="/electronics" element={<StudentsLayout />}>
           <Route
             index
             element={

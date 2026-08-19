@@ -357,7 +357,7 @@ const Header: React.FC = () => {
     // Last of the links a visitor sees. The label matches the page title, so
     // the link and the place it lands read as the same thing. The dashboard
     // link below is staff-only and stays pinned at the end of the row.
-    { label: t("Student programme"), path: "/students" },
+    { label: t("Electronics"), path: "/electronics" },
     {
       label: t("Admin Dashboard"),
       path: "/dashboard",

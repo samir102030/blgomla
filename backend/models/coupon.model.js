@@ -109,7 +109,7 @@ const couponSchema = new mongoose.Schema(
      */
     applicableAudience: {
       type: String,
-      enum: ["public", "students", null],
+      enum: ["public", "electronics", null],
       default: null,
     },
     createdBy: {

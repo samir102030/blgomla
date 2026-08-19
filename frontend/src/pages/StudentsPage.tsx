@@ -11,16 +11,18 @@ import { useStudentStore } from "../stores/student.store";
 import "../styles/students.css";
 
 /**
- * The university student programme, student side.
+ * The Electronics section.
  *
- * One page carries the whole journey — the offer, the application, the wait,
- * and the code — because there is only ever one thing for a given student to
- * do next, and routing them between four pages to do it would be four chances
- * to lose them.
+ * A shop anyone can buy from — boards, sensors, lab tools, components — with a
+ * standing student discount inside it. The order on the page says which is
+ * which: the shelf first, the discount under it. It was the other way round
+ * when the section was framed as a student programme, and that arrangement
+ * told every visitor who is not a student that the page was not for them.
  *
- * It reads as its own product rather than a storefront page: the programme is
- * a system inside the system, and a student arriving from a faculty group chat
- * should be able to tell in a second that this is for them.
+ * The student half still carries its whole journey on this one page — the
+ * offer, the application, the wait, the code — because there is only ever one
+ * thing for a given student to do next, and routing them between four pages to
+ * do it would be four chances to lose them.
  */
 
 const StudentsPage: React.FC = () => {
@@ -77,9 +79,9 @@ const StudentsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <SEO
-        title={t("Student programme")}
+        title={t("Electronics")}
         description={t(
-          "Engineering and computer science students get a personal discount on electronics at Belgomla — verified with a faculty email.",
+          "Boards, sensors, lab tools and components — open to everyone, with a standing discount for engineering and computer science students.",
         )}
       />
       <Header />
@@ -87,7 +89,7 @@ const StudentsPage: React.FC = () => {
       <main className="st-scope">
         <section className="st-head">
           <div className="st-width">
-            <span className="st-kicker">{t("Engineering & computer science")}</span>
+            <span className="st-kicker">{t("Boards · sensors · lab tools")}</span>
           </div>
           <div className="st-width">
             <h1 className="st-title">
@@ -97,34 +99,144 @@ const StudentsPage: React.FC = () => {
           <div className="st-width">
             <p className="st-lede">
               {t(
-                "Confirm a faculty email address and a personal discount code is yours — on the laptops, components, networking gear and storage you actually study with. The code renews; it is not a one-off voucher.",
+                "The parts a project actually needs, in one place — anyone can buy. Students at an engineering or computer science faculty confirm a faculty email once and carry a standing discount on all of it.",
               )}
             </p>
           </div>
           <div className="st-width">
             <div className="st-terms">
               <div className="st-term">
-                <b className="st-mono">{discountLabel}</b>
-                <span>{t("Off electronics")}</span>
+                <b className="st-mono">{shelf?.total ?? "—"}</b>
+                <span>{t("Products")}</span>
               </div>
               <div className="st-term">
-                <b className="st-mono">{publicProgram?.renewal?.usesPerPeriod ?? "—"}</b>
-                <span>{t("Orders per period")}</span>
+                <b className="st-mono">{shelf?.tree?.length ?? "—"}</b>
+                <span>{t("Departments")}</span>
+              </div>
+              <div className="st-term">
+                <b className="st-mono">{discountLabel}</b>
+                <span>{t("Student discount")}</span>
               </div>
               <div className="st-term">
                 <b className="st-mono">{publicProgram?.renewal?.periodDays ?? "—"}</b>
                 <span>{t("Day renewal cycle")}</span>
               </div>
-              <div className="st-term">
-                <b className="st-mono">{publicProgram?.domains?.length ?? 0}</b>
-                <span>{t("Approved faculties")}</span>
-              </div>
             </div>
           </div>
         </section>
 
+        {/* ── The shop ──
+            Above the discount, not below it. Anyone can buy here; the student
+            offer is a benefit inside the section rather than the door into it,
+            and putting the door first told every other visitor the page was
+            not for them. */}
+        <section className="st-shop">
+          <div className="st-width">
+            <div className="st-shop-head">
+              <div>
+                <span className="st-kicker">{t("The shelf")}</span>
+                <h2>{t("Everything in the section")}</h2>
+              </div>
+              {!!shelf?.total && (
+                <span className="st-mono st-shop-count">
+                  {shelf.total} {t("products")}
+                </span>
+              )}
+            </div>
+
+            {!!shelf?.tree?.length && (
+              <div className="st-depts">
+                <button
+                  type="button"
+                  className={department === "" ? "st-active" : ""}
+                  onClick={() => {
+                    setDepartment("");
+                    setPage(1);
+                  }}
+                >
+                  {t("Everything")}
+                </button>
+                {shelf.tree.map((d) => (
+                  <button
+                    key={d._id}
+                    type="button"
+                    className={department === d._id ? "st-active" : ""}
+                    onClick={() => {
+                      setDepartment(d._id);
+                      setPage(1);
+                    }}
+                  >
+                    {isRtl && d.nameAr ? d.nameAr : d.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {shelfLoading && !shelf?.products?.length && (
+              <p className="st-shop-note">{t("Loading products…")}</p>
+            )}
+
+            {!shelfLoading && !shelf?.products?.length && (
+              <p className="st-shop-note">{t("Nothing is on the shelf yet.")}</p>
+            )}
+
+            <div className="st-grid">
+              {(shelf?.products || []).map((product: any, index: number) => (
+                <ProductCard
+                  key={product._id}
+                  id={product._id}
+                  name={product.name}
+                  nameAr={product.nameAr}
+                  price={getBaseUnitPrice(product)}
+                  currency="EGP"
+                  originalPrice={product.saleActive ? product.price : undefined}
+                  image={product.images?.[0]?.url || "/placeholder.png"}
+                  rating={product.rating}
+                  isOnSale={product.saleActive}
+                  salePercentage={product.salePercentage}
+                  isInStock={product.stock > 0}
+                  stock={product.stock}
+                  soldCount={product.soldCount}
+                  priority={index === 0}
+                />
+              ))}
+            </div>
+
+            {(shelf?.pages ?? 1) > 1 && (
+              <div className="st-pager">
+                <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+                  {t("Previous")}
+                </button>
+                <span className="st-mono">
+                  {page} / {shelf?.pages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= (shelf?.pages ?? 1)}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  {t("Next")}
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── The student discount ──
+            A benefit for people who qualify, sat under the shop rather than in
+            front of it. Nothing here gates buying: a visitor who is not a
+            student scrolls past it and checks out at the usual price. */}
         <section className="st-body">
           <div className="st-width">
+            <div className="st-shop-head" style={{ marginBottom: 22 }}>
+              <div>
+                <span className="st-kicker">{t("Engineering & computer science")}</span>
+                <h2 style={{ margin: "10px 0 0", fontFamily: '"Reem Kufi", sans-serif', fontSize: "clamp(22px, 3vw, 32px)", fontWeight: 700, color: "#fff", lineHeight: 1.25 }}>
+                  {t("Studying? The same shelf, cheaper.")}
+                </h2>
+              </div>
+            </div>
+
             {/* The programme could not be read at all. Without this the page
                 rendered a masthead over an empty column — a visitor cannot
                 tell that from a programme with nothing in it. */}
@@ -339,103 +451,6 @@ const StudentsPage: React.FC = () => {
                     )}
                   </div>
                 </aside>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* ── The shelf ──
-            Shown whether or not the programme is open, and whether or not the
-            visitor has joined. What is in the section is the reason to join
-            it; hiding it until after they have proved enrolment asks people to
-            commit to something they cannot see. */}
-        <section className="st-shop">
-          <div className="st-width">
-            <div className="st-shop-head">
-              <div>
-                <span className="st-kicker">{t("The student shelf")}</span>
-                <h2>{t("What the discount is for")}</h2>
-              </div>
-              {!!shelf?.total && (
-                <span className="st-mono st-shop-count">
-                  {shelf.total} {t("products")}
-                </span>
-              )}
-            </div>
-
-            {!!shelf?.tree?.length && (
-              <div className="st-depts">
-                <button
-                  type="button"
-                  className={department === "" ? "st-active" : ""}
-                  onClick={() => {
-                    setDepartment("");
-                    setPage(1);
-                  }}
-                >
-                  {t("Everything")}
-                </button>
-                {shelf.tree.map((d) => (
-                  <button
-                    key={d._id}
-                    type="button"
-                    className={department === d._id ? "st-active" : ""}
-                    onClick={() => {
-                      setDepartment(d._id);
-                      setPage(1);
-                    }}
-                  >
-                    {isRtl && d.nameAr ? d.nameAr : d.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {shelfLoading && !shelf?.products?.length && (
-              <p className="st-shop-note">{t("Loading products…")}</p>
-            )}
-
-            {!shelfLoading && !shelf?.products?.length && (
-              <p className="st-shop-note">{t("Nothing is on the shelf yet.")}</p>
-            )}
-
-            <div className="st-grid">
-              {(shelf?.products || []).map((product: any, index: number) => (
-                <ProductCard
-                  key={product._id}
-                  id={product._id}
-                  name={product.name}
-                  nameAr={product.nameAr}
-                  price={getBaseUnitPrice(product)}
-                  currency="EGP"
-                  originalPrice={product.saleActive ? product.price : undefined}
-                  image={product.images?.[0]?.url || "/placeholder.png"}
-                  rating={product.rating}
-                  isOnSale={product.saleActive}
-                  salePercentage={product.salePercentage}
-                  isInStock={product.stock > 0}
-                  stock={product.stock}
-                  soldCount={product.soldCount}
-                  priority={index === 0}
-                />
-              ))}
-            </div>
-
-            {(shelf?.pages ?? 1) > 1 && (
-              <div className="st-pager">
-                <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                  {t("Previous")}
-                </button>
-                <span className="st-mono">
-                  {page} / {shelf?.pages}
-                </span>
-                <button
-                  type="button"
-                  disabled={page >= (shelf?.pages ?? 1)}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  {t("Next")}
-                </button>
               </div>
             )}
           </div>

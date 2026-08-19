@@ -18,7 +18,7 @@ const productListPipeline = (filter, sort, limit) => [
   // different catalogue sold to a different audience, and the schema's find
   // hook cannot reach an aggregation, so it is excluded at the one point they
   // all share rather than in each of the five below.
-  { $match: { audience: { $ne: "students" }, ...filter } },
+  { $match: { audience: { $ne: "electronics" }, ...filter } },
   { $sort: sort },
   { $limit: limit },
   { $project: LIST_PROJECTION },

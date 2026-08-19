@@ -172,7 +172,7 @@ const StudentsOverviewPage: React.FC = () => {
           >
             {open ? t("Close the programme") : t("Open the programme")}
           </button>
-          <a href="/students" target="_blank" rel="noreferrer" className={btnGhost}>
+          <a href="/electronics" target="_blank" rel="noreferrer" className={btnGhost}>
             {t("View the student page")}
           </a>
         </div>

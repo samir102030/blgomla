@@ -19,7 +19,7 @@ import {
  * had to learn to skip student departments. Nothing reads `StudentCategory`
  * but this file, so there is nothing to teach and nowhere to leak.
  *
- * Products stay in `Product`, marked `audience: "students"`. A second product
+ * Products stay in `Product`, marked `audience: "electronics"`. A second product
  * collection would have meant the cart, the order, the stock count, the
  * payment and the shipping label each learning about a second kind of line —
  * five migrations to gain nothing a flag does not already give. The flag is
@@ -30,7 +30,7 @@ import {
 const ok = (res, data, status = 200) => res.status(status).json({ success: true, ...data });
 const fail = (res, status, message) => res.status(status).json({ success: false, message });
 
-const STUDENT = { audience: "students" };
+const STUDENT = { audience: "electronics" };
 
 /** What a shelf listing needs, and nothing that would bloat the payload. */
 const LIST_FIELDS =
@@ -56,7 +56,7 @@ export const listStudentCategories = controllerWrapper(
     // One count per department, so the dashboard can say what emptying a
     // department would strand before anybody empties it.
     const counts = await Product.aggregate([
-      { $match: { audience: "students", deleted: { $ne: true } } },
+      { $match: { audience: "electronics", deleted: { $ne: true } } },
       { $group: { _id: "$studentCategory", n: { $sum: 1 } } },
     ]);
     const byId = new Map(counts.map((c) => [String(c._id), c.n]));
@@ -141,7 +141,7 @@ export const deleteStudentCategory = controllerWrapper(
     // product filed there where no page lists it and nobody goes looking.
     const [children, products] = await Promise.all([
       StudentCategory.countDocuments({ parentCategory: category._id, deleted: { $ne: true } }),
-      Product.countDocuments({ studentCategory: category._id, audience: "students", deleted: { $ne: true } }),
+      Product.countDocuments({ studentCategory: category._id, audience: "electronics", deleted: { $ne: true } }),
     ]);
 
     if (children) return fail(res, 409, "Empty the departments under this one first.");
@@ -290,7 +290,7 @@ export const createStudentProduct = controllerWrapper(
 
     const product = await Product.create({
       ...patch,
-      audience: "students",
+      audience: "electronics",
       // The section's products are its own to publish; they do not queue behind
       // the vendor approval flow, which exists to police what outside sellers
       // put on the storefront.

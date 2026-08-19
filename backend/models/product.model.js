@@ -187,7 +187,7 @@ const productSchema = new mongoose.Schema(
      */
     audience: {
       type: String,
-      enum: ["public", "students"],
+      enum: ["public", "electronics"],
       default: "public",
       index: true,
     },
@@ -445,7 +445,7 @@ productSchema.pre(/^find/, function () {
   const filter = this.getFilter() || {};
   if (filter.audience !== undefined) return;
   if (filter._id !== undefined || filter.slug !== undefined) return;
-  this.where({ audience: { $ne: "students" } });
+  this.where({ audience: { $ne: "electronics" } });
 });
 
 // ── Slug auto-generation ──

@@ -238,7 +238,7 @@ export const downloadStudentProductTemplate = async (req, res) => {
 export const exportStudentProducts = async (req, res) => {
   try {
     const [products, categories] = await Promise.all([
-      Product.find({ audience: "students", deleted: { $ne: true } })
+      Product.find({ audience: "electronics", deleted: { $ne: true } })
         .sort({ createdAt: -1 })
         .lean(),
       StudentCategory.find({}).select("_id name").lean(),
@@ -283,7 +283,7 @@ export const bulkUploadStudentProducts = async (req, res) => {
 
     const [categories, existing] = await Promise.all([
       StudentCategory.find({ deleted: { $ne: true } }).lean(),
-      Product.find({ audience: "students" }).select("_id name"),
+      Product.find({ audience: "electronics" }).select("_id name"),
     ]);
 
     const categoryByName = new Map(categories.map((c) => [norm(c.name), c._id]));
@@ -358,7 +358,7 @@ export const bulkUploadStudentProducts = async (req, res) => {
           const doc = new Product({
             name: row.name,
             ...fields,
-            audience: "students",
+            audience: "electronics",
             // The section publishes its own products; the approval queue exists
             // to police what outside sellers put on the storefront.
             approvalStatus: "approved",

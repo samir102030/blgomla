@@ -908,7 +908,10 @@ export const sendAbandonedCartEmail = async (user, cartItems = [], stage = 1) =>
 export const sendStudentVerificationEmail = async (user, profile, token, clientUrl) => {
   const lang = pickLang(user?.lang || user?.locale);
   const base = clientUrl || CLIENT_URL;
-  const link = `${base}/students/verify/${token}`;
+  // New links point at the section's own path. `/students/verify/:token` still
+  // resolves on the site, so a link already sitting in somebody's inbox keeps
+  // working — an email outlives a rename.
+  const link = `${base}/electronics/verify/${token}`;
 
   const subjectMap = {
     en: "Confirm your university email — Belgomla Students",

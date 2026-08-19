@@ -76,7 +76,7 @@ const StudentVerifyPage: React.FC = () => {
                     <Link to="/products" className="st-btn st-btn-primary">
                       {t("Shop electronics")}
                     </Link>
-                    <Link to="/students" className="st-btn st-btn-ghost">
+                    <Link to="/electronics" className="st-btn st-btn-ghost">
                       {t("My membership")}
                     </Link>
                   </div>
@@ -89,7 +89,7 @@ const StudentVerifyPage: React.FC = () => {
                   <p style={{ marginTop: 16 }}>
                     {t("Confirmation links last an hour. Ask for a fresh one from the programme page.")}
                   </p>
-                  <Link to="/students" className="st-btn st-btn-primary">
+                  <Link to="/electronics" className="st-btn st-btn-primary">
                     {t("Back to the programme")}
                   </Link>
                 </>
