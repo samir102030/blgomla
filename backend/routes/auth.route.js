@@ -1,5 +1,4 @@
 import express from "express";
-import { rateLimit } from "express-rate-limit";
 
 import {
   requirePermission,
@@ -7,26 +6,11 @@ import {
   superAdminRoute,
 } from "../middleware/auth.middleware.js";
 import { verifyRefreshToken } from "../middleware/token.js";
-import { MongoRateLimitStore } from "../utils/rateLimitStore.js";
-
-// Strict limiter for credential-handling endpoints. The global limiter in
-// app.js is 1000/15min — far too permissive for brute-force protection on
-// login/signup/forgot/reset. Keyed by IP.
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: {
-    success: false,
-    message: "Too many attempts. Please try again in 15 minutes.",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
-  // Must be shared: with the default per-process memory store an attacker
-  // gets a fresh 10-attempt budget from every warm Lambda, which is the
-  // opposite of what a brute-force limiter is for.
-  store: new MongoRateLimitStore({ prefix: "rl:auth" }),
-});
+// Strict limiter for credential-handling endpoints — the global limiter in
+// app.js is 1000/15min, far too permissive for brute-force protection on
+// login/signup/forgot/reset. Defined in middleware/ because the student
+// programme needs limiters of its own and they belong in one place.
+import { authLimiter } from "../middleware/rateLimit.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import {
   activateUser,

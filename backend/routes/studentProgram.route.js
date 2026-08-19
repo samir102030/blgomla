@@ -15,6 +15,11 @@ import {
   verifyStudentEmail,
 } from "../controllers/studentProgram.controller.js";
 import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
+import {
+  studentMailIpLimiter,
+  studentMailLimiter,
+  studentVerifyLimiter,
+} from "../middleware/rateLimit.middleware.js";
 
 const router = express.Router();
 
@@ -23,12 +28,25 @@ const router = express.Router();
    without a session: the link is opened from a university webmail that may be
    signed into nothing on this site. */
 router.get("/program", getPublicProgram);
-router.post("/verify", verifyStudentEmail);
-router.post("/verify/:token", verifyStudentEmail);
+router.post("/verify", studentVerifyLimiter, verifyStudentEmail);
+router.post("/verify/:token", studentVerifyLimiter, verifyStudentEmail);
 
 /* ── The student's own membership ── */
 router.get("/me", protectRoute, getMyStudentProfile);
-router.post("/apply", protectRoute, applyForStudentProgram);
+
+/* Applying sends mail from the shop's own sending domain, so it is limited
+   twice: once per account and once per network. The controller also holds a
+   two-minute cooldown per account, which is what a student who clicks twice
+   runs into; these are the ceilings for someone who is not a student. The
+   account limiter is keyed on `req.user`, so `protectRoute` has to run
+   first. */
+router.post(
+  "/apply",
+  studentMailIpLimiter,
+  protectRoute,
+  studentMailLimiter,
+  applyForStudentProgram,
+);
 
 /* ── Administration ──
    Split three ways on purpose: reading the member list, acting on a member,

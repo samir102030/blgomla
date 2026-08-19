@@ -1,0 +1,120 @@
+import { rateLimit } from "express-rate-limit";
+
+import { MongoRateLimitStore } from "../utils/rateLimitStore.js";
+
+/**
+ * The limiters that guard endpoints the global one in `app.js` is too loose
+ * for. That one allows 1000 requests a quarter hour per IP, which is a
+ * sensible ceiling for browsing and no ceiling at all for anything that
+ * checks a credential or sends a message.
+ *
+ * They live here rather than beside a single router because more than one
+ * router needs them, and a limiter that is copied is a limiter whose two
+ * copies drift apart.
+ *
+ * All of them share the Mongo-backed store: with express-rate-limit's default
+ * per-process memory store, every warm Lambda hands out a fresh budget, so
+ * the effective limit is `max × live instances` and it resets whenever a
+ * container is recycled.
+ */
+
+/**
+ * Credential handling — login, signup, password reset, email verification.
+ * Keyed by IP, and successful requests are refunded, so a person who signs in
+ * correctly twenty times never notices it while someone spraying passwords
+ * runs out after ten.
+ */
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: {
+    success: false,
+    message: "Too many attempts. Please try again in 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  store: new MongoRateLimitStore({ prefix: "rl:auth" }),
+});
+
+/**
+ * Asking the shop to send a confirmation link to a university mailbox.
+ *
+ * Keyed by account, deliberately not by IP. A faculty sits behind one campus
+ * NAT, so an IP-keyed limit would count every student on the network as the
+ * same person and throttle a whole department the week the programme opens —
+ * exactly the people it exists for. The account is the thing being abused
+ * when this is abused, so the account is what to count.
+ *
+ * Successes count. This is the opposite of `authLimiter`, and for the same
+ * reason it is the right way round there: on the auth routes a success is a
+ * person proving who they are, and here a success is a message leaving the
+ * shop's sending domain. Refunding those would leave the ceiling at
+ * "unlimited, as long as every request works".
+ *
+ * Six an hour is far above honest use — a student needs one, or a handful if
+ * they mistype the address — and far below anything worth doing with a mail
+ * relay.
+ *
+ * Rejected attempts are refunded. A student guessing at which of their
+ * addresses the faculty registered gets a 422 and no mail is sent, so there
+ * is nothing to charge them for; charging anyway would lock them out for an
+ * hour for the crime of not knowing the answer. The IP limiter below is what
+ * catches somebody hammering rejections.
+ */
+export const studentMailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 6,
+  message: {
+    success: false,
+    message:
+      "Too many confirmation links requested for this account. Try again in an hour, or contact support.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipFailedRequests: true,
+  keyGenerator: (req) => String(req.user?._id || "anonymous"),
+  store: new MongoRateLimitStore({ prefix: "rl:student-mail" }),
+});
+
+/**
+ * The same endpoint, seen from the other side: one host driving many accounts.
+ *
+ * The per-account limit above is the real control; this is the backstop for
+ * someone who registers accounts in bulk and spends each one's six. The
+ * ceiling is set high enough that a campus opening the programme together
+ * never reaches it.
+ */
+export const studentMailIpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: {
+    success: false,
+    message: "Too many requests from this network. Please try again shortly.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MongoRateLimitStore({ prefix: "rl:student-mail-ip" }),
+});
+
+/**
+ * Opening a confirmation link.
+ *
+ * The token is 32 random bytes, so guessing one is not a threat worth pricing;
+ * what this stops is a host hammering the endpoint with rubbish. Successful
+ * confirmations are refunded, so the only requests that spend the budget are
+ * the ones that failed — which is the signal, and means a lecture hall
+ * confirming at once is never affected.
+ */
+export const studentVerifyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: {
+    success: false,
+    message: "Too many attempts. Please try again in 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  store: new MongoRateLimitStore({ prefix: "rl:student-verify" }),
+});
