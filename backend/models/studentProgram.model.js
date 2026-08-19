@@ -107,34 +107,15 @@ const studentProgramSchema = new mongoose.Schema(
     },
 
     /**
-     * The categories the discount reaches. Roots are enough here — every
-     * descendant is resolved when a code is minted, because the coupon matcher
-     * compares category ids exactly and would otherwise miss every product
-     * filed one level down.
-     */
-    categories: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",
-      },
-    ],
-
-    /**
-     * Products put in the student shop by hand, on top of whatever the
-     * categories above already bring in.
+     * There is no category scope here any more.
      *
-     * They are references, not copies. The student area is a different way
-     * into the same catalogue — one price list, one stock count, one place a
-     * product is edited. A second product collection would drift from the
-     * first within a week and there would be no way to tell which of the two
-     * a customer was looking at.
+     * It used to hold roots from the public catalogue, back when the section
+     * was a curated view over the shop's own products. The section now has its
+     * own departments and its own products, so the scope has exactly one
+     * honest value — the student shelf — and the coupon carries it as
+     * `applicableAudience` rather than as a list of ids that would have to be
+     * rewritten into every live code each time a department is added.
      */
-    products: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-      },
-    ],
 
     /** How long a verified membership lasts before it has to be renewed. */
     membershipDays: {

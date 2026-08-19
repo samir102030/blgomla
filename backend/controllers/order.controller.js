@@ -387,7 +387,7 @@ export const createOrder = controllerWrapper(
         for (let i = 0; i < validatedItems.length; i++) {
           const item = validatedItems[i];
           const product = await Product.findById(item.product).session(session);
-          if (coupon.canApplyToProduct(product._id, product.category)) {
+          if (coupon.canApplyToProduct(product._id, product.category, product.audience)) {
             applicableSubtotal += item.price * item.quantity;
           }
         }
@@ -409,7 +409,7 @@ export const createOrder = controllerWrapper(
         for (let i = 0; i < validatedItems.length; i++) {
           const item = validatedItems[i];
           const product = await Product.findById(item.product).session(session);
-          if (coupon.canApplyToProduct(product._id, product.category)) {
+          if (coupon.canApplyToProduct(product._id, product.category, product.audience)) {
             const itemTotal = item.price * item.quantity;
             const proportion = itemTotal / applicableSubtotal;
             const itemDiscount = Math.min(

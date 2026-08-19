@@ -2,11 +2,9 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 
 import Coupon from "../models/coupon.model.js";
-import Product from "../models/product.model.js";
 import StudentProfile from "../models/studentProfile.model.js";
 import StudentProgram from "../models/studentProgram.model.js";
 import User from "../models/user.model.js";
-import { collectCategoryIds } from "../utils/categoryTree.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { sendStudentDiscountEmail, sendStudentVerificationEmail } from "../utils/email.js";
 
@@ -21,11 +19,11 @@ import { sendStudentDiscountEmail, sendStudentVerificationEmail } from "../utils
  *
  * Two things here are deliberate and worth not "simplifying" later:
  *
- * 1. The scope is stored on the coupon as the full expansion of every
- *    descendant category, not as the handful of roots an admin picked. The
- *    coupon matcher compares category ids exactly, so a code scoped to
- *    "Computers & Laptops" would otherwise match nothing at all, because every
- *    product is filed in a leaf.
+ * 1. The scope is an audience, not a list of departments. The section has its
+ *    own catalogue, so "what the code pays for" is "the student shelf" —
+ *    listing department ids instead would freeze the answer at the moment the
+ *    code was minted, and every code issued before a department existed would
+ *    quietly refuse to pay for it.
  *
  * 2. The verification link is proof of nothing but the mailbox. It therefore
  *    does not require a session — the student may well open it in a browser
@@ -66,18 +64,6 @@ const mintCouponCode = async () => {
   throw new Error("Could not allocate a unique student coupon code");
 };
 
-/**
- * Every category the discount reaches, roots expanded to their whole subtree.
- * An empty scope in the settings means the whole catalogue, which the coupon
- * model already represents as an empty `applicableCategories`.
- */
-const expandScope = async (categoryIds = []) => {
-  const expanded = new Set();
-  for (const id of categoryIds) {
-    for (const descendant of await collectCategoryIds(id)) expanded.add(String(descendant));
-  }
-  return [...expanded];
-};
 
 /** Human-readable terms for the email, built from the live settings. */
 const describeTerms = (program, expiresAt) => {
@@ -90,13 +76,12 @@ const describeTerms = (program, expiresAt) => {
   const minAr = d.minimumPurchase ? ` على الطلبات فوق ${d.minimumPurchase} جنيه` : "";
   const uses = program.renewal?.usesPerPeriod ?? 1;
   const days = program.renewal?.periodDays ?? 30;
-  const scoped = (program.categories || []).length > 0;
 
   return {
     discountEN: `${amount} off${cap}${min}.`,
     discountAR: `خصم ${amountAr}${capAr}${minAr}.`,
-    scopeEN: scoped ? "Valid on the electronics selected for the programme." : "Valid across the store.",
-    scopeAR: scoped ? "صالح على الإلكترونيات المختارة للبرنامج." : "صالح على كل المتجر.",
+    scopeEN: "Valid on everything in the student section.",
+    scopeAR: "صالح على كل اللي في قسم الطلاب.",
     renewalEN: `Good for ${uses} order${uses === 1 ? "" : "s"} every ${days} days — it renews, it does not burn out.`,
     renewalAR: `يكفي ${uses} ${uses === 1 ? "طلب" : "طلبات"} كل ${days} يوم — يتجدد ولا ينتهي بعد أول استخدام.`,
     expiryEN: expiresAt ? `Membership runs until ${new Date(expiresAt).toISOString().slice(0, 10)}.` : "",
@@ -140,7 +125,6 @@ export const rollRenewalWindow = async (profile, program) => {
  * period has actually elapsed.
  */
 const issueCoupon = async (profile, program) => {
-  const categories = await expandScope(program.categories);
   const expiresAt =
     profile.expiresAt || new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
 
@@ -155,7 +139,11 @@ const issueCoupon = async (profile, program) => {
     isActive: true,
     // Never advertised on the storefront strip — it belongs to one person.
     isPublic: false,
-    applicableCategories: categories,
+    // The student shelf, whatever is on it today. Naming the audience rather
+    // than listing departments means a code minted in September still covers
+    // a department added in March, without rewriting every live coupon.
+    applicableAudience: "students",
+    applicableCategories: [],
     applicableProducts: [],
     assignedUser: profile.user,
   };
@@ -194,90 +182,11 @@ export const getPublicProgram = controllerWrapper("getPublicProgram", async (req
       discount: program.discount,
       renewal: program.renewal,
       membershipDays: program.membershipDays,
-      categories: program.categories,
       universities,
       // The domains themselves are public: a student needs to know whether
       // their faculty address will be accepted before they type it in.
       domains: program.domains.filter((d) => d.active).map((d) => d.domain),
     },
-  });
-});
-
-/**
- * The shelf: which products the student area shows.
- *
- * Two sources, one list — every product filed under a chosen department, plus
- * anything picked out by hand. Both are the shop's own products; this decides
- * what appears in the student area, never what a product is or costs. A
- * department selected here is the same department the discount applies to,
- * so the shelf and the offer cannot drift apart and leave a student looking at
- * something their code will not pay for.
- *
- * Public on purpose. The point of the section is that a student can see what
- * is in it before deciding whether to prove who they are.
- */
-export const getStudentCatalogue = controllerWrapper("getStudentCatalogue", async (req, res) => {
-  const program = await StudentProgram.load();
-
-  const page = Math.max(1, Number(req.query.page) || 1);
-  const limit = Math.min(60, Math.max(1, Number(req.query.limit) || 24));
-  const sort = String(req.query.sort || "");
-
-  // A department filter has to be one of the programme's own, or the section
-  // becomes a way to browse the whole catalogue through a student URL.
-  const chosen = (program.categories || []).map(String);
-  const requested = req.query.category ? String(req.query.category) : "";
-  const departments = requested ? (chosen.includes(requested) ? [requested] : []) : chosen;
-
-  const categoryIds = await expandScope(departments);
-  const handPicked = requested ? [] : (program.products || []).map(String);
-
-  // Nothing chosen at all means the whole catalogue, which is what the empty
-  // scope already means for the discount.
-  const reach =
-    categoryIds.length || handPicked.length
-      ? {
-          $or: [
-            ...(categoryIds.length ? [{ category: { $in: categoryIds } }] : []),
-            ...(handPicked.length ? [{ _id: { $in: handPicked } }] : []),
-          ],
-        }
-      : {};
-
-  const filter = {
-    isActive: true,
-    deleted: { $ne: true },
-    approvalStatus: "approved",
-    ...reach,
-  };
-
-  const order =
-    sort === "price-asc"
-      ? { price: 1 }
-      : sort === "price-desc"
-        ? { price: -1 }
-        : sort === "newest"
-          ? { createdAt: -1 }
-          : { soldCount: -1, rating: -1 };
-
-  const [products, total] = await Promise.all([
-    Product.find(filter)
-      .select("name nameAr slug price salePrice saleActive images rating stock soldCount")
-      .sort(order)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
-    Product.countDocuments(filter),
-  ]);
-
-  await program.populate("categories", "name nameAr slug");
-
-  return ok(res, {
-    products,
-    total,
-    page,
-    pages: Math.max(1, Math.ceil(total / limit)),
-    departments: program.categories,
   });
 });
 
@@ -503,25 +412,14 @@ export const verifyStudentEmail = controllerWrapper("verifyStudentEmail", async 
 
 /* ────────────────────────── admin side ────────────────────────── */
 
-/**
- * The departments and the hand-picked products, filled in enough for the
- * dashboard to render a list without a second round trip.
- */
-const populateShelf = (program) =>
-  program.populate([
-    { path: "categories", select: "name nameAr slug" },
-    { path: "products", select: "name nameAr slug price images stock isActive" },
-  ]);
-
 export const getProgramSettings = controllerWrapper("getProgramSettings", async (req, res) => {
   const program = await StudentProgram.load();
-  await populateShelf(program);
   return ok(res, { program });
 });
 
 export const updateProgramSettings = controllerWrapper("updateProgramSettings", async (req, res) => {
   const program = await StudentProgram.load();
-  const { enabled, discount, renewal, categories, products, membershipDays } = req.body || {};
+  const { enabled, discount, renewal, membershipDays } = req.body || {};
 
   if (typeof enabled === "boolean") program.enabled = enabled;
   if (discount && typeof discount === "object") {
@@ -534,17 +432,10 @@ export const updateProgramSettings = controllerWrapper("updateProgramSettings", 
     if (renewal.usesPerPeriod !== undefined) program.renewal.usesPerPeriod = renewal.usesPerPeriod;
     if (renewal.periodDays !== undefined) program.renewal.periodDays = renewal.periodDays;
   }
-  if (Array.isArray(categories)) {
-    program.categories = categories.filter((id) => mongoose.isValidObjectId(id));
-  }
-  if (Array.isArray(products)) {
-    program.products = products.filter((id) => mongoose.isValidObjectId(id));
-  }
   if (membershipDays !== undefined) program.membershipDays = membershipDays;
   program.updatedBy = req.user._id;
 
   await program.save();
-  await populateShelf(program);
   return ok(res, { program, message: "Programme settings saved." });
 });
 

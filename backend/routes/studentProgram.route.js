@@ -5,7 +5,6 @@ import {
   getMyStudentProfile,
   getProgramSettings,
   getPublicProgram,
-  getStudentCatalogue,
   getStudentStats,
   listStudentMembers,
   removeProgramDomain,
@@ -15,6 +14,19 @@ import {
   updateStudentMember,
   verifyStudentEmail,
 } from "../controllers/studentProgram.controller.js";
+import {
+  createStudentCategory,
+  createStudentProduct,
+  deleteStudentCategory,
+  deleteStudentProduct,
+  getStudentProduct,
+  getStudentShelf,
+  getStudentTree,
+  listStudentCategories,
+  listStudentProducts,
+  updateStudentCategory,
+  updateStudentProduct,
+} from "../controllers/studentCatalog.controller.js";
 import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import {
   studentMailIpLimiter,
@@ -29,9 +41,11 @@ const router = express.Router();
    without a session: the link is opened from a university webmail that may be
    signed into nothing on this site. */
 router.get("/program", getPublicProgram);
-// The shelf is readable by anyone: a student decides whether the section is
-// worth proving enrolment for by looking at what is on it.
-router.get("/catalogue", getStudentCatalogue);
+// The shelf and its departments are readable by anyone: a student decides
+// whether the section is worth proving enrolment for by looking at what is on
+// it.
+router.get("/shop", getStudentShelf);
+router.get("/shop/tree", getStudentTree);
 router.post("/verify", studentVerifyLimiter, verifyStudentEmail);
 router.post("/verify/:token", studentVerifyLimiter, verifyStudentEmail);
 
@@ -75,6 +89,35 @@ router.delete(
 router.get("/admin/members", protectRoute, requirePermission("students.view"), listStudentMembers);
 router.patch("/admin/members/:id", protectRoute, requirePermission("students.manage"), updateStudentMember);
 router.get("/admin/stats", protectRoute, requirePermission("students.view"), getStudentStats);
+
+/* ── The section's own catalogue ──
+   Its departments and its products, kept behind `students.configure`: this is
+   what the section sells and what it charges, which is a different level of
+   trust from reading the member list. */
+router
+  .route("/admin/catalog/categories")
+  .all(protectRoute)
+  .get(requirePermission("students.view"), listStudentCategories)
+  .post(requirePermission("students.configure"), createStudentCategory);
+
+router
+  .route("/admin/catalog/categories/:id")
+  .all(protectRoute, requirePermission("students.configure"))
+  .patch(updateStudentCategory)
+  .delete(deleteStudentCategory);
+
+router
+  .route("/admin/catalog/products")
+  .all(protectRoute)
+  .get(requirePermission("students.view"), listStudentProducts)
+  .post(requirePermission("students.configure"), createStudentProduct);
+
+router
+  .route("/admin/catalog/products/:id")
+  .all(protectRoute)
+  .get(requirePermission("students.view"), getStudentProduct)
+  .patch(requirePermission("students.configure"), updateStudentProduct)
+  .delete(requirePermission("students.configure"), deleteStudentProduct);
 
 /* Renewal and expiry sweep. Guarded like the other maintenance endpoints
    rather than left open, because it writes. */

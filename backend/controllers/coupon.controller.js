@@ -383,7 +383,8 @@ export const validateCoupon = controllerWrapper(
       if (
         coupon.canApplyToProduct(
           product._id,
-          product.category?._id || product.category
+          product.category?._id || product.category,
+          product.audience
         )
       ) {
         applicableItems.push(item);

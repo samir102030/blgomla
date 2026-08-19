@@ -95,6 +95,23 @@ const couponSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    /**
+     * Restrict the code to one storefront's catalogue.
+     *
+     * The student section sells its own products, filed in its own
+     * departments, so `applicableCategories` — which holds ids from the public
+     * category tree — cannot describe "the student shelf". This can, in one
+     * field, and it stays true as the shelf changes rather than needing every
+     * coupon rewritten each time a department is added.
+     *
+     * Null means the code does not care, which is every coupon that existed
+     * before the section did.
+     */
+    applicableAudience: {
+      type: String,
+      enum: ["public", "students", null],
+      default: null,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -120,7 +137,15 @@ couponSchema.virtual("isValid").get(function () {
 });
 
 // Method to check if coupon can be applied to a product
-couponSchema.methods.canApplyToProduct = function (productId, categoryId) {
+couponSchema.methods.canApplyToProduct = function (productId, categoryId, audience = "public") {
+  // A code minted for one storefront never pays for the other's products.
+  // Checked before the product/category lists, because it is a harder rule
+  // than either: a student code with no category scope still means "the
+  // student shelf", not "everything in the shop".
+  if (this.applicableAudience && this.applicableAudience !== (audience || "public")) {
+    return false;
+  }
+
   // If no specific products/categories specified, applies to all
   if (
     (!this.applicableProducts || this.applicableProducts.length === 0) &&
