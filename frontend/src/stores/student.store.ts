@@ -40,29 +40,49 @@ export interface PublicProgram {
   discount: ProgramDiscount;
   renewal: ProgramRenewal;
   membershipDays: number;
-  categories: string[];
   universities: { university?: string; universityAr?: string; faculty: Faculty }[];
   domains: string[];
 }
 
-/** A category as the settings endpoint returns it once populated. */
-export interface ShelfCategory {
+/** A department in the student section's own tree. */
+export interface StudentCategory {
   _id: string;
   name: string;
   nameAr?: string;
   slug?: string;
+  description?: string;
+  descriptionAr?: string;
+  image?: string;
+  parentCategory?: string | null;
+  level: number;
+  order: number;
+  active: boolean;
+  /** Filled in on the dashboard list only. */
+  productCount?: number;
+  children?: StudentCategory[];
 }
 
-/** A product on the student shelf, filled in enough to list it. */
-export interface ShelfProduct {
+/** A product on the student shelf. Its own record, sold only in the section. */
+export interface StudentProduct {
   _id: string;
   name: string;
   nameAr?: string;
   slug?: string;
+  description?: string;
+  descriptionAr?: string;
+  sku?: string;
   price: number;
-  images?: Array<{ url?: string } | string>;
+  salePercentage?: number;
+  saleActive?: boolean;
   stock?: number;
+  minOrderQty?: number;
+  images?: Array<{ url?: string; alt?: string }>;
+  tags?: string[];
+  featured?: boolean;
   isActive?: boolean;
+  rating?: number;
+  soldCount?: number;
+  studentCategory?: StudentCategory | string | null;
 }
 
 /** The full settings document, dashboard side. */
@@ -72,9 +92,6 @@ export interface ProgramSettings {
   domains: ProgramDomain[];
   discount: ProgramDiscount;
   renewal: ProgramRenewal;
-  categories: Array<ShelfCategory | string>;
-  /** Hand-picked products, on top of whatever the departments bring in. */
-  products: Array<ShelfProduct | string>;
   membershipDays: number;
   updatedAt?: string;
 }
@@ -126,12 +143,12 @@ const message = (error: any, fallback: string) =>
   error?.response?.data?.message || error?.message || fallback;
 
 /** One page of the student shelf, as the storefront reads it. */
-export interface StudentCatalogue {
-  products: any[];
+export interface StudentShelf {
+  products: StudentProduct[];
   total: number;
   page: number;
   pages: number;
-  departments: ShelfCategory[];
+  tree: StudentCategory[];
 }
 
 interface StudentStore {
@@ -142,8 +159,13 @@ interface StudentStore {
   membersTotal: number;
   membersPages: number;
   stats: StudentStats | undefined;
-  catalogue: StudentCatalogue | undefined;
-  catalogueLoading: boolean;
+  shelf: StudentShelf | undefined;
+  shelfLoading: boolean;
+  /** Dashboard side: the section's departments and products. */
+  catalogCategories: StudentCategory[];
+  catalogProducts: StudentProduct[];
+  catalogTotal: number;
+  catalogPages: number;
   loading: boolean;
   saving: boolean;
   error: string | undefined;
@@ -162,7 +184,16 @@ interface StudentStore {
   setMemberStatus: (id: string, status: StudentStatus, rejectionReason?: string) => Promise<boolean>;
   fetchStats: () => Promise<void>;
   runMaintenance: () => Promise<boolean>;
-  fetchCatalogue: (params?: Record<string, any>) => Promise<void>;
+
+  /* ── The section's catalogue ── */
+  fetchShelf: (params?: Record<string, any>) => Promise<void>;
+  fetchCatalogCategories: () => Promise<void>;
+  saveCategory: (data: Partial<StudentCategory> & { _id?: string }) => Promise<boolean>;
+  deleteCategory: (id: string) => Promise<boolean>;
+  fetchCatalogProducts: (params?: Record<string, any>) => Promise<void>;
+  saveProduct: (data: Partial<StudentProduct> & { _id?: string }) => Promise<boolean>;
+  deleteProduct: (id: string) => Promise<boolean>;
+
   clearError: () => void;
 }
 
@@ -174,30 +205,111 @@ export const useStudentStore = create<StudentStore>((set, get) => ({
   membersTotal: 0,
   membersPages: 1,
   stats: undefined,
-  catalogue: undefined,
-  catalogueLoading: false,
+  shelf: undefined,
+  shelfLoading: false,
+  catalogCategories: [],
+  catalogProducts: [],
+  catalogTotal: 0,
+  catalogPages: 1,
   loading: false,
   saving: false,
   error: undefined,
 
-  fetchCatalogue: async (params) => {
+  fetchShelf: async (params) => {
     // Its own loading flag: the shelf sits under the membership panel on the
     // same page, and sharing `loading` would blank one while the other reads.
-    set({ catalogueLoading: true });
+    set({ shelfLoading: true });
     try {
-      const { data } = await axiosInstance.get("/students/catalogue", { params });
+      const { data } = await axiosInstance.get("/students/shop", { params });
       set({
-        catalogue: {
+        shelf: {
           products: data.products || [],
           total: data.total || 0,
           page: data.page || 1,
           pages: data.pages || 1,
-          departments: data.departments || [],
+          tree: data.tree || [],
         },
-        catalogueLoading: false,
+        shelfLoading: false,
       });
     } catch (error: any) {
-      set({ error: message(error, "Could not load the products."), catalogueLoading: false });
+      set({ error: message(error, "Could not load the products."), shelfLoading: false });
+    }
+  },
+
+  fetchCatalogCategories: async () => {
+    set({ loading: true, error: undefined });
+    try {
+      const { data } = await axiosInstance.get("/students/admin/catalog/categories");
+      set({ catalogCategories: data.categories || [], loading: false });
+    } catch (error: any) {
+      set({ error: message(error, "Could not load the departments."), loading: false });
+    }
+  },
+
+  saveCategory: async ({ _id, ...patch }) => {
+    set({ saving: true, error: undefined });
+    try {
+      if (_id) await axiosInstance.patch(`/students/admin/catalog/categories/${_id}`, patch);
+      else await axiosInstance.post("/students/admin/catalog/categories", patch);
+      set({ saving: false });
+      await get().fetchCatalogCategories();
+      return true;
+    } catch (error: any) {
+      set({ error: message(error, "Could not save the department."), saving: false });
+      return false;
+    }
+  },
+
+  deleteCategory: async (id) => {
+    set({ saving: true, error: undefined });
+    try {
+      await axiosInstance.delete(`/students/admin/catalog/categories/${id}`);
+      set({ saving: false });
+      await get().fetchCatalogCategories();
+      return true;
+    } catch (error: any) {
+      set({ error: message(error, "Could not remove the department."), saving: false });
+      return false;
+    }
+  },
+
+  fetchCatalogProducts: async (params) => {
+    set({ loading: true, error: undefined });
+    try {
+      const { data } = await axiosInstance.get("/students/admin/catalog/products", { params });
+      set({
+        catalogProducts: data.products || [],
+        catalogTotal: data.total || 0,
+        catalogPages: data.pages || 1,
+        loading: false,
+      });
+    } catch (error: any) {
+      set({ error: message(error, "Could not load the products."), loading: false });
+    }
+  },
+
+  saveProduct: async ({ _id, ...patch }) => {
+    set({ saving: true, error: undefined });
+    try {
+      if (_id) await axiosInstance.patch(`/students/admin/catalog/products/${_id}`, patch);
+      else await axiosInstance.post("/students/admin/catalog/products", patch);
+      set({ saving: false });
+      return true;
+    } catch (error: any) {
+      set({ error: message(error, "Could not save the product."), saving: false });
+      return false;
+    }
+  },
+
+  deleteProduct: async (id) => {
+    set({ saving: true, error: undefined });
+    try {
+      await axiosInstance.delete(`/students/admin/catalog/products/${id}`);
+      set({ saving: false });
+      return true;
+    } catch (error: any) {
+      set({ error: message(error, "Could not remove the product."), saving: false });
+      return false;
     }
   },
 

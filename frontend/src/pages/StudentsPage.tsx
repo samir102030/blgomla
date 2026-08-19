@@ -37,9 +37,9 @@ const StudentsPage: React.FC = () => {
   const fetchMyProfile = useStudentStore((s) => s.fetchMyProfile);
   const apply = useStudentStore((s) => s.apply);
 
-  const catalogue = useStudentStore((s) => s.catalogue);
-  const catalogueLoading = useStudentStore((s) => s.catalogueLoading);
-  const fetchCatalogue = useStudentStore((s) => s.fetchCatalogue);
+  const shelf = useStudentStore((s) => s.shelf);
+  const shelfLoading = useStudentStore((s) => s.shelfLoading);
+  const fetchShelf = useStudentStore((s) => s.fetchShelf);
 
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null);
@@ -51,8 +51,8 @@ const StudentsPage: React.FC = () => {
   }, [fetchPublicProgram]);
 
   useEffect(() => {
-    fetchCatalogue({ page, limit: 12, ...(department ? { category: department } : {}) });
-  }, [fetchCatalogue, page, department]);
+    fetchShelf({ page, limit: 12, ...(department ? { category: department } : {}) });
+  }, [fetchShelf, page, department]);
 
   useEffect(() => {
     if (user) fetchMyProfile();
@@ -356,14 +356,14 @@ const StudentsPage: React.FC = () => {
                 <span className="st-kicker">{t("The student shelf")}</span>
                 <h2>{t("What the discount is for")}</h2>
               </div>
-              {!!catalogue?.total && (
+              {!!shelf?.total && (
                 <span className="st-mono st-shop-count">
-                  {catalogue.total} {t("products")}
+                  {shelf.total} {t("products")}
                 </span>
               )}
             </div>
 
-            {!!catalogue?.departments?.length && (
+            {!!shelf?.tree?.length && (
               <div className="st-depts">
                 <button
                   type="button"
@@ -375,7 +375,7 @@ const StudentsPage: React.FC = () => {
                 >
                   {t("Everything")}
                 </button>
-                {catalogue.departments.map((d) => (
+                {shelf.tree.map((d) => (
                   <button
                     key={d._id}
                     type="button"
@@ -391,16 +391,16 @@ const StudentsPage: React.FC = () => {
               </div>
             )}
 
-            {catalogueLoading && !catalogue?.products?.length && (
+            {shelfLoading && !shelf?.products?.length && (
               <p className="st-shop-note">{t("Loading products…")}</p>
             )}
 
-            {!catalogueLoading && !catalogue?.products?.length && (
+            {!shelfLoading && !shelf?.products?.length && (
               <p className="st-shop-note">{t("Nothing is on the shelf yet.")}</p>
             )}
 
             <div className="st-grid">
-              {(catalogue?.products || []).map((product: any, index: number) => (
+              {(shelf?.products || []).map((product: any, index: number) => (
                 <ProductCard
                   key={product._id}
                   id={product._id}
@@ -421,17 +421,17 @@ const StudentsPage: React.FC = () => {
               ))}
             </div>
 
-            {(catalogue?.pages ?? 1) > 1 && (
+            {(shelf?.pages ?? 1) > 1 && (
               <div className="st-pager">
                 <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                   {t("Previous")}
                 </button>
                 <span className="st-mono">
-                  {page} / {catalogue?.pages}
+                  {page} / {shelf?.pages}
                 </span>
                 <button
                   type="button"
-                  disabled={page >= (catalogue?.pages ?? 1)}
+                  disabled={page >= (shelf?.pages ?? 1)}
                   onClick={() => setPage((p) => p + 1)}
                 >
                   {t("Next")}

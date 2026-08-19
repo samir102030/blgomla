@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useStudentStore } from "../../../stores/student.store";
-import { Card, PageHead, btnGhost, idsOf } from "./shared";
+import { Card, PageHead, btnGhost } from "./shared";
 
 /**
  * Where the module opens: the state of the programme in one screen, and a
@@ -16,21 +16,38 @@ import { Card, PageHead, btnGhost, idsOf } from "./shared";
 
 const StudentsOverviewPage: React.FC = () => {
   const { t } = useTranslation();
-  const { settings, stats, saving, fetchSettings, fetchStats, runMaintenance, saveSettings } =
-    useStudentStore();
+  const {
+    settings,
+    stats,
+    saving,
+    catalogCategories,
+    catalogTotal,
+    fetchSettings,
+    fetchStats,
+    fetchCatalogCategories,
+    fetchCatalogProducts,
+    runMaintenance,
+    saveSettings,
+  } = useStudentStore();
 
   useEffect(() => {
     fetchSettings();
     fetchStats();
-  }, [fetchSettings, fetchStats]);
+    fetchCatalogCategories();
+    fetchCatalogProducts({ limit: 1 });
+  }, [fetchSettings, fetchStats, fetchCatalogCategories, fetchCatalogProducts]);
 
   const open = !!settings?.enabled;
   const activeDomains = (settings?.domains || []).filter((d) => d.active).length;
-  const departments = idsOf(settings?.categories).length;
-  const picked = idsOf(settings?.products).length;
+  const departments = catalogCategories.length;
 
   /* What stops the programme working, in the order it stops working. */
   const blockers = [
+    !catalogTotal && {
+      text: t("The section has nothing to sell yet."),
+      to: "/dashboard/students/products",
+      action: t("Add a product"),
+    },
     !activeDomains && {
       text: t("No faculty domains are accepting applications — nobody can join."),
       to: "/dashboard/students/faculties",
@@ -53,8 +70,8 @@ const StudentsOverviewPage: React.FC = () => {
   ];
 
   const shelf: Array<[string, number | string, string]> = [
-    [t("Departments"), departments || t("Whole catalogue"), "/dashboard/students/categories"],
-    [t("Hand-picked products"), picked, "/dashboard/students/products"],
+    [t("Products"), catalogTotal, "/dashboard/students/products"],
+    [t("Departments"), departments, "/dashboard/students/categories"],
     [t("Accepting faculties"), activeDomains, "/dashboard/students/faculties"],
   ];
 
@@ -63,7 +80,7 @@ const StudentsOverviewPage: React.FC = () => {
       <PageHead
         title={t("Student programme")}
         description={t(
-          "A shop inside the shop: its own departments and shelf, drawn from the same catalogue, open to students who prove enrolment with a faculty email.",
+          "A shop inside the shop: its own departments, its own products, open to students who prove enrolment with a faculty email.",
         )}
       >
         <span
@@ -109,7 +126,7 @@ const StudentsOverviewPage: React.FC = () => {
 
       <Card
         title={t("What the section sells")}
-        description={t("Departments bring their whole subtree with them; picked products are added on top.")}
+        description={t("Its own products, filed in its own departments. Nothing here appears on the main shop.")}
       >
         <div className="grid sm:grid-cols-3 gap-3">
           {shelf.map(([label, value, to]) => (

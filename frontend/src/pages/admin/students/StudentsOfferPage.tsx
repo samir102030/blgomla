@@ -167,9 +167,9 @@ const StudentsOfferPage: React.FC = () => {
         </div>
 
         <p className="text-sm text-[var(--text-muted)]">
-          {t("The discount applies to the section's departments.")}{" "}
-          <Link to="/dashboard/students/categories" className="text-[var(--brand-primary)] hover:underline">
-            {t("Change what it covers")}
+          {t("The code pays for everything in the student section, and for nothing on the main shop.")}{" "}
+          <Link to="/dashboard/students/products" className="text-[var(--brand-primary)] hover:underline">
+            {t("See what is in it")}
           </Link>
         </p>
       </Card>
