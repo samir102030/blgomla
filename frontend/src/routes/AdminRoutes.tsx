@@ -37,7 +37,12 @@ import AccurateSettingsPage from "../pages/admin/AccurateSettingsPage";
 import PayoutsPage from "../pages/admin/PayoutsPage";
 import AuditLogPage from "../pages/admin/AuditLogPage";
 import RolesAccessPage from "../pages/admin/RolesAccessPage";
-import StudentProgramPage from "../pages/admin/StudentProgramPage";
+import StudentsOverviewPage from "../pages/admin/students/StudentsOverviewPage";
+import StudentsProductsPage from "../pages/admin/students/StudentsProductsPage";
+import StudentsCategoriesPage from "../pages/admin/students/StudentsCategoriesPage";
+import StudentsFacultiesPage from "../pages/admin/students/StudentsFacultiesPage";
+import StudentsMembersPage from "../pages/admin/students/StudentsMembersPage";
+import StudentsOfferPage from "../pages/admin/students/StudentsOfferPage";
 import { RequirePermission } from "../components/Can";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
@@ -81,11 +86,55 @@ const AdminRoutes: React.FC = () => {
           }
         />
         <Route path="/coupons" element={<CouponsPage />} />
+        {/* The student module. Reading the section and changing it are
+            different levels of trust, so the shelf and the terms sit behind
+            `students.configure` while the overview and the roll only need
+            `students.view`. */}
         <Route
           path="/students"
           element={
             <RequirePermission perm="students.view">
-              <StudentProgramPage />
+              <StudentsOverviewPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/students/products"
+          element={
+            <RequirePermission perm="students.configure">
+              <StudentsProductsPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/students/categories"
+          element={
+            <RequirePermission perm="students.configure">
+              <StudentsCategoriesPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/students/offer"
+          element={
+            <RequirePermission perm="students.configure">
+              <StudentsOfferPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/students/faculties"
+          element={
+            <RequirePermission perm="students.configure">
+              <StudentsFacultiesPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/students/members"
+          element={
+            <RequirePermission perm="students.view">
+              <StudentsMembersPage />
             </RequirePermission>
           }
         />

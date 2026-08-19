@@ -20,6 +20,7 @@ import {
   RocketLaunchIcon,
   TruckIcon,
   BanknotesIcon,
+  AcademicCapIcon,
   // StarIcon,
 } from "@heroicons/react/24/outline";
 import Logo, { BRAND } from "../Logo";
@@ -93,10 +94,26 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { name: t("admin.storefrontVisibility", "Storefront visibility"), href: "/dashboard/storefront-visibility", perm: "categories.manage" },
         { name: t("admin.collections"), href: "/dashboard/collections", perm: "collections.view" },
         { name: t("admin.coupons"), href: "/dashboard/coupons", perm: "coupons.view" },
-        { name: t("admin.studentProgram", "Student programme"), href: "/dashboard/students", perm: "students.view" },
         { name: t("admin.advertisements"), href: "/dashboard/advertisements", perm: "advertisements.manage" },
         { name: t("admin.mosaic", "Card Mosaic"), href: "/dashboard/mosaic", perm: "mosaic.manage" },
         { name: t("admin.layout", "Page layout"), href: "/dashboard/layout", perm: "layout.manage" },
+      ],
+    },
+
+    // ── Student programme ────────────────────────────────────
+    // Its own group rather than one line under E-commerce: the section is a
+    // shop inside the shop, with its own departments, its own shelf and its
+    // own members, and every one of those is a page.
+    {
+      name: t("admin.studentProgram", "Student programme"),
+      icon: AcademicCapIcon,
+      children: [
+        { name: t("admin.studentOverview", "Overview"), href: "/dashboard/students", perm: "students.view" },
+        { name: t("admin.studentProducts", "Products"), href: "/dashboard/students/products", perm: "students.configure" },
+        { name: t("admin.studentDepartments", "Departments"), href: "/dashboard/students/categories", perm: "students.configure" },
+        { name: t("admin.studentOffer", "The offer"), href: "/dashboard/students/offer", perm: "students.configure" },
+        { name: t("admin.studentFaculties", "Faculties"), href: "/dashboard/students/faculties", perm: "students.configure" },
+        { name: t("admin.studentMembers", "Members"), href: "/dashboard/students/members", perm: "students.view" },
       ],
     },
 
