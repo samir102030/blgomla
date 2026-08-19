@@ -115,10 +115,12 @@ const StudentProgramPage: React.FC = () => {
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      // The server writes these in English; `t` swaps in the Arabic where
+      // there is one and returns the key untouched where there is not.
+      toast.error(t(error));
       clearError();
     }
-  }, [error, clearError]);
+  }, [error, clearError, t]);
 
   /** Root categories only — the scope is picked at department level and the
    *  server expands each to its whole subtree when it mints a code. */

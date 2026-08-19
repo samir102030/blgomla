@@ -124,7 +124,7 @@ const StudentsPage: React.FC = () => {
                     "Something went wrong on our side, not yours. Refresh the page in a moment, or ask support if it keeps happening.",
                   )}
                 </p>
-                {loadError && <div className="st-note st-bad">{loadError}</div>}
+                {loadError && <div className="st-note st-bad">{t(loadError)}</div>}
                 <Link to="/contact" className="st-btn st-btn-ghost" style={{ marginTop: 16 }}>
                   {t("Contact support")}
                 </Link>
@@ -211,7 +211,7 @@ const StudentsPage: React.FC = () => {
                           style={{ marginTop: 16 }}
                           role="status"
                         >
-                          {feedback.message}
+                          {t(feedback.message)}
                         </div>
                       )}
                     </div>
@@ -251,7 +251,7 @@ const StudentsPage: React.FC = () => {
                       </form>
                       {feedback && (
                         <div className={`st-note ${feedback.ok ? "" : "st-bad"}`} style={{ marginTop: 16 }} role="status">
-                          {feedback.message}
+                          {t(feedback.message)}
                         </div>
                       )}
                     </div>

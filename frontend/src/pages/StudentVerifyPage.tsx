@@ -85,7 +85,7 @@ const StudentVerifyPage: React.FC = () => {
 
               {result && !result.ok && (
                 <>
-                  <div className="st-note st-bad">{result.message}</div>
+                  <div className="st-note st-bad">{t(result.message)}</div>
                   <p style={{ marginTop: 16 }}>
                     {t("Confirmation links last an hour. Ask for a fresh one from the programme page.")}
                   </p>
