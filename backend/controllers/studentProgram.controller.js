@@ -40,6 +40,22 @@ const RESEND_COOLDOWN_MS = 2 * 60 * 1000;
 const ok = (res, data, status = 200) => res.status(status).json({ success: true, ...data });
 const fail = (res, status, message) => res.status(status).json({ success: false, message });
 
+/**
+ * One mailbox, one address.
+ *
+ * Sub-addressing means `sara+1@`, `sara+2@` and `sara@` all land in the same
+ * inbox, so without this a single student could hold as many memberships as
+ * they had patience for — each one a fresh code, each one passing verification
+ * honestly. The tag is dropped before the address is stored or compared.
+ */
+const normalizeUniversityEmail = (raw) => {
+  const value = String(raw || "").toLowerCase().trim();
+  const at = value.lastIndexOf("@");
+  if (at < 1) return value;
+  const local = value.slice(0, at).split("+")[0];
+  return `${local}${value.slice(at)}`;
+};
+
 /** `STU-XXXXXX`, checked against the global unique index before it is used. */
 const mintCouponCode = async () => {
   for (let attempt = 0; attempt < 8; attempt += 1) {
@@ -206,7 +222,7 @@ export const applyForStudentProgram = controllerWrapper("applyForStudentProgram"
   const program = await StudentProgram.load();
   if (!program.enabled) return fail(res, 403, "The student programme is not open at the moment.");
 
-  const universityEmail = String(req.body?.universityEmail || "").toLowerCase().trim();
+  const universityEmail = normalizeUniversityEmail(req.body?.universityEmail);
   if (!universityEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(universityEmail)) {
     return fail(res, 400, "Enter a valid university email address.");
   }
@@ -228,8 +244,26 @@ export const applyForStudentProgram = controllerWrapper("applyForStudentProgram"
   if (takenByOther) return fail(res, 409, "That university email is already registered to another account.");
 
   let profile = await StudentProfile.findOne({ user: req.user._id });
-  if (profile && profile.status === "suspended") {
-    return fail(res, 403, "This membership is suspended. Contact support if you think that is a mistake.");
+
+  // A decision an admin made is not undone by the applicant re-submitting.
+  // Without this, rejecting a membership meant nothing: the student applied
+  // again, verified, and was back in.
+  if (profile && (profile.status === "suspended" || profile.status === "rejected")) {
+    return fail(
+      res,
+      403,
+      "This membership is not active. Contact support if you think that is a mistake.",
+    );
+  }
+
+  // Already in, same address, nothing to prove. Re-issuing here is what let a
+  // member loop apply → confirm → apply to reset their own usage counter and
+  // push the expiry out, which is an unlimited discount with extra steps.
+  if (profile && profile.status === "verified" && profile.universityEmail === universityEmail) {
+    return ok(res, {
+      message: "You are already verified — your code is on the programme page.",
+      status: profile.status,
+    });
   }
 
   if (!profile) profile = new StudentProfile({ user: req.user._id, universityEmail });
@@ -300,17 +334,37 @@ export const verifyStudentEmail = controllerWrapper("verifyStudentEmail", async 
   }
 
   const program = await StudentProgram.load();
+
+  // The link was minted while the programme was open and the faculty was on
+  // the list. Both can have changed since — a closed programme that still
+  // admits everyone holding an old link is not closed.
+  if (!program.enabled) {
+    return fail(res, 403, "The student programme is not open at the moment.");
+  }
+  if (!program.matchDomain(profile.universityEmail)) {
+    return fail(res, 403, "This faculty is no longer part of the programme.");
+  }
+
   const user = await User.findById(profile.user);
   if (!user) return fail(res, 404, "The account behind this application no longer exists.");
 
+  // Confirming an address the membership already holds must not restart the
+  // renewal window or the membership term. The token is spent either way.
+  const alreadyVerified = profile.status === "verified" && !!profile.coupon;
+
   profile.status = "verified";
-  profile.verifiedAt = new Date();
-  profile.expiresAt = new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
-  profile.periodStartedAt = new Date();
+  profile.verifiedAt = profile.verifiedAt || new Date();
   profile.verificationTokenHash = undefined;
   profile.verificationTokenExpiresAt = undefined;
 
-  const coupon = await issueCoupon(profile, program);
+  if (!alreadyVerified) {
+    profile.expiresAt = new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
+    profile.periodStartedAt = new Date();
+  }
+
+  const coupon = alreadyVerified
+    ? (await Coupon.findById(profile.coupon)) || (await issueCoupon(profile, program))
+    : await issueCoupon(profile, program);
   profile.coupon = coupon._id;
   await profile.save();
 
