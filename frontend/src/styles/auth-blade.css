@@ -1,42 +1,110 @@
 /**
  * The blade that changes the sign-in card over.
  *
- * One skewed rectangle sweeps across the card. It is opaque, so for the stretch
- * of its travel that it sits over the card the two panes trade places behind
- * it — no cross-fade, no two forms briefly on screen at once, just a card that
- * was one thing before the blade passed and another after.
+ * The card is two panes side by side — the brand panel and the form — and
+ * switching between sign-in and register makes them trade sides. A swap like
+ * that cannot be watched happening, so a skewed rectangle wide enough to cover
+ * the whole card runs across it and the panes change places underneath while
+ * it does: no cross-fade, no two forms briefly on screen at once, just a card
+ * that was one thing before the blade passed and another after.
  *
  * The part worth understanding is the slice. The blade has `overflow: hidden`
- * and carries a second copy of the heading inside it, and that copy is given
- * the exact inverse of the blade's own transform. So while the blade moves,
- * the heading inside it does not — it stays welded over the heading underneath.
- * What travels is the *window*, which is why the letters look cut on a
- * diagonal and lit as the edge crosses them, rather than sliding along with it.
+ * and carries a second copy of the brand panel's opening block, and that copy
+ * is given the exact inverse of the blade's own transform. So while the blade
+ * moves, the copy inside it does not — it stays welded over the panel
+ * underneath. What travels is the *window*, which is why the letters look cut
+ * on a diagonal and lit as the edge crosses them, rather than sliding with it.
  *
- * For that to line up, the blade's untransformed box has to start at the
- * stage's own top-left corner: the inner layer is `inset: 0` of the blade, so
- * its co-ordinates are the stage's co-ordinates, and the slice can then be
- * placed with the same offsets the real heading has inside the card.
+ * For that to line up, the blade's untransformed box starts at the stage's own
+ * top-left corner and the mirror inside it is scaled back to the stage's exact
+ * width — so the mirror's grid resolves to the same columns the real one does,
+ * and the copy needs no hand-measured offsets to sit over the original.
  */
 
 .ab-stage {
   position: relative;
   isolation: isolate;
+
+  --ab-rake: -13deg;
+
+  /*
+   * How much wider than the card the blade is, and the two positions it holds
+   * while the panes trade places. Both are in blade-widths, and both come out
+   * of the same piece of geometry:
+   *
+   * A rectangle skewed by r about its own centre reaches |tan r|·h/2 past each
+   * of its vertical edges, so it only covers a card of w × h across the card's
+   * whole height while its left edge sits somewhere in
+   *
+   *     [ -(scale-1)/scale + |tan r|·h/(2·scale·w) , -|tan r|·h/(2·scale·w) ]
+   *
+   * which is empty unless scale ≥ 1 + |tan r|·h/w. That is the whole reason
+   * the numbers change at the breakpoint below: the same card is about as wide
+   * as it is tall on a desktop and three or four times taller than it is wide
+   * on a phone, and a blade that comfortably covers the first cannot cover the
+   * second at any position. The mid-points sit near the middle of the window
+   * with room on both sides, so a card that runs unusually long — a register
+   * form with every error showing — does not push them out of it.
+   */
+  --ab-scale: 1.7;
+  --ab-mid-a: -26%;
+  --ab-mid-b: -14%;
+  /* Just past first contact and just past the far edge, so no part of the pass
+     is spent off the card where nothing can be seen of it. */
+  --ab-from: -112%;
+  --ab-to: 72%;
+}
+
+@media (max-width: 1023.98px) {
+  .ab-stage {
+    --ab-scale: 2.6;
+    --ab-mid-a: -34%;
+    --ab-mid-b: -27%;
+    --ab-from: -125%;
+    --ab-to: 62%;
+  }
+}
+
+/* Mirrored with the layout: everything else about the card flips in Arabic, so
+   the cut leans the same way relative to the page. Skewing about the centre is
+   what lets the sign flip without moving the window above — the reach is split
+   evenly between the two edges either way. */
+[dir="rtl"] .ab-stage {
+  --ab-rake: 13deg;
+}
+
+/* The blade runs inside a box the size of the card, so it is only ever seen
+   over the card. Clipping here rather than on the stage leaves the stage's own
+   overflow alone — the cards keep their shadows and their focus rings. */
+.ab-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Above the panel's own stacking. The brand panel lifts its text over its
+     background wash with `z-10`, and because nothing in between opens a
+     stacking context those tens are measured against the stage — a blade at 5
+     passed *underneath* the headline it is supposed to be cutting. */
+  z-index: 20;
+}
+
+/* Nothing to draw, nothing to composite, and no stray edge of a parked blade
+   sitting over the card between switches. */
+.ab-stage:not(.is-sweeping) .ab-clip {
+  display: none;
 }
 
 .ab-blade {
   position: absolute;
-  /* Anchored at the stage's corner — see the note above. Narrower than the
-     card so it reads as a blade passing rather than a curtain dropping. */
-  inset-inline-start: 0;
+  /* Physical, not logical. The mirror inside reads the stage's own
+     co-ordinates in both writing directions; it is the travel that mirrors,
+     not where the box is anchored. */
+  left: 0;
   top: 0;
-  width: 58%;
+  width: calc(100% * var(--ab-scale));
   height: 100%;
-  z-index: 5;
-  pointer-events: none;
   overflow: hidden;
-  opacity: 0;
-  transform: skewX(var(--ab-rake)) translateX(-180%);
+  transform: skewX(var(--ab-rake)) translateX(var(--ab-from));
   background: linear-gradient(
     100deg,
     var(--brand-accent) 0%,
@@ -45,8 +113,9 @@
   );
 }
 
-/* Two lit seams: the leading edge reads as the cut, the trailing one as the
-   light coming off it. */
+/* Two lit seams. The one that arrives is the cut; the one that leaves is the
+   light coming off it — which of the two that is depends on the way the blade
+   is running. */
 .ab-edge {
   position: absolute;
   top: 0;
@@ -55,54 +124,155 @@
   background: var(--brand-secondary);
   box-shadow: 0 0 20px 3px rgba(var(--brand-secondary-rgb), 0.7);
 }
-.ab-edge--lead { inset-inline-start: 0; }
-.ab-edge--trail { inset-inline-end: 0; opacity: 0.4; }
+.ab-edge--left { left: 0; }
+.ab-edge--right { right: 0; }
+.ab-stage[data-flow="fwd"] .ab-edge--left { opacity: 0.4; }
+.ab-stage[data-flow="back"] .ab-edge--right { opacity: 0.4; }
 
 /* Back into the card's co-ordinates: the exact inverse of the blade's own
-   transform, frame for frame. */
+   transform, frame for frame. Percentages resolve against this element's own
+   width, which is the blade's width, so the same numbers negate exactly — and
+   because both layers skew about the same centre of the same box, the pair
+   cancels to the identity whatever the rake is. */
 .ab-blade-inner {
   position: absolute;
   inset: 0;
-  transform: skewX(calc(-1 * var(--ab-rake))) translateX(180%);
+  transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-from)));
 }
 
-/* The heading's second copy, sat where the real one sits inside the card:
-   the card's padding down and in from the stage corner. */
-.ab-slice {
+/* Back to the card's width, at the card's own left edge — so a grid declared
+   here lands on the columns the real grid lands on. */
+.ab-mirror {
   position: absolute;
-  inset-inline-start: 1.5rem;
-  top: 1.5rem;
+  left: 0;
+  top: 0;
+  width: calc(100% / var(--ab-scale));
+  height: 100%;
   color: #fff;
-  font-weight: 700;
-  font-size: 1.5rem;
-  line-height: 2rem;
-  white-space: nowrap;
 }
-@media (min-width: 640px) {
-  .ab-slice { inset-inline-start: 2rem; top: 2rem; }
+
+/* The second line of the headline. A different face and a slant against the
+   display face on the line above — the same contrast the panel gets from
+   colour when it is set in Arabic, where letters do not slant. */
+.ab-em {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--brand-secondary);
+}
+[dir="rtl"] .ab-em {
+  font-family: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif;
+  font-style: normal;
+  letter-spacing: 0;
+}
+/* Inside the blade the ground is the brand gradient, so the accent would sink
+   into it. */
+.ab-mirror .ab-em {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ab-lead {
+  font-family: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif;
 }
 
 .ab-stage.is-sweeping .ab-blade {
-  animation: ab-sweep var(--ab-sweep) cubic-bezier(0.72, 0, 0.24, 1) both;
+  animation: ab-sweep var(--ab-sweep) both;
 }
 .ab-stage.is-sweeping .ab-blade-inner {
-  animation: ab-sweep-inner var(--ab-sweep) cubic-bezier(0.72, 0, 0.24, 1) both;
+  animation: ab-sweep-inner var(--ab-sweep) both;
+}
+.ab-stage.is-sweeping[data-flow="back"] .ab-blade {
+  animation-name: ab-sweep-back;
+}
+.ab-stage.is-sweeping[data-flow="back"] .ab-blade-inner {
+  animation-name: ab-sweep-inner-back;
 }
 
+/*
+ * The pass: on at speed, slowing as it comes; a crawl from 46% to 58% while
+ * the card is covered end to end and the panes trade sides; then away. The
+ * swap in LoginRegisterPage is timed to the middle of that crawl.
+ */
 @keyframes ab-sweep {
-  0% { opacity: 0; transform: skewX(var(--ab-rake)) translateX(-180%); }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { opacity: 0; transform: skewX(var(--ab-rake)) translateX(180%); }
+  0% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-from));
+    animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  }
+  46% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-mid-a));
+    animation-timing-function: linear;
+  }
+  58% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-mid-b));
+    animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.7);
+  }
+  100% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-to));
+  }
 }
 
 @keyframes ab-sweep-inner {
-  0% { transform: skewX(calc(-1 * var(--ab-rake))) translateX(180%); }
-  100% { transform: skewX(calc(-1 * var(--ab-rake))) translateX(-180%); }
+  0% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-from)));
+    animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  }
+  46% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-mid-a)));
+    animation-timing-function: linear;
+  }
+  58% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-mid-b)));
+    animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.7);
+  }
+  100% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-to)));
+  }
+}
+
+/* The same pass the other way. Only the ends swap, and the two held positions
+   are visited in the other order — the window itself does not move, because
+   the blade's box is anchored at the card's left edge whichever way it runs. */
+@keyframes ab-sweep-back {
+  0% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-to));
+    animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  }
+  46% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-mid-b));
+    animation-timing-function: linear;
+  }
+  58% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-mid-a));
+    animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.7);
+  }
+  100% {
+    transform: skewX(var(--ab-rake)) translateX(var(--ab-from));
+  }
+}
+
+@keyframes ab-sweep-inner-back {
+  0% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-to)));
+    animation-timing-function: cubic-bezier(0.33, 0, 0.2, 1);
+  }
+  46% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-mid-b)));
+    animation-timing-function: linear;
+  }
+  58% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-mid-a)));
+    animation-timing-function: cubic-bezier(0.7, 0, 0.9, 0.7);
+  }
+  100% {
+    transform: skewX(calc(-1 * var(--ab-rake))) translateX(calc(-1 * var(--ab-from)));
+  }
 }
 
 /* Asked for less motion: the card still changes, it just changes at once. The
    blade is never drawn rather than being drawn and left frozen over the card. */
 @media (prefers-reduced-motion: reduce) {
-  .ab-blade { display: none; }
+  .ab-clip {
+    display: none !important;
+  }
 }

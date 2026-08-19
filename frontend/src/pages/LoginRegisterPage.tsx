@@ -10,13 +10,24 @@ import "../styles/auth-blade.css";
 
 type AuthMode = "login" | "register";
 
-/** The blade's whole pass, and the moment inside it when the card is hidden. */
-const SWEEP_MS = 720;
-const COVER_MS = 330;
+/** The blade's whole pass. */
+const SWEEP_MS = 1100;
+/**
+ * Mid-way through the stretch of the pass — 46% to 58%, see auth-blade.css —
+ * where the blade covers the card end to end. It is the only moment the two
+ * panes can trade sides without being seen doing it.
+ */
+const COVER_MS = Math.round(SWEEP_MS * 0.52);
 
 const LoginRegisterPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [mode, setMode] = useState<AuthMode>("login");
+  /**
+   * Where the card is headed, as opposed to what it is showing. The tabs read
+   * this one, so a click lights the tab it landed on straight away instead of
+   * half a second later when the panes actually change.
+   */
+  const [target, setTarget] = useState<AuthMode>("login");
   const [sweeping, setSweeping] = useState(false);
   const timers = useRef<number[]>([]);
 
@@ -36,7 +47,8 @@ const LoginRegisterPage: React.FC = () => {
    * one through the first.
    */
   const switchTo = (next: AuthMode) => {
-    if (next === mode || sweeping) return;
+    if (next === target || sweeping) return;
+    setTarget(next);
     if (prefersReducedMotion) {
       setMode(next);
       return;
@@ -48,10 +60,37 @@ const LoginRegisterPage: React.FC = () => {
     );
   };
 
-  const heading =
+  /**
+   * The brand panel sits on the far side for sign-in and the near side for
+   * register, and the two panes trade places when the mode changes. The blade
+   * runs the way they are being pushed — which mirrors in Arabic, along with
+   * the sides themselves.
+   */
+  const rtl = i18n.dir() === "rtl";
+  const flow = (target === "login") !== rtl ? "fwd" : "back";
+  const brandCol =
+    mode === "login" ? "lg:col-start-4 lg:col-span-2 lg:row-start-1" : "lg:col-start-1 lg:col-span-2 lg:row-start-1";
+  const formCol =
+    mode === "login" ? "lg:col-start-1 lg:col-span-3 lg:row-start-1" : "lg:col-start-3 lg:col-span-3 lg:row-start-1";
+
+  const copy =
     mode === "login"
-      ? t("login.welcomeBack", "Welcome Back")
-      : t("login.createYourAccount", "Create Your Account");
+      ? {
+          lead: t("login.headlineSignInLead", "Welcome"),
+          em: t("login.headlineSignInEm", "back."),
+          blurb: t(
+            "login.headlineSignInBlurb",
+            "Your cart, your orders and your saved list are exactly where you left them.",
+          ),
+        }
+      : {
+          lead: t("login.headlineRegisterLead", "Start the"),
+          em: t("login.headlineRegisterEm", "first page."),
+          blurb: t(
+            "login.headlineRegisterBlurb",
+            "One account for every order, every quote and every device you own.",
+          ),
+        };
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({ name: "", email: "", phoneNumber: "", password: "", confirmPassword: "" });
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -185,30 +224,51 @@ const LoginRegisterPage: React.FC = () => {
     { icon: "🏷️", title: t("login.benefit4Title", "Exclusive Deals"), desc: t("login.benefit4Desc", "Access member-only prices & promotions") },
   ];
 
+  /**
+   * The brand panel's opening block — wordmark, headline, blurb.
+   *
+   * Rendered twice: once in the panel and once inside the blade, where the
+   * blade's `overflow: hidden` cuts it along the rake. Both copies are built
+   * from this one value so the copy inside the blade sits exactly over the one
+   * underneath, and any change to the spacing moves the two together.
+   */
+  const intro = (
+    <>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-bold text-white text-lg">B</div>
+        <span className="text-white font-bold text-xl tracking-tight">{t("brand.wordmark", "Belgomla")}</span>
+      </div>
+      {/* 700 is the ceiling for the display face — at 800 the browser
+          synthesises the bold and the kufic loses its edges. */}
+      <h2 className="text-4xl font-bold text-white leading-[1.1] mb-4">
+        <span className="ab-lead block">{copy.lead}</span>
+        <span className="ab-em block">{copy.em}</span>
+      </h2>
+      <p className="text-white/80 text-sm leading-relaxed">{copy.blurb}</p>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-[var(--bg)]">
       <Header />
 
       <main className="py-8 lg:py-14">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
+          {/* The stage is the whole card — both panes — because both of them
+              move: switching mode sends the brand panel to the other side and
+              the form back the other way, and the blade has to cover the pair
+              of them while they cross. */}
+          <div
+            className={`ab-stage grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-stretch${sweeping ? " is-sweeping" : ""}`}
+            data-flow={flow}
+            style={{ "--ab-sweep": `${SWEEP_MS}ms` } as React.CSSProperties}
+          >
 
-            {/* ===== LEFT: BRANDING PANEL ===== */}
-            <div className="hidden lg:flex lg:col-span-2 flex-col h-full">
+            {/* ===== BRANDING PANEL ===== */}
+            <div className={`hidden lg:flex ${brandCol} flex-col`}>
               <div className="relative flex-1 rounded-3xl overflow-hidden bg-gradient-to-br from-[var(--brand-primary)] via-[var(--brand-accent)] to-[#0B0B10] p-8 flex flex-col justify-between" style={{ minHeight: '520px' }}>
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA1Ij48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-60"></div>
-                <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center font-bold text-white text-lg">B</div>
-                    <span className="text-white font-bold text-xl">{t("brand.wordmark", "Belgomla")}</span>
-                  </div>
-                  <h2 className="text-3xl font-extrabold text-white leading-tight mb-3">
-                    {t("login.welcomeTitle", "Your Tech Marketplace Awaits")}
-                  </h2>
-                  <p className="text-white/80 text-sm leading-relaxed">
-                    {t("login.welcomeDesc", "Join thousands of buyers and vendors in Egypt's premier IT & networking marketplace.")}
-                  </p>
-                </div>
+                <div className="relative z-10">{intro}</div>
                 <div className="relative z-10 space-y-3 mt-auto">
                   {benefits.map((b, i) => (
                     <div key={i} className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
@@ -223,41 +283,17 @@ const LoginRegisterPage: React.FC = () => {
               </div>
             </div>
 
-            {/* ===== RIGHT: AUTH FORMS ===== */}
-            <div className="lg:col-span-3">
-              {/* Tab Switcher */}
+            {/* ===== AUTH FORMS ===== */}
+            <div className={formCol}>
+              {/* Tab Switcher — on `target`, not `mode`, so the press lands the
+                  moment it is made rather than when the panes catch up. */}
               <div className="flex bg-[var(--surface-2)] rounded-2xl p-1 mb-8 border border-[var(--border)]">
                 {(["login", "register"] as AuthMode[]).map((m) => (
-                  <button key={m} onClick={() => switchTo(m)} aria-pressed={mode === m} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${mode === m ? "bg-[var(--surface)] text-[var(--text)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}>
+                  <button key={m} onClick={() => switchTo(m)} aria-pressed={target === m} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${target === m ? "bg-[var(--surface)] text-[var(--text)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}>
                     {m === "login" ? t("login.signIn", "Sign In") : t("login.createAccount", "Create Account")}
                   </button>
                 ))}
               </div>
-
-              <div
-                className={`ab-stage${sweeping ? " is-sweeping" : ""}`}
-                style={
-                  {
-                    "--ab-rake": "-13deg",
-                    "--ab-sweep": `${SWEEP_MS}ms`,
-                  } as React.CSSProperties
-                }
-              >
-                {/* One blade, two lit seams. Decorative: the heading it slices
-                    is already on the page underneath, and the swap it covers is
-                    announced by the pressed state on the tabs. */}
-                {/* Keyed so React matches it across the swap. Without the key
-                    it is reconciled by position, and the pane changing beside
-                    it at the halfway point restarted the animation from zero —
-                    the blade reached the middle of the card and jumped back to
-                    the edge. */}
-                <span className="ab-blade" key="ab-blade" aria-hidden="true">
-                  <span className="ab-edge ab-edge--lead" />
-                  <span className="ab-edge ab-edge--trail" />
-                  <span className="ab-blade-inner">
-                    <span className="ab-slice">{heading}</span>
-                  </span>
-                </span>
 
               {/* ===== LOGIN FORM ===== */}
               {mode === "login" && (
@@ -455,7 +491,6 @@ const LoginRegisterPage: React.FC = () => {
                   </div>
                 </div>
               )}
-              </div>
 
               {/* ===== TRUST BADGES (below form) ===== */}
               <div className="mt-6 grid grid-cols-3 gap-3">
@@ -482,6 +517,28 @@ const LoginRegisterPage: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {/* One blade, two lit seams. Decorative throughout: the headline it
+                slices is already on the page underneath it, and the swap it
+                covers is announced by the pressed state on the tabs — which
+                has moved before the blade even arrives.
+
+                The mirror repeats the stage's grid at the stage's own width,
+                so the copy of the panel inside the blade lands on the same
+                columns as the real one without a single measured offset. */}
+            <span className="ab-clip" key="ab-clip" aria-hidden="true">
+              <span className="ab-blade">
+                <span className="ab-edge ab-edge--left" />
+                <span className="ab-edge ab-edge--right" />
+                <span className="ab-blade-inner">
+                  <div className="ab-mirror grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+                    <div className={`hidden lg:block ${brandCol}`}>
+                      <div className="p-8">{intro}</div>
+                    </div>
+                  </div>
+                </span>
+              </span>
+            </span>
           </div>
         </div>
       </main>
