@@ -171,6 +171,34 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
     },
+
+    /**
+     * Which storefront this product belongs to.
+     *
+     * The student section is a catalogue of its own — different departments,
+     * different products, sold to people who proved they are students. What it
+     * is *not* is a different way to own a product: a second collection would
+     * mean the cart, the order, the stock count, the payment and the shipping
+     * label all had to learn about a second kind of line, and each of those is
+     * a place a half-migration would go wrong. So a student product is a
+     * product, marked, and everything downstream of the shelf keeps working.
+     *
+     * Defaults to `public`, which is what every existing row is.
+     */
+    audience: {
+      type: String,
+      enum: ["public", "students"],
+      default: "public",
+      index: true,
+    },
+
+    /** The student department this is filed under. Null for public products. */
+    studentCategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "StudentCategory",
+      default: null,
+      index: true,
+    },
     brand: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Brand",
@@ -396,6 +424,29 @@ productSchema.index({ category: 1, createdAt: -1 }); // Category-filtered listin
 productSchema.index({ featured: 1, createdAt: -1 }); // Featured strip
 productSchema.index({ saleActive: 1, createdAt: -1 }); // Sale strip
 productSchema.index({ rating: -1 }); // Most-rated
+productSchema.index({ audience: 1, studentCategory: 1, createdAt: -1 }); // Student shelf
+
+/**
+ * Keep the student catalogue out of the storefront by default.
+ *
+ * There are dozens of places that list products — the catalogue, search, the
+ * home rails, sale strips, sitemaps, feeds — and adding `audience: "public"`
+ * to each one would mean the next listing anybody writes leaks the student
+ * shelf onto the shop. Defaulting here inverts that: a query says nothing
+ * about audience and gets the public catalogue, which is the safe answer, and
+ * asking for the student shelf has to be deliberate.
+ *
+ * Lookups by id or slug are left alone. Those are not listings — they are the
+ * product page, the cart reading a line back, the order decrementing stock —
+ * and a student product has to work in every one of them or it cannot be
+ * bought, which is the entire point of putting it on a shelf.
+ */
+productSchema.pre(/^find/, function () {
+  const filter = this.getFilter() || {};
+  if (filter.audience !== undefined) return;
+  if (filter._id !== undefined || filter.slug !== undefined) return;
+  this.where({ audience: { $ne: "students" } });
+});
 
 // ── Slug auto-generation ──
 productSchema.pre("save", function (next) {

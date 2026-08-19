@@ -68,8 +68,14 @@ export async function paginateProducts({
   limit = Math.max(Number(limit) || DEFAULT_LIMIT, 1);
   const skip = (page - 1) * limit;
 
+  // The schema's find hook cannot reach an aggregation, and this function is
+  // behind most of the storefront's listings, so the student shelf is excluded
+  // here for the same reason and on the same default: say nothing about
+  // audience and you get the public catalogue.
+  const scoped = filter.audience === undefined ? { ...filter, audience: { $ne: "students" } } : filter;
+
   const [result] = await Product.aggregate([
-    { $match: filter },
+    { $match: scoped },
     {
       $facet: {
         data: [

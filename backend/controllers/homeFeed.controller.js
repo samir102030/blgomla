@@ -14,7 +14,11 @@ const LIST_PROJECTION = {
 };
 
 const productListPipeline = (filter, sort, limit) => [
-  { $match: filter },
+  // Every rail on the home page runs through here. The student shelf is a
+  // different catalogue sold to a different audience, and the schema's find
+  // hook cannot reach an aggregation, so it is excluded at the one point they
+  // all share rather than in each of the five below.
+  { $match: { audience: { $ne: "students" }, ...filter } },
   { $sort: sort },
   { $limit: limit },
   { $project: LIST_PROJECTION },
