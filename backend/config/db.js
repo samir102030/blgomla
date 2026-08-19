@@ -87,8 +87,22 @@ const connectDB = async () => {
     return cached.conn;
   }
 
+  /**
+   * Render's own guide, and most of the tutorials people follow alongside it,
+   * call this MONGODB_URI. Fifty-five files in here read MONGO_URI, so the
+   * name stays — but a deploy should not die on boot over which of the two
+   * spellings someone typed into a dashboard. Read here rather than at module
+   * load: this file is imported before the entry point calls dotenv.config(),
+   * so a top-level assignment would run before a local .env exists.
+   */
+  if (!process.env.MONGO_URI && process.env.MONGODB_URI) {
+    process.env.MONGO_URI = process.env.MONGODB_URI;
+  }
+
   if (!process.env.MONGO_URI) {
-    throw new Error("MONGO_URI is not set");
+    throw new Error(
+      "MONGO_URI is not set. On a host that calls it MONGODB_URI, either name works."
+    );
   }
 
   if (!cached.promise) {

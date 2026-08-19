@@ -341,10 +341,12 @@ const Header: React.FC = () => {
     { label: t("All Products"), path: "/products" },
     { label: t("Deals"), path: "/deals", className: "!text-[var(--brand-accent)] font-semibold" },
     { label: t("Collections"), path: "/collections" },
-    // The old category flyout carried a "Top brands" strip, which was the only
-    // link to the brands page anywhere in the nav. The menu no longer has room
-    // for it, so the page gets a link of its own rather than losing its way in.
-    { label: t("Brands"), path: "/brands" },
+    // Out of the desktop bar and kept in the drawer. The brands page is
+    // reachable from the strip of brand cards on the home page and from the
+    // footer, so the row does not have to spend one of its few slots saying so
+    // — but the drawer has no such strip, and dropping it there would leave
+    // the page with no way in on a phone at all.
+    { label: t("Brands"), path: "/brands", mobileOnly: true },
     { label: t("Contact"), path: "/contact" },
     // Lives beside Login in the action strip on desktop; this entry is what
     // keeps it in the mobile drawer, where that strip has no room for it.
@@ -608,10 +610,9 @@ const Header: React.FC = () => {
               }}
               aria-label={t("Language")}
               title={language === "en" ? "العربية" : "English"}
-              className="mn-icon-btn gap-1.5 text-xs font-extrabold"
-              style={{ width: "auto", padding: "0 10px" }}
+              className="mn-header-link inline-flex gap-1.5 font-extrabold"
             >
-              <GlobeAltIcon className="w-4 h-4" />
+              <GlobeAltIcon className="w-4 h-4 shrink-0" />
               <span>{language === "en" ? "EN" : "ع"}</span>
             </button>
 
@@ -629,24 +630,23 @@ const Header: React.FC = () => {
                 it sits with the account controls rather than in the row of
                 places to browse. */}
             {showBecomeVendor && (
-              <Link
-                to="/vendor-registration"
-                className="mn-icon-btn hidden lg:inline-flex whitespace-nowrap"
-                style={{ width: "auto", padding: "0 12px" }}
-              >
-                <span className="font-medium">{t("Become a Vendor")}</span>
+              <Link to="/vendor-registration" className="mn-header-link hidden xl:inline-flex">
+                {t("Become a Vendor")}
               </Link>
             )}
 
             {!user && (
-              <Link
-                to="/login"
-                className="mn-icon-btn" style={{ width: "auto", padding: "0 12px" }}
-              >
-                <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                <span className="hidden lg:block font-medium">{t("Login")}</span>
+              <Link to="/login" className="mn-header-link inline-flex">
+                <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0" />
+                <span className="hidden lg:block">{t("Login")}</span>
               </Link>
             )}
+
+            {/* Words on one side, the shop's own controls on the other. The
+                three squares that follow are the same size and the same box,
+                which is what makes them read as one set rather than three more
+                things to choose between. */}
+            <div className="w-px h-6 bg-[var(--line)] mx-1 hidden sm:block" />
             {user ? (
               <div ref={userMenuRef} className="relative">
                 <button
