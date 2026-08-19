@@ -20,10 +20,9 @@ import { useBrandStore } from "../stores/brand.store";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
-import { CategoryAccordion, CategoryNavItems } from "./CategoryNav";
+import { AllCategoriesMenu, CategoryAccordion } from "./CategoryNav";
 import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
-import Logo, { BRAND } from "./Logo";
 
 interface NavigationItem {
   label: string;
@@ -529,49 +528,46 @@ const Header: React.FC = () => {
   return (
     <>
       <AnnouncementBar />
+      {/* The bar wears the Manus chrome (`site-header` / `nav-row`), which
+          paints its own charcoal ground. Dropdowns below keep the theme's
+          surface — they are panels over the page, not part of the bar. */}
       <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[var(--surface)]/95 backdrop-blur-xl shadow-lg border-b border-[var(--border)]/50"
-          : "bg-[var(--surface)] border-b border-[var(--border)]"
+      className={`mn-scope mn-site-header z-50 ${
+        scrolled ? "shadow-[0_18px_40px_rgba(0,0,0,0.45)]" : ""
       }`}
     >
       {/* Main header */}
-      <div className="shell">
-        <div className="flex items-center justify-between h-16 sm:h-18 gap-4">
+      <div className="mn-site-width">
+        <div className="mn-nav-row justify-between gap-4">
           {/* Logo — Belgomla MarkBag (geometric B with bag handle) + wordmark */}
-          <Link
-            to="/"
-            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity flex-shrink-0"
-            aria-label={t("brand.homeLabel", "Belgomla home")}
-          >
-            <Logo size={32} color={BRAND.orange} />
-            <span
-              className={`text-xl sm:text-2xl font-semibold text-[var(--text)] hidden sm:inline ${
-                i18n.language === "ar" ? "" : "lowercase"
-              }`}
-              style={
-                i18n.language === "ar"
-                  ? { lineHeight: 1 }
-                  : { letterSpacing: "-0.045em", lineHeight: 0.9 }
-              }
-            >
+          {/* The design package ships a brand symbol; it replaces the drawn
+              logo here, with the discipline named under the wordmark exactly
+              as the preview had it. */}
+          <Link to="/" className="mn-brand" aria-label={t("brand.homeLabel", "Belgomla home")}>
+            <img
+              className="mn-brand-mark"
+              src="/manus/brand-symbol.webp"
+              alt=""
+              width={48}
+              height={48}
+            />
+            <span className={`mn-brand-text hidden sm:block ${i18n.language === "ar" ? "" : "lowercase"}`}>
               {t("brand.wordmark", "belgomla")}
+              <small>Smart Solutions</small>
             </span>
           </Link>
 
           {/* Search bar - desktop */}
           <div
-            className="flex-1 max-w-xl mx-4 hidden md:block"
+            className="mn-search mx-4 hidden md:block"
             ref={desktopSearchRef}
           >
             <div className="relative">
               <div className="relative flex items-center">
-                <MagnifyingGlassIcon className="absolute left-3.5 w-4 h-4 text-[var(--text-subtle)] pointer-events-none" />
+                <MagnifyingGlassIcon className="pointer-events-none" />
                 <input
                   type="text"
-                  placeholder={t("Search products, brands, categories...")}
-                  className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all"
+                  placeholder={t("Search for a solution, product, or project...")}
                   value={searchQuery}
                   autoComplete="off"
                   role="combobox"
@@ -598,7 +594,8 @@ const Header: React.FC = () => {
               }}
               aria-label={t("Language")}
               title={language === "en" ? "العربية" : "English"}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-3,var(--surface-2))] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/30 transition-colors"
+              className="mn-icon-btn gap-1.5 text-xs font-extrabold"
+              style={{ width: "auto", padding: "0 10px" }}
             >
               <GlobeAltIcon className="w-4 h-4" />
               <span>{language === "en" ? "EN" : "ع"}</span>
@@ -606,12 +603,18 @@ const Header: React.FC = () => {
 
             <ThemeToggle showLabel={false} className="ml-0.5" />
 
-            <div className="w-px h-6 bg-[var(--border)] mx-1 hidden sm:block" />
+            <div className="w-px h-6 bg-[var(--line)] mx-1 hidden sm:block" />
+
+            {/* The one orange action in the bar, as the design package has it.
+                Quoting is the path this storefront is built around. */}
+            <Link to="/contact" className="mn-header-action hidden md:inline-flex">
+              {t("Request a quote")}
+            </Link>
 
             {!user && (
               <Link
                 to="/login"
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all text-sm"
+                className="mn-icon-btn" style={{ width: "auto", padding: "0 12px" }}
               >
                 <ArrowRightOnRectangleIcon className="w-5 h-5" />
                 <span className="hidden lg:block font-medium">{t("Login")}</span>
@@ -624,7 +627,7 @@ const Header: React.FC = () => {
                   onClick={() => setUserMenuOpen((v) => !v)}
                   aria-haspopup="menu"
                   aria-expanded={userMenuOpen}
-                  className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
+                  className="mn-icon-btn"
                 >
                   <UserCircleIcon className="w-5 h-5" />
                 </button>
@@ -667,7 +670,7 @@ const Header: React.FC = () => {
             ) : (
               <Link
                 to="/account"
-                className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
+                className="mn-icon-btn"
               >
                 <UserCircleIcon className="w-5 h-5" />
               </Link>
@@ -675,43 +678,44 @@ const Header: React.FC = () => {
             {user && <NotificationBell />}
             <Link
               to="/wishlist"
-              className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all"
+              className="mn-icon-btn"
             >
               <HeartIcon className="w-5 h-5" />
             </Link>
             <Link
               to="/cart"
-              className="flex items-center gap-1.5 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--surface-2)] transition-all relative"
+              className="mn-icon-btn"
             >
               <ShoppingCartIcon className="w-5 h-5" />
-              <span className="absolute ltr:-top-0.5 ltr:-right-0.5 rtl:-top-0.5 rtl:-left-0.5 bg-[var(--brand-primary)] text-white rounded-full flex items-center justify-center font-bold" style={{ width: '18px', height: '18px', fontSize: '10px' }}>
+              {/* `.mn-icon-btn em` is the design package's own count badge. */}
+              <em>
                 {user?.cart?.length
                   ? user.cart.reduce(
                       (acc, item) => acc + (item.quantity || 0),
                       0
                     )
                   : 0}
-              </span>
+              </em>
             </Link>
 
             {/* Mobile menu toggle */}
             <button
-              className="lg:hidden flex flex-col justify-center items-center w-9 h-9 rounded-lg hover:bg-[var(--surface-2)] transition-colors ml-1"
+              className="lg:hidden flex flex-col justify-center items-center w-9 h-9 rounded-[11px] border border-[var(--line)] hover:border-[var(--orange)] transition-colors ml-1"
               onClick={toggleMenu}
               aria-label="Toggle menu"
             >
               <span
-                className={`w-5 h-0.5 bg-[var(--text)] transition-all duration-300 ${
+                className={`w-5 h-0.5 bg-white transition-all duration-300 ${
                   isMenuOpen ? "rotate-45 translate-y-1" : ""
                 }`}
               />
               <span
-                className={`w-5 h-0.5 bg-[var(--text)] transition-all duration-300 mt-1 ${
+                className={`w-5 h-0.5 bg-white transition-all duration-300 mt-1 ${
                   isMenuOpen ? "opacity-0" : ""
                 }`}
               />
               <span
-                className={`w-5 h-0.5 bg-[var(--text)] transition-all duration-300 mt-1 ${
+                className={`w-5 h-0.5 bg-white transition-all duration-300 mt-1 ${
                   isMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
                 }`}
               />
@@ -720,14 +724,13 @@ const Header: React.FC = () => {
         </div>
 
         {/* Mobile search bar */}
-        <div className="pb-3 md:hidden" ref={mobileSearchRef}>
+        <div className="mn-search pb-3 md:hidden" style={{ width: "auto" }} ref={mobileSearchRef}>
           <div className="relative">
             <div className="relative flex items-center">
-              <MagnifyingGlassIcon className="absolute left-3.5 w-4 h-4 text-[var(--text-subtle)] pointer-events-none" />
+              <MagnifyingGlassIcon className="pointer-events-none" />
               <input
                 type="text"
                 placeholder={t("Search...")}
-                className="w-full pl-10 pr-4 py-2.5 bg-[var(--surface-2)] border border-[var(--border)] rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-subtle)] focus:outline-none focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]/20 transition-all"
                 value={searchQuery}
                 autoComplete="off"
                 role="combobox"
@@ -744,36 +747,28 @@ const Header: React.FC = () => {
       </div>
 
       {/* Desktop Navigation */}
-      <nav className="hidden lg:block border-t border-[var(--border)] bg-[var(--brand-nav)]">
-        <div className="shell">
-          <ul className="flex flex-row flex-wrap items-center gap-x-1">
+      <nav className="hidden lg:block border-t border-[var(--line)] bg-[rgba(9,13,20,0.55)]">
+        <div className="mn-site-width">
+          <ul className="mn-nav-links flex-wrap">
+            {/* The catalogue opens from one control at the head of the row.
+                Given a row of its own the departments wrapped onto a second
+                and third line as the catalogue grew; behind this button the
+                bar stays one line however many departments there are. */}
+            <AllCategoriesMenu />
+
             {navigationItems
               .filter((item) => item.condition === undefined || item.condition)
               .map((item) => (
                 <li key={item.path}>
                   <Link
                     to={item.path}
-                    className={`block py-3 px-4 text-sm font-medium text-[var(--brand-nav-text)] opacity-70 hover:opacity-100 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all ${item.className || ""}`}
+                    className={`block py-3 px-4 text-[13px] font-bold rounded-lg ${item.className || ""}`}
                   >
                     {item.label}
                   </Link>
                 </li>
               ))}
           </ul>
-        </div>
-
-        {/* The catalogue gets a row of its own. Sharing one with the standing
-            links meant the two sets wrapped into each other as categories were
-            added, and which row a name landed on read as an accident. Wrapping
-            rather than scrolling sideways, so nothing falls off the end. */}
-        <div className="border-t border-[var(--border)]/60">
-          <div className="shell">
-            <ul className="flex flex-row flex-wrap items-center">
-              {/* Roots sit in the bar itself; each drops its subcategories
-                  below it, and those open a third level to the side. */}
-              <CategoryNavItems />
-            </ul>
-          </div>
         </div>
       </nav>
 

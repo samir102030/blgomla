@@ -2,7 +2,7 @@ import React, { useMemo, useState, lazy, Suspense } from "react";
 import { useSectionOrder } from "../layout/useLayout";
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
-import HeroSlider from "../components/HeroSlider";
+import ManusHero from "../components/manus/ManusHero";
 import Footer from "../components/Footer";
 import AddBundleDialog from "../components/AddBundleDialog";
 import SEO from "../components/SEO";
@@ -241,9 +241,16 @@ const HomePage: React.FC = () => {
     hero: (
       <>
         {/* ════════════════════════════════════════════
-            § 1.  HERO CAROUSEL  — First impression
+            § 1.  SOLUTION BANNER — First impression
+            ────────────────────────────────────────────
+            The one piece kept from the design package. The wrapper carries
+            the charcoal ground and Cairo the preview put on `body`; scoping
+            it here keeps the rest of the storefront — and the admin — on the
+            theme they already have.
             ════════════════════════════════════════════ */}
-        <HeroSlider />
+        <div className="mn-scope mn-commerce-home">
+          <ManusHero />
+        </div>
       </>
     ),
     services: (
@@ -717,6 +724,13 @@ const HomePage: React.FC = () => {
         {sectionOrder.map((key) => (
           <React.Fragment key={key}>{sectionNodes[key]}</React.Fragment>
         ))}
+
+        {/* The close of the Smart Solutions journey — guidance cards, the
+            consultation banner, and the service values. It sits after the
+            catalogue sections rather than inside the ordered list because the
+            design package puts it last on the page, after the products, and
+            an admin reordering the storefront should not be able to strand
+            the page's final call to action somewhere in the middle. */}
       </main>
 
       <AddBundleDialog

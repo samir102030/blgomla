@@ -1,7 +1,7 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useCategoryStore } from "../stores/category.store";
 import type { Category } from "../types/category.type";
 import i18n from "../lib/i18n";
@@ -263,6 +263,73 @@ const RootItem: React.FC<BranchProps> = ({ node, onPick }) => {
  * Rendered as a fragment so they sit in the same row as the rest of the nav
  * links rather than in a bar of their own.
  */
+/**
+ * The whole catalogue behind one button in the nav row.
+ *
+ * Roots were tried in the bar itself, which put every department on screen at
+ * once but cost the bar a second row that grew with the catalogue. This is the
+ * arrangement the shop had before that: one entry point, the departments in a
+ * panel under it, and each department opening its own children to the side —
+ * the same three levels, folded into one control.
+ *
+ * The panel deliberately does not scroll. `overflow-y` clips on both axes, so
+ * a scrollable list swallows the side flyouts its own rows open; the panel
+ * grows instead, exactly as `panelScrollClass` decides for the levels below.
+ */
+export const AllCategoriesMenu: React.FC = () => {
+  const { t } = useTranslation();
+  const tree = useCategoryMenuTree();
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+
+  const pick = (id: string) => {
+    setOpen(false);
+    navigate(`/products?category=${encodeURIComponent(id)}`);
+  };
+
+  // Nothing to open until the catalogue has loaded.
+  if (!tree.length) return null;
+
+  return (
+    <li
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className={`flex items-center gap-2 py-3 px-4 text-[13px] font-bold uppercase whitespace-nowrap text-[var(--brand-nav-text)] border-b-2 transition-all ${
+          open
+            ? "opacity-100 border-[var(--brand-primary)]"
+            : "opacity-80 hover:opacity-100 border-transparent"
+        }`}
+      >
+        <Bars3Icon className="w-4 h-4 shrink-0" />
+        {t("All Categories")}
+        <ChevronDownIcon
+          className={`w-3.5 h-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute top-full ltr:left-0 rtl:right-0 w-64 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-b-xl shadow-2xl z-50 animate-fadeInDown">
+          <ul>
+            {tree.map((node) => (
+              <DropdownRow key={node._id} node={node} onPick={pick} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </li>
+  );
+};
+
 export const CategoryNavItems: React.FC = () => {
   const tree = useCategoryMenuTree();
   const navigate = useNavigate();

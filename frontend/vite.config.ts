@@ -21,6 +21,10 @@ export default defineConfig({
   ],
   server: {
     host: true,
+    // Vite has no interest in $PORT on its own — it takes 5173 and walks up
+    // from there. Reading it here lets a supervisor that already picked a free
+    // port hand it over, instead of guessing where the server landed.
+    port: process.env.PORT ? Number(process.env.PORT) : undefined,
     // Vite rejects Host headers it doesn't recognise (DNS-rebinding defence).
     // Named suffixes rather than `true`, so only the tunnel providers we
     // actually use get through and any other hostname is still refused.
