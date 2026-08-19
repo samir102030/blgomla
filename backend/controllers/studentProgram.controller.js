@@ -327,7 +327,30 @@ export const applyForStudentProgram = controllerWrapper("applyForStudentProgram"
   const token = profile.issueVerificationToken(VERIFY_TTL_MINUTES);
   await profile.save();
 
-  await sendStudentVerificationEmail(req.user, profile, token, process.env.CLIENT_URL);
+  // Everywhere else in the shop a message that fails to send is a nuisance —
+  // the order still exists, the receipt can be re-sent. Here the message is
+  // the entire product: without the link there is no way to finish. So the
+  // send is checked, and a failure is reported as one rather than answered
+  // with "check your inbox".
+  //
+  // Clearing the stamp releases the two-minute cooldown at the same time.
+  // Being told to wait for a message that was never dispatched is the worst
+  // of both, and the send never happened, so there is nothing to throttle.
+  const sent = await sendStudentVerificationEmail(
+    req.user,
+    profile,
+    token,
+    process.env.CLIENT_URL,
+  );
+  if (!sent) {
+    profile.verificationSentAt = undefined;
+    await profile.save();
+    return fail(
+      res,
+      502,
+      "We could not send the confirmation link just now. Try again in a moment, or contact support.",
+    );
+  }
 
   return ok(res, {
     message: "Check your university inbox for the confirmation link.",

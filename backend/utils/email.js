@@ -20,36 +20,170 @@ export const buildUnsubscribeLink = (userId, type) => {
   return `${API_URL.replace(/\/$/, "")}/api/emails/unsubscribe?token=${encodeURIComponent(token)}`;
 };
 
-const sendEmail = async ({ to, subject, html, text, replyTo, unsubscribeUrl }) => {
-  if (!process.env.RESEND_API_KEY || !resend) {
-    console.warn("[Email] RESEND_API_KEY not set — skipping email to", to);
+/**
+ * `Name <address@host>` split into the parts Brevo wants separately. Resend
+ * takes the header as written, so this is only used on the Brevo path.
+ */
+const parseSender = (value) => {
+  const match = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(value || "");
+  if (match) return { name: match[1] || undefined, email: match[2] };
+  return { email: String(value || "").trim() };
+};
+
+/**
+ * RFC 8058 one-click unsubscribe. Gmail and Outlook put a native
+ * "Unsubscribe" control next to the sender name when these are present, which
+ * is what keeps marketing-class mail out of the spam folder.
+ */
+const unsubscribeHeaders = (unsubscribeUrl) =>
+  unsubscribeUrl
+    ? {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      }
+    : undefined;
+
+const sendViaResend = async ({ to, subject, html, text, replyTo, unsubscribeUrl }) => {
+  const headers = unsubscribeHeaders(unsubscribeUrl);
+  const { data, error } = await resend.emails.send({
+    from: FROM_EMAIL,
+    to: Array.isArray(to) ? to : [to],
+    subject,
+    html,
+    text,
+    reply_to: replyTo || SUPPORT_EMAIL,
+    ...(headers ? { headers } : {}),
+  });
+  if (error) {
+    console.error("[Email] Resend error:", error);
     return null;
   }
-  try {
-    // RFC 8058 List-Unsubscribe headers — Gmail/Outlook surface a native
-    // "Unsubscribe" affordance next to the sender name when these are present,
-    // which protects deliverability for marketing-class mail.
-    const headers = unsubscribeUrl
-      ? {
-          "List-Unsubscribe": `<${unsubscribeUrl}>`,
-          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-        }
-      : undefined;
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: Array.isArray(to) ? to : [to],
-      subject,
-      html,
-      text,
-      reply_to: replyTo || SUPPORT_EMAIL,
-      ...(headers ? { headers } : {}),
-    });
-    if (error) {
-      console.error("[Email] Resend error:", error);
-      return null;
+  console.log("[Email] Sent via Resend:", data?.id);
+  return data;
+};
+
+const brevoApi = async (path) => {
+  const response = await fetch(`https://api.brevo.com/v3${path}`, {
+    headers: { accept: "application/json", "api-key": process.env.BREVO_API_KEY },
+  });
+  if (!response.ok) throw new Error(`${path} -> ${response.status}`);
+  return response.json();
+};
+
+/**
+ * Is FROM_EMAIL an address Brevo will actually send from?
+ *
+ * Worth a network call because of how Brevo fails when it is not: the send
+ * returns 200 with a message id, and the rejection — "the sender you used is
+ * not valid" — is recorded minutes later on an events endpoint nobody is
+ * watching. Every message is lost and every caller is told it was sent.
+ *
+ * Checked once per process and remembered, so this costs one request on the
+ * first send of a container's life. If the check itself cannot be made the
+ * answer is "yes": a blip reaching their API is no reason to stop the shop
+ * mailing receipts.
+ */
+let senderCheck = null;
+const brevoSenderUsable = () => {
+  senderCheck ??= (async () => {
+    const address = parseSender(FROM_EMAIL).email?.toLowerCase();
+    if (!address) return true;
+    try {
+      const [senders, domains] = await Promise.all([
+        brevoApi("/senders"),
+        brevoApi("/senders/domains"),
+      ]);
+      const verified = (senders?.senders || []).some(
+        (s) => String(s.email).toLowerCase() === address,
+      );
+      const host = address.slice(address.lastIndexOf("@") + 1);
+      const authenticated = (domains?.domains || []).some(
+        (d) => String(d.domain_name || d.domain).toLowerCase() === host && d.authenticated,
+      );
+      if (!verified && !authenticated) {
+        console.error(
+          `[Email] Brevo will reject every send: FROM_EMAIL is <${address}>, which is ` +
+            `neither a verified sender nor on an authenticated domain. Authenticate ` +
+            `${host} in Brevo, or set FROM_EMAIL to an address that is verified.`,
+        );
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn("[Email] Could not check the Brevo sender:", err.message);
+      return true;
     }
-    console.log("[Email] Sent successfully:", data?.id);
-    return data;
+  })();
+  return senderCheck;
+};
+
+/**
+ * Brevo's transactional endpoint, called over plain `fetch`.
+ *
+ * No SDK: this is one POST with a JSON body, and their package would be a
+ * dependency carrying an HTTP client we already have built in.
+ */
+const sendViaBrevo = async ({ to, subject, html, text, replyTo, unsubscribeUrl }) => {
+  const recipients = (Array.isArray(to) ? to : [to]).filter(Boolean).map((email) => ({ email }));
+  if (!recipients.length) return null;
+
+  // Refuse rather than collect a message id for something that will be
+  // dropped — the student portal reads this answer to decide whether to tell
+  // somebody their link is on the way.
+  if (!(await brevoSenderUsable())) return null;
+
+  const headers = unsubscribeHeaders(unsubscribeUrl);
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      "api-key": process.env.BREVO_API_KEY,
+    },
+    body: JSON.stringify({
+      sender: parseSender(FROM_EMAIL),
+      to: recipients,
+      subject,
+      htmlContent: html,
+      // Brevo rejects an empty string here, so send the field only when there
+      // is a plain-text part to send.
+      ...(text ? { textContent: text } : {}),
+      replyTo: { email: replyTo || SUPPORT_EMAIL },
+      ...(headers ? { headers } : {}),
+    }),
+  });
+
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    // Their errors are the useful kind — an unverified sender, a blocked
+    // recipient — so log the message rather than just the status.
+    console.error(
+      "[Email] Brevo error:",
+      response.status,
+      body?.message || body?.code || "(no body)",
+    );
+    return null;
+  }
+  console.log("[Email] Sent via Brevo:", body?.messageId);
+  return body;
+};
+
+/**
+ * Send one message, by whichever provider is configured.
+ *
+ * Brevo wins when both keys are present, on the grounds that setting the
+ * newer key is the deliberate act. Returns null on every failure rather than
+ * throwing: a checkout must not fall over because a receipt did not send. The
+ * student programme is the exception and checks the return value, because
+ * there the message *is* the product.
+ */
+const sendEmail = async ({ to, subject, html, text, replyTo, unsubscribeUrl }) => {
+  const payload = { to, subject, html, text, replyTo, unsubscribeUrl };
+  try {
+    if (process.env.BREVO_API_KEY) return await sendViaBrevo(payload);
+    if (process.env.RESEND_API_KEY && resend) return await sendViaResend(payload);
+    console.warn("[Email] No mail provider configured — skipping email to", to);
+    return null;
   } catch (err) {
     console.error("[Email] Failed to send:", err.message);
     return null;
