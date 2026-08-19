@@ -243,15 +243,29 @@ export const applyForStudentProgram = controllerWrapper("applyForStudentProgram"
     return fail(res, 429, "A confirmation link was just sent. Check the inbox, then try again in a couple of minutes.");
   }
 
+  // Read before the overwrite. Comparing `profile.universityEmail` after
+  // assigning it compares the value to itself, which quietly lets a verified
+  // member point their membership at a different mailbox and stay verified
+  // without ever proving they hold it.
+  const previousEmail = profile.universityEmail;
+  const wasVerified = profile.status === "verified";
+  const addressChanged = previousEmail !== universityEmail;
+
   profile.universityEmail = universityEmail;
   profile.domain = match.domain;
   profile.university = match.university;
   profile.faculty = match.faculty;
-  // Re-applying returns a verified member to pending only if the address
-  // actually changed; otherwise a stray click would cost them their code.
-  if (profile.status !== "verified" || profile.universityEmail !== universityEmail) {
+
+  // A verified member who re-applies with the same address keeps their code —
+  // a stray click should not cost them anything. A different address is a new
+  // claim and has to be proved, so the membership drops back to pending and
+  // the code stops working until it is.
+  if (!wasVerified || addressChanged) {
     profile.status = "pending";
     profile.rejectionReason = undefined;
+    if (wasVerified && addressChanged && profile.coupon) {
+      await Coupon.findByIdAndUpdate(profile.coupon, { isActive: false });
+    }
   }
 
   const token = profile.issueVerificationToken(VERIFY_TTL_MINUTES);
