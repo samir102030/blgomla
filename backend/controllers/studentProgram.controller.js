@@ -123,37 +123,55 @@ export const rollRenewalWindow = async (profile, program) => {
   return true;
 };
 
-/** Create — or refresh — the personal coupon behind a verified membership. */
+/**
+ * Create — or refresh — the personal coupon behind a verified membership.
+ *
+ * Refreshing is deliberately not the same as issuing. A refresh re-reads the
+ * terms an admin may have changed (rate, cap, scope) and reactivates the code,
+ * but it does NOT touch `usageCount`, `startDate` or `endDate`, because every
+ * path that refreshes is a path the member can walk on demand: re-confirming
+ * an address, moving faculty, an admin re-approving. Resetting the counter
+ * there hands out an extra order for the asking, and pushing `endDate` out
+ * renews the term for free — between them they make the advertised "N orders
+ * every M days" and the membership length unenforceable.
+ *
+ * The counter is reset in exactly one place: `rollRenewalWindow`, when the
+ * period has actually elapsed.
+ */
 const issueCoupon = async (profile, program) => {
   const categories = await expandScope(program.categories);
   const expiresAt =
     profile.expiresAt || new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
 
-  const shape = {
+  // Terms, scope and state that should follow the settings wherever they are.
+  const terms = {
     description: `Student programme — ${profile.university || profile.domain}`,
     discountType: program.discount?.type ?? "percentage",
     discountValue: program.discount?.value ?? 0,
     minimumPurchase: program.discount?.minimumPurchase ?? 0,
     maximumDiscount: program.discount?.maximumDiscount,
-    startDate: new Date(),
-    endDate: expiresAt,
     usageLimit: program.renewal?.usesPerPeriod ?? 1,
-    usageCount: 0,
     isActive: true,
     // Never advertised on the storefront strip — it belongs to one person.
     isPublic: false,
     applicableCategories: categories,
     applicableProducts: [],
     assignedUser: profile.user,
-    createdBy: profile.user,
   };
 
   if (profile.coupon) {
-    const updated = await Coupon.findByIdAndUpdate(profile.coupon, shape, { new: true });
+    const updated = await Coupon.findByIdAndUpdate(profile.coupon, terms, { new: true });
     if (updated) return updated;
   }
 
-  return Coupon.create({ ...shape, code: await mintCouponCode() });
+  return Coupon.create({
+    ...terms,
+    code: await mintCouponCode(),
+    startDate: new Date(),
+    endDate: expiresAt,
+    usageCount: 0,
+    createdBy: profile.user,
+  });
 };
 
 /* ─────────────────────── student-facing ─────────────────────── */
@@ -268,11 +286,15 @@ export const applyForStudentProgram = controllerWrapper("applyForStudentProgram"
 
   if (!profile) profile = new StudentProfile({ user: req.user._id, universityEmail });
 
+  // Per account, not per address. Keying the cooldown to the address meant a
+  // signed-in shopper could walk a list of mailboxes on an approved faculty
+  // domain — a different address every call, so the cooldown never matched —
+  // and have the store mail every one of them. The ceiling was the global
+  // per-IP limiter, i.e. roughly a thousand unsolicited messages a quarter
+  // hour, sent from the shop's own sending domain.
   if (
-    profile.status === "pending" &&
-    profile.verificationSentAt &&
-    Date.now() - new Date(profile.verificationSentAt).getTime() < RESEND_COOLDOWN_MS &&
-    profile.universityEmail === universityEmail
+    profile?.verificationSentAt &&
+    Date.now() - new Date(profile.verificationSentAt).getTime() < RESEND_COOLDOWN_MS
   ) {
     return fail(res, 429, "A confirmation link was just sent. Check the inbox, then try again in a couple of minutes.");
   }
@@ -348,23 +370,24 @@ export const verifyStudentEmail = controllerWrapper("verifyStudentEmail", async 
   const user = await User.findById(profile.user);
   if (!user) return fail(res, 404, "The account behind this application no longer exists.");
 
-  // Confirming an address the membership already holds must not restart the
-  // renewal window or the membership term. The token is spent either way.
-  const alreadyVerified = profile.status === "verified" && !!profile.coupon;
+  // A membership that already has a code is being re-proved, not started.
+  // Keyed on the coupon rather than on `status`, because the status is exactly
+  // what a member can flip back to "pending" on demand — applying with a second
+  // address on the same approved faculty domain did it, and that reset the
+  // counter and pushed the term out every time, without limit.
+  const isNewMembership = !profile.coupon;
 
   profile.status = "verified";
   profile.verifiedAt = profile.verifiedAt || new Date();
   profile.verificationTokenHash = undefined;
   profile.verificationTokenExpiresAt = undefined;
 
-  if (!alreadyVerified) {
+  if (isNewMembership) {
     profile.expiresAt = new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
     profile.periodStartedAt = new Date();
   }
 
-  const coupon = alreadyVerified
-    ? (await Coupon.findById(profile.coupon)) || (await issueCoupon(profile, program))
-    : await issueCoupon(profile, program);
+  const coupon = await issueCoupon(profile, program);
   profile.coupon = coupon._id;
   await profile.save();
 
