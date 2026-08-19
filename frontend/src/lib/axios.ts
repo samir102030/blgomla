@@ -20,6 +20,28 @@ axiosInstance.interceptors.request.use(
     // Add Accept-Language header
     config.headers["Accept-Language"] = currentLanguage;
 
+    /**
+     * The JSON content type above is right for almost every request and wrong
+     * for the ones carrying a file.
+     *
+     * axios 1.x reads that header before sending: seeing JSON with a FormData
+     * body, it runs the body through `formDataToJSON`, and a File serialises
+     * to `{}`. The server receives `{"file":{}}`, multer finds nothing, and
+     * the answer is "No file uploaded" — for a file the user definitely
+     * chose. Every upload that works in this app works because its call site
+     * remembered to override the header; the ones that forgot were broken and
+     * looked like a server fault.
+     *
+     * Dropping the header here lets the browser set `multipart/form-data`
+     * with the boundary that makes the body parseable, so an upload works
+     * whether or not its call site remembered.
+     */
+    if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+      const headers = config.headers as any;
+      if (typeof headers?.delete === "function") headers.delete("Content-Type");
+      else delete headers["Content-Type"];
+    }
+
     return config;
   },
   (error) => {
