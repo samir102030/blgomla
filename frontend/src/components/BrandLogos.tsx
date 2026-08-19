@@ -1,4 +1,5 @@
 import React, { useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useBrands } from "../lib/queries";
 
@@ -48,20 +49,32 @@ const BrandLogos: React.FC = () => {
         ((b as { sortOrder?: number }).sortOrder ?? 0)
     );
 
+  // The id rides along so a card can open the catalogue already filtered to
+  // that brand. The fallback list below has none — those are marks for brands
+  // the shop does not carry yet, and a link to an empty result is worse than
+  // no link — so they stay unclickable.
   const brandItems =
     visibleBrands.length > 0
       ? visibleBrands.map((b) => ({
+          id: (b as { _id?: string })._id,
           name: b.name,
           logo: b.logo || brandLogos[b.name] || "",
         }))
-      : Object.entries(brandLogos).map(([name, logo]) => ({ name, logo }));
+      : Object.entries(brandLogos).map(([name, logo]) => ({
+          id: undefined as string | undefined,
+          name,
+          logo,
+        }));
 
   // Approach: render every card with an explicit margin-right (no flex gap,
   // no logical padding). Then the cycle distance is just N * (card_width
   // + margin_right). We render enough copies to overflow the viewport,
   // and animate by exactly one cycle's pixel width — measured from the
   // first card's offsetLeft to the (N+1)-th card's offsetLeft after mount.
-  const cardRef = useRef<HTMLDivElement | null>(null);
+  // HTMLElement, not HTMLDivElement: the first card is an anchor once the
+  // brand is one the shop actually carries. All this ref does is measure the
+  // card's width, which either element answers.
+  const cardRef = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [copies, setCopies] = useState(3);
   const [cycleDistance, setCycleDistance] = useState<number | null>(null);
@@ -153,14 +166,15 @@ const BrandLogos: React.FC = () => {
         <div className="absolute inset-y-0 right-0 w-24 sm:w-40 bg-gradient-to-l from-[var(--bg)] to-transparent z-10 pointer-events-none" />
 
         <div className="flex w-max brand-marquee-track" style={animationStyle}>
-          {repeated.map(({ brand, key }, index) => (
-            <div
-              key={key}
-              ref={index === 0 ? cardRef : undefined}
-              aria-hidden={index >= brandItems.length}
-              className="flex-shrink-0 group cursor-pointer"
-              style={{ marginRight: `${cardMargin}px` }}
-            >
+          {repeated.map(({ brand, key }, index) => {
+            // Only the first copy is real; the rest exist to make the loop
+            // seamless and are hidden from assistive tech. Giving those copies
+            // a link too would put the whole brand list in the tab order
+            // several times over.
+            const isReal = index < brandItems.length;
+            const linkable = Boolean(brand.id) && isReal;
+
+            const card = (
               <div className="flex flex-col items-center justify-center gap-2 w-44 h-24 sm:w-52 sm:h-28 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-5 hover:border-[var(--brand-primary)]/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
                 {brand.logo ? (
                   <img
@@ -189,8 +203,33 @@ const BrandLogos: React.FC = () => {
                   {brand.name}
                 </span>
               </div>
-            </div>
-          ))}
+            );
+
+            // A callback ref rather than the object: the measured card is a
+            // div or an anchor depending on the brand, and one object ref
+            // cannot be typed as both.
+            const measure = index === 0 ? (el: HTMLElement | null) => { cardRef.current = el; } : undefined;
+            const shared = {
+              className: "flex-shrink-0 group",
+              style: { marginRight: `${cardMargin}px` },
+            };
+
+            return linkable ? (
+              <Link
+                key={key}
+                ref={measure}
+                {...shared}
+                to={`/products?brand=${encodeURIComponent(brand.id!)}`}
+                aria-label={`${t("Browse")} ${brand.name}`}
+              >
+                {card}
+              </Link>
+            ) : (
+              <div key={key} ref={measure} {...shared} aria-hidden="true">
+                {card}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

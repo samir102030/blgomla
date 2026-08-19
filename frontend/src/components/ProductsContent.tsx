@@ -60,11 +60,26 @@ const collectCategoryIds = (
   return [rootId, ...children.flatMap((c) => collectCategoryIds(c._id, all, visited))];
 };
 
+/**
+ * Categories and brands travel as a comma-separated list.
+ *
+ * They used to travel as `category=<first id>`, which quietly made the whole
+ * filter single-select: the sidebar held an array and offered checkboxes, the
+ * page filtered on the array — and then every change round-tripped through a
+ * URL that could only carry one, so ticking a second box wrote the first back
+ * over it. The controls looked multi-select and behaved single-select.
+ */
+const listParam = (value: string | null) =>
+  (value || "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
 /** The canonical query string for a set of filters — one direction of the URL sync. */
 const toQuery = (filters: FilterState, sortBy: string) => {
   const next = new URLSearchParams();
-  if (filters.categories[0]) next.set("category", filters.categories[0]);
-  if (filters.brands[0]) next.set("brand", filters.brands[0]);
+  if (filters.categories.length) next.set("category", filters.categories.join(","));
+  if (filters.brands.length) next.set("brand", filters.brands.join(","));
   if (filters.minPrice) next.set("min", filters.minPrice);
   if (filters.maxPrice) next.set("max", filters.maxPrice);
   if (filters.rating) next.set("rating", filters.rating);
@@ -80,8 +95,11 @@ const toQuery = (filters: FilterState, sortBy: string) => {
 const fromQuery = (params: URLSearchParams) => ({
   filters: {
     ...EMPTY_FILTERS,
-    categories: params.get("category") ? [params.get("category")!] : [],
-    brands: params.get("brand") ? [params.get("brand")!] : [],
+    // A single id still reads correctly, so every link already out there —
+    // the menu, the banner slides, anything a customer bookmarked or shared —
+    // keeps working.
+    categories: listParam(params.get("category")),
+    brands: listParam(params.get("brand")),
     minPrice: params.get("min") || "",
     maxPrice: params.get("max") || "",
     rating: params.get("rating") || "",
