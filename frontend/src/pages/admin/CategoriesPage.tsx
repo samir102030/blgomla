@@ -1,20 +1,28 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-hot-toast";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
   PlusIcon,
   ArrowUpTrayIcon,
+  ArrowDownTrayIcon,
   EyeIcon,
   PencilIcon,
   TrashIcon,
+  ArrowsRightLeftIcon,
 } from "@heroicons/react/24/outline";
 import { useCategoryStore } from "../../stores/category.store";
+import { axiosInstance } from "../../lib/axios";
 import type { Category } from "../../types/category.type";
 import CategoryModal from "../../components/CategoryModal";
 import ViewCategoryModal from "../../components/ViewCategoryModal";
 import BulkCategoryUpload from "../../components/admin/BulkCategoryUpload";
+import SearchableTreeSelect, {
+  type TreeOption,
+} from "../../components/SearchableTreeSelect";
+import MoveCategoryProductsModal from "../../components/admin/MoveCategoryProductsModal";
 
 const parentIdOf = (c: Category): string | null => {
   const parent = c.parentCategory;
@@ -37,6 +45,49 @@ const CategoriesPage: React.FC = () => {
   // parent already chosen instead of leaving it to be found in a long list.
   const [addingUnder, setAddingUnder] = useState<string>("");
   const [bulkOpen, setBulkOpen] = useState(false);
+  // The category whose products are being re-filed, if the move dialog is open.
+  const [movingProductsFrom, setMovingProductsFrom] = useState<Category | null>(null);
+  // Categories ticked for a single re-parent, and where they are going.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [moveTarget, setMoveTarget] = useState("");
+  // "Top level" is a real destination whose value is the empty string, which is
+  // also what "nothing picked yet" looks like. Without this flag the two are
+  // the same value, and pressing Move before choosing anything read as "send
+  // them all to the top" — no visible change for rows already there, and the
+  // selection cleared as if the work had been done.
+  const [targetChosen, setTargetChosen] = useState(false);
+  const [moving, setMoving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  /**
+   * Download the tree as a sheet.
+   *
+   * Fetched through axios rather than pointing a link at the URL, because the
+   * endpoint is behind the session and an `<a download>` cannot carry the auth
+   * header — the browser would follow it and save the 401 body as a .xlsx.
+   */
+  const exportCategories = async () => {
+    setExporting(true);
+    try {
+      const { data } = await axiosInstance.get("/categories/export", {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(data);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `categories-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(t("categories.exported"));
+    } catch {
+      toast.error(t("categories.exportFailed"));
+    } finally {
+      setExporting(false);
+    }
+  };
   const {
     categories,
     loading,
@@ -104,6 +155,165 @@ const CategoriesPage: React.FC = () => {
     walk(null, 0);
     return out;
   }, [categories, childrenOf, expanded, searchTerm]);
+
+  /**
+   * Where the ticked categories may be moved to.
+   *
+   * A category cannot go under itself or under one of its own subcategories —
+   * that would cut the branch loose from every root. The server refuses it, so
+   * the whole selection and everything beneath it is left out of the list here
+   * rather than offered and then rejected.
+   */
+  const moveOptions = useMemo<TreeOption[]>(() => {
+    const blocked = new Set<string>();
+    const block = (id: string) => {
+      if (blocked.has(id)) return;
+      blocked.add(id);
+      for (const child of childrenOf.get(id) || []) block(child._id);
+    };
+    for (const id of selected) block(id);
+
+    const options: TreeOption[] = [];
+    const walk = (parentId: string | null, depth: number, trail: string[]) => {
+      for (const c of childrenOf.get(parentId) || []) {
+        if (blocked.has(c._id)) continue; // and, with it, its whole subtree
+        options.push({ id: c._id, name: c.name, depth, trail });
+        walk(c._id, depth + 1, [...trail, c.name]);
+      }
+    };
+    walk(null, 0, []);
+    return options;
+  }, [childrenOf, selected]);
+
+  const allTicked = rows.length > 0 && rows.every(({ category }) => selected.has(category._id));
+
+  const toggleSelected = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleAllSelected = () =>
+    setSelected(allTicked ? new Set() : new Set(rows.map(({ category }) => category._id)));
+
+  /**
+   * Re-parents every ticked category.
+   *
+   * Each goes through updateCategory rather than a raw write: that path is what
+   * refuses a move that would loop the tree and what keeps the old and new
+   * parents' subCategories arrays in step. Failures are counted rather than
+   * thrown, so one rejected move does not strand the rest half-applied.
+   */
+  const moveSelected = async () => {
+    if (selected.size === 0 || !targetChosen) return;
+    setMoving(true);
+    const stuck = new Set<string>();
+    let moved = 0;
+    try {
+      for (const id of selected) {
+        const ok = await updateCategory(id, { parentCategory: moveTarget || null });
+        if (ok) moved += 1;
+        else stuck.add(id);
+      }
+      await fetchCategories();
+
+      // Only the ones that landed leave the selection. Clearing everything on a
+      // partial failure hides which rows still need attention, and clearing on a
+      // total failure looks exactly like success.
+      setSelected(stuck);
+      if (stuck.size === 0) {
+        setMoveTarget("");
+        setTargetChosen(false);
+      }
+
+      if (stuck.size > 0) toast.error(t("categories.moveSomeFailed", { count: stuck.size }));
+      else toast.success(t("categories.moveDone", { count: moved }));
+    } finally {
+      setMoving(false);
+    }
+  };
+
+  /**
+   * The ticked categories plus everything beneath them, and what they hold.
+   *
+   * Deleting a parent on its own is not a smaller version of deleting the
+   * branch — it is a worse one. `safeDeleteCategory` only sets `deleted: true`,
+   * so the children keep pointing at a parent that no longer resolves and climb
+   * back to the top of the tree as roots, while the products keep pointing at a
+   * category nothing lists. Taking the branch is the honest reading of "delete
+   * this", and counting the products first is what makes the confirmation worth
+   * reading.
+   */
+  const deletionScope = useMemo(() => {
+    const ids = new Set<string>();
+    const add = (id: string) => {
+      if (ids.has(id)) return;
+      ids.add(id);
+      for (const child of childrenOf.get(id) || []) add(child._id);
+    };
+    for (const id of selected) add(id);
+
+    const byId = new Map(categories.map((c) => [c._id, c]));
+    let products = 0;
+    for (const id of ids) products += (byId.get(id) as any)?.productCount || 0;
+
+    return { ids: [...ids], descendants: ids.size - selected.size, products };
+  }, [selected, childrenOf, categories]);
+
+  /**
+   * Soft-delete the ticked categories and their branches.
+   *
+   * Deepest first, so a parent is never removed while a child of it is still
+   * live — the intermediate state is visible in the UI between requests, and a
+   * branch that briefly reparents itself to the root reads as data loss.
+   */
+  const deleteSelected = async () => {
+    if (selected.size === 0) return;
+
+    const { ids, descendants, products } = deletionScope;
+    const warnings = [
+      t("categories.confirmBulkDelete", { count: selected.size }),
+      descendants > 0
+        ? t("categories.alsoDeletesSubcategories", { count: descendants })
+        : null,
+      products > 0 ? t("categories.willStrandProducts", { count: products }) : null,
+    ].filter(Boolean);
+    if (!window.confirm(warnings.join("\n\n"))) return;
+
+    setDeleting(true);
+    const depthOf = (id: string) => {
+      let depth = 0;
+      let parent = parentIdOf(categories.find((c) => c._id === id) as Category);
+      let guard = 0;
+      while (parent && guard++ < 20) {
+        depth += 1;
+        const p = categories.find((c) => c._id === parent);
+        parent = p ? parentIdOf(p) : null;
+      }
+      return depth;
+    };
+    const ordered = [...ids].sort((a, b) => depthOf(b) - depthOf(a));
+
+    const stuck = new Set<string>();
+    let removed = 0;
+    try {
+      for (const id of ordered) {
+        const ok = await safeDeleteCategory(id);
+        if (ok) removed += 1;
+        else stuck.add(id);
+      }
+      await fetchCategories();
+      // Same rule as the move: only what actually went leaves the selection.
+      setSelected(stuck);
+      if (stuck.size > 0)
+        toast.error(t("categories.deleteSomeFailed", { count: stuck.size }));
+      else toast.success(t("categories.deleteDone", { count: removed }));
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const toggleExpanded = (id: string) =>
     setExpanded((prev) => {
@@ -193,6 +403,14 @@ const CategoriesPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={exportCategories}
+            disabled={exporting}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-[#333333] hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 font-medium flex-1 sm:flex-none"
+          >
+            <ArrowDownTrayIcon className="h-4 w-4" />
+            {exporting ? t("categories.exporting") : t("categories.exportTree")}
+          </button>
           <button
             onClick={() => setBulkOpen((v) => !v)}
             className="px-4 py-2 rounded-lg border border-gray-300 text-[#333333] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-medium flex-1 sm:flex-none"
@@ -300,6 +518,58 @@ const CategoriesPage: React.FC = () => {
         )}
       </div>
 
+      {/* Only once something is ticked — before that there is nothing to move. */}
+      {selected.size > 0 && (
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-[var(--brand-primary)] flex flex-col sm:flex-row sm:items-center gap-3">
+          <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
+            {t("categories.selectedCount", { count: selected.size })}
+          </span>
+          <div className="flex-1 min-w-0 sm:max-w-sm">
+            <SearchableTreeSelect
+              options={moveOptions}
+              value={moveTarget}
+              onChange={(id) => {
+                setMoveTarget(id);
+                setTargetChosen(true);
+              }}
+              emptyLabel={t("categories.noParent")}
+              searchLabel={t("categories.searchParent")}
+              noResultsLabel={t("categories.noMatchingCategory")}
+            />
+          </div>
+          <button
+            onClick={moveSelected}
+            title={targetChosen ? undefined : t("categories.pickDestinationFirst")}
+            disabled={moving || deleting || !targetChosen}
+            className="px-4 py-2 rounded-lg bg-[var(--brand-accent)] text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
+          >
+            {moving ? t("categories.moving") : t("categories.moveSelected")}
+          </button>
+          {/* Says what it will actually take, so the count in the button and the
+              count in the confirmation never disagree. */}
+          <button
+            onClick={deleteSelected}
+            disabled={moving || deleting}
+            className="px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 disabled:opacity-50 whitespace-nowrap flex items-center gap-1.5"
+          >
+            <TrashIcon className="h-4 w-4" />
+            {deleting
+              ? t("categories.deleting")
+              : t("categories.deleteSelected", { count: deletionScope.ids.length })}
+          </button>
+          <button
+            onClick={() => {
+              setSelected(new Set());
+              setMoveTarget("");
+              setTargetChosen(false);
+            }}
+            className="text-sm text-gray-500 hover:underline whitespace-nowrap"
+          >
+            {t("categories.clearSelection")}
+          </button>
+        </div>
+      )}
+
       {/* Categories Table */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
@@ -327,11 +597,26 @@ const CategoriesPage: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t("categories.colActions")}
                 </th>
+                {/* Last column, so the tick boxes line up down the right edge. */}
+                <th className="px-6 py-3 w-12">
+                  <input
+                    type="checkbox"
+                    checked={allTicked}
+                    onChange={toggleAllSelected}
+                    aria-label={t("categories.selectAll")}
+                    className="w-4 h-4 rounded border-gray-300 text-[var(--brand-accent)] focus:ring-[var(--brand-primary)] cursor-pointer"
+                  />
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {rows.map(({ category, depth, childCount }) => (
-                <tr key={category._id} className="hover:bg-gray-50">
+                <tr
+                  key={category._id}
+                  className={
+                    selected.has(category._id) ? "bg-amber-50" : "hover:bg-gray-50"
+                  }
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div
                       className="flex items-center gap-3"
@@ -433,6 +718,13 @@ const CategoriesPage: React.FC = () => {
                         {category.isActive ? "✓" : "✗"}
                       </button>
                       <button
+                        onClick={() => setMovingProductsFrom(category)}
+                        className="text-amber-600 hover:text-amber-800"
+                        title={t("Move products to another category")}
+                      >
+                        <ArrowsRightLeftIcon className="h-4 w-4" />
+                      </button>
+                      <button
                         onClick={() => handleEditCategory(category)}
                         className="text-green-600 hover:text-green-900"
                       >
@@ -445,6 +737,15 @@ const CategoriesPage: React.FC = () => {
                         <TrashIcon className="h-4 w-4" />
                       </button>
                     </div>
+                  </td>
+                  <td className="px-6 py-4 w-12">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(category._id)}
+                      onChange={() => toggleSelected(category._id)}
+                      aria-label={category.name}
+                      className="w-4 h-4 rounded border-gray-300 text-[var(--brand-accent)] focus:ring-[var(--brand-primary)] cursor-pointer"
+                    />
                   </td>
                 </tr>
               ))}
@@ -496,6 +797,16 @@ const CategoriesPage: React.FC = () => {
         onClose={handleViewModalClose}
         category={viewingCategory}
       />
+
+      {movingProductsFrom && (
+        <MoveCategoryProductsModal
+          isOpen
+          onClose={() => setMovingProductsFrom(null)}
+          source={movingProductsFrom}
+          categories={categories || []}
+          onMoved={fetchCategories}
+        />
+      )}
     </div>
   );
 };

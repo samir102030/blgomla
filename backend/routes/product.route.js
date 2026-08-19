@@ -17,6 +17,8 @@ import {
   deleteProductReview,
   filterProducts,
   getAllProducts,
+  getFilteredProductIds,
+  getBrandFacets,
   getBestSellers,
   getCart,
   getFeaturedProducts,
@@ -92,6 +94,10 @@ const publicListCache = cacheHeaders(60, 300);
 router.get("/", publicListCache, translateResponse, validateGetAllProducts, getAllProducts);
 router.get("/storefront", publicListCache, translateResponse, getStorefrontProducts);
 router.get("/search-suggestions", publicListCache, translateResponse, getSearchSuggestions);
+// Which brands occur under the selected categories — drives the brand list in
+// the filter panel. Public and cacheable: it is a shape of the catalogue, the
+// same thing the storefront's own facets expose.
+router.get("/brand-facets", publicListCache, getBrandFacets);
 router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);
 router.get("/newest", publicListCache, translateResponse, getNewestProducts);
 router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);
@@ -123,6 +129,10 @@ router.delete("/cart/:productId", protectRoute, removeFromCart);
 // sibling route below: a permission check rather than a role check.
 router.post("/", protectRoute, requirePermission("products.create"), validateCreateProduct, createProduct);
 router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
+// Ids for every product matching a filter, for "select all" across pages.
+// Admin-gated to match the bulk actions it feeds — this is not a browsing
+// endpoint, it exists to hand the client a selection it will then mutate.
+router.get("/filter-ids", protectRoute, adminRoute, getFilteredProductIds);
 router.get("/approvals", protectRoute, requirePermission("products.approve"), getProductApprovals);
 router.get("/pricing-insights", protectRoute, requirePermission("products.view"), getPricingInsights);
 router.post("/:productId/approve", protectRoute, requirePermission("products.approve"), approveProduct);

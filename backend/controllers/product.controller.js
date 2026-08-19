@@ -11,8 +11,14 @@ import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import { logEventSafe } from "./event.controller.js";
 import { logAudit, diff } from "../utils/audit.js";
-import { categoryFilterValue } from "../utils/categoryTree.js";
+import { categoryFilterValue, collectCategoryIdsMany } from "../utils/categoryTree.js";
 import mongoose from "mongoose";
+
+// Stock thresholds. The admin table has always drawn its "low stock" warning at
+// 30, so the filter that claims to select those rows has to use the same number
+// — two definitions of "low" is a filter that disagrees with the badge next to
+// the row it returned.
+const LOW_STOCK_THRESHOLD = 30;
 
 // Tokenized, case-insensitive search filter: every word must appear in the
 // name, tags, or description (order-independent). Beats a single contiguous
@@ -184,30 +190,109 @@ export const createProduct = controllerWrapper(
   }
 );
 
+/** `a,b,c` / `["a","b"]` / `a` → `["a","b","c"]`, blanks dropped. */
+const toIdList = (value) => {
+  if (value === undefined || value === null) return [];
+  const flat = Array.isArray(value) ? value : String(value).split(",");
+  return flat.map((v) => String(v).trim()).filter(Boolean);
+};
+
+/**
+ * Ids as ObjectIds, for a filter that will be handed to `$match`.
+ *
+ * `find()` casts query values against the schema; an aggregation pipeline does
+ * not, so a string id in `$match` matches nothing at all and the page comes
+ * back empty rather than erroring. Invalid ids are dropped — they can't match
+ * anything either way, and keeping them would throw on cast.
+ */
+const toObjectIds = (ids) =>
+  ids
+    .filter((id) => mongoose.Types.ObjectId.isValid(id))
+    .map((id) => new mongoose.Types.ObjectId(id));
+
+/**
+ * The Mongo filter behind the product list.
+ *
+ * Shared by the paginated list, the id-only endpoint that backs "select every
+ * match" and the brand facets, because those three have to agree: a count, a
+ * selection and a brand list built from three copies of this logic drift the
+ * moment one of them gains a filter the others don't have.
+ *
+ * Categories match their whole subtree — picking "Security & Surveillance"
+ * means everything filed beneath it, not the (usually empty) parent itself.
+ */
+const buildProductFilter = async (query = {}) => {
+  const { search, ...filters } = query;
+  const filter = {};
+
+  const searchAnd = buildSearchFilter(search);
+  if (searchAnd) filter.$and = searchAnd;
+
+  // `categoryIds` is the multi-select form; `categoryId` stays for the single-
+  // category callers that predate it.
+  const categoryIds = toIdList(filters.categoryIds ?? filters.categoryId);
+  if (categoryIds.length) {
+    const expanded = toObjectIds(await collectCategoryIdsMany(categoryIds));
+    filter.category = expanded.length === 1 ? expanded[0] : { $in: expanded };
+  }
+
+  const brandIds = toObjectIds(toIdList(filters.brandIds ?? filters.brandId));
+  if (brandIds.length) {
+    filter.brand = brandIds.length === 1 ? brandIds[0] : { $in: brandIds };
+  }
+
+  const storeIds = toObjectIds(toIdList(filters.storeId ?? filters.vendor));
+  if (storeIds.length) {
+    filter.store = storeIds.length === 1 ? storeIds[0] : { $in: storeIds };
+  }
+
+  // Booleans arrive as the strings "true"/"false" via query params; coerce
+  // so Mongo matches the actual Boolean field type.
+  const toBool = (v) => (v === true || v === "true");
+  if (filters.isActive !== undefined) filter.isActive = toBool(filters.isActive);
+  if (filters.featured !== undefined) filter.featured = toBool(filters.featured);
+  if (filters.saleActive !== undefined) filter.saleActive = toBool(filters.saleActive);
+  if (filters.deleted !== undefined) filter.deleted = toBool(filters.deleted);
+  if (filters.approvalStatus) filter.approvalStatus = filters.approvalStatus;
+
+  if (filters.minPrice || filters.maxPrice) {
+    filter.price = {};
+    if (filters.minPrice) filter.price.$gte = Number(filters.minPrice);
+    if (filters.maxPrice) filter.price.$lte = Number(filters.maxPrice);
+  }
+
+  // `productStatus` is the admin panel's wording for the same isActive flag;
+  // an explicit isActive above wins if both somehow arrive.
+  if (filters.productStatus && filter.isActive === undefined) {
+    if (filters.productStatus === "active") filter.isActive = true;
+    if (filters.productStatus === "inactive") filter.isActive = false;
+  }
+
+  switch (filters.stockStatus) {
+    case "in_stock":
+      filter.stock = { $gt: LOW_STOCK_THRESHOLD };
+      break;
+    case "low_stock":
+      filter.stock = { $gt: 0, $lte: LOW_STOCK_THRESHOLD };
+      break;
+    case "out_of_stock":
+      // A product created without a stock field is out of stock, not absent
+      // from the filter — `$lte: 0` alone would silently skip those rows.
+      filter.$or = [{ stock: { $lte: 0 } }, { stock: { $exists: false } }, { stock: null }];
+      break;
+    default:
+      break;
+  }
+
+  return filter;
+};
+
 // Get All Products (with optional filters/search)
 export const getAllProducts = controllerWrapper(
   "getAllProducts",
   async (req, res) => {
-    const { page = 1, limit = 20, search, ...filters } = req.query;
-    const filter = {};
-    const searchAnd = buildSearchFilter(search);
-    if (searchAnd) filter.$and = searchAnd;
-    if (filters.categoryId) filter.category = filters.categoryId;
-    if (filters.brandId) filter.brand = filters.brandId;
-    if (filters.storeId) filter.store = filters.storeId;
-    // Booleans arrive as the strings "true"/"false" via query params; coerce
-    // so Mongo matches the actual Boolean field type.
-    const toBool = (v) => (v === true || v === "true");
-    if (filters.isActive !== undefined) filter.isActive = toBool(filters.isActive);
-    if (filters.featured !== undefined) filter.featured = toBool(filters.featured);
-    if (filters.saleActive !== undefined) filter.saleActive = toBool(filters.saleActive);
-    if (filters.deleted !== undefined) filter.deleted = toBool(filters.deleted);
-    if (filters.approvalStatus) filter.approvalStatus = filters.approvalStatus;
-    if (filters.minPrice || filters.maxPrice) {
-      filter.price = {};
-      if (filters.minPrice) filter.price.$gte = Number(filters.minPrice);
-      if (filters.maxPrice) filter.price.$lte = Number(filters.maxPrice);
-    }
+    const { page = 1, limit = 20, search } = req.query;
+    const filter = await buildProductFilter(req.query);
 
     const result = await paginateProducts({
       filter,
@@ -221,6 +306,90 @@ export const getAllProducts = controllerWrapper(
       logEventSafe({ type: "search_no_results", query: String(search) });
     }
     res.status(200).json(result);
+  }
+);
+
+/**
+ * Every product id matching the current filter, no pagination.
+ *
+ * Backs "select all" in the admin table. Selecting what you can see is the easy
+ * half; the reason to filter to 250 products is to act on all 250, and the page
+ * only ever holds 20 of them. Ids only — the client already has the rows it
+ * renders and needs nothing else to drive a bulk update.
+ *
+ * Capped so a mis-click on an empty filter can't try to hand back the entire
+ * catalogue; the response says when it truncated rather than quietly returning
+ * a prefix the caller would treat as "all".
+ */
+export const getFilteredProductIds = controllerWrapper(
+  "getFilteredProductIds",
+  async (req, res) => {
+    const MAX_IDS = 5000;
+    const filter = await buildProductFilter(req.query);
+
+    const [total, docs] = await Promise.all([
+      Product.countDocuments(filter),
+      Product.find(filter).select("_id").limit(MAX_IDS).lean(),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      ids: docs.map((d) => String(d._id)),
+      total,
+      truncated: total > MAX_IDS,
+      limit: MAX_IDS,
+    });
+  }
+);
+
+/**
+ * Which brands actually occur under the selected categories.
+ *
+ * The brand list in the filter panel is meant to narrow with the categories
+ * above it, and `brand.categories` — the hand-maintained link — is populated on
+ * almost nothing, so trusting it alone would empty the panel for most of the
+ * catalogue. The products themselves are the reliable answer: a brand belongs
+ * to a category when something of that brand is filed there. The explicit link
+ * is unioned in, so a brand curated onto a category still shows before its
+ * first product lands.
+ *
+ * With no categories selected the caller gets an empty list, meaning "no
+ * narrowing" — the client shows every brand.
+ */
+export const getBrandFacets = controllerWrapper(
+  "getBrandFacets",
+  async (req, res) => {
+    const selected = toIdList(req.query.categoryIds ?? req.query.categoryId);
+    if (!selected.length) {
+      return res.status(200).json({ success: true, brands: [], scoped: false });
+    }
+
+    const objectIds = toObjectIds(await collectCategoryIdsMany(selected));
+
+    const [fromProducts, linked] = await Promise.all([
+      Product.aggregate([
+        { $match: { deleted: { $ne: true }, category: { $in: objectIds } } },
+        { $group: { _id: "$brand", count: { $sum: 1 } } },
+        { $match: { _id: { $ne: null } } },
+      ]),
+      Brand.find({ deleted: { $ne: true }, categories: { $in: objectIds } })
+        .select("_id")
+        .lean(),
+    ]);
+
+    const counts = new Map(fromProducts.map((r) => [String(r._id), r.count]));
+    for (const b of linked) {
+      const id = String(b._id);
+      if (!counts.has(id)) counts.set(id, 0);
+    }
+
+    res.status(200).json({
+      success: true,
+      scoped: true,
+      brands: [...counts.entries()]
+        .map(([brandId, count]) => ({ brandId, count }))
+        .sort((a, b) => b.count - a.count),
+    });
   }
 );
 

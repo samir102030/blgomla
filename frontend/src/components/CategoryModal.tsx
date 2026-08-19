@@ -5,6 +5,7 @@ import { uploadErrorMessage } from "../lib/uploadError";
 import { useCategoryStore } from "../stores/category.store";
 import type { Category } from "../types/category.type";
 import { axiosInstance } from "../lib/axios";
+import SearchableTreeSelect, { type TreeOption } from "./SearchableTreeSelect";
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -72,15 +73,17 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       );
     }
 
-    const options: Array<{ id: string; label: string }> = [];
-    const walk = (parentId: string | null, depth: number) => {
+    // depth drives the indentation while browsing; trail names the ancestors so
+    // a filtered result still says which branch it belongs to.
+    const options: TreeOption[] = [];
+    const walk = (parentId: string | null, depth: number, trail: string[]) => {
       for (const c of childrenOf.get(parentId) || []) {
         if (c._id === category?._id) continue; // and, with it, its whole subtree
-        options.push({ id: c._id, label: `${"— ".repeat(depth)}${c.name}` });
-        walk(c._id, depth + 1);
+        options.push({ id: c._id, name: c.name, depth, trail });
+        walk(c._id, depth + 1, [...trail, c.name]);
       }
     };
-    walk(null, 0);
+    walk(null, 0, []);
     return options;
   }, [parentCategories, category?._id]);
 
@@ -260,20 +263,16 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t("categories.parentCategory")}
               </label>
-              <select
+              <SearchableTreeSelect
+                options={parentOptions}
                 value={formData.parentCategory}
-                onChange={(e) =>
-                  setFormData({ ...formData, parentCategory: e.target.value })
+                onChange={(id) =>
+                  setFormData({ ...formData, parentCategory: id })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">{t("categories.noParent")}</option>
-                {parentOptions.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                emptyLabel={t("categories.noParent")}
+                searchLabel={t("categories.searchParent")}
+                noResultsLabel={t("categories.noMatchingCategory")}
+              />
             </div>
           </div>
 

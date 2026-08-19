@@ -296,6 +296,21 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
         )}
       </div>
 
+      {/* Category — first, and open by default.
+          It is the filter every other one narrows from, and the catalogue is
+          deep enough that scrolling past three toggles to reach it made the
+          panel read as though it filtered by sale badges. */}
+      <div className="border-b border-[var(--border)]">
+        <SectionToggle section="category" title={t("Categories")} count={filters.categories.length} />
+        {expandedSections.category && (
+          <div className="px-3 pb-3">
+            <div className="space-y-0.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+              {categoryTree.map((node) => renderCategoryNode(node, 0))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Quick Toggles */}
       <div className="p-3 border-b border-[var(--border)] space-y-2">
         <label className="flex items-center gap-3 cursor-pointer group">
@@ -343,18 +358,6 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
             📦 {t("In Stock Only")}
           </span>
         </label>
-      </div>
-
-      {/* Category */}
-      <div className="border-b border-[var(--border)]">
-        <SectionToggle section="category" title={t("Category")} count={filters.categories.length} />
-        {expandedSections.category && (
-          <div className="px-3 pb-3">
-            <div className="space-y-0.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
-              {categoryTree.map((node) => renderCategoryNode(node, 0))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Brand */}

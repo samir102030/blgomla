@@ -5,6 +5,7 @@ import {
   markAsRead,
   markAllAsRead,
   deleteNotification,
+  deleteAllNotifications,
   getUnreadCount,
   getAllNotifications,
   createNotification,
@@ -31,6 +32,11 @@ router.put("/preferences", updateMyNotificationPreferences);
 router.get("/push-key", getPushKey);
 router.post("/push-subscribe", subscribePush);
 router.delete("/push-subscribe", unsubscribePush);
+
+// Clear the whole list. Above "/:id" for the same reason the push routes are:
+// a literal that sits below the wildcard is never reached — the wildcard takes
+// "all" as an id and the request dies as a malformed ObjectId.
+router.delete("/all", deleteAllNotifications);
 
 router.get("/:id", getNotificationById);
 router.put("/:id/read", markAsRead);

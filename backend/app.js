@@ -148,6 +148,21 @@ app.get("/api/v1/health", async (req, res) => {
   });
 });
 
+// The limiter guards a public deployment from one address hammering the API.
+// A developer on their own machine is not that: opening the admin dashboard
+// walks categories, brands, products, orders and settings in a single render,
+// and an afternoon of editing passes 1000 requests well inside the 15-minute
+// window. Past it every call answers 429, which the UI shows as a spinner that
+// never resolves — so the limit reads as "the app is broken" rather than as
+// "slow down", and the last thing touched gets the blame.
+//
+// Hence: skipped for loopback outside production. Deployed behaviour is
+// unchanged — NODE_ENV is "production" there — and the test is on the resolved
+// req.ip (trust proxy is set to 1 above), so a forwarded public address can
+// never present itself as localhost.
+const isLoopback = (ip) =>
+  ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
@@ -157,6 +172,7 @@ const limiter = rateLimit({
   // Shared across instances — the default memory store gives every warm
   // Lambda its own counter, which makes the limit meaningless on Vercel.
   store: new MongoRateLimitStore({ prefix: "rl:global" }),
+  skip: (req) => process.env.NODE_ENV !== "production" && isLoopback(req.ip),
 });
 app.use(limiter);
 

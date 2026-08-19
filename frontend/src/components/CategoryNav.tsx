@@ -1,7 +1,12 @@
-import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 import { useCategoryStore } from "../stores/category.store";
 import type { Category } from "../types/category.type";
 import i18n from "../lib/i18n";
@@ -9,16 +14,17 @@ import i18n from "../lib/i18n";
 /**
  * The storefront's category menu, three levels deep.
  *
- * The catalogue has always been a tree — `parentCategory` puts no limit on how
- * deep it goes — but the menu only ever showed two levels of it, and showed
- * them as one flyout listing every root down the side. A third level had
- * nowhere to appear, so the only way to reach one was a link nothing rendered.
+ * The catalogue is a tree — `parentCategory` puts no limit on how deep it goes
+ * — and the menu shows all of it, but not by laying it out flat. Putting every
+ * root in the bar worked while there were nine of them; at a hundred and
+ * seventy the bar became a twelve-row wall of names above every page, which is
+ * a table of contents where a navigation bar should be.
  *
- * The shape here is the one shoppers already know from every parts catalogue:
- * roots sit in the bar itself, hovering one drops its children below it, and a
- * child that has children of its own opens them to the side. Depth is not
- * assumed anywhere — a root with no children is a plain link, and a branch that
- * stops at two levels simply never shows the side panel.
+ * So the whole catalogue lives behind one control at the start of the row, and
+ * opens as a panel: roots down the left, the children of whichever root the
+ * pointer is on to the right, and a search box for the case a shopper already
+ * knows the word they want. Depth is not assumed anywhere — a root with no
+ * children is a plain link, and a branch that stops early simply shows less.
  */
 
 export interface CategoryNode extends Category {
@@ -81,201 +87,245 @@ const useCategoryMenuTree = (): CategoryNode[] => {
   }, [categories]);
 };
 
-/**
- * Keep a panel inside the viewport.
- *
- * A dropdown under the last category in the bar, and every side flyout opening
- * off one, runs out of room on the right — in Arabic, on the left. Measured
- * once per open, before paint, so the panel is never seen in the wrong place.
- */
-const useEdgeFlip = (open: boolean) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [flipped, setFlipped] = useState(false);
-
-  useLayoutEffect(() => {
-    if (!open) {
-      setFlipped(false);
-      return;
-    }
-    const el = ref.current;
-    if (!el) return;
-    const box = el.getBoundingClientRect();
-    const rtl = document.dir === "rtl" || i18n.language === "ar";
-    setFlipped(rtl ? box.left < 8 : box.right > window.innerWidth - 8);
-    // Deliberately keyed on `open` alone: re-measuring after the flip would
-    // read the flipped position and could send the panel back again.
-  }, [open]);
-
-  return { ref, flipped };
-};
-
 /* ────────────────────────────── desktop ────────────────────────────── */
 
-interface BranchProps {
-  node: CategoryNode;
-  onPick: (id: string) => void;
-}
+/** Every node in the tree, flattened, with the trail that leads to it. */
+const flattenWithTrail = (
+  nodes: CategoryNode[],
+  trail: string[] = []
+): Array<{ node: CategoryNode; trail: string[] }> =>
+  nodes.flatMap((node) => [
+    { node, trail },
+    ...flattenWithTrail(node.children, [...trail, labelOf(node)]),
+  ]);
 
 /**
- * A panel may scroll only when nothing opens out of its side.
+ * The catalogue behind one button at the start of the nav row.
  *
- * `overflow-y: auto` clips on both axes, so a scrollable list swallows the
- * flyouts its own rows open — the third level was rendered, hoverable and
- * invisible. Where a level below exists the panel is left unscrolled and grows
- * instead; where it doesn't, a long list still scrolls as before.
+ * The left column scrolls and the right one does not: the roots are the long
+ * list, and a department's own children are few enough to lay out at once. The
+ * right column is a grid rather than a single file so a department of twenty
+ * subcategories reads across instead of running off the bottom of the window.
  */
-const panelScrollClass = (node: CategoryNode) =>
-  node.children.some((child) => child.children.length > 0)
-    ? ""
-    : // Generous, because a real department runs to a dozen-plus entries and
-      // the menu should show them rather than hand back a scrollbar. Still
-      // bounded, so it can never run past the bottom of the window.
-      "max-h-[75vh] overflow-y-auto";
-
-/** One row inside a dropdown, plus its own children off to the side. */
-const DropdownRow: React.FC<BranchProps> = ({ node, onPick }) => {
-  const [open, setOpen] = useState(false);
-  const { ref, flipped } = useEdgeFlip(open);
-  const hasChildren = node.children.length > 0;
-
-  return (
-    <li
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button
-        type="button"
-        onClick={() => onPick(node._id)}
-        onFocus={() => setOpen(true)}
-        aria-haspopup={hasChildren || undefined}
-        aria-expanded={hasChildren ? open : undefined}
-        className="w-full flex items-center gap-2 text-start px-4 py-2.5 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] hover:text-[var(--brand-primary)] transition-colors"
-      >
-        {/* Wraps rather than truncates: "Uninterruptible Power Supply (UPS)"
-            cut off at the panel edge is not a category anyone can identify. */}
-        <span className="flex-1 leading-snug">{labelOf(node)}</span>
-        {hasChildren && (
-          <ChevronRightIcon className="w-3.5 h-3.5 shrink-0 text-[var(--text-subtle)] rtl:rotate-180" />
-        )}
-      </button>
-
-      {hasChildren && open && (
-        <div
-          ref={ref}
-          className={`absolute top-0 w-60 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 ${panelScrollClass(
-            node
-          )} ${
-            flipped
-              ? "ltr:right-full rtl:left-full"
-              : "ltr:left-full rtl:right-full"
-          }`}
-        >
-          <ul>
-            {node.children.map((child) => (
-              <DropdownRow key={child._id} node={child} onPick={onPick} />
-            ))}
-          </ul>
-        </div>
-      )}
-    </li>
-  );
-};
-
-/** One root category in the bar, with its dropdown. */
-const RootItem: React.FC<BranchProps> = ({ node, onPick }) => {
+export const CategoryMenuButton: React.FC = () => {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const { ref, flipped } = useEdgeFlip(open);
-  const hasChildren = node.children.length > 0;
-
-  const pick = (id: string) => {
-    setOpen(false);
-    onPick(id);
-  };
-
-  return (
-    <li
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") setOpen(false);
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => (hasChildren ? setOpen((v) => !v) : pick(node._id))}
-        aria-haspopup={hasChildren || undefined}
-        aria-expanded={hasChildren ? open : undefined}
-        // Tight on purpose: nine departments is an ordinary catalogue, and
-        // they should sit on one line at a laptop width rather than wrapping
-        // into a second row that reads as a mistake.
-        className={`flex items-center gap-1 py-3 px-2 text-[13px] font-semibold uppercase whitespace-nowrap text-[var(--brand-nav-text)] border-b-2 transition-all ${
-          open
-            ? "opacity-100 border-[var(--brand-primary)]"
-            : "opacity-70 hover:opacity-100 border-transparent"
-        }`}
-      >
-        {labelOf(node)}
-        {hasChildren && (
-          <ChevronDownIcon
-            className={`w-3.5 h-3.5 shrink-0 transition-transform ${
-              open ? "rotate-180" : ""
-            }`}
-          />
-        )}
-      </button>
-
-      {hasChildren && open && (
-        <div
-          ref={ref}
-          className={`absolute top-full w-64 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-b-xl shadow-2xl z-50 animate-fadeInDown ${panelScrollClass(
-            node
-          )} ${flipped ? "ltr:right-0 rtl:left-0" : "ltr:left-0 rtl:right-0"}`}
-        >
-          <ul>
-            {node.children.map((child) => (
-              <DropdownRow key={child._id} node={child} onPick={pick} />
-            ))}
-          </ul>
-          {/* The root itself is a place products can be filed, and the only
-              way to see the branch whole. Its own row makes that reachable
-              instead of leaving the parent clickable by luck. */}
-          <div className="mt-1 pt-1.5 border-t border-[var(--border)]">
-            <button
-              type="button"
-              onClick={() => pick(node._id)}
-              className="w-full text-start px-4 py-2 text-xs font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]"
-            >
-              {t("See all")} {labelOf(node)} →
-            </button>
-          </div>
-        </div>
-      )}
-    </li>
-  );
-};
-
-/**
- * The root categories, as `<li>` items for the desktop nav bar.
- *
- * Rendered as a fragment so they sit in the same row as the rest of the nav
- * links rather than in a bar of their own.
- */
-export const CategoryNavItems: React.FC = () => {
   const tree = useCategoryMenuTree();
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  const goToCategory = (id: string) =>
+  const goToCategory = (id: string) => {
+    setOpen(false);
+    setQuery("");
     navigate(`/products?category=${encodeURIComponent(id)}`);
+  };
+
+  // Close on a click anywhere else, and on Escape. Without the outside click a
+  // panel this large can be left covering the page with no obvious way back.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (open) searchRef.current?.focus();
+    else setActiveId(null);
+  }, [open]);
+
+  const active = useMemo(
+    () => tree.find((n) => n._id === activeId) ?? tree[0] ?? null,
+    [tree, activeId]
+  );
+
+  /**
+   * Search runs over the whole tree, not just the roots.
+   *
+   * With this many categories the name a shopper wants is usually a
+   * subcategory, and making them find its parent first to discover it is the
+   * problem the panel exists to solve.
+   */
+  const matches = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    if (!term) return null;
+    return flattenWithTrail(tree)
+      .filter(({ node }) =>
+        `${node.name} ${node.nameAr || ""}`.toLowerCase().includes(term)
+      )
+      .slice(0, 60);
+  }, [tree, query]);
+
+  const totalRoots = tree.length;
 
   return (
-    <>
-      {tree.map((node) => (
-        <RootItem key={node._id} node={node} onPick={goToCategory} />
-      ))}
-    </>
+    <div className="relative" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="true"
+        className={`flex items-center gap-2 py-2.5 px-3 text-[13px] font-semibold uppercase whitespace-nowrap text-[var(--brand-nav-text)] rounded-lg transition-all ${
+          open ? "opacity-100 bg-[var(--brand-primary)]/15" : "opacity-80 hover:opacity-100 hover:bg-[var(--brand-primary)]/10"
+        }`}
+      >
+        <Bars3Icon className="w-4 h-4 shrink-0" />
+        {t("All Categories")}
+        <ChevronDownIcon
+          className={`w-3.5 h-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute top-full mt-1 ltr:left-0 rtl:right-0 z-50 w-[min(56rem,calc(100vw-2rem))] bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl overflow-hidden animate-fadeInDown">
+          {/* Search */}
+          <div className="p-2.5 border-b border-[var(--border)]">
+            <div className="relative">
+              <MagnifyingGlassIcon className="w-4 h-4 absolute top-1/2 -translate-y-1/2 ltr:left-3 rtl:right-3 text-[var(--text-subtle)] pointer-events-none" />
+              <input
+                ref={searchRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("Search categories")}
+                className="w-full ltr:pl-9 ltr:pr-3 rtl:pr-9 rtl:pl-3 py-2 text-sm rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/30"
+              />
+            </div>
+          </div>
+
+          {matches ? (
+            <div className="max-h-[70vh] overflow-y-auto p-2">
+              {matches.length === 0 ? (
+                <p className="px-3 py-6 text-sm text-[var(--text-muted)] text-center">
+                  {t("No categories")}
+                </p>
+              ) : (
+                <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
+                  {matches.map(({ node, trail }) => (
+                    <li key={node._id}>
+                      <button
+                        type="button"
+                        onClick={() => goToCategory(node._id)}
+                        className="w-full text-start px-3 py-2 rounded-lg hover:bg-[var(--surface-2)] transition-colors"
+                      >
+                        <span className="block text-sm text-[var(--text)] leading-snug">
+                          {labelOf(node)}
+                        </span>
+                        {trail.length > 0 && (
+                          <span className="block text-[11px] text-[var(--text-subtle)] truncate">
+                            {trail.join(" › ")}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <div className="flex">
+              {/* Roots */}
+              <ul className="w-60 shrink-0 max-h-[70vh] overflow-y-auto py-1.5 border-e border-[var(--border)]">
+                {tree.map((node) => {
+                  const isActive = active?._id === node._id;
+                  return (
+                    <li key={node._id}>
+                      <button
+                        type="button"
+                        onMouseEnter={() => setActiveId(node._id)}
+                        onFocus={() => setActiveId(node._id)}
+                        onClick={() => goToCategory(node._id)}
+                        className={`w-full flex items-center gap-2 text-start px-3 py-2 text-sm transition-colors ${
+                          isActive
+                            ? "bg-[var(--surface-2)] text-[var(--brand-primary)] font-medium"
+                            : "text-[var(--text)] hover:bg-[var(--surface-2)]"
+                        }`}
+                      >
+                        <span className="flex-1 leading-snug">{labelOf(node)}</span>
+                        {node.children.length > 0 && (
+                          <ChevronRightIcon className="w-3.5 h-3.5 shrink-0 text-[var(--text-subtle)] rtl:rotate-180" />
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Children of the root under the pointer */}
+              <div className="flex-1 min-w-0 max-h-[70vh] overflow-y-auto p-3">
+                {active && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => goToCategory(active._id)}
+                      className="text-sm font-semibold text-[var(--brand-primary)] hover:underline mb-2"
+                    >
+                      {t("See all")} {labelOf(active)} →
+                    </button>
+                    {active.children.length === 0 ? (
+                      <p className="text-xs text-[var(--text-subtle)]">
+                        {t("No subcategories")}
+                      </p>
+                    ) : (
+                      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-0.5">
+                        {active.children.map((child) => (
+                          <li key={child._id} className="min-w-0">
+                            <button
+                              type="button"
+                              onClick={() => goToCategory(child._id)}
+                              className="w-full text-start px-2 py-1.5 text-sm text-[var(--text)] rounded-lg hover:bg-[var(--surface-2)] hover:text-[var(--brand-primary)] transition-colors leading-snug"
+                            >
+                              {labelOf(child)}
+                            </button>
+                            {/* The third level, listed under its parent rather
+                                than behind another hover — one more flyout on a
+                                panel this wide is a target that is easy to slip
+                                off and hard to get back to. */}
+                            {child.children.length > 0 && (
+                              <ul className="mb-1.5 ms-2 ps-2 border-s border-[var(--border)]">
+                                {child.children.map((grand) => (
+                                  <li key={grand._id}>
+                                    <button
+                                      type="button"
+                                      onClick={() => goToCategory(grand._id)}
+                                      className="w-full text-start px-2 py-1 text-xs text-[var(--text-muted)] rounded hover:bg-[var(--surface-2)] hover:text-[var(--brand-primary)] transition-colors leading-snug"
+                                    >
+                                      {labelOf(grand)}
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {totalRoots > 0 && (
+            <div className="px-3 py-1.5 border-t border-[var(--border)] text-[11px] text-[var(--text-subtle)]">
+              {t("{{count}} departments", { count: totalRoots })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

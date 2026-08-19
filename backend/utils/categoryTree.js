@@ -57,6 +57,35 @@ export const collectCategoryIds = async (categoryId) => {
 };
 
 /**
+ * The same walk for several categories at once, de-duplicated.
+ *
+ * Calling `collectCategoryIds` in a loop would re-read the whole category
+ * collection per selected id; a filter panel where ticking ten boxes fires ten
+ * full reads is the kind of thing that only shows up once the catalogue grows.
+ * One index, one walk per root, one set out.
+ *
+ * @returns {Promise<string[]>} every selected id plus every descendant.
+ */
+export const collectCategoryIdsMany = async (categoryIds = []) => {
+  const roots = (Array.isArray(categoryIds) ? categoryIds : [categoryIds])
+    .filter(Boolean)
+    .map(String);
+  if (!roots.length) return [];
+
+  const childrenOf = await loadChildIndex();
+  const seen = new Set();
+  const queue = [...roots];
+
+  while (queue.length) {
+    const id = queue.shift();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    queue.push(...(childrenOf.get(id) || []));
+  }
+  return [...seen];
+};
+
+/**
  * The value to assign to a `category` query field.
  *
  * Leaves stay a plain equality match — no `$in` wrapper around a single id, so

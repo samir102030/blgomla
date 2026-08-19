@@ -3,6 +3,7 @@ import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { findByName } from "../utils/findOrCreateByName.js";
 import { categoryFilterValue, wouldCreateCycle } from "../utils/categoryTree.js";
+import { logAudit } from "../utils/audit.js";
 
 // Create Category
 export const createCategory = controllerWrapper(
@@ -271,6 +272,103 @@ export const setCategoryToProduct = controllerWrapper(
     if (!product)
       return res.status(404).json({ success: false, message: "Product not found" });
     res.status(200).json({ success: true, product });
+  }
+);
+
+/**
+ * Move every product in one category into another.
+ *
+ * The single-product version above is fine for a correction; re-filing a
+ * department after an import is thousands of rows, and doing that through the
+ * table means ticking twenty at a time across sixty pages.
+ *
+ * `includeSubcategories` decides what "in this category" means. Off, it is the
+ * products filed directly on it. On, it is the whole branch — which is what
+ * "move Laptops into LAPTOP" almost always means, because in a tree three
+ * levels deep the products hang off the leaves and the parent itself holds
+ * none.
+ *
+ * `dryRun` returns the count without writing, so the confirmation an operator
+ * sees is the number that is about to move rather than an estimate.
+ */
+export const moveCategoryProducts = controllerWrapper(
+  "moveCategoryProducts",
+  async (req, res) => {
+    const { categoryId } = req.params;
+    const { targetCategoryId, includeSubcategories = true, dryRun = false } = req.body;
+
+    if (!targetCategoryId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "targetCategoryId is required" });
+    }
+    if (String(targetCategoryId) === String(categoryId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Source and target are the same category" });
+    }
+
+    const [source, target] = await Promise.all([
+      Category.findById(categoryId),
+      Category.findById(targetCategoryId),
+    ]);
+    if (!source)
+      return res.status(404).json({ success: false, message: "Source category not found" });
+    if (!target || target.deleted)
+      return res.status(404).json({ success: false, message: "Target category not found" });
+
+    // Moving a branch into its own descendant would file products under a
+    // category that is about to be beneath them; refuse rather than tangle it.
+    if (includeSubcategories && (await wouldCreateCycle(categoryId, targetCategoryId))) {
+      return res.status(400).json({
+        success: false,
+        message: "Target sits inside the source category",
+      });
+    }
+
+    const filter = {
+      category: includeSubcategories
+        ? await categoryFilterValue(categoryId)
+        : source._id,
+      deleted: { $ne: true },
+    };
+
+    const count = await Product.countDocuments(filter);
+    if (dryRun) {
+      return res.status(200).json({
+        success: true,
+        dryRun: true,
+        count,
+        source: { _id: source._id, name: source.name },
+        target: { _id: target._id, name: target.name },
+      });
+    }
+
+    const result = await Product.updateMany(filter, { $set: { category: target._id } });
+
+    logAudit(
+      req,
+      "category.productsMoved",
+      "category",
+      source._id,
+      {
+        sourceName: source.name,
+        target: String(target._id),
+        targetName: target.name,
+        includeSubcategories,
+        matched: result.matchedCount,
+        moved: result.modifiedCount,
+      },
+      { category: "admin" }
+    );
+
+    res.status(200).json({
+      success: true,
+      moved: result.modifiedCount,
+      matched: result.matchedCount,
+      source: { _id: source._id, name: source.name },
+      target: { _id: target._id, name: target.name },
+    });
   }
 );
 

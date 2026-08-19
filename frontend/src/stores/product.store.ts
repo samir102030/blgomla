@@ -433,6 +433,18 @@ export const useProductStore = create<ProductStore>()(
     {
       name: "product-store",
       skipHydration: true,
+      /**
+       * Only the cart is worth keeping across a reload.
+       *
+       * Without this the whole store went to localStorage, product lists
+       * included. A listing page holds hundreds of products with their images,
+       * descriptions and attributes, which overruns the 5MB quota — and a
+       * failed `setItem` throws inside the persist middleware, so the write
+       * that was meant to be a convenience took the page down with it and the
+       * listing rendered "No products found". Lists are fetched on mount
+       * anyway; they were never something a reload needed to restore.
+       */
+      partialize: (state) => ({ cart: state.cart }),
     }
   )
 );

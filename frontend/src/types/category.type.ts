@@ -5,7 +5,11 @@ export interface Category {
   description?: string;
   descriptionAr?: string;
   image?: string;
-  parentCategory?: string | Category; // ObjectId as string or populated Category
+  // ObjectId as string, or the populated Category. null is what a root actually
+  // carries — the model defaults the field to null and the API sends it back
+  // that way — and it is also how a move to the top level is requested, since
+  // undefined would be dropped from the JSON body and clear nothing.
+  parentCategory?: string | Category | null;
   subCategories?: Category[];
   productCount?: number;
   isActive: boolean;

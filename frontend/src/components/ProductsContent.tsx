@@ -49,6 +49,17 @@ const idOf = (field: any): string => {
 // `parentCategory`, so matching it against a raw id found nothing and picking
 // a department showed only the products filed directly on it — which, in a
 // tree three levels deep, is usually none.
+/**
+ * How many products the page pulls for one set of filters.
+ *
+ * The list is paged in the browser, so this is the ceiling on a single filtered
+ * result set rather than on the catalogue. Sized above the largest department
+ * (Laptops, around twelve hundred) so an unfiltered department still arrives
+ * whole; `truncatedTotal` below reports the case where a set exceeds it instead
+ * of letting the page quietly show a prefix.
+ */
+const FETCH_LIMIT = 2000;
+
 const collectCategoryIds = (
   rootId: string,
   all: any[],
@@ -123,6 +134,7 @@ const ProductsContent: React.FC = () => {
 
   const fetchProducts = useProductStore((state) => state.fetchProducts);
   const products = useProductStore((state) => state.products);
+  const paginated = useProductStore((state) => state.paginated);
   const loading = useProductStore((state) => state.loading);
   const error = useProductStore((state) => state.error);
 
@@ -135,8 +147,52 @@ const ProductsContent: React.FC = () => {
   useEffect(() => {
     fetchBrands();
     fetchCategories();
-    fetchProducts({ isActive: true, deleted: false, approvalStatus: "approved", limit: 1000 });
-  }, [fetchBrands, fetchCategories, fetchProducts]);
+  }, [fetchBrands, fetchCategories]);
+
+  /**
+   * The filters the server can apply, as query params.
+   *
+   * Categories go over as the ids that were ticked, not expanded: the endpoint
+   * walks each one's subtree itself, so sending the branch would be the same
+   * query in a much longer URL.
+   */
+  const serverParams = useMemo(() => {
+    const params: Record<string, string | boolean | number> = {
+      isActive: true,
+      deleted: false,
+      approvalStatus: "approved",
+      limit: FETCH_LIMIT,
+    };
+    if (filters.categories.length) {
+      params.categoryIds = filters.categories.join(",");
+    }
+    if (filters.brands.length) params.brandIds = filters.brands.join(",");
+    if (filters.minPrice) params.minPrice = filters.minPrice;
+    if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+    if (filters.search.trim()) params.search = filters.search.trim();
+    return params;
+  }, [filters]);
+
+  const serverKey = JSON.stringify(serverParams);
+
+  /**
+   * Narrow on the server, refine in the page.
+   *
+   * This used to ask for a flat thousand products and do the whole job in the
+   * browser. That held while the catalogue was small; at six thousand products
+   * it meant the page only ever held the newest sixth of them, so picking a
+   * department showed whatever slice of it happened to be recent — Motherboard
+   * has a hundred and fifty-eight products and one of them was reachable.
+   *
+   * The category, brand, price and search now go to the server, which cuts the
+   * result to something a page can hold; rating, the toggles and the
+   * attribute-level search still run below, over that narrowed set.
+   */
+  useEffect(() => {
+    fetchProducts(serverParams);
+    // serverParams is rebuilt per render; serverKey is its stable identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverKey, fetchProducts]);
 
   // Any change to the filters — from the sidebar or from the menu upstairs —
   // starts the results again from the first page.
@@ -212,7 +268,12 @@ const ProductsContent: React.FC = () => {
       if (term) {
         const haystack = [
           product.name,
+          // The Arabic fields are searched on the server too. Leaving them out
+          // here would drop a product the server matched by its Arabic name the
+          // moment this pass re-checked the same term.
+          product.nameAr,
           product.description,
+          product.descriptionAr,
           typeof product.brand === "object" ? product.brand?.name : brandNameById.get(idOf(product.brand)),
           typeof product.category === "object" ? product.category?.name : categoryNameById.get(idOf(product.category)),
           ...(product.tags || []),
@@ -258,6 +319,16 @@ const ProductsContent: React.FC = () => {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, totalProducts);
   const currentProducts = sortedProducts.slice(startIndex, endIndex);
+
+  /**
+   * How many matches the fetch left behind, if any.
+   *
+   * Say it rather than show a prefix: a filter that silently returns its first
+   * two thousand of three thousand matches looks exactly like a filter that
+   * found two thousand, and the difference is invisible from the page.
+   */
+  const truncatedTotal =
+    paginated && paginated.total > products.length ? paginated.total : 0;
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     write({ ...filters, ...newFilters }, sortBy);
@@ -393,6 +464,13 @@ const ProductsContent: React.FC = () => {
                       ? <>{t("Showing")} <span className="font-semibold text-[var(--text)]">{startIndex + 1}–{endIndex}</span> {t("of")} <span className="font-semibold text-[var(--text)]">{totalProducts}</span> {t("products")}</>
                       : <>{t("Showing")} <span className="font-semibold text-[var(--text)]">0</span> {t("of")} <span className="font-semibold text-[var(--text)]">0</span> {t("products")}</>
                     }
+                    {truncatedTotal > 0 && (
+                      <span className="ms-2 text-[var(--brand-accent)]">
+                        {t("Narrow the filters to reach all {{total}} matches.", {
+                          total: truncatedTotal.toLocaleString(),
+                        })}
+                      </span>
+                    )}
                   </span>
 
                   <div className="flex items-center gap-2">

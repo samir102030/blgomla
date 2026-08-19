@@ -145,12 +145,25 @@ export const validateUpdateAttribute = validate([
 ]);
 
 // Query Parameter Validations
+// Comma-separated ids from the multi-select filter panel. Rejecting the whole
+// request over one malformed id would blank the admin's list with a 400; the
+// controller ignores ids that match nothing, so the check is on shape only.
+const isIdList = (value) =>
+  String(value)
+    .split(",")
+    .filter(Boolean)
+    .every((id) => /^[a-f\d]{24}$/i.test(id.trim()));
+
 export const validateGetAllProducts = validate([
   query("page").optional().isInt({ min: 1 }),
   query("limit").optional().isInt({ min: 1 }),
   query("search").optional().trim(),
   query("categoryId").optional().isMongoId(),
   query("brandId").optional().isMongoId(),
+  query("categoryIds").optional().custom(isIdList).withMessage("Invalid category ids"),
+  query("brandIds").optional().custom(isIdList).withMessage("Invalid brand ids"),
+  query("stockStatus").optional().isIn(["in_stock", "low_stock", "out_of_stock"]),
+  query("productStatus").optional().isIn(["active", "inactive"]),
   query("minPrice").optional().isFloat({ min: 0 }),
   query("maxPrice").optional().isFloat({ min: 0 }),
   query("rating").optional().isInt({ min: 1, max: 5 }),

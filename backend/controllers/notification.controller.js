@@ -135,6 +135,41 @@ export const deleteNotification = controllerWrapper(
   }
 );
 
+/**
+ * Clear the caller's notification list in one call.
+ *
+ * The client has offered this since the list was built and had nothing to call:
+ * DELETE /notifications/all fell through to the "/:id" route below it, which
+ * read "all" as an id and answered 400 "Invalid _id". So the button reported a
+ * failure on a list it had every right to clear.
+ *
+ * Soft-deleted like the single-notification case, and scoped to req.user, so
+ * "all" can only ever mean the caller's own. The route must stay above "/:id"
+ * or the shadowing comes straight back.
+ */
+export const deleteAllNotifications = controllerWrapper(
+  "deleteAllNotifications",
+  async (req, res) => {
+    const userId = req.user._id;
+
+    const result = await Notification.updateMany(
+      { user: userId, deleted: false },
+      { deleted: true }
+    );
+
+    // No bulk "deleted" event exists, and inventing one would need a matching
+    // client handler. Mark-all-read is the event the list already refetches on,
+    // so open tabs converge on the emptied list.
+    emitNotificationMarkAllRead(userId);
+
+    res.status(200).json({
+      success: true,
+      message: `${result.modifiedCount} notifications deleted`,
+      deletedCount: result.modifiedCount,
+    });
+  }
+);
+
 // Get unread notification count
 export const getUnreadCount = controllerWrapper(
   "getUnreadCount",

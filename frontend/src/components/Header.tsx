@@ -20,7 +20,7 @@ import { useBrandStore } from "../stores/brand.store";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
-import { CategoryAccordion, CategoryNavItems } from "./CategoryNav";
+import { CategoryAccordion, CategoryMenuButton } from "./CategoryNav";
 import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
 import Logo, { BRAND } from "./Logo";
@@ -743,35 +743,29 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Desktop Navigation */}
+      {/* Desktop Navigation
+          One row. The catalogue used to get a second one of its own, which held
+          up while there were nine departments and became a wall of names at a
+          hundred and seventy — so it now sits behind a single control at the
+          start of this row and opens as a panel. */}
       <nav className="hidden lg:block border-t border-[var(--border)] bg-[var(--brand-nav)]">
         <div className="shell">
-          <ul className="flex flex-row flex-wrap items-center gap-x-1">
-            {navigationItems
-              .filter((item) => item.condition === undefined || item.condition)
-              .map((item) => (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    className={`block py-3 px-4 text-sm font-medium text-[var(--brand-nav-text)] opacity-70 hover:opacity-100 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all ${item.className || ""}`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-          </ul>
-        </div>
-
-        {/* The catalogue gets a row of its own. Sharing one with the standing
-            links meant the two sets wrapped into each other as categories were
-            added, and which row a name landed on read as an accident. Wrapping
-            rather than scrolling sideways, so nothing falls off the end. */}
-        <div className="border-t border-[var(--border)]/60">
-          <div className="shell">
-            <ul className="flex flex-row flex-wrap items-center">
-              {/* Roots sit in the bar itself; each drops its subcategories
-                  below it, and those open a third level to the side. */}
-              <CategoryNavItems />
+          <div className="flex flex-row items-center gap-x-1">
+            <CategoryMenuButton />
+            <span className="w-px h-5 bg-[var(--border)] mx-1.5" aria-hidden="true" />
+            <ul className="flex flex-row flex-wrap items-center gap-x-1">
+              {navigationItems
+                .filter((item) => item.condition === undefined || item.condition)
+                .map((item) => (
+                  <li key={item.path}>
+                    <Link
+                      to={item.path}
+                      className={`block py-3 px-4 text-sm font-medium text-[var(--brand-nav-text)] opacity-70 hover:opacity-100 hover:bg-[var(--brand-primary)]/10 rounded-lg transition-all ${item.className || ""}`}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
             </ul>
           </div>
         </div>
