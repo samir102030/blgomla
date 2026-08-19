@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useStudentStore, type Faculty } from "../../../stores/student.store";
-import { Card, Field, PageHead, btnGhost, inputCls, useLocalName } from "./shared";
+import { Card, Field, PageHead, btnPrimary, inputCls, useLocalName } from "./shared";
 
 /**
  * Who is allowed in.
@@ -52,12 +52,25 @@ const StudentsFacultiesPage: React.FC = () => {
         )}
       />
 
-      <Card title={t("Add a faculty")}>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-3 items-end">
-          <Field label={t("Domain")}>
+      <Card
+        title={t("Add a faculty")}
+        description={t("Add as many as you like — one row per faculty domain.")}
+      >
+        <form
+          className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-3 items-end"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onAdd();
+          }}
+        >
+          {/* The domain is the only required field, and it is the one that was
+              being left empty while the button sat dead with nothing saying
+              why. Marked, and Enter submits, so the form answers either way. */}
+          <Field label={`${t("Domain")} *`}>
             <input
               className={inputCls}
               dir="ltr"
+              required
               placeholder="eng.cu.edu.eg"
               value={draft.domain}
               onChange={(e) => setDraft({ ...draft, domain: e.target.value })}
@@ -88,10 +101,17 @@ const StudentsFacultiesPage: React.FC = () => {
               <option value="other">{t("Other")}</option>
             </select>
           </Field>
-          <button onClick={onAdd} disabled={saving || !draft.domain.trim()} className={`${btnGhost} mb-4`}>
-            {t("Add domain")}
+          {/* The primary style, not the ghost one: greyed out and outlined, it
+              read as a fourth disabled text field rather than the button that
+              finishes the form. */}
+          <button
+            type="submit"
+            disabled={saving || !draft.domain.trim()}
+            className={`${btnPrimary} mb-4`}
+          >
+            {saving ? t("Saving…") : t("Add domain")}
           </button>
-        </div>
+        </form>
       </Card>
 
       <Card title={`${t("Accepting")} · ${domains.filter((d) => d.active).length} / ${domains.length}`}>
