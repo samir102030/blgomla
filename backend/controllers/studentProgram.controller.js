@@ -439,9 +439,36 @@ export const updateProgramSettings = controllerWrapper("updateProgramSettings", 
   return ok(res, { program, message: "Programme settings saved." });
 });
 
+/**
+ * The bare mail domain, out of whatever somebody had on their clipboard.
+ *
+ * What gets pasted into this box is a student's address, or the faculty's
+ * website, or the domain with the `@` still attached — all naming the same
+ * thing. Taking only the bare form and refusing the rest is a validator that
+ * is right about the format and useless about the intent: the person is
+ * looking at `student@eng.cu.edu.eg` being called invalid while `eng.cu.edu.eg`
+ * sits inside it.
+ */
+export const normalizeMailDomain = (raw) => {
+  let value = String(raw || "").trim().toLowerCase();
+  if (!value) return "";
+
+  // An address: the domain is what follows the last @. Also covers a bare
+  // leading @.
+  const at = value.lastIndexOf("@");
+  if (at !== -1) value = value.slice(at + 1);
+
+  // A URL: drop the scheme, then anything from the first / or : onwards.
+  value = value.replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
+  value = value.split("/")[0].split("?")[0].split(":")[0];
+
+  // A fully-qualified name ends in a dot; a fat-fingered one may too.
+  return value.replace(/^\.+|\.+$/g, "").trim();
+};
+
 export const addProgramDomain = controllerWrapper("addProgramDomain", async (req, res) => {
   const program = await StudentProgram.load();
-  const domain = String(req.body?.domain || "").toLowerCase().trim().replace(/^@/, "");
+  const domain = normalizeMailDomain(req.body?.domain);
   if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
     return fail(res, 400, "Enter a valid mail domain, for example eng.cu.edu.eg");
   }

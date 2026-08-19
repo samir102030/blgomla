@@ -28,7 +28,11 @@ const StudentsLayout: React.FC = () => {
     if (!error) return;
     // The server writes these in English; `t` swaps in the Arabic where there
     // is one and returns the text untouched where there is not.
-    toast.error(t(error));
+    //
+    // A fixed id so a second attempt replaces the first message rather than
+    // stacking another copy of it — the same refusal twice reads as two
+    // separate problems.
+    toast.error(t(error), { id: "student-module-error" });
     clearError();
   }, [error, clearError, t]);
 

@@ -13,6 +13,25 @@ import { Card, Field, PageHead, btnPrimary, inputCls, useLocalName } from "./sha
  * to be a deliberate visit.
  */
 
+/**
+ * The bare mail domain out of whatever was pasted — an address, a URL, the
+ * domain with its `@` still on.
+ *
+ * The server does this too, and is the one that counts. This copy exists so
+ * the field can show what it is about to save *before* anybody presses the
+ * button: a preview that says "eng.cu.edu.eg" under a pasted student address
+ * answers the question the refusal message only raises.
+ */
+const bareDomain = (raw: string) => {
+  let value = raw.trim().toLowerCase();
+  if (!value) return "";
+  const at = value.lastIndexOf("@");
+  if (at !== -1) value = value.slice(at + 1);
+  value = value.replace(/^[a-z][a-z0-9+.-]*:\/\//, "");
+  value = value.split("/")[0].split("?")[0].split(":")[0];
+  return value.replace(/^\.+|\.+$/g, "").trim();
+};
+
 const StudentsFacultiesPage: React.FC = () => {
   const { t } = useTranslation();
   const localUniversity = useLocalName();
@@ -37,6 +56,8 @@ const StudentsFacultiesPage: React.FC = () => {
       setDraft({ domain: "", university: "", universityAr: "", faculty: "engineering" });
     }
   };
+
+  const cleaned = bareDomain(draft.domain);
 
   const facultyLabel = (f: Faculty) =>
     f === "computer_science" ? t("Computer science") : f === "other" ? t("Other") : t("Engineering");
@@ -66,7 +87,14 @@ const StudentsFacultiesPage: React.FC = () => {
           {/* The domain is the only required field, and it is the one that was
               being left empty while the button sat dead with nothing saying
               why. Marked, and Enter submits, so the form answers either way. */}
-          <Field label={`${t("Domain")} *`}>
+          <Field
+            label={`${t("Domain")} *`}
+            hint={
+              cleaned && cleaned !== draft.domain.trim().toLowerCase()
+                ? `${t("Will be saved as")} ${cleaned}`
+                : t("A whole address or a link works — the domain is taken out of it.")
+            }
+          >
             <input
               className={inputCls}
               dir="ltr"
