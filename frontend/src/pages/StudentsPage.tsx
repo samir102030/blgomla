@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SEO from "../components/SEO";
+import ProductCard from "../components/ProductCard";
+import { getBaseUnitPrice } from "../lib/pricing";
 import { useUserStore } from "../stores/user.store";
 import { useStudentStore } from "../stores/student.store";
 import "../styles/students.css";
@@ -35,12 +37,22 @@ const StudentsPage: React.FC = () => {
   const fetchMyProfile = useStudentStore((s) => s.fetchMyProfile);
   const apply = useStudentStore((s) => s.apply);
 
+  const catalogue = useStudentStore((s) => s.catalogue);
+  const catalogueLoading = useStudentStore((s) => s.catalogueLoading);
+  const fetchCatalogue = useStudentStore((s) => s.fetchCatalogue);
+
   const [email, setEmail] = useState("");
   const [feedback, setFeedback] = useState<{ ok: boolean; message: string } | null>(null);
+  const [department, setDepartment] = useState("");
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchPublicProgram();
   }, [fetchPublicProgram]);
+
+  useEffect(() => {
+    fetchCatalogue({ page, limit: 12, ...(department ? { category: department } : {}) });
+  }, [fetchCatalogue, page, department]);
 
   useEffect(() => {
     if (user) fetchMyProfile();
@@ -327,6 +339,103 @@ const StudentsPage: React.FC = () => {
                     )}
                   </div>
                 </aside>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── The shelf ──
+            Shown whether or not the programme is open, and whether or not the
+            visitor has joined. What is in the section is the reason to join
+            it; hiding it until after they have proved enrolment asks people to
+            commit to something they cannot see. */}
+        <section className="st-shop">
+          <div className="st-width">
+            <div className="st-shop-head">
+              <div>
+                <span className="st-kicker">{t("The student shelf")}</span>
+                <h2>{t("What the discount is for")}</h2>
+              </div>
+              {!!catalogue?.total && (
+                <span className="st-mono st-shop-count">
+                  {catalogue.total} {t("products")}
+                </span>
+              )}
+            </div>
+
+            {!!catalogue?.departments?.length && (
+              <div className="st-depts">
+                <button
+                  type="button"
+                  className={department === "" ? "st-active" : ""}
+                  onClick={() => {
+                    setDepartment("");
+                    setPage(1);
+                  }}
+                >
+                  {t("Everything")}
+                </button>
+                {catalogue.departments.map((d) => (
+                  <button
+                    key={d._id}
+                    type="button"
+                    className={department === d._id ? "st-active" : ""}
+                    onClick={() => {
+                      setDepartment(d._id);
+                      setPage(1);
+                    }}
+                  >
+                    {isRtl && d.nameAr ? d.nameAr : d.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {catalogueLoading && !catalogue?.products?.length && (
+              <p className="st-shop-note">{t("Loading products…")}</p>
+            )}
+
+            {!catalogueLoading && !catalogue?.products?.length && (
+              <p className="st-shop-note">{t("Nothing is on the shelf yet.")}</p>
+            )}
+
+            <div className="st-grid">
+              {(catalogue?.products || []).map((product: any, index: number) => (
+                <ProductCard
+                  key={product._id}
+                  id={product._id}
+                  name={product.name}
+                  nameAr={product.nameAr}
+                  price={getBaseUnitPrice(product)}
+                  currency="EGP"
+                  originalPrice={product.saleActive ? product.price : undefined}
+                  image={product.images?.[0]?.url || "/placeholder.png"}
+                  rating={product.rating}
+                  isOnSale={product.saleActive}
+                  salePercentage={product.salePercentage}
+                  isInStock={product.stock > 0}
+                  stock={product.stock}
+                  soldCount={product.soldCount}
+                  priority={index === 0}
+                />
+              ))}
+            </div>
+
+            {(catalogue?.pages ?? 1) > 1 && (
+              <div className="st-pager">
+                <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+                  {t("Previous")}
+                </button>
+                <span className="st-mono">
+                  {page} / {catalogue?.pages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= (catalogue?.pages ?? 1)}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  {t("Next")}
+                </button>
               </div>
             )}
           </div>
