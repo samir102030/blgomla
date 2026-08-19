@@ -29,6 +29,13 @@ interface NavigationItem {
   path: string;
   condition?: boolean;
   className?: string;
+  /**
+   * Kept out of the desktop row but still in the mobile drawer. The drawer is
+   * the only navigation a phone has, so a link that moved into the header's
+   * action strip — where there is no room for it below `lg` — has to stay
+   * reachable here or it disappears on the smaller half of the traffic.
+   */
+  mobileOnly?: boolean;
 }
 
 interface SuggestProduct {
@@ -339,11 +346,18 @@ const Header: React.FC = () => {
     // for it, so the page gets a link of its own rather than losing its way in.
     { label: t("Brands"), path: "/brands" },
     { label: t("Contact"), path: "/contact" },
+    // Lives beside Login in the action strip on desktop; this entry is what
+    // keeps it in the mobile drawer, where that strip has no room for it.
     {
       label: t("Become a Vendor"),
       path: "/vendor-registration",
       condition: showBecomeVendor,
+      mobileOnly: true,
     },
+    // Last of the links a visitor sees. The label matches the page title, so
+    // the link and the place it lands read as the same thing. The dashboard
+    // link below is staff-only and stays pinned at the end of the row.
+    { label: t("Student programme"), path: "/students" },
     {
       label: t("Admin Dashboard"),
       path: "/dashboard",
@@ -611,6 +625,19 @@ const Header: React.FC = () => {
               {t("Request a quote")}
             </Link>
 
+            {/* Selling on the shop is a different job from shopping on it, so
+                it sits with the account controls rather than in the row of
+                places to browse. */}
+            {showBecomeVendor && (
+              <Link
+                to="/vendor-registration"
+                className="mn-icon-btn hidden lg:inline-flex whitespace-nowrap"
+                style={{ width: "auto", padding: "0 12px" }}
+              >
+                <span className="font-medium">{t("Become a Vendor")}</span>
+              </Link>
+            )}
+
             {!user && (
               <Link
                 to="/login"
@@ -757,7 +784,7 @@ const Header: React.FC = () => {
             <AllCategoriesMenu />
 
             {navigationItems
-              .filter((item) => item.condition === undefined || item.condition)
+              .filter((item) => (item.condition === undefined || item.condition) && !item.mobileOnly)
               .map((item) => (
                 <li key={item.path}>
                   <Link
