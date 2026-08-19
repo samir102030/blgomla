@@ -102,9 +102,21 @@ const BrandLogos: React.FC = () => {
     };
   }, [brandItems.length]);
 
+  /**
+   * How fast a logo crosses the screen, in pixels a second.
+   *
+   * The strip used to run for a fixed 30 seconds however far it had to travel,
+   * which meant its speed was set by the size of the brand list: 46,800px of
+   * track over 30s is 1,560px a second, roughly thirty times readable, and it
+   * got worse with every brand added. Fixing the speed instead of the duration
+   * makes the strip read the same whether the shop carries twelve brands or
+   * six hundred.
+   */
+  const MARQUEE_SPEED = 50;
+
   const animationStyle: React.CSSProperties | undefined = cycleDistance
     ? {
-        animation: "brand-marquee 30s linear infinite",
+        animation: `brand-marquee ${Math.round(cycleDistance / MARQUEE_SPEED)}s linear infinite`,
         ["--track-distance" as any]: `${cycleDistance}px`,
       }
     : undefined;
