@@ -182,87 +182,6 @@ const DropdownRow: React.FC<BranchProps> = ({ node, onPick }) => {
   );
 };
 
-/** One root category in the bar, with its dropdown. */
-const RootItem: React.FC<BranchProps> = ({ node, onPick }) => {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const { ref, flipped } = useEdgeFlip(open);
-  const hasChildren = node.children.length > 0;
-
-  const pick = (id: string) => {
-    setOpen(false);
-    onPick(id);
-  };
-
-  return (
-    <li
-      className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onKeyDown={(e) => {
-        if (e.key === "Escape") setOpen(false);
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => (hasChildren ? setOpen((v) => !v) : pick(node._id))}
-        aria-haspopup={hasChildren || undefined}
-        aria-expanded={hasChildren ? open : undefined}
-        // Tight on purpose: nine departments is an ordinary catalogue, and
-        // they should sit on one line at a laptop width rather than wrapping
-        // into a second row that reads as a mistake.
-        className={`flex items-center gap-1 py-3 px-2 text-[13px] font-semibold uppercase whitespace-nowrap text-[var(--brand-nav-text)] border-b-2 transition-all ${
-          open
-            ? "opacity-100 border-[var(--brand-primary)]"
-            : "opacity-70 hover:opacity-100 border-transparent"
-        }`}
-      >
-        {labelOf(node)}
-        {hasChildren && (
-          <ChevronDownIcon
-            className={`w-3.5 h-3.5 shrink-0 transition-transform ${
-              open ? "rotate-180" : ""
-            }`}
-          />
-        )}
-      </button>
-
-      {hasChildren && open && (
-        <div
-          ref={ref}
-          className={`absolute top-full w-64 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-b-xl shadow-2xl z-50 animate-fadeInDown ${panelScrollClass(
-            node
-          )} ${flipped ? "ltr:right-0 rtl:left-0" : "ltr:left-0 rtl:right-0"}`}
-        >
-          <ul>
-            {node.children.map((child) => (
-              <DropdownRow key={child._id} node={child} onPick={pick} />
-            ))}
-          </ul>
-          {/* The root itself is a place products can be filed, and the only
-              way to see the branch whole. Its own row makes that reachable
-              instead of leaving the parent clickable by luck. */}
-          <div className="mt-1 pt-1.5 border-t border-[var(--border)]">
-            <button
-              type="button"
-              onClick={() => pick(node._id)}
-              className="w-full text-start px-4 py-2 text-xs font-medium text-[var(--brand-primary)] hover:text-[var(--brand-primary-hover)]"
-            >
-              {t("See all")} {labelOf(node)} →
-            </button>
-          </div>
-        </div>
-      )}
-    </li>
-  );
-};
-
-/**
- * The root categories, as `<li>` items for the desktop nav bar.
- *
- * Rendered as a fragment so they sit in the same row as the rest of the nav
- * links rather than in a bar of their own.
- */
 /**
  * The whole catalogue behind one button in the nav row.
  *
@@ -327,22 +246,6 @@ export const AllCategoriesMenu: React.FC = () => {
         </div>
       )}
     </li>
-  );
-};
-
-export const CategoryNavItems: React.FC = () => {
-  const tree = useCategoryMenuTree();
-  const navigate = useNavigate();
-
-  const goToCategory = (id: string) =>
-    navigate(`/products?category=${encodeURIComponent(id)}`);
-
-  return (
-    <>
-      {tree.map((node) => (
-        <RootItem key={node._id} node={node} onPick={goToCategory} />
-      ))}
-    </>
   );
 };
 
