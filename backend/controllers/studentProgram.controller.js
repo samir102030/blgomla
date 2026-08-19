@@ -1,0 +1,513 @@
+import crypto from "crypto";
+import mongoose from "mongoose";
+
+import Coupon from "../models/coupon.model.js";
+import StudentProfile from "../models/studentProfile.model.js";
+import StudentProgram from "../models/studentProgram.model.js";
+import User from "../models/user.model.js";
+import { collectCategoryIds } from "../utils/categoryTree.js";
+import { controllerWrapper } from "../utils/wrappers.js";
+import { sendStudentDiscountEmail, sendStudentVerificationEmail } from "../utils/email.js";
+
+/**
+ * The university student programme.
+ *
+ * A student proves enrolment by holding a faculty mailbox, and is paid in a
+ * personal coupon rather than a price rule: the coupon machinery already knows
+ * how to cap a discount, scope it to categories, and count redemptions, and
+ * reusing it means the student discount shows up in the same reports as every
+ * other discount instead of in a private ledger nobody reconciles.
+ *
+ * Two things here are deliberate and worth not "simplifying" later:
+ *
+ * 1. The scope is stored on the coupon as the full expansion of every
+ *    descendant category, not as the handful of roots an admin picked. The
+ *    coupon matcher compares category ids exactly, so a code scoped to
+ *    "Computers & Laptops" would otherwise match nothing at all, because every
+ *    product is filed in a leaf.
+ *
+ * 2. The verification link is proof of nothing but the mailbox. It therefore
+ *    does not require a session — the student may well open it in a browser
+ *    that has never logged in — and the account it belongs to is read from the
+ *    profile the token was minted for.
+ */
+
+const VERIFY_TTL_MINUTES = 60;
+const RESEND_COOLDOWN_MS = 2 * 60 * 1000;
+
+/* ─────────────────────────── helpers ─────────────────────────── */
+
+const ok = (res, data, status = 200) => res.status(status).json({ success: true, ...data });
+const fail = (res, status, message) => res.status(status).json({ success: false, message });
+
+/** `STU-XXXXXX`, checked against the global unique index before it is used. */
+const mintCouponCode = async () => {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = `STU-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
+    if (!(await Coupon.exists({ code }))) return code;
+  }
+  throw new Error("Could not allocate a unique student coupon code");
+};
+
+/**
+ * Every category the discount reaches, roots expanded to their whole subtree.
+ * An empty scope in the settings means the whole catalogue, which the coupon
+ * model already represents as an empty `applicableCategories`.
+ */
+const expandScope = async (categoryIds = []) => {
+  const expanded = new Set();
+  for (const id of categoryIds) {
+    for (const descendant of await collectCategoryIds(id)) expanded.add(String(descendant));
+  }
+  return [...expanded];
+};
+
+/** Human-readable terms for the email, built from the live settings. */
+const describeTerms = (program, expiresAt) => {
+  const d = program.discount || {};
+  const amount = d.type === "fixed" ? `${d.value} EGP` : `${d.value}%`;
+  const amountAr = d.type === "fixed" ? `${d.value} جنيه` : `${d.value}%`;
+  const cap = d.maximumDiscount ? ` (up to ${d.maximumDiscount} EGP)` : "";
+  const capAr = d.maximumDiscount ? ` (بحد أقصى ${d.maximumDiscount} جنيه)` : "";
+  const min = d.minimumPurchase ? ` on orders over ${d.minimumPurchase} EGP` : "";
+  const minAr = d.minimumPurchase ? ` على الطلبات فوق ${d.minimumPurchase} جنيه` : "";
+  const uses = program.renewal?.usesPerPeriod ?? 1;
+  const days = program.renewal?.periodDays ?? 30;
+  const scoped = (program.categories || []).length > 0;
+
+  return {
+    discountEN: `${amount} off${cap}${min}.`,
+    discountAR: `خصم ${amountAr}${capAr}${minAr}.`,
+    scopeEN: scoped ? "Valid on the electronics selected for the programme." : "Valid across the store.",
+    scopeAR: scoped ? "صالح على الإلكترونيات المختارة للبرنامج." : "صالح على كل المتجر.",
+    renewalEN: `Good for ${uses} order${uses === 1 ? "" : "s"} every ${days} days — it renews, it does not burn out.`,
+    renewalAR: `يكفي ${uses} ${uses === 1 ? "طلب" : "طلبات"} كل ${days} يوم — يتجدد ولا ينتهي بعد أول استخدام.`,
+    expiryEN: expiresAt ? `Membership runs until ${new Date(expiresAt).toISOString().slice(0, 10)}.` : "",
+    expiryAR: expiresAt ? `العضوية سارية حتى ${new Date(expiresAt).toISOString().slice(0, 10)}.` : "",
+  };
+};
+
+/**
+ * Roll the renewal window forward when it has elapsed.
+ *
+ * The coupon holds the hard limit for one window; this is what makes the next
+ * window start. Called wherever a student's status is read, so the code is
+ * already usable by the time they look at it, and again from the cron for the
+ * students who never open the page.
+ */
+export const rollRenewalWindow = async (profile, program) => {
+  if (!profile?.coupon || profile.status !== "verified") return false;
+  const days = program?.renewal?.periodDays ?? 30;
+  const started = profile.periodStartedAt ? new Date(profile.periodStartedAt).getTime() : 0;
+  if (!started || Date.now() - started < days * 24 * 60 * 60 * 1000) return false;
+
+  await Coupon.findByIdAndUpdate(profile.coupon, { usageCount: 0 });
+  profile.periodStartedAt = new Date();
+  await profile.save();
+  return true;
+};
+
+/** Create — or refresh — the personal coupon behind a verified membership. */
+const issueCoupon = async (profile, program) => {
+  const categories = await expandScope(program.categories);
+  const expiresAt =
+    profile.expiresAt || new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
+
+  const shape = {
+    description: `Student programme — ${profile.university || profile.domain}`,
+    discountType: program.discount?.type ?? "percentage",
+    discountValue: program.discount?.value ?? 0,
+    minimumPurchase: program.discount?.minimumPurchase ?? 0,
+    maximumDiscount: program.discount?.maximumDiscount,
+    startDate: new Date(),
+    endDate: expiresAt,
+    usageLimit: program.renewal?.usesPerPeriod ?? 1,
+    usageCount: 0,
+    isActive: true,
+    // Never advertised on the storefront strip — it belongs to one person.
+    isPublic: false,
+    applicableCategories: categories,
+    applicableProducts: [],
+    assignedUser: profile.user,
+    createdBy: profile.user,
+  };
+
+  if (profile.coupon) {
+    const updated = await Coupon.findByIdAndUpdate(profile.coupon, shape, { new: true });
+    if (updated) return updated;
+  }
+
+  return Coupon.create({ ...shape, code: await mintCouponCode() });
+};
+
+/* ─────────────────────── student-facing ─────────────────────── */
+
+/** What the portal page needs before anyone has signed in. */
+export const getPublicProgram = controllerWrapper("getPublicProgram", async (req, res) => {
+  const program = await StudentProgram.load();
+  const universities = [
+    ...new Map(
+      program.domains
+        .filter((d) => d.active)
+        .map((d) => [d.university || d.domain, { university: d.university, universityAr: d.universityAr, faculty: d.faculty }]),
+    ).values(),
+  ];
+
+  return ok(res, {
+    program: {
+      enabled: program.enabled,
+      discount: program.discount,
+      renewal: program.renewal,
+      membershipDays: program.membershipDays,
+      categories: program.categories,
+      universities,
+      // The domains themselves are public: a student needs to know whether
+      // their faculty address will be accepted before they type it in.
+      domains: program.domains.filter((d) => d.active).map((d) => d.domain),
+    },
+  });
+});
+
+/** The signed-in student's own membership. */
+export const getMyStudentProfile = controllerWrapper("getMyStudentProfile", async (req, res) => {
+  const program = await StudentProgram.load();
+  const profile = await StudentProfile.findOne({ user: req.user._id }).populate("coupon");
+  if (!profile) return ok(res, { profile: null });
+
+  await rollRenewalWindow(profile, program);
+  const coupon = profile.coupon ? await Coupon.findById(profile.coupon._id || profile.coupon) : null;
+
+  return ok(res, {
+    profile: {
+      _id: profile._id,
+      universityEmail: profile.universityEmail,
+      university: profile.university,
+      faculty: profile.faculty,
+      status: profile.status,
+      rejectionReason: profile.rejectionReason,
+      verifiedAt: profile.verifiedAt,
+      expiresAt: profile.expiresAt,
+      periodStartedAt: profile.periodStartedAt,
+      code: coupon && profile.status === "verified" ? coupon.code : null,
+      usesLeft: coupon ? Math.max(0, (coupon.usageLimit ?? 0) - (coupon.usageCount ?? 0)) : 0,
+      usesPerPeriod: program.renewal?.usesPerPeriod ?? 1,
+      periodDays: program.renewal?.periodDays ?? 30,
+    },
+  });
+});
+
+/**
+ * Apply with a university address.
+ *
+ * Re-applying is allowed and is the same call: a student who mistyped the
+ * address, or who moved faculty, should not be stuck with the first attempt.
+ */
+export const applyForStudentProgram = controllerWrapper("applyForStudentProgram", async (req, res) => {
+  const program = await StudentProgram.load();
+  if (!program.enabled) return fail(res, 403, "The student programme is not open at the moment.");
+
+  const universityEmail = String(req.body?.universityEmail || "").toLowerCase().trim();
+  if (!universityEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(universityEmail)) {
+    return fail(res, 400, "Enter a valid university email address.");
+  }
+
+  const match = program.matchDomain(universityEmail);
+  if (!match) {
+    return fail(
+      res,
+      422,
+      "That domain is not on the approved list. The programme is open to engineering and computer science faculty addresses.",
+    );
+  }
+
+  // One university address per person, and one person per university address.
+  const takenByOther = await StudentProfile.findOne({
+    universityEmail,
+    user: { $ne: req.user._id },
+  });
+  if (takenByOther) return fail(res, 409, "That university email is already registered to another account.");
+
+  let profile = await StudentProfile.findOne({ user: req.user._id });
+  if (profile && profile.status === "suspended") {
+    return fail(res, 403, "This membership is suspended. Contact support if you think that is a mistake.");
+  }
+
+  if (!profile) profile = new StudentProfile({ user: req.user._id, universityEmail });
+
+  if (
+    profile.status === "pending" &&
+    profile.verificationSentAt &&
+    Date.now() - new Date(profile.verificationSentAt).getTime() < RESEND_COOLDOWN_MS &&
+    profile.universityEmail === universityEmail
+  ) {
+    return fail(res, 429, "A confirmation link was just sent. Check the inbox, then try again in a couple of minutes.");
+  }
+
+  profile.universityEmail = universityEmail;
+  profile.domain = match.domain;
+  profile.university = match.university;
+  profile.faculty = match.faculty;
+  // Re-applying returns a verified member to pending only if the address
+  // actually changed; otherwise a stray click would cost them their code.
+  if (profile.status !== "verified" || profile.universityEmail !== universityEmail) {
+    profile.status = "pending";
+    profile.rejectionReason = undefined;
+  }
+
+  const token = profile.issueVerificationToken(VERIFY_TTL_MINUTES);
+  await profile.save();
+
+  await sendStudentVerificationEmail(req.user, profile, token, process.env.CLIENT_URL);
+
+  return ok(res, {
+    message: "Check your university inbox for the confirmation link.",
+    status: profile.status,
+  });
+});
+
+/**
+ * Confirm the mailbox and hand over the code.
+ *
+ * Deliberately unauthenticated: the token is the proof, and the link is opened
+ * from a university webmail that may be signed into nothing.
+ */
+export const verifyStudentEmail = controllerWrapper("verifyStudentEmail", async (req, res) => {
+  const token = String(req.body?.token || req.params?.token || "").trim();
+  if (!token) return fail(res, 400, "Missing confirmation token.");
+
+  const profile = await StudentProfile.findOne({
+    verificationTokenHash: StudentProfile.hashToken(token),
+    verificationTokenExpiresAt: { $gt: new Date() },
+  }).select("+verificationTokenHash");
+
+  if (!profile) return fail(res, 400, "This confirmation link is invalid or has expired. Request a new one.");
+  if (profile.status === "suspended" || profile.status === "rejected") {
+    return fail(res, 403, "This membership is not active.");
+  }
+
+  const program = await StudentProgram.load();
+  const user = await User.findById(profile.user);
+  if (!user) return fail(res, 404, "The account behind this application no longer exists.");
+
+  profile.status = "verified";
+  profile.verifiedAt = new Date();
+  profile.expiresAt = new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
+  profile.periodStartedAt = new Date();
+  profile.verificationTokenHash = undefined;
+  profile.verificationTokenExpiresAt = undefined;
+
+  const coupon = await issueCoupon(profile, program);
+  profile.coupon = coupon._id;
+  await profile.save();
+
+  await sendStudentDiscountEmail(user, profile, coupon, describeTerms(program, profile.expiresAt));
+
+  return ok(res, {
+    message: "Your university email is confirmed and your code is on its way.",
+    code: coupon.code,
+  });
+});
+
+/* ────────────────────────── admin side ────────────────────────── */
+
+export const getProgramSettings = controllerWrapper("getProgramSettings", async (req, res) => {
+  const program = await StudentProgram.load();
+  await program.populate("categories", "name nameAr slug");
+  return ok(res, { program });
+});
+
+export const updateProgramSettings = controllerWrapper("updateProgramSettings", async (req, res) => {
+  const program = await StudentProgram.load();
+  const { enabled, discount, renewal, categories, membershipDays } = req.body || {};
+
+  if (typeof enabled === "boolean") program.enabled = enabled;
+  if (discount && typeof discount === "object") {
+    if (discount.type) program.discount.type = discount.type;
+    if (discount.value !== undefined) program.discount.value = discount.value;
+    program.discount.maximumDiscount = discount.maximumDiscount ?? undefined;
+    if (discount.minimumPurchase !== undefined) program.discount.minimumPurchase = discount.minimumPurchase;
+  }
+  if (renewal && typeof renewal === "object") {
+    if (renewal.usesPerPeriod !== undefined) program.renewal.usesPerPeriod = renewal.usesPerPeriod;
+    if (renewal.periodDays !== undefined) program.renewal.periodDays = renewal.periodDays;
+  }
+  if (Array.isArray(categories)) {
+    program.categories = categories.filter((id) => mongoose.isValidObjectId(id));
+  }
+  if (membershipDays !== undefined) program.membershipDays = membershipDays;
+  program.updatedBy = req.user._id;
+
+  await program.save();
+  await program.populate("categories", "name nameAr slug");
+  return ok(res, { program, message: "Programme settings saved." });
+});
+
+export const addProgramDomain = controllerWrapper("addProgramDomain", async (req, res) => {
+  const program = await StudentProgram.load();
+  const domain = String(req.body?.domain || "").toLowerCase().trim().replace(/^@/, "");
+  if (!domain || !/^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain)) {
+    return fail(res, 400, "Enter a valid mail domain, for example eng.cu.edu.eg");
+  }
+  if (program.domains.some((d) => d.domain === domain)) {
+    return fail(res, 409, "That domain is already on the list.");
+  }
+
+  program.domains.push({
+    domain,
+    university: req.body?.university,
+    universityAr: req.body?.universityAr,
+    faculty: req.body?.faculty || "engineering",
+    active: req.body?.active !== false,
+  });
+  program.updatedBy = req.user._id;
+  await program.save();
+  return ok(res, { program, message: "Domain added." }, 201);
+});
+
+export const updateProgramDomain = controllerWrapper("updateProgramDomain", async (req, res) => {
+  const program = await StudentProgram.load();
+  const entry = program.domains.id(req.params.domainId);
+  if (!entry) return fail(res, 404, "Domain not found.");
+
+  if (req.body?.university !== undefined) entry.university = req.body.university;
+  if (req.body?.universityAr !== undefined) entry.universityAr = req.body.universityAr;
+  if (req.body?.faculty !== undefined) entry.faculty = req.body.faculty;
+  if (req.body?.active !== undefined) entry.active = !!req.body.active;
+  program.updatedBy = req.user._id;
+
+  await program.save();
+  return ok(res, { program, message: "Domain updated." });
+});
+
+/**
+ * Domains are removed, not soft-deleted: the membership record keeps its own
+ * copy of the university and domain, so history survives the list.
+ */
+export const removeProgramDomain = controllerWrapper("removeProgramDomain", async (req, res) => {
+  const program = await StudentProgram.load();
+  const entry = program.domains.id(req.params.domainId);
+  if (!entry) return fail(res, 404, "Domain not found.");
+  entry.deleteOne();
+  program.updatedBy = req.user._id;
+  await program.save();
+  return ok(res, { program, message: "Domain removed." });
+});
+
+export const listStudentMembers = controllerWrapper("listStudentMembers", async (req, res) => {
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+  const query = {};
+
+  if (req.query.status) query.status = req.query.status;
+  if (req.query.faculty) query.faculty = req.query.faculty;
+  if (req.query.search) {
+    const rx = new RegExp(String(req.query.search).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    query.$or = [{ universityEmail: rx }, { university: rx }, { domain: rx }];
+  }
+
+  const [members, total] = await Promise.all([
+    StudentProfile.find(query)
+      .populate("user", "name email phoneNumber")
+      .populate("coupon", "code usageCount usageLimit isActive")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    StudentProfile.countDocuments(query),
+  ]);
+
+  return ok(res, { members, total, page, pages: Math.ceil(total / limit) || 1, limit });
+});
+
+/**
+ * Approve, reject, suspend, or restore a member.
+ *
+ * Suspending deactivates the coupon rather than deleting it, so a membership
+ * can be restored without the student having to learn a new code.
+ */
+export const updateStudentMember = controllerWrapper("updateStudentMember", async (req, res) => {
+  const { status, rejectionReason } = req.body || {};
+  const allowed = ["verified", "rejected", "suspended", "expired", "pending"];
+  if (!allowed.includes(status)) return fail(res, 400, "Unknown status.");
+
+  const profile = await StudentProfile.findById(req.params.id);
+  if (!profile) return fail(res, 404, "Member not found.");
+
+  const program = await StudentProgram.load();
+  const user = await User.findById(profile.user);
+
+  profile.status = status;
+  profile.rejectionReason = status === "rejected" ? rejectionReason : undefined;
+  profile.approvedBy = req.user._id;
+
+  if (status === "verified") {
+    profile.verifiedAt = profile.verifiedAt || new Date();
+    profile.expiresAt =
+      profile.expiresAt || new Date(Date.now() + (program.membershipDays ?? 365) * 24 * 60 * 60 * 1000);
+    profile.periodStartedAt = new Date();
+    const coupon = await issueCoupon(profile, program);
+    profile.coupon = coupon._id;
+    await profile.save();
+    if (user) await sendStudentDiscountEmail(user, profile, coupon, describeTerms(program, profile.expiresAt));
+    return ok(res, { message: "Member approved and code sent." });
+  }
+
+  if (profile.coupon) await Coupon.findByIdAndUpdate(profile.coupon, { isActive: false });
+  await profile.save();
+  return ok(res, { message: "Member updated." });
+});
+
+export const getStudentStats = controllerWrapper("getStudentStats", async (req, res) => {
+  const [byStatus, redeemed] = await Promise.all([
+    StudentProfile.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+    Coupon.aggregate([
+      { $match: { assignedUser: { $ne: null } } },
+      { $group: { _id: null, uses: { $sum: "$usageCount" }, codes: { $sum: 1 } } },
+    ]),
+  ]);
+
+  const counts = byStatus.reduce((acc, row) => ({ ...acc, [row._id]: row.count }), {});
+  return ok(res, {
+    stats: {
+      total: Object.values(counts).reduce((a, b) => a + b, 0),
+      pending: counts.pending || 0,
+      verified: counts.verified || 0,
+      rejected: counts.rejected || 0,
+      suspended: counts.suspended || 0,
+      expired: counts.expired || 0,
+      codesIssued: redeemed[0]?.codes || 0,
+      redemptions: redeemed[0]?.uses || 0,
+    },
+  });
+});
+
+/**
+ * Cron: roll every elapsed renewal window, and retire memberships that have
+ * run past their expiry. Students who never open the page are the reason this
+ * exists — the lazy roll in `getMyStudentProfile` only helps the ones who do.
+ */
+export const performStudentMaintenance = async () => {
+  const program = await StudentProgram.load();
+  const active = await StudentProfile.find({ status: "verified" });
+
+  let rolled = 0;
+  for (const profile of active) {
+    if (await rollRenewalWindow(profile, program)) rolled += 1;
+  }
+
+  const stale = await StudentProfile.find({
+    status: "verified",
+    expiresAt: { $lt: new Date() },
+  });
+  for (const profile of stale) {
+    profile.status = "expired";
+    await profile.save();
+    if (profile.coupon) await Coupon.findByIdAndUpdate(profile.coupon, { isActive: false });
+  }
+
+  return { rolled, expired: stale.length };
+};
+
+export const runStudentMaintenance = controllerWrapper("runStudentMaintenance", async (req, res) => {
+  return ok(res, await performStudentMaintenance());
+});

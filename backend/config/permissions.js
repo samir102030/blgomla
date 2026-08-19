@@ -198,6 +198,19 @@ export const PERMISSION_GROUPS = [
     ],
   },
   {
+    // The university student programme. Kept as its own resource rather than
+    // folded into `coupons`, because the people who should be able to admit a
+    // student and the people who should be able to mint a storewide discount
+    // are not the same people.
+    resource: "students",
+    label: "Student Programme",
+    actions: [
+      { key: "view", label: "View members and settings" },
+      { key: "manage", label: "Approve, suspend, and remove members" },
+      { key: "configure", label: "Edit domains, discount, and scope" },
+    ],
+  },
+  {
     resource: "account",
     label: "My Account",
     actions: [{ key: "manage", label: "Manage own profile" }],

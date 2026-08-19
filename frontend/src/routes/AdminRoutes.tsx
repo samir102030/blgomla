@@ -37,6 +37,7 @@ import AccurateSettingsPage from "../pages/admin/AccurateSettingsPage";
 import PayoutsPage from "../pages/admin/PayoutsPage";
 import AuditLogPage from "../pages/admin/AuditLogPage";
 import RolesAccessPage from "../pages/admin/RolesAccessPage";
+import StudentProgramPage from "../pages/admin/StudentProgramPage";
 import { RequirePermission } from "../components/Can";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
@@ -80,6 +81,14 @@ const AdminRoutes: React.FC = () => {
           }
         />
         <Route path="/coupons" element={<CouponsPage />} />
+        <Route
+          path="/students"
+          element={
+            <RequirePermission perm="students.view">
+              <StudentProgramPage />
+            </RequirePermission>
+          }
+        />
         <Route
           path="/attributes"
           element={

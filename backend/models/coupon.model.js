@@ -73,7 +73,27 @@ const couponSchema = new mongoose.Schema(
     store: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Store",
-      required: true,
+      // Every coupon belonged to a store until the student programme, which
+      // mints codes on behalf of the platform rather than any one seller.
+      // Required unless the coupon is addressed to a single person, which is
+      // the only way a platform-wide code is currently created.
+      required: function () {
+        return !this.assignedUser;
+      },
+    },
+    /**
+     * Addressed to one customer. A code with this set is refused for anyone
+     * else, in the cart preview and again when the order is charged.
+     *
+     * This is what makes a personal student code personal: without it, the
+     * first student to post their code in a group chat hands the discount to
+     * the whole faculty.
+     */
+    assignedUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

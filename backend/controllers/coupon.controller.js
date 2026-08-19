@@ -343,6 +343,17 @@ export const validateCoupon = controllerWrapper(
       });
     }
 
+    // A code addressed to one customer — a student programme code — is refused
+    // for anybody else. Same wording as an unknown code on purpose: telling a
+    // stranger that the code is real but belongs to someone else invites them
+    // to go looking for whose.
+    if (coupon.assignedUser && String(coupon.assignedUser) !== String(req.user?._id)) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid coupon code",
+      });
+    }
+
     // Check if coupon is valid
     if (!coupon.isValid) {
       let message = "Coupon is not valid";

@@ -34,6 +34,7 @@ import layoutRoutes from "./pageLayout.route.js";
 import paymobChannelRoutes from "./paymobChannel.route.js";
 import storefrontVisibilityRoutes from "./storefrontVisibility.route.js";
 import stockAlertRoutes from "./stockAlert.route.js";
+import studentProgramRoutes from "./studentProgram.route.js";
 
 const router = express.Router();
 
@@ -71,6 +72,7 @@ router.use("/layouts", layoutRoutes);
 router.use("/paymob-channels", paymobChannelRoutes);
 router.use("/storefront-visibility", storefrontVisibilityRoutes);
 router.use("/stock-alerts", stockAlertRoutes);
+router.use("/students", studentProgramRoutes);
 
 // ops module owns: /analytics, /audit-logs, /site-mode, /cron
 router.use("/", opsRoutes);

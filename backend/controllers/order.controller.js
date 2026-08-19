@@ -330,11 +330,26 @@ export const createOrder = controllerWrapper(
       if (couponCode) {
         const coupon = await Coupon.findOne({
           code: couponCode.toUpperCase(),
-          store: store,
           isActive: true,
+          // Either this store's own coupon, or a platform code that belongs to
+          // no store. The student programme mints the second kind; before it
+          // existed every coupon had a store and this filter was just `store`,
+          // which would have made a student code unfindable at checkout while
+          // still validating in the cart.
+          $or: [{ store }, { store: null }],
         }).session(session);
 
         if (!coupon) {
+          await session.abortTransaction();
+          return res.status(400).json({
+            success: false,
+            message: "Invalid coupon code",
+          });
+        }
+
+        // Personal codes are checked against the buyer here as well as in the
+        // cart preview: the preview is advice, this is the charge.
+        if (coupon.assignedUser && String(coupon.assignedUser) !== String(req.user._id)) {
           await session.abortTransaction();
           return res.status(400).json({
             success: false,

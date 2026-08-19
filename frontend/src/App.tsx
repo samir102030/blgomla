@@ -89,6 +89,8 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const BrandsPage = lazy(() => import("./pages/BrandsPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const DealsPage = lazy(() => import("./pages/DealsPage"));
+const StudentsPage = lazy(() => import("./pages/StudentsPage"));
+const StudentVerifyPage = lazy(() => import("./pages/StudentVerifyPage"));
 const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
 const LoginRegisterPage = lazy(() => import("./pages/LoginRegisterPage"));
@@ -166,6 +168,11 @@ function App() {
           <Route path="/brands" element={<BrandsPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/deals" element={<DealsPage />} />
+          {/* University student programme — a system inside the system. The verify
+
+              route takes no session: the link arrives in a faculty mailbox. */}
+          <Route path="/students" element={<StudentsPage />} />
+          <Route path="/students/verify/:token" element={<StudentVerifyPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/login" element={<LoginRegisterPage />} />

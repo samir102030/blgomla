@@ -10,6 +10,7 @@ import {
   sendStockAlertEmail,
 } from "../../utils/email.js";
 import { controllerWrapper } from "../../utils/wrappers.js";
+import { performStudentMaintenance } from "../../controllers/studentProgram.controller.js";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -271,4 +272,21 @@ export const runSaleScheduler = controllerWrapper(
       expired: expired.modifiedCount || 0,
     });
   }
+);
+
+/**
+ * Student programme upkeep: roll every renewal window that has elapsed and
+ * retire memberships past their expiry.
+ *
+ * The portal rolls a window lazily when a student opens it, which covers the
+ * students who visit. This covers the ones who do not — their code should be
+ * usable the morning it renews, not the next time they happen to look.
+ */
+export const runStudentProgramMaintenance = controllerWrapper(
+  "runStudentProgramMaintenance",
+  async (req, res) => {
+    if (rejectIfUnauthorized(req, res)) return;
+    const result = await performStudentMaintenance();
+    return res.json({ success: true, ...result });
+  },
 );

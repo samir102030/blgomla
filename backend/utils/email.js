@@ -764,4 +764,123 @@ export const sendAbandonedCartEmail = async (user, cartItems = [], stage = 1) =>
   });
 };
 
+/**
+ * University student programme — prove the address.
+ *
+ * Sent to the university mailbox, never to the account address: holding the
+ * faculty mailbox is the entire proof of enrolment, so the link has to arrive
+ * there and nowhere else.
+ */
+export const sendStudentVerificationEmail = async (user, profile, token, clientUrl) => {
+  const lang = pickLang(user?.lang || user?.locale);
+  const base = clientUrl || CLIENT_URL;
+  const link = `${base}/students/verify/${token}`;
+
+  const subjectMap = {
+    en: "Confirm your university email — Belgomla Students",
+    ar: "أكّد بريدك الجامعي — طلاب بلجملة",
+  };
+  const previewMap = {
+    en: "One click to confirm your faculty address and unlock your student discount.",
+    ar: "ضغطة واحدة لتأكيد بريد كليتك وتفعيل خصم الطلاب.",
+  };
+
+  const bodyEN = `
+    <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">Confirm your university email</h1>
+    <p class="text" style="margin:0 0 14px;">${greeting("en", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">You asked to join the Belgomla student programme with <strong>${profile.universityEmail}</strong>. Confirm the address to unlock your personal discount code on electronics.</p>
+    ${ctaButton(link, "Confirm my email")}
+    <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">Button not working? Paste this link into your browser:</p>
+    <p style="margin:0 0 14px;word-break:break-all;font-family:'SFMono-Regular',Menlo,Monaco,Consolas,monospace;font-size:12px;color:${T.orange};">${link}</p>
+    ${noticeBlock("warning", "This link is valid for 1 hour. If you did not ask to join, you can ignore this email — nothing will happen to your account.")}
+  `;
+
+  const bodyAR = `
+    <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">أكّد بريدك الجامعي</h1>
+    <p class="text" style="margin:0 0 14px;">${greeting("ar", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">طلبت الانضمام لبرنامج طلاب بلجملة باستخدام <strong>${profile.universityEmail}</strong>. أكّد البريد لتحصل على كود الخصم الشخصي على الإلكترونيات.</p>
+    ${ctaButton(link, "تأكيد البريد")}
+    <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">لا يعمل الزر؟ انسخ هذا الرابط إلى المتصفح:</p>
+    <p style="margin:0 0 14px;word-break:break-all;font-family:'SFMono-Regular',Menlo,Monaco,Consolas,monospace;font-size:12px;color:${T.orange};direction:ltr;">${link}</p>
+    ${noticeBlock("warning", "صلاحية الرابط ساعة واحدة. إن لم تطلب الانضمام تجاهل الرسالة — لن يحدث أي تغيير في حسابك.")}
+  `;
+
+  const html = renderEmailLayout({
+    lang,
+    previewText: previewMap[lang],
+    body: lang === "ar" ? bodyAR : bodyEN,
+  });
+
+  const text = lang === "ar"
+    ? `أكّد بريدك الجامعي:\n${link}\nالصلاحية: ساعة واحدة.`
+    : `Confirm your university email:\n${link}\nLink valid for 1 hour.`;
+
+  return sendEmail({ to: profile.universityEmail, subject: subjectMap[lang], html, text });
+};
+
+/**
+ * University student programme — deliver the code.
+ *
+ * `terms` is prose the caller formats from the live programme settings rather
+ * than anything hard-coded here, so an admin who changes the discount does not
+ * leave this email describing the old one.
+ */
+export const sendStudentDiscountEmail = async (user, profile, coupon, terms = {}) => {
+  const lang = pickLang(user?.lang || user?.locale);
+  const shopLink = `${CLIENT_URL}/students`;
+
+  const subjectMap = {
+    en: "Your Belgomla student discount code",
+    ar: "كود خصم الطلاب الخاص بك",
+  };
+  const previewMap = {
+    en: `Your personal code ${coupon.code} is ready.`,
+    ar: `كودك الشخصي ${coupon.code} جاهز.`,
+  };
+
+  const line = (v) => (v ? `<li style="margin:0 0 6px;">${v}</li>` : "");
+
+  const bodyEN = `
+    <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">Your student code is ready</h1>
+    <p class="text" style="margin:0 0 14px;">${greeting("en", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">Your faculty address is confirmed. This code is yours alone — it is tied to your account and will not work for anyone else.</p>
+    ${codeBox(coupon.code)}
+    <ul class="text" style="margin:0 0 18px;padding-inline-start:18px;font-size:14px;">
+      ${line(terms.discountEN)}
+      ${line(terms.scopeEN)}
+      ${line(terms.renewalEN)}
+      ${line(terms.expiryEN)}
+    </ul>
+    ${ctaButton(shopLink, "Shop the student store")}
+    ${noticeBlock("warning", "Keep the code to yourself. It is checked against your account at checkout, so a shared code simply fails for the other person.")}
+  `;
+
+  const bodyAR = `
+    <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">كودك الطلابي جاهز</h1>
+    <p class="text" style="margin:0 0 14px;">${greeting("ar", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">تم تأكيد بريد كليتك. الكود ده ليك وحدك — مربوط بحسابك ولن يعمل مع أي شخص آخر.</p>
+    ${codeBox(coupon.code)}
+    <ul class="text" style="margin:0 0 18px;padding-inline-start:18px;font-size:14px;">
+      ${line(terms.discountAR)}
+      ${line(terms.scopeAR)}
+      ${line(terms.renewalAR)}
+      ${line(terms.expiryAR)}
+    </ul>
+    ${ctaButton(shopLink, "تسوّق متجر الطلاب")}
+    ${noticeBlock("warning", "احتفظ بالكود لنفسك. يتم التحقق منه مقابل حسابك عند الدفع، فالكود المُشارَك لا يعمل مع غيرك.")}
+  `;
+
+  const html = renderEmailLayout({
+    lang,
+    previewText: previewMap[lang],
+    body: lang === "ar" ? bodyAR : bodyEN,
+  });
+
+  const text = lang === "ar"
+    ? `كود خصم الطلاب: ${coupon.code}\n${shopLink}`
+    : `Your student discount code: ${coupon.code}\n${shopLink}`;
+
+  return sendEmail({ to: profile.universityEmail, subject: subjectMap[lang], html, text });
+};
+
 export default sendEmail;

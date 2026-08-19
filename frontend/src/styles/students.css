@@ -1,0 +1,152 @@
+/* ══════════════════════════════════════════════════════════════════════
+   STUDENT PROGRAMME — a system inside the system
+   ──────────────────────────────────────────────────────────────────────
+   Scoped under `.st-scope` for the same reason the design-package styles
+   are scoped: this area is meant to look like its own thing, and none of
+   it may leak into the storefront or the dashboard.
+
+   The direction is the storefront's own — brutalist-technical: an
+   engineering grid, square corners, monospace for anything a machine
+   produced (codes, counts, dates), and the display face carrying the
+   headline. The one thing a student should remember is the code panel,
+   so it is the only element on the page allowed to be loud.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.st-scope {
+  --st-ink: #07090d;
+  --st-panel: #0e131c;
+  --st-line: rgba(174, 194, 224, .16);
+  --st-rule: rgba(174, 194, 224, .08);
+  --st-text: #e8eef8;
+  --st-muted: #8ea0b8;
+  --st-orange: #ff5b00;
+  --st-blue: #248dff;
+  --st-ease: cubic-bezier(.2, .9, .1, 1);
+  background: var(--st-ink);
+  color: var(--st-text);
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+
+.st-width { width: min(1180px, calc(100% - 40px)); margin-inline: auto; }
+.st-mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+/* ── Masthead ── */
+.st-head { position: relative; padding: 74px 0 62px; border-bottom: 1px solid var(--st-line); overflow: hidden; }
+.st-head::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    repeating-linear-gradient(to right, var(--st-rule) 0 1px, transparent 1px 88px),
+    repeating-linear-gradient(to bottom, var(--st-rule) 0 1px, transparent 1px 88px);
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+.st-head > * { position: relative; }
+
+.st-kicker {
+  display: inline-flex; align-items: center; gap: 10px; margin-bottom: 18px;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--st-orange);
+}
+html[dir="rtl"] .st-kicker { letter-spacing: .04em; text-transform: none; font-size: 11px; }
+.st-kicker::before { content: ""; width: 30px; height: 1px; background: var(--st-orange); }
+
+.st-title {
+  margin: 0; max-width: 18ch;
+  font-family: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif;
+  font-size: clamp(32px, 4.4vw, 62px); line-height: 1.14; letter-spacing: -.02em; font-weight: 700;
+}
+html[dir="rtl"] .st-title { letter-spacing: 0; line-height: 1.3; max-width: 20ch; }
+.st-title span { color: var(--st-orange); }
+.st-lede { margin: 18px 0 0; max-width: 62ch; color: var(--st-muted); font-size: 15px; line-height: 1.9; }
+
+/* ── Terms strip: the offer, stated as figures ── */
+.st-terms { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--st-line); margin-top: 38px; }
+.st-term { padding: 18px 20px; border-inline-end: 1px solid var(--st-line); }
+.st-term:last-child { border-inline-end: 0; }
+.st-term b { display: block; font-size: clamp(22px, 2.4vw, 32px); font-weight: 600; letter-spacing: -.03em; }
+.st-term span { display: block; margin-top: 6px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--st-muted); }
+html[dir="rtl"] .st-term span { letter-spacing: .02em; text-transform: none; font-size: 11px; }
+
+/* ── Body panels ── */
+.st-body { padding: 56px 0 84px; }
+.st-panel { border: 1px solid var(--st-line); background: var(--st-panel); padding: clamp(22px, 3vw, 38px); }
+.st-panel + .st-panel { margin-top: 18px; }
+.st-panel h2 { margin: 0 0 8px; font-family: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif; font-size: 22px; font-weight: 700; }
+.st-panel p { margin: 0 0 18px; color: var(--st-muted); font-size: 14px; line-height: 1.85; }
+
+.st-grid2 { display: grid; grid-template-columns: 1.25fr .75fr; gap: 18px; align-items: start; }
+
+/* ── Form ── */
+.st-field { display: block; margin-bottom: 14px; }
+.st-field span { display: block; margin-bottom: 8px; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--st-muted); }
+html[dir="rtl"] .st-field span { letter-spacing: .02em; text-transform: none; font-size: 12px; }
+.st-input {
+  width: 100%; min-height: 48px; padding: 0 14px; border: 1px solid var(--st-line); border-radius: 0;
+  background: #0a0e15; color: var(--st-text); font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 14px;
+  transition: border-color 160ms var(--st-ease);
+}
+.st-input:focus { outline: none; border-color: var(--st-orange); }
+.st-input::placeholder { color: #5d6e86; }
+
+.st-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  min-height: 48px; padding: 0 22px; border: 1px solid transparent; border-radius: 0;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: box-shadow 140ms var(--st-ease), transform 140ms var(--st-ease), background 140ms var(--st-ease);
+}
+.st-btn-primary { background: var(--st-orange); color: #fff; box-shadow: 4px 4px 0 rgba(255, 91, 0, .3); }
+.st-btn-primary:hover:not(:disabled) { box-shadow: 6px 6px 0 rgba(255, 91, 0, .45); transform: translate(-1px, -1px); }
+.st-btn-ghost { background: transparent; border-color: var(--st-line); color: var(--st-text); }
+.st-btn-ghost:hover:not(:disabled) { border-color: var(--st-orange); color: #fff; }
+.st-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+/* ── The code panel: the one loud element ── */
+.st-code {
+  position: relative; border: 1px solid var(--st-orange); background: linear-gradient(140deg, rgba(255,91,0,.12), transparent 60%), #0a0e15;
+  padding: 26px; overflow: hidden;
+}
+.st-code::after {
+  content: ""; position: absolute; inset-inline-end: -30px; top: -30px; width: 130px; height: 130px;
+  border: 1px solid rgba(255, 91, 0, .32); transform: rotate(18deg);
+}
+.st-code b {
+  display: block; font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: clamp(24px, 3.4vw, 40px); font-weight: 600; letter-spacing: .06em; color: #fff; word-break: break-all;
+}
+.st-code small { display: block; margin-bottom: 10px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--st-orange); }
+html[dir="rtl"] .st-code small { letter-spacing: .02em; text-transform: none; font-size: 11px; }
+
+.st-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.st-chip {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px;
+  border: 1px solid var(--st-line); background: rgba(7, 11, 18, .6);
+  font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; color: #c6d3e6;
+}
+
+/* ── Status notice ── */
+.st-note { border-inline-start: 2px solid var(--st-blue); background: rgba(36, 141, 255, .07); padding: 14px 16px; font-size: 13px; line-height: 1.8; color: #cfe0f5; }
+.st-note.st-warn { border-color: var(--st-orange); background: rgba(255, 91, 0, .08); color: #ffd9c4; }
+.st-note.st-bad { border-color: #ff5566; background: rgba(255, 85, 102, .08); color: #ffd2d7; }
+
+/* ── Approved faculties ── */
+.st-domains { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.st-domains b { padding: 6px 10px; border: 1px solid var(--st-line); font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px; font-weight: 500; color: #cfdcee; }
+
+/* One reveal on load, staggered, matching the storefront banner. */
+@keyframes st-wipe { from { opacity: 0; transform: translateY(18px); clip-path: inset(0 0 100% 0); } to { opacity: 1; transform: none; clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: no-preference) {
+  .st-head > *, .st-body > * { animation: st-wipe 560ms var(--st-ease) both; }
+  .st-head > *:nth-child(2) { animation-delay: 80ms; }
+  .st-head > *:nth-child(3) { animation-delay: 160ms; }
+  .st-head > *:nth-child(4) { animation-delay: 240ms; }
+  .st-body > *:nth-child(2) { animation-delay: 120ms; }
+}
+
+@media (max-width: 900px) {
+  .st-grid2 { grid-template-columns: 1fr; }
+  .st-terms { grid-template-columns: 1fr 1fr; }
+  .st-term:nth-child(2) { border-inline-end: 0; }
+  .st-term:nth-child(1), .st-term:nth-child(2) { border-bottom: 1px solid var(--st-line); }
+  .st-head { padding: 52px 0 44px; }
+  .st-body { padding: 40px 0 64px; }
+}
