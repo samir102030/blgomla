@@ -23,6 +23,9 @@ import i18n from "../lib/i18n";
 
 export interface CategoryNode extends Category {
   children: CategoryNode[];
+  /** The name in the language on screen, resolved once when the tree is built
+   *  so that what is sorted and what is shown can never disagree. */
+  label: string;
 }
 
 const parentIdOf = (c: Category): string | null => {
@@ -35,8 +38,16 @@ const parentIdOf = (c: Category): string | null => {
 const isMenuVisible = (c: Category) =>
   c.isActive !== false && !c.deleted && c.showInMenu !== false;
 
-const labelOf = (c: Category) =>
-  i18n.language === "ar" && c.nameAr ? c.nameAr : c.name;
+/**
+ * Categories carry both names at once — the API returns `name` and `nameAr` on
+ * every row — so which one is shown is decided here, and the language has to
+ * be passed in rather than read off the shared i18n object. Read at render
+ * time it is a value React knows nothing about: a switch changes it without
+ * telling anything to render again, and the menu keeps the names it already
+ * had until something unrelated re-renders it.
+ */
+const labelOf = (c: Category, language: string) =>
+  language === "ar" && c.nameAr ? c.nameAr : c.name;
 
 /**
  * Build the menu tree from the flat category list.
@@ -47,11 +58,17 @@ const labelOf = (c: Category) =>
  */
 const useCategoryMenuTree = (): CategoryNode[] => {
   const categories = useCategoryStore((state) => state.categories);
+  // Through the hook, so switching the language re-runs the build. The i18n
+  // object read directly is not reactive, and a menu built once kept whichever
+  // language happened to be on when it was built.
+  const { i18n } = useTranslation();
+  const language = i18n.language;
 
   return useMemo(() => {
     const nodes = new Map<string, CategoryNode>();
     for (const c of categories || []) {
-      if (isMenuVisible(c)) nodes.set(c._id, { ...c, children: [] });
+      if (isMenuVisible(c))
+        nodes.set(c._id, { ...c, children: [], label: labelOf(c, language) });
     }
 
     const roots: CategoryNode[] = [];
@@ -68,17 +85,14 @@ const useCategoryMenuTree = (): CategoryNode[] => {
       list.sort(
         (a, b) =>
           (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
-          labelOf(a).localeCompare(labelOf(b))
+          a.label.localeCompare(b.label, language)
       );
       for (const node of list) sortDeep(node.children);
     };
     sortDeep(roots);
 
     return roots;
-    // Not keyed on the language: switching it refetches the categories (the
-    // names come back translated), so the list itself changes and the tree is
-    // rebuilt — sorted by the names actually on screen.
-  }, [categories]);
+  }, [categories, language]);
 };
 
 /**
@@ -154,7 +168,7 @@ const DropdownRow: React.FC<BranchProps> = ({ node, onPick }) => {
       >
         {/* Wraps rather than truncates: "Uninterruptible Power Supply (UPS)"
             cut off at the panel edge is not a category anyone can identify. */}
-        <span className="flex-1 leading-snug">{labelOf(node)}</span>
+        <span className="flex-1 leading-snug">{node.label}</span>
         {hasChildren && (
           <ChevronRightIcon className="w-3.5 h-3.5 shrink-0 text-[var(--text-subtle)] rtl:rotate-180" />
         )}
@@ -271,7 +285,7 @@ const AccordionRow: React.FC<AccordionRowProps> = ({ node, depth, onPick }) => {
           className="flex-1 text-start py-2.5 px-4 text-sm text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors truncate"
           style={{ paddingInlineStart: `${1 + depth * 0.75}rem` }}
         >
-          {labelOf(node)}
+          {node.label}
         </button>
         {hasChildren && (
           <button
