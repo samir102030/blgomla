@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import path from "path";
+import { randomBytes } from "crypto";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +18,30 @@ import Advertisement from "../models/advertisement.model.js";
 import Collection from "../models/collection.model.js";
 
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/belgomla";
+
+/**
+ * Passwords for the seeded accounts.
+ *
+ * They used to be written here — Admin@123 on a super_admin account, in a
+ * public repository. Anyone reading the repo could read them, and any database
+ * this script had ever been run against was open to whoever did.
+ *
+ * Set them yourself with SEED_ADMIN_PASSWORD and friends, or let one be made
+ * for you: a password nobody chose and nobody has seen is better than a
+ * memorable one, and it is printed once at the end so it can be saved. What
+ * cannot happen either way is this file knowing what it is.
+ */
+const generated = [];
+const seedPassword = (role) => {
+  const fromEnv = process.env[`SEED_${role.toUpperCase()}_PASSWORD`];
+  if (fromEnv) return fromEnv;
+
+  // 18 bytes of base64 — long enough that the printed value is worth saving
+  // rather than remembering, with the symbols the validator expects.
+  const made = `${randomBytes(18).toString("base64url")}A1!`;
+  generated.push([role, made]);
+  return made;
+};
 
 async function seed() {
   await mongoose.connect(MONGO_URI);
@@ -39,9 +64,9 @@ async function seed() {
   // with EMAIL_NOT_VERIFIED. Phone numbers are stored E.164, which is what the
   // schema validator requires.
   const [admin, storeOwner, customer] = await User.create([
-    { name: "Admin Belgomla", email: "admin@belgomla.com", password: "Admin@123", phoneNumber: "+201009353639", role: "super_admin", active: true, isVerified: true },
-    { name: "Ahmed Hassan", email: "store@belgomla.com", password: "Store@123", phoneNumber: "+201112223344", role: "store", active: true, isVerified: true },
-    { name: "Mohamed Ali", email: "customer@belgomla.com", password: "Customer@123", phoneNumber: "+201223344556", role: "customer", active: true, isVerified: true },
+    { name: "Admin Belgomla", email: "admin@belgomla.com", password: seedPassword("admin"), phoneNumber: "+201009353639", role: "super_admin", active: true, isVerified: true },
+    { name: "Ahmed Hassan", email: "store@belgomla.com", password: seedPassword("store"), phoneNumber: "+201112223344", role: "store", active: true, isVerified: true },
+    { name: "Mohamed Ali", email: "customer@belgomla.com", password: seedPassword("customer"), phoneNumber: "+201223344556", role: "customer", active: true, isVerified: true },
   ]);
   console.log("👤 Created 3 users");
 
@@ -216,9 +241,18 @@ async function seed() {
   console.log("📦 Created 4 collections/bundles");
 
   console.log("\n🎉 Seed complete!");
-  console.log("   Admin:    admin@belgomla.com / Admin@123");
-  console.log("   Store:    store@belgomla.com / Store@123");
-  console.log("   Customer: customer@belgomla.com / Customer@123");
+  console.log("   Admin:    admin@belgomla.com");
+  console.log("   Store:    store@belgomla.com");
+  console.log("   Customer: customer@belgomla.com");
+
+  // Shown once, here and nowhere else. Anything not printed now was set from
+  // the environment, and whoever set it already has it.
+  if (generated.length) {
+    console.log("\n🔑 Generated passwords — save these now, they are not stored anywhere:");
+    for (const [role, password] of generated) console.log(`   ${role.padEnd(9)} ${password}`);
+    console.log("\n   Set SEED_ADMIN_PASSWORD / SEED_STORE_PASSWORD / SEED_CUSTOMER_PASSWORD");
+    console.log("   to choose them yourself instead.");
+  }
 
   await mongoose.disconnect();
   process.exit(0);
