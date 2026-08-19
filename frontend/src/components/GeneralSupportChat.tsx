@@ -1,320 +1,285 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useUserStore } from "../stores/user.store";
+import { useNavigate } from "react-router-dom";
+import { ChatBubbleLeftRightIcon, XMarkIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { axiosInstance } from "../lib/axios";
 
-interface Message {
-  _id: string;
-  sender: {
-    _id?: string;
-    name: string;
-    email: string;
-    role: string;
-    profilePicture?: string;
-  };
-  content: string;
-  createdAt: string;
-  messageType: string;
-  isRead: boolean;
-  readAt?: string;
-  attachments: any[];
-}
+/**
+ * The shop's support assistant.
+ *
+ * This used to be a message box that reached a person, which meant it only
+ * worked while somebody was awake and only for customers who had already
+ * signed in — so the question a visitor actually has at 1am, "do you have this
+ * and what does delivery cost", had nowhere to go but the WhatsApp button.
+ *
+ * Now the assistant answers, from the shop's own orders, catalogue and
+ * shipping settings, and a person is where the conversation *ends* rather than
+ * where it starts: when the assistant runs out of road it hands over to
+ * WhatsApp with everything already said attached, so nobody types their
+ * problem twice.
+ */
+
+type Turn = { role: "user" | "assistant"; content: string };
+type Suggestion = { label: string; action: string; to?: string };
 
 const GeneralSupportChat: React.FC = () => {
-  const { t } = useTranslation();
-  const user = useUserStore((state) => state.user);
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [conversation, setConversation] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const initializedRef = useRef(false);
-  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
 
-  const fetchMessages = useCallback(async (conversationId: string) => {
+  const [open, setOpen] = useState(false);
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [draft, setDraft] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [canHandOff, setCanHandOff] = useState(false);
+  const [handingOff, setHandingOff] = useState(false);
+
+  const lang = i18n.language === "ar" ? "ar" : "en";
+  const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Follow the conversation down as it grows, and land the caret in the box
+  // when the panel opens so the first thing anyone can do is type.
+  useEffect(() => {
+    if (open) endRef.current?.scrollIntoView({ block: "end" });
+  }, [turns, thinking, open]);
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  const send = useCallback(
+    async (text: string) => {
+      const message = text.trim();
+      if (!message || thinking) return;
+
+      // The history goes with the message rather than being kept on the
+      // server: the assistant is open to visitors, and a conversation with
+      // somebody who has no account has nowhere on the server to live.
+      const history = turns.slice(-8);
+
+      setTurns((prev) => [...prev, { role: "user", content: message }]);
+      setDraft("");
+      setSuggestions([]);
+      setThinking(true);
+
+      try {
+        const { data } = await axiosInstance.post("/support/ask", { message, history, lang });
+        setTurns((prev) => [...prev, { role: "assistant", content: data.reply }]);
+        setSuggestions(data.suggestions || []);
+        if (data.handoff) setCanHandOff(true);
+      } catch {
+        setTurns((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: t(
+              "support.unreachable",
+              "I could not reach the shop just now. Try again in a moment, or talk to the team on WhatsApp."
+            ),
+          },
+        ]);
+        setCanHandOff(true);
+      } finally {
+        setThinking(false);
+      }
+    },
+    [turns, thinking, lang, t]
+  );
+
+  /**
+   * Hand the conversation to a person.
+   *
+   * The transcript is built on the server, where the customer's name is known,
+   * and comes back as a WhatsApp draft. Opened in a new tab rather than
+   * navigating: the customer may well want to come back to the page they were
+   * on, which is usually the product they were asking about.
+   */
+  const handOff = async () => {
+    setHandingOff(true);
     try {
-      const response = await axiosInstance.get(
-        `/chat/conversations/${conversationId}/messages`
-      );
-      setMessages(response.data);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    }
-  }, []);
-
-  const initializeConversationRef = useRef<() => Promise<void>>(async () => {});
-
-  initializeConversationRef.current = async () => {
-    if (initializedRef.current) return; // Prevent multiple calls
-
-    initializedRef.current = true;
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await axiosInstance.post("/chat/conversations", {
-        type: "general",
+      const { data } = await axiosInstance.post("/support/handoff", {
+        history: turns.slice(-8),
+        lang,
       });
-      setConversation(response.data);
-
-      // Fetch messages for this conversation
-      await fetchMessages(response.data._id);
-    } catch (error: any) {
-      console.error("Error initializing conversation:", error);
-      setError(
-        error?.response?.data?.message || t("Failed to start conversation")
-      );
-      setConversation(null);
-      initializedRef.current = false; // Allow retry on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (
-      isOpen &&
-      !initializedRef.current &&
-      initializeConversationRef.current
-    ) {
-      initializeConversationRef.current();
-    }
-  }, [isOpen]);
-
-  // Reset initialization state when chat is closed
-  useEffect(() => {
-    if (!isOpen) {
-      initializedRef.current = false;
-      setConversation(null);
-      setMessages([]);
-      setError(null);
-    }
-  }, [isOpen]);
-
-  // Poll for new messages while the chat is open
-  useEffect(() => {
-    if (!isOpen || !conversation?._id) {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-      return;
-    }
-
-    pollingIntervalRef.current = setInterval(() => {
-      fetchMessages(conversation._id);
-    }, 5000);
-
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    };
-  }, [conversation?._id, fetchMessages, isOpen]);
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !user || !conversation || sending) return;
-
-    setSending(true);
-    const messageToSend = newMessage;
-    setNewMessage("");
-
-    const tempMessage: Message = {
-      _id: Date.now().toString(),
-      sender: {
-        _id: user._id,
-        name: user.name || "Customer",
-        email: user.email || "",
-        role: user.role,
-      },
-      content: messageToSend,
-      createdAt: new Date().toISOString(),
-      messageType: "text",
-      isRead: false,
-      attachments: [],
-    };
-
-    // Optimistically add message to UI
-    setMessages((prev) => [...prev, tempMessage]);
-
-    try {
-      const response = await axiosInstance.post(
-        `/chat/conversations/${conversation._id}/messages`,
+      window.open(data.whatsappUrl, "_blank", "noopener,noreferrer");
+    } catch {
+      setTurns((prev) => [
+        ...prev,
         {
-          content: messageToSend,
-        }
-      );
-
-      // Replace temp message with real message from server
-      setMessages((prev) =>
-        prev.map((msg) => (msg._id === tempMessage._id ? response.data : msg))
-      );
-    } catch (error) {
-      console.error("Error sending message:", error);
-      // Remove temp message on error
-      setMessages((prev) => prev.filter((msg) => msg._id !== tempMessage._id));
-      setNewMessage(messageToSend); // Restore the message
+          role: "assistant",
+          content: t("support.handoffFailed", "I could not open WhatsApp. Please try again."),
+        },
+      ]);
     } finally {
-      setSending(false);
+      setHandingOff(false);
     }
   };
 
-  // Only show for logged-in users who are customers
-  if (!user || user.role !== "customer") {
-    return null;
-  }
+  const starters = [
+    t("support.starterOrder", "Where is my order?"),
+    t("support.starterShipping", "How much is delivery?"),
+    t("support.starterReturn", "How do I return something?"),
+  ];
 
-  if (!isOpen) {
+  if (!open) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
-        <button
-          onClick={() => setIsOpen(true)}
-          className="bg-green-600 text-white p-4 rounded-full shadow-lg hover:bg-green-700 transition-colors"
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 100 19.5 9.75 9.75 0 000-19.5z"
-            />
-          </svg>
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={t("support.title", "Ask Belgomla")}
+        className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+      >
+        <ChatBubbleLeftRightIcon className="w-6 h-6" />
+      </button>
     );
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-auto z-50 sm:w-96 h-96 bg-white border border-gray-200 rounded-lg shadow-xl flex flex-col">
-      {/* Chat Header */}
-      <div className="p-4 bg-green-600 text-white rounded-t-lg flex items-center justify-between">
-        <div>
-          <h3 className="font-medium">{t("General Support")}</h3>
-          <p className="text-sm text-green-100">{t("We're here to help!")}</p>
+    <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 z-50 sm:w-[22rem] h-[30rem] max-h-[80vh] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+      <header className="flex items-center justify-between gap-3 px-4 py-3 bg-[var(--brand-primary)] text-white">
+        <div className="min-w-0">
+          <h2 className="font-bold text-sm truncate">{t("support.title", "Ask Belgomla")}</h2>
+          <p className="text-[11px] text-white/80 truncate">
+            {t("support.subtitle", "Orders, products, delivery and returns")}
+          </p>
         </div>
-        <button
-          onClick={() => setIsOpen(false)}
-          className="text-white hover:text-green-200"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-gray-500">{t("Loading conversation...")}</div>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="text-red-500 mb-2">⚠️ {t("Error")}</div>
-              <div className="text-gray-600 text-sm">{error}</div>
-            </div>
-          </div>
-        ) : (
-          messages.map((message) => {
-            // Find the participant's role in the conversation
-            const participant = conversation?.participants?.find(
-              (p: any) => p.user._id === message.sender._id
-            );
-            const senderRole = participant?.role || message.sender.role;
-            const isCurrentUser = message.sender._id === user?._id;
-
-            // Determine message styling based on sender role
-            const getMessageStyle = () => {
-              if (isCurrentUser) {
-                return "bg-green-600 text-white"; // Customer messages (current user)
-              }
-              switch (senderRole) {
-                case "admin":
-                  return "bg-blue-100 text-gray-900 border-l-4 border-blue-500";
-                default:
-                  return "bg-gray-200 text-gray-900";
-              }
-            };
-
-            const getRoleLabel = () => {
-              switch (senderRole) {
-                case "admin":
-                  return t("Admin Support");
-                default:
-                  return t("Support");
-              }
-            };
-
-            return (
-              <div
-                key={message._id}
-                className={`flex ${
-                  isCurrentUser ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-xs px-3 py-2 rounded-lg text-sm ${getMessageStyle()}`}
-                >
-                  {!isCurrentUser && (
-                    <div className="flex items-center mb-1">
-                      <span className="text-xs font-medium text-gray-600">
-                        {getRoleLabel()}
-                      </span>
-                    </div>
-                  )}
-                  <p>{message.content}</p>
-                  <p
-                    className={`text-xs mt-1 ${
-                      isCurrentUser ? "text-green-100" : "text-gray-500"
-                    }`}
-                  >
-                    {new Date(message.createdAt).toLocaleTimeString()}
-                  </p>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Message Input */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder={t("Type your message...")}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-          />
+        {/* Always here, not only once the assistant gives up. Somebody who
+            wants a person wants one now, and hunting for the way to reach one
+            is the thing that makes a bot feel like a wall. */}
+        <div className="shrink-0 flex items-center gap-1">
           <button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sending || !conversation || !!error}
-            className="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            type="button"
+            onClick={handOff}
+            disabled={handingOff}
+            aria-label={t("support.handoff", "Talk to the team on WhatsApp")}
+            title={t("support.handoff", "Talk to the team on WhatsApp")}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/15 disabled:opacity-50 transition-colors"
           >
-            {sending ? t("Sending...") : t("Send")}
+            <svg viewBox="0 0 32 32" fill="currentColor" className="w-[18px] h-[18px]" aria-hidden="true">
+              <path d="M16.003 3C9.376 3 4 8.376 4 15.003c0 2.643.86 5.084 2.314 7.066L4.062 29l7.106-2.226A11.954 11.954 0 0 0 16.003 27C22.63 27 28 21.624 28 14.997 28 8.37 22.63 3 16.003 3zm6.946 17.16c-.296.832-1.745 1.594-2.428 1.69-.62.088-1.4.124-2.262-.142-.522-.165-1.193-.387-2.052-.756-3.612-1.559-5.97-5.185-6.15-5.425-.18-.24-1.471-1.955-1.471-3.73 0-1.774.931-2.647 1.262-3.01.331-.363.722-.454.962-.454.24 0 .482.002.692.012.222.011.519-.084.811.618.296.71 1.005 2.452 1.094 2.63.09.18.149.39.03.63-.12.24-.18.39-.36.6-.179.21-.378.469-.539.629-.18.18-.367.375-.158.733.21.359.93 1.535 1.998 2.486 1.371 1.223 2.527 1.602 2.886 1.781.359.18.567.15.778-.09.21-.24.898-1.048 1.137-1.408.24-.359.479-.299.808-.18.33.12 2.093.988 2.452 1.168.359.18.598.27.687.42.09.149.09.869-.207 1.7z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label={t("support.close", "Close")}
+            className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/15 transition-colors"
+          >
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
+      </header>
+
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+        {turns.length === 0 && (
+          <>
+            <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+              {t("support.greeting", "Hello. Ask me about your order, a product, or delivery and returns.")}
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              {starters.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => send(s)}
+                  className="px-3 py-1.5 rounded-full border border-[var(--border)] text-xs text-[var(--text-muted)] hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] transition-colors"
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {turns.map((turn, i) => (
+          <div key={i} className={`flex ${turn.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-line ${
+                turn.role === "user"
+                  ? "bg-[var(--brand-primary)] text-white rounded-ee-sm"
+                  : "bg-[var(--surface-2)] text-[var(--text)] rounded-es-sm"
+              }`}
+            >
+              {turn.content}
+            </div>
+          </div>
+        ))}
+
+        {thinking && (
+          <div className="flex justify-start">
+            <div className="px-3 py-2 rounded-2xl bg-[var(--surface-2)] flex gap-1">
+              {[0, 150, 300].map((delay) => (
+                <span
+                  key={delay}
+                  className="w-1.5 h-1.5 rounded-full bg-[var(--text-subtle)] animate-bounce"
+                  style={{ animationDelay: `${delay}ms` }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {suggestions.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  if (s.action === "navigate" && s.to) {
+                    navigate(s.to);
+                    setOpen(false);
+                  }
+                }}
+                className="px-3 py-1.5 rounded-full bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] text-xs font-medium hover:bg-[var(--brand-primary)]/20 transition-colors max-w-full truncate"
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div ref={endRef} />
       </div>
+
+      {canHandOff && (
+        <button
+          type="button"
+          onClick={handOff}
+          disabled={handingOff}
+          className="mx-4 mb-2 py-2.5 rounded-xl bg-[#25D366] text-white text-sm font-semibold hover:brightness-95 disabled:opacity-60 transition-all"
+        >
+          {handingOff
+            ? t("support.handoffOpening", "Opening WhatsApp…")
+            : t("support.handoff", "Talk to the team on WhatsApp")}
+        </button>
+      )}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          send(draft);
+        }}
+        className="flex items-center gap-2 p-3 border-t border-[var(--border)]"
+      >
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={t("support.placeholder", "Type your question…")}
+          maxLength={2000}
+          className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all"
+        />
+        <button
+          type="submit"
+          disabled={!draft.trim() || thinking}
+          aria-label={t("support.send", "Send")}
+          className="shrink-0 w-10 h-10 rounded-xl bg-[var(--brand-primary)] text-white flex items-center justify-center disabled:opacity-40 hover:brightness-110 transition-all"
+        >
+          <PaperAirplaneIcon className="w-4 h-4 rtl:-scale-x-100" />
+        </button>
+      </form>
     </div>
   );
 };

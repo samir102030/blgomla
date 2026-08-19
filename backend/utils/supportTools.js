@@ -1,0 +1,318 @@
+/**
+ * What the support assistant is allowed to look at.
+ *
+ * Every answer the assistant gives about this shop comes from one of these
+ * functions, and each one decides for itself what the caller may see. That is
+ * the point of putting them together: the assistant can be asked anything, so
+ * the boundary cannot live in the asking — it has to live here, where a single
+ * reading tells you that an order query is never built without a user on it.
+ *
+ * Nothing here takes an id out of the customer's message and trusts it. An
+ * order is found by matching a reference *within* that customer's own orders,
+ * so a guessed or copied reference belonging to someone else finds nothing
+ * rather than finding someone else's order.
+ */
+import Order from "../models/order.model.js";
+import Product from "../models/product.model.js";
+import { getShippingSettings } from "../models/shippingSettings.model.js";
+
+/**
+ * Arabic is typed the way it is spoken, not the way it is spelled. The same
+ * word arrives as طلبي / طلبى, إرجاع / ارجاع, شاشة / شاشه — so the shapes that
+ * differ only in a hamza, a dotted yaa or a taa marbuta are folded together
+ * before anything is matched against them.
+ */
+export const normalizeArabic = (text) =>
+  String(text || "")
+    .toLowerCase()
+    .replace(/[ً-ْـ]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
+ * The shop speaks Arabic and its catalogue does not.
+ *
+ * Six thousand of the products carry no Arabic name at all — they were
+ * imported from suppliers' English sheets — so a customer typing لابتوب, which
+ * is the ordinary word for the thing, matches nothing in a shop full of
+ * laptops. These are the words people actually use at the counter, mapped to
+ * the words the rows are written in.
+ *
+ * Phrases are listed before single words and replaced first: كارت شاشة is a
+ * graphics card, and translating its two halves separately would ask for a
+ * "card monitor".
+ */
+const PHRASES = [
+  ["كارت شاشه", "graphics card"],
+  ["كارت الشاشه", "graphics card"],
+  ["لوحه مفاتيح", "keyboard"],
+  ["لوحه ام", "motherboard"],
+  ["باور سبلاي", "power supply"],
+  ["اكسس بوينت", "access point"],
+  ["هارد ديسك", "hard drive"],
+  ["لاب توب", "laptop"],
+];
+
+const WORDS = {
+  لابتوب: "laptop",
+  لاب: "laptop",
+  شاشه: "monitor",
+  شاشات: "monitor",
+  هارد: "hard",
+  رام: "ram",
+  رامات: "ram",
+  معالج: "processor",
+  بروسيسور: "processor",
+  مذربورد: "motherboard",
+  طابعه: "printer",
+  طابعات: "printer",
+  راوتر: "router",
+  كاميرا: "camera",
+  كاميرات: "camera",
+  سماعه: "headset",
+  سماعات: "headset",
+  كيبورد: "keyboard",
+  ماوس: "mouse",
+  فلاشه: "flash",
+  فلاش: "flash",
+  سيرفر: "server",
+  تابلت: "tablet",
+  موبايل: "phone",
+  مروحه: "fan",
+  كيسه: "case",
+  كيس: "case",
+  شاحن: "charger",
+  كابل: "cable",
+  سويتش: "switch",
+  ماك: "macbook",
+  ايفون: "iphone",
+  // Units, which people say in Arabic and every row spells in English.
+  تيرا: "tb",
+  جيجا: "gb",
+  ميجا: "mb",
+  بوصه: "inch",
+  انش: "inch",
+  وايرلس: "wireless",
+  خارجي: "external",
+  داخلي: "internal",
+};
+
+/** The English the row is written in, kept beside the Arabic that was typed. */
+const withEnglish = (term) => {
+  let out = normalizeArabic(term);
+  for (const [arabic, english] of PHRASES) out = out.split(arabic).join(english);
+  return out
+    .split(/\s+/)
+    .map((word) => WORDS[word] || word)
+    .join(" ")
+    .trim();
+};
+
+/** What the customer sees on their orders page, and so what they will quote. */
+export const orderReference = (id) => String(id).slice(-8).toUpperCase();
+
+/** Pull anything that looks like an order reference out of a sentence. */
+export const referenceIn = (text) => {
+  const match = String(text || "")
+    .toUpperCase()
+    .match(/[0-9A-F]{8,24}/g);
+  return match ? match[0] : null;
+};
+
+const money = (n) => Math.round(Number(n || 0));
+
+const orderSummary = (order) => ({
+  reference: orderReference(order._id),
+  id: String(order._id),
+  status: order.status,
+  placedAt: order.createdAt,
+  total: money(order.totalPrice),
+  delivered: !!order.isDelivered,
+  deliveredAt: order.deliveredAt || null,
+  tracking: order.trackingNumber || null,
+  items: (order.orderItems || []).map((item) => ({
+    name: item.product?.name || item.collectionName || "",
+    nameAr: item.product?.nameAr || "",
+    quantity: item.quantity,
+    price: money(item.price),
+  })),
+});
+
+/** The caller's own recent orders. Never anyone else's — see the file note. */
+export const recentOrders = async (user, { limit = 5 } = {}) => {
+  if (!user) return [];
+  const orders = await Order.find({ user: user._id })
+    .sort({ createdAt: -1 })
+    .limit(Math.min(limit, 10))
+    .populate("orderItems.product", "name nameAr")
+    .lean();
+  return orders.map(orderSummary);
+};
+
+/**
+ * One of the caller's orders by the reference they quoted.
+ *
+ * The reference is the tail of the id, so it is matched against the caller's
+ * own orders rather than looked up directly: a customer reading out someone
+ * else's reference gets "not found", which is the honest answer to "where is
+ * *my* order" when it isn't theirs.
+ */
+export const findOrder = async (user, reference) => {
+  if (!user || !reference) return null;
+  const wanted = String(reference).toUpperCase().replace(/^#/, "");
+  const orders = await Order.find({ user: user._id })
+    .sort({ createdAt: -1 })
+    .limit(50)
+    .populate("orderItems.product", "name nameAr")
+    .lean();
+  const hit = orders.find(
+    (o) =>
+      orderReference(o._id) === wanted ||
+      String(o._id).toUpperCase().endsWith(wanted)
+  );
+  return hit ? orderSummary(hit) : null;
+};
+
+/**
+ * Catalogue search, seen exactly as a shopper sees it.
+ *
+ * No filter is lifted here on purpose. The Product model hides the Electronics
+ * shelf from plain finds, and an assistant that quietly saw more than the
+ * storefront does would answer questions about things the customer cannot
+ * reach from any page.
+ */
+export const searchProducts = async (query, { limit = 5, strict = false } = {}) => {
+  // Two readings of the same question. Rows imported from suppliers are named
+  // in English and rows entered by hand are named in Arabic, so the words the
+  // customer typed are tried as they were typed and again translated, and
+  // whichever half of the catalogue holds the answer is reached.
+  const arabic = normalizeArabic(query);
+  const english = withEnglish(query);
+  const term = english;
+  if (term.length < 2) return [];
+
+  const rx = (word) => new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  const anyField = (word) => ({ $or: [{ name: rx(word) }, { nameAr: rx(word) }, { sku: rx(word) }] });
+
+  /**
+   * People type "msi monitor", and no product is called that — it is an "MSI
+   * MAG 276CF … Gaming Monitor". Matching the sentence as one string finds
+   * nothing, so each word has to be found somewhere in the row and the row
+   * kept only if all of them are.
+   */
+  const wordsOf = (text) => text.split(/\s+/).filter((w) => w.length >= 2).slice(0, 6);
+  const words = wordsOf(english);
+  const arabicWords = arabic === english ? [] : wordsOf(arabic);
+
+  const run = (conditions, { byScore = false } = {}) => {
+    const query = Product.find({
+      isActive: { $ne: false },
+      deleted: { $ne: true },
+      ...conditions,
+    })
+      .select("name nameAr slug price salePercentage stock images brand")
+      .populate("brand", "name")
+      .limit(Math.min(limit, 8));
+
+    // A text search matches any of the words, so "msi monitor" pulls every
+    // monitor in the shop. Ranking puts the rows that matched both first —
+    // without it the answer is confidently about the wrong brand.
+    if (byScore) {
+      query.select({ score: { $meta: "textScore" } }).sort({ score: { $meta: "textScore" } });
+    }
+
+    return query.lean();
+  };
+
+  const shape = (rows) =>
+    rows.map((p) => ({
+      name: p.name,
+      nameAr: p.nameAr || "",
+      slug: p.slug,
+      brand: p.brand?.name || "",
+      price: money(p.price),
+      salePrice: p.salePercentage ? money(p.price * (1 - p.salePercentage / 100)) : null,
+      inStock: Number(p.stock || 0) > 0,
+      stock: Number(p.stock || 0),
+      image: p.images?.[0]?.url || p.images?.[0] || null,
+    }));
+
+  /**
+   * `strict` is for the caller that is *guessing* the sentence was a product
+   * name rather than having been told so. A text search matches any one of the
+   * words, which means "I want to talk to someone" comes back holding a
+   * security camera — confident, irrelevant, and worse than no answer. Under
+   * strict every word has to appear in the row, so a guess that is wrong finds
+   * nothing and the assistant admits it did not understand, which is true.
+   */
+  if (strict) {
+    let rows = words.length ? await run({ $and: words.map(anyField) }) : [];
+    if (!rows.length && arabicWords.length) {
+      rows = await run({ $and: arabicWords.map(anyField) });
+    }
+    return shape(rows);
+  }
+
+  /**
+   * The catalogue runs to five figures, and a regular expression over it is a
+   * collection scan every time somebody asks a question. The text index on the
+   * product name answers the common case — Latin names, several words, in any
+   * order — in one indexed lookup, so it is tried first and the scan is kept
+   * for what the index cannot see: Arabic names and SKUs.
+   */
+  let products = await run({ $text: { $search: term } }, { byScore: true });
+
+  if (!products.length && words.length) {
+    products = await run({ $and: words.map(anyField) });
+  }
+  if (!products.length && arabicWords.length) {
+    products = await run({ $and: arabicWords.map(anyField) });
+  }
+
+  // One wrong word should not lose the whole search; the longest is the most
+  // specific thing they typed.
+  if (!products.length && words.length > 1) {
+    const longest = words.slice().sort((a, b) => b.length - a.length)[0];
+    products = await run(anyField(longest));
+  }
+  if (!products.length && !words.length) products = await run(anyField(term));
+
+  return shape(products);
+};
+
+/**
+ * Shipping, answered from the shop's own settings rather than from a sentence
+ * somebody typed into a policy page a year ago. The zone table is the same one
+ * checkout charges from, so the number the assistant quotes is the number the
+ * customer will pay.
+ */
+export const shippingFacts = async (governorate) => {
+  const s = await getShippingSettings();
+  const zone =
+    governorate &&
+    (s.zones || []).find((z) =>
+      String(z.governorate).toLowerCase().includes(String(governorate).toLowerCase())
+    );
+
+  return {
+    enabled: s.enabled !== false,
+    fee: money(zone ? zone.fee : s.defaultFee),
+    zone: zone ? zone.governorate : null,
+    freeOver: money(s.freeShippingThreshold),
+    daysMin: zone?.deliveryDaysMin || s.deliveryDaysMin,
+    daysMax: zone?.deliveryDaysMax || s.deliveryDaysMax,
+    zones: (s.zones || []).map((z) => ({ governorate: z.governorate, fee: money(z.fee) })),
+  };
+};
+
+export default {
+  orderReference,
+  referenceIn,
+  recentOrders,
+  findOrder,
+  searchProducts,
+  shippingFacts,
+};

@@ -118,3 +118,27 @@ export const studentVerifyLimiter = rateLimit({
   skipSuccessfulRequests: true,
   store: new MongoRateLimitStore({ prefix: "rl:student-verify" }),
 });
+
+/**
+ * Talking to the support assistant.
+ *
+ * Every question costs the shop a database read and, once a model key is
+ * configured, a paid call — so the ceiling is per host rather than per
+ * account: the endpoint is open to visitors, and an account is exactly what
+ * somebody driving it in bulk would not bother to make.
+ *
+ * Forty in a quarter of an hour is a long conversation typed by a person and
+ * a short one written by a script. A customer who reaches it is having a
+ * genuinely hard day, which is what the hand-off to a human is for.
+ */
+export const supportAssistantLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 40,
+  message: {
+    success: false,
+    message: "Too many messages. Please wait a moment, or contact support directly.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MongoRateLimitStore({ prefix: "rl:support-assistant" }),
+});

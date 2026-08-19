@@ -35,6 +35,7 @@ import paymobChannelRoutes from "./paymobChannel.route.js";
 import storefrontVisibilityRoutes from "./storefrontVisibility.route.js";
 import stockAlertRoutes from "./stockAlert.route.js";
 import studentProgramRoutes from "./studentProgram.route.js";
+import supportAssistantRoutes from "./supportAssistant.route.js";
 
 const router = express.Router();
 
@@ -49,6 +50,7 @@ router.use("/upload", uploadRoutes);
 router.use("/stores", storeRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/chat", chatRoutes);
+router.use("/support", supportAssistantRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/brand-requests", brandRequestRoutes);

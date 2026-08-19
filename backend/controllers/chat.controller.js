@@ -3,6 +3,7 @@ import Message from "../models/message.model.js";
 import User from "../models/user.model.js";
 import Product from "../models/product.model.js";
 import Store from "../models/store.model.js";
+import { getOrCreateGeneralConversation } from "../utils/supportConversation.js";
 
 // Create or get conversation
 export const createOrGetConversation = async (req, res) => {
@@ -13,41 +14,9 @@ export const createOrGetConversation = async (req, res) => {
     let conversation;
 
     if (type === "general") {
-      // Find existing general conversation with admin
-      conversation = await Conversation.findOne({
-        type: "general",
-        "participants.user": { $all: [userId] },
-        "participants.role": { $in: ["admin"] },
-      }).populate("participants.user", "name email role profilePicture");
-
-      if (!conversation) {
-        // Try to create new general conversation
-        const adminUser = await User.findOne({ role: "admin" });
-
-        if (adminUser) {
-          // Create conversation with admin
-          conversation = new Conversation({
-            type: "general",
-            participants: [
-              { user: userId, role: "customer" },
-              { user: adminUser._id, role: "admin" },
-            ],
-          });
-        } else {
-          // No admin available - create conversation without admin for now
-          // This allows customers to send messages that will be handled later
-          conversation = new Conversation({
-            type: "general",
-            participants: [{ user: userId, role: "customer" }],
-          });
-        }
-
-        await conversation.save();
-        await conversation.populate(
-          "participants.user",
-          "name email role profilePicture"
-        );
-      }
+      // Shared with the assistant's hand-off, so a transcript it files and a
+      // message the customer types land in the same thread.
+      conversation = await getOrCreateGeneralConversation(userId);
     } else if (type === "product") {
       if (!productId) {
         return res.status(400).json({
