@@ -1,91 +1,52 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import { axiosInstance } from "../../../lib/axios";
-import { useStudentStore, type StudentProduct } from "../../../stores/student.store";
 import {
-  Card,
-  Field,
-  PageHead,
-  btnGhost,
-  btnPrimary,
-  firstImage,
-  inputCls,
-  useLocalName,
-} from "./shared";
+  ArrowUpTrayIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { useStudentStore, type StudentProduct } from "../../../stores/student.store";
+import BulkStudentUpload from "../../../components/admin/BulkStudentUpload";
+import StudentProductModal from "../../../components/admin/StudentProductModal";
 
 /**
- * The section's products — created here, sold only here.
+ * The section's products, laid out as the catalogue's own products page is.
  *
- * They are stored in the shop's product collection with the section's mark on
- * them, which is why they can be added to a cart, charged, counted against
- * stock and put on a shipping label without any of that machinery learning a
- * second kind of product. Nothing on the storefront lists them: every product
- * query defaults to the public catalogue, so appearing there has to be asked
- * for and this section never asks.
+ * They live in the shop's product collection with the section's mark on them,
+ * which is why they can be added to a cart, charged, counted against stock and
+ * shipped without any of that machinery learning a second kind of product.
+ * Nothing on the storefront lists them: product queries default to the public
+ * catalogue, and this section never asks otherwise.
  */
 
-interface Draft {
-  _id?: string;
-  name: string;
-  nameAr: string;
-  description: string;
-  descriptionAr: string;
-  sku: string;
-  price: string;
-  stock: string;
-  studentCategory: string;
-  images: Array<{ url: string; alt?: string }>;
-  featured: boolean;
-  isActive: boolean;
-}
-
-const EMPTY: Draft = {
-  name: "",
-  nameAr: "",
-  description: "",
-  descriptionAr: "",
-  sku: "",
-  price: "",
-  stock: "0",
-  studentCategory: "",
-  images: [],
-  featured: false,
-  isActive: true,
-};
-
 const StudentsProductsPage: React.FC = () => {
-  const { t } = useTranslation();
-  const localName = useLocalName();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language === "ar";
+  const name = (p?: { name?: string; nameAr?: string } | null) =>
+    (isAr && p?.nameAr ? p.nameAr : p?.name) || "—";
+
   const {
     catalogProducts,
     catalogTotal,
     catalogPages,
     catalogCategories,
     loading,
-    saving,
     fetchCatalogProducts,
     fetchCatalogCategories,
-    saveProduct,
     deleteProduct,
   } = useStudentStore();
 
-  const [draft, setDraft] = useState<Draft>(EMPTY);
-  const [editing, setEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState({ search: "", category: "", page: 1 });
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<StudentProduct | null>(null);
 
   useEffect(() => {
     fetchCatalogCategories();
   }, [fetchCatalogCategories]);
-
-  useEffect(() => {
-    fetchCatalogProducts({
-      page: filter.page,
-      ...(filter.search ? { search: filter.search } : {}),
-      ...(filter.category ? { category: filter.category } : {}),
-    });
-  }, [fetchCatalogProducts, filter]);
 
   const reload = () =>
     fetchCatalogProducts({
@@ -94,7 +55,12 @@ const StudentsProductsPage: React.FC = () => {
       ...(filter.category ? { category: filter.category } : {}),
     });
 
-  /** Depth-first, so the dropdown reads as the tree it is. */
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter]);
+
+  /** The tree, flattened, so the filter reads as the tree it is. */
   const options = useMemo(() => {
     const byParent = new Map<string, typeof catalogCategories>();
     for (const c of catalogCategories) {
@@ -103,89 +69,16 @@ const StudentsProductsPage: React.FC = () => {
     }
     const out: Array<{ _id: string; label: string }> = [];
     const walk = (key: string, depth: number) => {
-      for (const node of (byParent.get(key) || []).sort((a, b) => a.order - b.order)) {
-        out.push({ _id: node._id, label: `${"— ".repeat(depth)}${localName(node)}` });
+      for (const node of (byParent.get(key) || []).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))) {
+        out.push({ _id: node._id, label: `${"— ".repeat(depth)}${(isAr && node.nameAr) || node.name}` });
         walk(String(node._id), depth + 1);
       }
     };
     walk("root", 0);
     return out;
-  }, [catalogCategories, localName]);
+  }, [catalogCategories, isAr]);
 
-  const onUpload = async (files: FileList | null) => {
-    if (!files?.length) return;
-    setUploading(true);
-    const added: Array<{ url: string; alt?: string }> = [];
-    try {
-      for (const file of Array.from(files)) {
-        const form = new FormData();
-        form.append("image", file);
-        const { data } = await axiosInstance.post("/upload/upload", form, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-        if (data?.url) added.push({ url: data.url, alt: file.name });
-      }
-      setDraft((d) => ({ ...d, images: [...d.images, ...added] }));
-    } catch {
-      toast.error(t("Could not upload the image."));
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const open = (product?: StudentProduct) => {
-    if (!product) {
-      setDraft(EMPTY);
-    } else {
-      setDraft({
-        _id: product._id,
-        name: product.name || "",
-        nameAr: product.nameAr || "",
-        description: product.description || "",
-        descriptionAr: product.descriptionAr || "",
-        sku: product.sku || "",
-        price: String(product.price ?? ""),
-        stock: String(product.stock ?? 0),
-        studentCategory:
-          typeof product.studentCategory === "string"
-            ? product.studentCategory
-            : product.studentCategory?._id || "",
-        images: (product.images || []).map((i) => ({ url: i.url || "", alt: i.alt })),
-        featured: !!product.featured,
-        isActive: product.isActive !== false,
-      });
-    }
-    setEditing(true);
-  };
-
-  const onSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!draft.name.trim() || !(Number(draft.price) > 0)) return;
-
-    const done = await saveProduct({
-      ...(draft._id ? { _id: draft._id } : {}),
-      name: draft.name.trim(),
-      nameAr: draft.nameAr.trim(),
-      description: draft.description,
-      descriptionAr: draft.descriptionAr,
-      sku: draft.sku.trim() || undefined,
-      price: Number(draft.price),
-      stock: Number(draft.stock) || 0,
-      studentCategory: draft.studentCategory || null,
-      images: draft.images,
-      featured: draft.featured,
-      isActive: draft.isActive,
-    } as any);
-
-    if (done) {
-      toast.success(draft._id ? t("Product updated.") : t("Product added."));
-      setEditing(false);
-      setDraft(EMPTY);
-      reload();
-    }
-  };
-
-  const onRemove = async (product: StudentProduct) => {
+  const onDelete = async (product: StudentProduct) => {
     if (!window.confirm(t("Remove this product?") as string)) return;
     if (await deleteProduct(product._id)) {
       toast.success(t("Product removed."));
@@ -193,186 +86,80 @@ const StudentsProductsPage: React.FC = () => {
     }
   };
 
+  const shown = catalogProducts.filter((p) => p.isActive !== false).length;
+  const outOfStock = catalogProducts.filter((p) => !p.stock).length;
+  const unpriced = catalogProducts.filter((p) => !p.price).length;
+
   return (
-    <div className="p-4 sm:p-6 max-w-6xl">
-      <PageHead
-        title={t("Products")}
-        description={t(
-          "The section's own products. They exist here and nowhere else on the shop, and they are bought, paid for and shipped through the same checkout as everything else.",
-        )}
-      >
-        <button onClick={() => open()} className={btnPrimary}>
-          {t("New product")}
-        </button>
-      </PageHead>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">{t("Products")}</h1>
+          <p className="text-[#9E9E9E]">
+            {t("The section's own products. They exist here and nowhere else on the shop.")}
+          </p>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            onClick={() => setBulkOpen((v) => !v)}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-[#333333] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-medium flex-1 sm:flex-none"
+          >
+            <ArrowUpTrayIcon className="h-4 w-4" />
+            {t("Bulk upload")}
+          </button>
+          <button
+            onClick={() => {
+              setEditing(null);
+              setModalOpen(true);
+            }}
+            className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center justify-center gap-2 font-medium flex-1 sm:flex-none"
+          >
+            <PlusIcon className="h-4 w-4" />
+            {t("Add product")}
+          </button>
+        </div>
+      </div>
 
-      {editing && (
-        <Card title={draft._id ? t("Edit product") : t("New product")}>
-          <form onSubmit={onSubmit}>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-4">
-              <Field label={t("Name (English)")}>
-                <input
-                  className={inputCls}
-                  value={draft.name}
-                  onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                />
-              </Field>
-              <Field label={t("Name (Arabic)")}>
-                <input
-                  className={inputCls}
-                  value={draft.nameAr}
-                  onChange={(e) => setDraft({ ...draft, nameAr: e.target.value })}
-                />
-              </Field>
-              <Field label={t("Department")}>
-                <select
-                  className={inputCls}
-                  value={draft.studentCategory}
-                  onChange={(e) => setDraft({ ...draft, studentCategory: e.target.value })}
-                >
-                  <option value="">{t("Unfiled")}</option>
-                  {options.map((o) => (
-                    <option key={o._id} value={o._id}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label={`${t("Price")} (EGP)`}>
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  className={inputCls}
-                  value={draft.price}
-                  onChange={(e) => setDraft({ ...draft, price: e.target.value })}
-                />
-              </Field>
-              <Field label={t("Stock")}>
-                <input
-                  type="number"
-                  min={0}
-                  className={inputCls}
-                  value={draft.stock}
-                  onChange={(e) => setDraft({ ...draft, stock: e.target.value })}
-                />
-              </Field>
-              <Field label={t("SKU")} hint={t("Optional. Must be unique if set.")}>
-                <input
-                  className={inputCls}
-                  dir="ltr"
-                  value={draft.sku}
-                  onChange={(e) => setDraft({ ...draft, sku: e.target.value })}
-                />
-              </Field>
-            </div>
+      {bulkOpen && <BulkStudentUpload kind="products" onDone={reload} />}
 
-            <Field label={t("Description (English)")}>
-              <textarea
-                className={inputCls}
-                rows={3}
-                value={draft.description}
-                onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-              />
-            </Field>
-            <Field label={t("Description (Arabic)")}>
-              <textarea
-                className={inputCls}
-                rows={3}
-                value={draft.descriptionAr}
-                onChange={(e) => setDraft({ ...draft, descriptionAr: e.target.value })}
-              />
-            </Field>
-
-            <Field label={t("Images")}>
-              <div className="flex flex-wrap gap-3 mb-3">
-                {draft.images.map((img, index) => (
-                  <div key={`${img.url}-${index}`} className="relative">
-                    <img
-                      src={img.url}
-                      alt=""
-                      className="w-20 h-20 rounded-lg object-cover border border-[var(--border)]"
-                    />
-                    <button
-                      type="button"
-                      aria-label={t("Remove") as string}
-                      onClick={() =>
-                        setDraft((d) => ({ ...d, images: d.images.filter((_, i) => i !== index) }))
-                      }
-                      className="absolute -top-2 -end-2 w-6 h-6 rounded-full bg-[var(--danger)] text-white text-xs"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {[
+          [t("Products"), catalogTotal, "text-gray-900", "📦"],
+          [t("Shown"), shown, "text-green-600", "✅"],
+          [t("Out of stock"), outOfStock, "text-orange-600", "📉"],
+          [t("Unpriced"), unpriced, "text-red-600", "🏷️"],
+        ].map(([label, value, tone, icon]) => (
+          <div key={String(label)} className="bg-white p-6 rounded-lg shadow-sm border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">{label}</p>
+                <p className={`text-2xl font-bold ${tone}`}>{value}</p>
               </div>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                disabled={uploading}
-                onChange={(e) => onUpload(e.target.files)}
-                className="text-sm text-[var(--text-muted)]"
-              />
-              {uploading && (
-                <span className="block text-xs text-[var(--text-muted)] mt-1">{t("Uploading…")}</span>
-              )}
-            </Field>
-
-            <div className="flex flex-wrap gap-6 mb-4">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={draft.isActive}
-                  onChange={(e) => setDraft({ ...draft, isActive: e.target.checked })}
-                  className="w-5 h-5 accent-[var(--brand-primary)]"
-                />
-                <span className="text-sm font-semibold text-[var(--text)]">{t("Shown on the section")}</span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={draft.featured}
-                  onChange={(e) => setDraft({ ...draft, featured: e.target.checked })}
-                  className="w-5 h-5 accent-[var(--brand-primary)]"
-                />
-                <span className="text-sm font-semibold text-[var(--text)]">{t("Featured first")}</span>
-              </label>
+              <div className="bg-gray-100 p-3 rounded-full">
+                <span className="text-2xl">{icon}</span>
+              </div>
             </div>
+          </div>
+        ))}
+      </div>
 
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={saving || uploading || !draft.name.trim() || !(Number(draft.price) > 0)}
-                className={btnPrimary}
-              >
-                {saving ? t("Saving…") : t("Save product")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setEditing(false);
-                  setDraft(EMPTY);
-                }}
-                className={btnGhost}
-              >
-                {t("Cancel")}
-              </button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <Card title={`${t("Products")} · ${catalogTotal}`}>
-        <div className="flex flex-wrap gap-3 mb-4">
-          <input
-            className={`${inputCls} max-w-[280px]`}
-            placeholder={t("Search products") as string}
-            value={filter.search}
-            onChange={(e) => setFilter({ ...filter, search: e.target.value, page: 1 })}
-          />
+      {/* Filters */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder={t("Search products") as string}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+              value={filter.search}
+              onChange={(e) => setFilter({ ...filter, search: e.target.value, page: 1 })}
+            />
+          </div>
           <select
-            className={`${inputCls} max-w-[240px]`}
+            className="px-4 py-2 border border-gray-300 rounded-lg sm:max-w-[260px] focus:ring-2 focus:ring-[var(--brand-primary)]"
             value={filter.category}
             onChange={(e) => setFilter({ ...filter, category: e.target.value, page: 1 })}
           >
@@ -384,69 +171,135 @@ const StudentsProductsPage: React.FC = () => {
             ))}
           </select>
         </div>
+      </div>
 
-        {!catalogProducts.length && !loading && (
-          <p className="text-sm text-[var(--text-muted)]">
-            {catalogCategories.length
-              ? t("No products yet.")
-              : t("Add a department first — a product needs somewhere to sit.")}
-          </p>
-        )}
-
-        <div className="divide-y divide-[var(--border)]">
-          {catalogProducts.map((p) => (
-            <div key={p._id} className="flex items-center gap-3 py-3">
-              <img
-                src={firstImage(p.images) || "/placeholder.png"}
-                alt=""
-                className="w-12 h-12 rounded-lg object-cover bg-[var(--surface-2)] flex-shrink-0"
-              />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-[var(--text)] truncate">{localName(p)}</div>
-                <div className="text-xs text-[var(--text-muted)] font-mono">
-                  {p.price} EGP · {t("Stock")} {p.stock ?? 0}
-                  {typeof p.studentCategory === "object" && p.studentCategory
-                    ? ` · ${localName(p.studentCategory)}`
-                    : ""}
-                </div>
-              </div>
-              {p.isActive === false && (
-                <span className="text-xs px-2 py-1 rounded bg-[var(--surface-2)] text-[var(--text-muted)]">
-                  {t("Hidden")}
-                </span>
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                {[t("Product"), t("Department"), t("Price"), t("Stock"), t("Status"), t("Actions")].map(
+                  (h) => (
+                    <th
+                      key={String(h)}
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {catalogProducts.map((p) => (
+                <tr key={p._id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={p.images?.[0]?.url || "/placeholder.png"}
+                        alt=""
+                        className="h-10 w-10 rounded-lg object-cover shrink-0 bg-gray-100"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium text-gray-900 truncate max-w-xs">
+                          {name(p)}
+                        </div>
+                        {p.sku && <div className="text-xs text-gray-500" dir="ltr">{p.sku}</div>}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {typeof p.studentCategory === "object" && p.studentCategory
+                      ? name(p.studentCategory)
+                      : "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {p.price ? `${p.price} EGP` : <span className="text-red-600">{t("Unpriced")}</span>}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{p.stock ?? 0}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        p.isActive !== false
+                          ? "bg-[#009688]/10 text-[#009688]"
+                          : "bg-[#9E9E9E]/10 text-[#9E9E9E]"
+                      }`}
+                    >
+                      {p.isActive !== false ? t("Shown") : t("Hidden")}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          setEditing(p);
+                          setModalOpen(true);
+                        }}
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => onDelete(p)} className="text-red-600 hover:text-red-900">
+                        <TrashIcon className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {!catalogProducts.length && !loading && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                    {catalogCategories.length
+                      ? t("No products yet.")
+                      : t("Add a department first — a product needs somewhere to sit.")}
+                  </td>
+                </tr>
               )}
-              <button onClick={() => open(p)} className="text-sm text-[var(--brand-primary)] hover:underline">
-                {t("Edit")}
-              </button>
-              <button onClick={() => onRemove(p)} className="text-sm text-[var(--danger)] hover:underline">
-                {t("Remove")}
-              </button>
-            </div>
-          ))}
+            </tbody>
+          </table>
         </div>
+      </div>
 
-        {catalogPages > 1 && (
-          <div className="flex items-center gap-2 mt-4">
-            <button
-              disabled={filter.page <= 1}
-              onClick={() => setFilter({ ...filter, page: filter.page - 1 })}
-              className="px-3 py-1.5 rounded border border-[var(--border)] text-sm disabled:opacity-40"
-            >
-              {t("Previous")}
-            </button>
-            <span className="text-sm text-[var(--text-muted)]">
-              {filter.page} / {catalogPages}
-            </span>
-            <button
-              disabled={filter.page >= catalogPages}
-              onClick={() => setFilter({ ...filter, page: filter.page + 1 })}
-              className="px-3 py-1.5 rounded border border-[var(--border)] text-sm disabled:opacity-40"
-            >
-              {t("Next")}
-            </button>
-          </div>
-        )}
-      </Card>
+      {/* Pagination */}
+      <div className="bg-white px-4 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="text-sm text-gray-700">
+          {t("Showing")} <span className="font-medium">{catalogProducts.length}</span> {t("of")}{" "}
+          <span className="font-medium">{catalogTotal}</span>
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setFilter({ ...filter, page: filter.page - 1 })}
+            disabled={filter.page <= 1}
+            className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-40"
+          >
+            {t("Previous")}
+          </button>
+          <span className="px-3 py-1 bg-[var(--brand-accent)] text-white rounded text-sm">
+            {filter.page}
+          </span>
+          <button
+            onClick={() => setFilter({ ...filter, page: filter.page + 1 })}
+            disabled={filter.page >= catalogPages}
+            className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-40"
+          >
+            {t("Next")}
+          </button>
+        </div>
+      </div>
+
+      <StudentProductModal
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setEditing(null);
+        }}
+        product={editing}
+        categories={catalogCategories}
+        onSaved={reload}
+      />
     </div>
   );
 };

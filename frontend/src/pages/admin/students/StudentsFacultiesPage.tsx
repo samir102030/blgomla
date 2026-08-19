@@ -44,7 +44,7 @@ const StudentsFacultiesPage: React.FC = () => {
   const domains = settings?.domains || [];
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl">
+    <div className="space-y-6">
       <PageHead
         title={t("Approved faculty domains")}
         description={t(
@@ -95,16 +95,16 @@ const StudentsFacultiesPage: React.FC = () => {
       </Card>
 
       <Card title={`${t("Accepting")} · ${domains.filter((d) => d.active).length} / ${domains.length}`}>
-        <div className="divide-y divide-[var(--border)]">
+        <div className="divide-y divide-gray-200">
           {domains.map((d) => (
             <div key={d._id} className="flex flex-wrap items-center gap-3 py-3">
-              <code className="font-mono text-sm text-[var(--text)]" dir="ltr">
+              <code className="font-mono text-sm text-gray-900" dir="ltr">
                 @{d.domain}
               </code>
-              <span className="text-sm text-[var(--text-muted)]">
+              <span className="text-sm text-gray-500">
                 {localUniversity({ name: d.university, nameAr: d.universityAr })}
               </span>
-              <span className="text-xs px-2 py-1 rounded bg-[var(--surface-2)] text-[var(--text-muted)]">
+              <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500">
                 {facultyLabel(d.faculty)}
               </span>
               <label className="flex items-center gap-2 text-sm ms-auto cursor-pointer">
@@ -118,14 +118,14 @@ const StudentsFacultiesPage: React.FC = () => {
               </label>
               <button
                 onClick={() => removeDomain(d._id)}
-                className="text-sm text-[var(--danger)] hover:underline"
+                className="text-sm text-red-600 hover:underline"
               >
                 {t("Remove")}
               </button>
             </div>
           ))}
           {!domains.length && (
-            <p className="text-sm text-[var(--text-muted)] py-3">
+            <p className="text-sm text-gray-500 py-3">
               {t("No domains yet — nobody can join until one is added.")}
             </p>
           )}

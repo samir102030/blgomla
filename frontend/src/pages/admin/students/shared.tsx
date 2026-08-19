@@ -5,13 +5,15 @@ import type { StudentStatus } from "../../../stores/student.store";
 /**
  * The pieces every page of the student module uses.
  *
- * The module is a shop inside the shop — its own departments, its own shelf,
- * its own members — so it gets its own pages rather than one long screen, and
- * these are what keep those pages looking like one thing.
+ * They deliberately look like the rest of the dashboard — white cards on grey,
+ * the yellow primary button, the same table chrome — rather than carrying the
+ * storefront section's own identity inland. The student area is its own
+ * product to a student; to an operator it is one more thing to run, and a
+ * screen that looks unlike every other screen is one more thing to learn.
  */
 
 export const inputCls =
-  "w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]";
+  "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent";
 
 export const Field: React.FC<{ label: string; hint?: string; children: React.ReactNode }> = ({
   label,
@@ -19,9 +21,9 @@ export const Field: React.FC<{ label: string; hint?: string; children: React.Rea
   children,
 }) => (
   <label className="block mb-4">
-    <span className="block text-sm font-semibold text-[var(--text)] mb-1">{label}</span>
+    <span className="block text-sm font-medium text-gray-700 mb-1">{label}</span>
     {children}
-    {hint && <span className="block text-xs text-[var(--text-muted)] mt-1">{hint}</span>}
+    {hint && <span className="block text-xs text-gray-500 mt-1">{hint}</span>}
   </label>
 );
 
@@ -30,40 +32,60 @@ export const Card: React.FC<{
   description?: string;
   children: React.ReactNode;
 }> = ({ title, description, children }) => (
-  <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 mb-5">
-    {title && <h2 className="text-lg font-bold text-[var(--text)]">{title}</h2>}
-    {description && <p className="text-sm text-[var(--text-muted)] mt-1 mb-4">{description}</p>}
+  <section className="bg-white p-6 rounded-lg shadow-sm border">
+    {title && <h2 className="text-lg font-semibold text-[#333333]">{title}</h2>}
+    {description && <p className="text-sm text-gray-500 mt-0.5 mb-4">{description}</p>}
     {children}
   </section>
 );
 
 /** The page title block, so every page in the module opens the same way. */
-export const PageHead: React.FC<{ title: string; description?: string; children?: React.ReactNode }> = ({
-  title,
-  description,
-  children,
-}) => (
-  <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+export const PageHead: React.FC<{
+  title: string;
+  description?: string;
+  children?: React.ReactNode;
+}> = ({ title, description, children }) => (
+  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
     <div>
-      <h1 className="text-2xl font-bold text-[var(--text)]">{title}</h1>
-      {description && <p className="text-sm text-[var(--text-muted)] mt-1 max-w-2xl">{description}</p>}
+      <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">{title}</h1>
+      {description && <p className="text-[#9E9E9E] max-w-2xl">{description}</p>}
     </div>
-    {children}
-  </header>
+    {children && <div className="flex gap-2 w-full sm:w-auto">{children}</div>}
+  </div>
+);
+
+/** A figure card, the same one the catalogue pages use. */
+export const StatCard: React.FC<{
+  label: string;
+  value: React.ReactNode;
+  tone?: string;
+  icon?: string;
+}> = ({ label, value, tone = "text-gray-900", icon = "•" }) => (
+  <div className="bg-white p-6 rounded-lg shadow-sm border h-full">
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-600">{label}</p>
+        <p className={`text-2xl font-bold ${tone}`}>{value}</p>
+      </div>
+      <div className="bg-gray-100 p-3 rounded-full">
+        <span className="text-2xl">{icon}</span>
+      </div>
+    </div>
+  </div>
 );
 
 export const STATUS_TONE: Record<StudentStatus, string> = {
-  verified: "bg-[var(--success-bg)] text-[var(--success)]",
-  pending: "bg-[var(--warning-bg)] text-[var(--warning)]",
-  rejected: "bg-[var(--danger-bg)] text-[var(--danger)]",
-  suspended: "bg-[var(--danger-bg)] text-[var(--danger)]",
-  expired: "bg-[var(--surface-2)] text-[var(--text-muted)]",
+  verified: "bg-[#009688]/10 text-[#009688]",
+  pending: "bg-[#FFD600]/20 text-[#8a6d00]",
+  rejected: "bg-red-100 text-red-700",
+  suspended: "bg-red-100 text-red-700",
+  expired: "bg-[#9E9E9E]/10 text-[#9E9E9E]",
 };
 
 export const btnPrimary =
-  "px-5 py-2.5 rounded-lg bg-[var(--brand-primary)] text-white font-semibold disabled:opacity-50";
+  "bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50";
 export const btnGhost =
-  "px-4 py-2.5 rounded-lg border border-[var(--border)] font-semibold text-[var(--text)] disabled:opacity-50";
+  "px-4 py-2 rounded-lg border border-gray-300 text-[#333333] hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50";
 
 /** Whichever name the reader can actually read. */
 export const useLocalName = () => {

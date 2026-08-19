@@ -76,7 +76,7 @@ const StudentsOverviewPage: React.FC = () => {
   ];
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl">
+    <div className="space-y-6">
       <PageHead
         title={t("Student programme")}
         description={t(
@@ -86,8 +86,8 @@ const StudentsOverviewPage: React.FC = () => {
         <span
           className={`px-3 py-1.5 rounded-lg text-sm font-semibold ${
             open
-              ? "bg-[var(--success-bg)] text-[var(--success)]"
-              : "bg-[var(--surface-2)] text-[var(--text-muted)]"
+              ? "bg-green-50 text-green-600"
+              : "bg-gray-100 text-gray-500"
           }`}
         >
           {open ? t("Open to applications") : t("Closed")}
@@ -97,9 +97,9 @@ const StudentsOverviewPage: React.FC = () => {
       {blockers.map((b) => (
         <div
           key={b.to}
-          className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--warning)]/40 bg-[var(--warning-bg)] px-4 py-3"
+          className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3"
         >
-          <span className="text-sm text-[var(--text)] flex-1">{b.text}</span>
+          <span className="text-sm text-gray-900 flex-1">{b.text}</span>
           <Link to={b.to} className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">
             {b.action}
           </Link>
@@ -109,9 +109,9 @@ const StudentsOverviewPage: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
         {figures.map(([label, value, to]) => {
           const cell = (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 h-full">
-              <div className="text-2xl font-bold text-[var(--text)] font-mono">{value ?? "—"}</div>
-              <div className="text-xs text-[var(--text-muted)] mt-1">{label}</div>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 h-full">
+              <div className="text-2xl font-bold text-gray-900 font-mono">{value ?? "—"}</div>
+              <div className="text-xs text-gray-500 mt-1">{label}</div>
             </div>
           );
           return to ? (
@@ -133,10 +133,10 @@ const StudentsOverviewPage: React.FC = () => {
             <Link
               key={label}
               to={to}
-              className="rounded-lg border border-[var(--border)] p-4 hover:border-[var(--brand-primary)] transition-colors"
+              className="rounded-lg border border-gray-200 p-4 hover:border-[var(--brand-primary)] transition-colors"
             >
-              <div className="text-xl font-bold text-[var(--text)] font-mono">{value}</div>
-              <div className="text-xs text-[var(--text-muted)] mt-1">{label}</div>
+              <div className="text-xl font-bold text-gray-900 font-mono">{value}</div>
+              <div className="text-xs text-gray-500 mt-1">{label}</div>
             </Link>
           ))}
         </div>

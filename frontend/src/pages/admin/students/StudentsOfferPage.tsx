@@ -37,7 +37,7 @@ const StudentsOfferPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl">
+    <div className="space-y-6">
       <PageHead
         title={t("The offer")}
         description={t("What a verified student gets, and how often it comes back.")}
@@ -55,7 +55,7 @@ const StudentsOfferPage: React.FC = () => {
             onChange={(e) => setDraft((d) => ({ ...d, enabled: e.target.checked }))}
             className="w-5 h-5 accent-[var(--brand-primary)]"
           />
-          <span className="text-sm font-semibold text-[var(--text)]">
+          <span className="text-sm font-semibold text-gray-900">
             {t("Programme open to applications")}
           </span>
         </label>
@@ -166,7 +166,7 @@ const StudentsOfferPage: React.FC = () => {
           </Field>
         </div>
 
-        <p className="text-sm text-[var(--text-muted)]">
+        <p className="text-sm text-gray-500">
           {t("The code pays for everything in the student section, and for nothing on the main shop.")}{" "}
           <Link to="/dashboard/students/products" className="text-[var(--brand-primary)] hover:underline">
             {t("See what is in it")}
