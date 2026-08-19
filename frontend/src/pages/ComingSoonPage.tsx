@@ -98,13 +98,13 @@ const ComingSoonPage: React.FC<Props> = ({ mode }) => {
       className="min-h-screen w-full flex flex-col relative overflow-hidden"
       style={{
         background:
-          "radial-gradient(1200px 600px at 20% 0%, rgba(255,106,26,0.35), transparent 60%), radial-gradient(900px 500px at 100% 100%, rgba(232,83,10,0.30), transparent 60%), linear-gradient(135deg, #0B0B10 0%, #1a0f08 100%)",
+          "radial-gradient(1200px 600px at 20% 0%, rgba(0, 168, 232,0.35), transparent 60%), radial-gradient(900px 500px at 100% 100%, rgba(0, 119, 182,0.30), transparent 60%), linear-gradient(135deg, #0B0B10 0%, #1a0f08 100%)",
         color: "#fff",
       }}
     >
       <header className="flex items-center justify-between px-6 py-5 sm:px-10">
         <div className="flex items-center gap-3">
-          <Logo size={44} color="#FF6A1A" />
+          <Logo size={44} color="#00A8E8" />
           <span className="text-xl font-bold tracking-tight">Belgomla</span>
         </div>
         <button
@@ -118,7 +118,7 @@ const ComingSoonPage: React.FC<Props> = ({ mode }) => {
       <main className="flex-1 flex items-center justify-center px-6">
         <div className="max-w-2xl w-full text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full bg-white/10 border border-white/15 text-xs font-semibold uppercase tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-[#FF6A1A] animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-[#00A8E8] animate-pulse" />
             {t("comingSoon.badge", "Coming soon")}
           </div>
 
@@ -147,12 +147,12 @@ const ComingSoonPage: React.FC<Props> = ({ mode }) => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("comingSoon.emailPlaceholder", "you@example.com")}
-                className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-[#FF6A1A] focus:bg-white/15 transition"
+                className="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 placeholder-white/40 text-white focus:outline-none focus:border-[#00A8E8] focus:bg-white/15 transition"
               />
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] hover:brightness-110 font-semibold text-white shadow-lg shadow-orange-900/30 transition disabled:opacity-60"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#00A8E8] to-[#0077B6] hover:brightness-110 font-semibold text-white shadow-lg shadow-orange-900/30 transition disabled:opacity-60"
               >
                 {submitting
                   ? t("comingSoon.subscribing", "Sending…")

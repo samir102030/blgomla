@@ -161,7 +161,7 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const Brand = (
     <div className="flex items-center gap-2.5 px-4 py-5">
-      <Logo size={28} color={BRAND.orange} />
+      <Logo size={28} color={BRAND.accent} />
       <span
         className="text-xl font-semibold lowercase text-[var(--text)]"
         style={{ letterSpacing: "-0.045em", lineHeight: 0.9 }}

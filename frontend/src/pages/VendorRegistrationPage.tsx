@@ -1459,7 +1459,7 @@ const VendorRegistrationPage: React.FC = () => {
 
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
               {t("vendorRegistration.heroTitle", "Grow Your Business")}
-              <span className="block bg-gradient-to-r from-[#FF6A1A] to-[#FFB382] bg-clip-text text-transparent">
+              <span className="block bg-gradient-to-r from-[#00A8E8] to-[#7FD8FF] bg-clip-text text-transparent">
                 {t("vendorRegistration.heroTitleAccent", "with Belgomla")}
               </span>
             </h1>

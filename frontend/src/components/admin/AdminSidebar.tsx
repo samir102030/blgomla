@@ -259,7 +259,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
           className="flex items-center gap-2.5"
           onClick={onCloseMobile}
         >
-          <Logo size={28} color={BRAND.orange} />
+          <Logo size={28} color={BRAND.accent} />
           {showLabels && (
             <>
               <span

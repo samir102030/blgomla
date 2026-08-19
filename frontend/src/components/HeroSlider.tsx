@@ -51,7 +51,7 @@ const HeroSlider: React.FC = () => {
       description: t("Discover laptops, cameras, and IT gear from the world's leading brands at wholesale prices."),
       buttonText: t("Shop Now"),
       buttonLink: "/products",
-      accentColor: "from-[#FF6A1A] to-[#E8530A]",
+      accentColor: "from-[#00A8E8] to-[#0077B6]",
       icon: "💻",
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779668994/halafawy/hero/premium-tech.png",
     },
@@ -63,7 +63,7 @@ const HeroSlider: React.FC = () => {
       description: t("Professional DSLR, mirrorless cameras, and lenses from Canon, Sony, and Nikon."),
       buttonText: t("Explore Cameras"),
       buttonLink: "/products?category=cameras",
-      accentColor: "from-[#FFB382] to-[#FF6A1A]",
+      accentColor: "from-[#7FD8FF] to-[#00A8E8]",
       icon: "📸",
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669608/halafawy/hero/cameras.png",
     },
@@ -75,7 +75,7 @@ const HeroSlider: React.FC = () => {
       description: t("Routers, switches, and access points for home and enterprise. Bulk pricing available."),
       buttonText: t("View Products"),
       buttonLink: "/products?category=networking",
-      accentColor: "from-[#E8530A] to-[#FFB382]",
+      accentColor: "from-[#0077B6] to-[#7FD8FF]",
       icon: "🌐",
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669319/halafawy/hero/networking.png",
     },
@@ -87,7 +87,7 @@ const HeroSlider: React.FC = () => {
       description: t("The latest flagship smartphones from Samsung, Apple, and Xiaomi at wholesale prices."),
       buttonText: t("Shop Phones"),
       buttonLink: "/products",
-      accentColor: "from-[#E8530A] to-[#FF6A1A]",
+      accentColor: "from-[#0077B6] to-[#00A8E8]",
       icon: "📱",
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669088/halafawy/hero/smartphones.png",
     },
@@ -172,9 +172,9 @@ const HeroSlider: React.FC = () => {
           decorative and pointer-transparent so they never eat a click. */}
       <div className="absolute inset-0 grid-lines opacity-[0.55] pointer-events-none" aria-hidden="true" />
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="absolute -top-40 ltr:-left-24 rtl:-right-24 w-[38rem] h-[38rem] rounded-full bg-[#FF6A1A] opacity-[0.16] blur-[120px] animate-drift" />
+        <div className="absolute -top-40 ltr:-left-24 rtl:-right-24 w-[38rem] h-[38rem] rounded-full bg-[#00A8E8] opacity-[0.16] blur-[120px] animate-drift" />
         <div
-          className="absolute -bottom-52 ltr:-right-16 rtl:-left-16 w-[34rem] h-[34rem] rounded-full bg-[#E8530A] opacity-[0.13] blur-[130px] animate-drift"
+          className="absolute -bottom-52 ltr:-right-16 rtl:-left-16 w-[34rem] h-[34rem] rounded-full bg-[#0077B6] opacity-[0.13] blur-[130px] animate-drift"
           style={{ animationDelay: "-7s" }}
         />
       </div>
@@ -206,13 +206,13 @@ const HeroSlider: React.FC = () => {
                 }
               >
                 <span className="chip chip-on-ink mb-5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#FF6A1A]" aria-hidden="true" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#00A8E8]" aria-hidden="true" />
                   {slide.kicker}
                 </span>
 
                 <h1 className="text-display text-[var(--on-ink)]">
                   {slide.title}
-                  <span className="block bg-gradient-to-r from-[#FFB382] via-[#FF6A1A] to-[#E8530A] bg-clip-text text-transparent">
+                  <span className="block bg-gradient-to-r from-[#7FD8FF] via-[#00A8E8] to-[#0077B6] bg-clip-text text-transparent">
                     {slide.subtitle}
                   </span>
                 </h1>
@@ -240,7 +240,7 @@ const HeroSlider: React.FC = () => {
             <ul className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/10 pt-6">
               {trustPoints.map(({ Icon, label }) => (
                 <li key={label} className="flex items-center gap-2 text-xs sm:text-sm font-medium text-[var(--on-ink-muted)]">
-                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF6A1A]" aria-hidden="true" />
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#00A8E8]" aria-hidden="true" />
                   {label}
                 </li>
               ))}
@@ -251,7 +251,7 @@ const HeroSlider: React.FC = () => {
           <div className="hidden lg:block lg:col-span-5 xl:col-span-6">
             <div className="relative mx-auto w-full max-w-md aspect-square">
               {/* Glow behind the frame */}
-              <div className="absolute inset-6 rounded-[2rem] bg-gradient-to-br from-[#FF6A1A] to-[#E8530A] opacity-25 blur-3xl" aria-hidden="true" />
+              <div className="absolute inset-6 rounded-[2rem] bg-gradient-to-br from-[#00A8E8] to-[#0077B6] opacity-25 blur-3xl" aria-hidden="true" />
 
               {slides.map((slide, index) => (
                 <div
@@ -310,7 +310,7 @@ const HeroSlider: React.FC = () => {
               >
                 {index === currentSlide && (
                   <span
-                    className="absolute inset-0 origin-left rtl:origin-right bg-gradient-to-r from-[#FFB382] to-[#FF6A1A]"
+                    className="absolute inset-0 origin-left rtl:origin-right bg-gradient-to-r from-[#7FD8FF] to-[#00A8E8]"
                     style={
                       reducedMotion
                         ? { transform: "scaleX(1)" }

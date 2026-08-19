@@ -4,8 +4,8 @@ import { useTranslation } from "react-i18next";
 // Belgomla brand tokens — kept here so the mark renders identically across
 // light/dark surfaces without depending on CSS variables.
 export const BRAND = {
-  orange: "#FF6A1A",
-  orangeDeep: "#E8530A",
+  accent: "#00A8E8",
+  accentDeep: "#0077B6",
   ink: "#0B0B10",
   white: "#FFFFFF",
 } as const;
@@ -23,7 +23,7 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({
   className = "",
   size = 40,
-  color = BRAND.orange,
+  color = BRAND.accent,
   showHandle = true,
 }) => {
   const { t } = useTranslation();

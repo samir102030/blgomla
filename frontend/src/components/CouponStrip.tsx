@@ -60,7 +60,7 @@ const CouponStrip: React.FC<{ title?: string }> = ({ title }) => {
               </span>
               <button
                 onClick={() => copy(c.code)}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] text-white hover:shadow-md transition-all active:scale-95"
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gradient-to-r from-[#00A8E8] to-[#0077B6] text-white hover:shadow-md transition-all active:scale-95"
               >
                 {copied === c.code ? t("Copied!") : t("Collect")}
               </button>

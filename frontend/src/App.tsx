@@ -254,7 +254,7 @@ function App() {
             boxShadow: "var(--shadow-lg)",
           },
           success: {
-            iconTheme: { primary: "#FF6A1A", secondary: "#FFFFFF" },
+            iconTheme: { primary: "#00A8E8", secondary: "#FFFFFF" },
           },
           error: {
             iconTheme: { primary: "#ef4444", secondary: "#FFFFFF" },

@@ -12,12 +12,12 @@ import AddBundleDialog from "../components/AddBundleDialog";
 /* ─── gradient accents per bundle ─── */
 // Belgomla orange spectrum — keep all tiles on-brand instead of a rainbow.
 const bundleThemes = [
-  { gradient: "from-[#FF6A1A] to-[#E8530A]", badge: "📸", tagline: "For Creators" },
-  { gradient: "from-[#FFB382] to-[#FF6A1A]", badge: "💼", tagline: "For Business" },
-  { gradient: "from-[#E8530A] to-[#FF6A1A]", badge: "🎮", tagline: "For Gamers" },
-  { gradient: "from-[#FF6A1A] to-[#0B0B10]", badge: "🌐", tagline: "For Networks" },
-  { gradient: "from-[#FFB382] to-[#E8530A]", badge: "⭐", tagline: "Featured" },
-  { gradient: "from-[#E8530A] to-[#0B0B10]", badge: "🔥", tagline: "Hot Deal" },
+  { gradient: "from-[#00A8E8] to-[#0077B6]", badge: "📸", tagline: "For Creators" },
+  { gradient: "from-[#7FD8FF] to-[#00A8E8]", badge: "💼", tagline: "For Business" },
+  { gradient: "from-[#0077B6] to-[#00A8E8]", badge: "🎮", tagline: "For Gamers" },
+  { gradient: "from-[#00A8E8] to-[#0B0B10]", badge: "🌐", tagline: "For Networks" },
+  { gradient: "from-[#7FD8FF] to-[#0077B6]", badge: "⭐", tagline: "Featured" },
+  { gradient: "from-[#0077B6] to-[#0B0B10]", badge: "🔥", tagline: "Hot Deal" },
 ];
 
 const CollectionsPage: React.FC = () => {

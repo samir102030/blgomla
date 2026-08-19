@@ -81,7 +81,7 @@ const ExitIntentPopup: React.FC = () => {
           <XMarkIcon className="h-5 w-5 text-[var(--text-muted)]" />
         </button>
 
-        <div className="bg-gradient-to-br from-[#FF6A1A] to-[#E8530A] p-6 text-center text-white">
+        <div className="bg-gradient-to-br from-[#00A8E8] to-[#0077B6] p-6 text-center text-white">
           <div className="text-4xl mb-2">🎁</div>
           <h2 className="text-2xl font-extrabold">{t("Wait! Don't go yet")}</h2>
           <p className="text-white/90 text-sm mt-1">
@@ -105,7 +105,7 @@ const ExitIntentPopup: React.FC = () => {
               />
               <button
                 type="submit"
-                className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] text-white font-semibold text-sm hover:shadow-lg transition-all active:scale-[0.98]"
+                className="w-full px-5 py-3 rounded-xl bg-gradient-to-r from-[#00A8E8] to-[#0077B6] text-white font-semibold text-sm hover:shadow-lg transition-all active:scale-[0.98]"
               >
                 {t("Get my code")}
               </button>

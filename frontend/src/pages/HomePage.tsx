@@ -139,12 +139,12 @@ const Ico = {
 
 /* ─── Bundle Themes ─── */
 // Warm orange spectrum derived from the Belgomla palette
-// (orange #FF6A1A, orangeDeep #E8530A, orangeSoft #FFB382, ink #0B0B10).
+// (orange #00A8E8, orangeDeep #0077B6, orangeSoft #7FD8FF, ink #0B0B10).
 const bundleThemes = [
-  { gradient: "from-[#FF6A1A] to-[#E8530A]", badge: "📸" },
-  { gradient: "from-[#FFB382] to-[#FF6A1A]", badge: "💼" },
-  { gradient: "from-[#E8530A] to-[#FF6A1A]", badge: "🎮" },
-  { gradient: "from-[#FF6A1A] to-[#0B0B10]", badge: "🌐" },
+  { gradient: "from-[#00A8E8] to-[#0077B6]", badge: "📸" },
+  { gradient: "from-[#7FD8FF] to-[#00A8E8]", badge: "💼" },
+  { gradient: "from-[#0077B6] to-[#00A8E8]", badge: "🎮" },
+  { gradient: "from-[#00A8E8] to-[#0B0B10]", badge: "🌐" },
 ];
 
 /* ═════════════════════ Main Page ═════════════════════ */

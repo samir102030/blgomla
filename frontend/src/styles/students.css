@@ -19,8 +19,9 @@
   --st-rule: rgba(174, 194, 224, .08);
   --st-text: #e8eef8;
   --st-muted: #8ea0b8;
-  --st-orange: #ff5b00;
-  --st-blue: #248dff;
+  --st-orange: #00A8E8;
+  --st-accent-rgb: 0, 168, 232;
+  --st-blue: #00A8E8;
   --st-ease: cubic-bezier(.2, .9, .1, 1);
   background: var(--st-ink);
   color: var(--st-text);
@@ -94,20 +95,20 @@ html[dir="rtl"] .st-field span { letter-spacing: .02em; text-transform: none; fo
   font-size: 13px; font-weight: 700; cursor: pointer;
   transition: box-shadow 140ms var(--st-ease), transform 140ms var(--st-ease), background 140ms var(--st-ease);
 }
-.st-btn-primary { background: var(--st-orange); color: #fff; box-shadow: 4px 4px 0 rgba(255, 91, 0, .3); }
-.st-btn-primary:hover:not(:disabled) { box-shadow: 6px 6px 0 rgba(255, 91, 0, .45); transform: translate(-1px, -1px); }
+.st-btn-primary { background: var(--st-orange); color: #fff; box-shadow: 4px 4px 0 rgba(var(--st-accent-rgb), .3); }
+.st-btn-primary:hover:not(:disabled) { box-shadow: 6px 6px 0 rgba(var(--st-accent-rgb), .45); transform: translate(-1px, -1px); }
 .st-btn-ghost { background: transparent; border-color: var(--st-line); color: var(--st-text); }
 .st-btn-ghost:hover:not(:disabled) { border-color: var(--st-orange); color: #fff; }
 .st-btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }
 
 /* ── The code panel: the one loud element ── */
 .st-code {
-  position: relative; border: 1px solid var(--st-orange); background: linear-gradient(140deg, rgba(255,91,0,.12), transparent 60%), #0a0e15;
+  position: relative; border: 1px solid var(--st-orange); background: linear-gradient(140deg, rgba(var(--st-accent-rgb), .12), transparent 60%), #0a0e15;
   padding: 26px; overflow: hidden;
 }
 .st-code::after {
   content: ""; position: absolute; inset-inline-end: -30px; top: -30px; width: 130px; height: 130px;
-  border: 1px solid rgba(255, 91, 0, .32); transform: rotate(18deg);
+  border: 1px solid rgba(var(--st-accent-rgb), .32); transform: rotate(18deg);
 }
 .st-code b {
   display: block; font-family: "IBM Plex Mono", ui-monospace, monospace;
@@ -124,8 +125,8 @@ html[dir="rtl"] .st-code small { letter-spacing: .02em; text-transform: none; fo
 }
 
 /* ── Status notice ── */
-.st-note { border-inline-start: 2px solid var(--st-blue); background: rgba(36, 141, 255, .07); padding: 14px 16px; font-size: 13px; line-height: 1.8; color: #cfe0f5; }
-.st-note.st-warn { border-color: var(--st-orange); background: rgba(255, 91, 0, .08); color: #ffd9c4; }
+.st-note { border-inline-start: 2px solid var(--st-blue); background: rgba(var(--st-accent-rgb), .07); padding: 14px 16px; font-size: 13px; line-height: 1.8; color: #cfe0f5; }
+.st-note.st-warn { border-color: var(--st-orange); background: rgba(var(--st-accent-rgb), .08); color: #ffd9c4; }
 .st-note.st-bad { border-color: #ff5566; background: rgba(255, 85, 102, .08); color: #ffd2d7; }
 
 /* ── Approved faculties ── */
@@ -158,7 +159,7 @@ html[dir="rtl"] .st-code small { letter-spacing: .02em; text-transform: none; fo
    second card would be a second place to fix all four. The frame around it
    stays in this section's language — square corners, ruled edges, mono
    numerals — so the card reads as being on this shelf, not borrowed. */
-.st-shop { border-top: 1px solid var(--st-line); padding: 64px 0 88px; background: linear-gradient(180deg, rgba(36, 141, 255, .04), transparent 220px); }
+.st-shop { border-top: 1px solid var(--st-line); padding: 64px 0 88px; background: linear-gradient(180deg, rgba(var(--st-accent-rgb), .04), transparent 220px); }
 .st-shop-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 26px; }
 .st-shop-head h2 { margin: 10px 0 0; font-family: "Reem Kufi", "IBM Plex Sans Arabic", sans-serif; font-size: clamp(24px, 3vw, 34px); font-weight: 700; color: var(--st-text); line-height: 1.25; }
 .st-shop-count { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 12px; color: var(--st-muted); border: 1px solid var(--st-line); padding: 7px 12px; }
@@ -170,7 +171,7 @@ html[dir="rtl"] .st-code small { letter-spacing: .02em; text-transform: none; fo
   transition: color 160ms var(--st-ease), border-color 160ms var(--st-ease), background 160ms var(--st-ease);
 }
 .st-depts button:hover { color: var(--st-text); border-color: rgba(174, 194, 224, .38); }
-.st-depts button.st-active { color: #fff; border-color: var(--st-orange); background: rgba(255, 91, 0, .12); font-weight: 600; }
+.st-depts button.st-active { color: #fff; border-color: var(--st-orange); background: rgba(var(--st-accent-rgb), .12); font-weight: 600; }
 
 .st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
 .st-shop-note { font-size: 13px; color: var(--st-muted); padding: 26px 0; }

@@ -78,7 +78,7 @@ const MyAccountPage: React.FC = () => {
       <section className="relative isolate overflow-hidden bg-[var(--ink-canvas)]">
         <div className="absolute inset-0 grid-lines opacity-[0.5] pointer-events-none" aria-hidden="true" />
         <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-32 ltr:-left-20 rtl:-right-20 w-[26rem] h-[26rem] rounded-full bg-[#FF6A1A] opacity-[0.14] blur-[110px] animate-drift" />
+          <div className="absolute -top-32 ltr:-left-20 rtl:-right-20 w-[26rem] h-[26rem] rounded-full bg-[#00A8E8] opacity-[0.14] blur-[110px] animate-drift" />
         </div>
         <div className="absolute inset-x-0 bottom-0 h-16 pointer-events-none bg-gradient-to-b from-transparent to-[var(--bg)]" aria-hidden="true" />
 

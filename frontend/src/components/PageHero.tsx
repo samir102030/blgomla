@@ -61,8 +61,8 @@ const PageHero: React.FC<PageHeroProps> = ({
             className="absolute inset-0 overflow-hidden pointer-events-none"
             aria-hidden="true"
           >
-            <div className="absolute -top-32 ltr:-left-20 rtl:-right-20 w-[26rem] h-[26rem] rounded-full bg-[#FF6A1A] opacity-[0.14] blur-[110px] animate-drift" />
-            <div className="absolute -bottom-40 ltr:-right-14 rtl:-left-14 w-[22rem] h-[22rem] rounded-full bg-[#E8530A] opacity-[0.11] blur-[120px] animate-drift" />
+            <div className="absolute -top-32 ltr:-left-20 rtl:-right-20 w-[26rem] h-[26rem] rounded-full bg-[#00A8E8] opacity-[0.14] blur-[110px] animate-drift" />
+            <div className="absolute -bottom-40 ltr:-right-14 rtl:-left-14 w-[22rem] h-[22rem] rounded-full bg-[#0077B6] opacity-[0.11] blur-[120px] animate-drift" />
           </div>
           {/* Melts into the page below instead of ending on a hard edge. */}
           <div

@@ -127,7 +127,7 @@ const SiteModePage: React.FC = () => {
         <button
           onClick={onToggleComingSoon}
           className={`relative w-14 h-8 rounded-full transition ${
-            draft.comingSoon ? "bg-[#FF6A1A]" : "bg-gray-400"
+            draft.comingSoon ? "bg-[#00A8E8]" : "bg-gray-400"
           }`}
           aria-label="Toggle coming soon"
         >

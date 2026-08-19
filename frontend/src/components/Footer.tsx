@@ -59,8 +59,8 @@ const Footer: React.FC = () => {
       {/* Ambient brand light, same treatment as the hero so the page opens and
           closes on the same note. */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div className="absolute -top-32 ltr:left-[8%] rtl:right-[8%] w-96 h-96 rounded-full bg-[#FF6A1A] opacity-[0.09] blur-[120px]" />
-        <div className="absolute -bottom-40 ltr:right-[6%] rtl:left-[6%] w-80 h-80 rounded-full bg-[#E8530A] opacity-[0.07] blur-[110px]" />
+        <div className="absolute -top-32 ltr:left-[8%] rtl:right-[8%] w-96 h-96 rounded-full bg-[#00A8E8] opacity-[0.09] blur-[120px]" />
+        <div className="absolute -bottom-40 ltr:right-[6%] rtl:left-[6%] w-80 h-80 rounded-full bg-[#0077B6] opacity-[0.07] blur-[110px]" />
       </div>
 
       <div className="relative shell py-12 sm:py-16">
@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
           {/* Brand */}
           <div className="col-span-2 lg:col-span-3">
             <Link to="/" className="inline-flex items-center gap-2.5 mb-4" aria-label={t("brand.homeLabel", "Belgomla home")}>
-              <Logo size={34} color={BRAND.orange} />
+              <Logo size={34} color={BRAND.accent} />
               <span
                 className={`text-2xl font-semibold text-white ${
                   i18n.language === "ar" ? "" : "lowercase"

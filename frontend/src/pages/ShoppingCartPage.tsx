@@ -1186,7 +1186,7 @@ const ShoppingCartPage: React.FC = () => {
                       )}
                       <div className="h-2 w-full rounded-full bg-[var(--surface-3)] overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#FF6A1A] to-[#E8530A] transition-all duration-500"
+                          className="h-full rounded-full bg-gradient-to-r from-[#00A8E8] to-[#0077B6] transition-all duration-500"
                           style={{
                             width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%`,
                           }}

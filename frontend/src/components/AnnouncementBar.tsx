@@ -74,7 +74,7 @@ const AnnouncementBar: React.FC = () => {
     <div
       dir={isRtl ? "rtl" : "ltr"}
       onClick={handleClick}
-      className={`relative w-full bg-gradient-to-r from-[#FF6A1A] via-[#E8530A] to-[#FF6A1A] text-white text-center text-xs sm:text-sm font-medium px-10 py-2 ${
+      className={`relative w-full bg-gradient-to-r from-[#00A8E8] via-[#0077B6] to-[#00A8E8] text-white text-center text-xs sm:text-sm font-medium px-10 py-2 ${
         current.link ? "cursor-pointer" : ""
       }`}
     >
