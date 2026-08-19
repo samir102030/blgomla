@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -6,12 +6,52 @@ import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { GoogleLogin } from "@react-oauth/google";
+import "../styles/auth-blade.css";
 
 type AuthMode = "login" | "register";
+
+/** The blade's whole pass, and the moment inside it when the card is hidden. */
+const SWEEP_MS = 720;
+const COVER_MS = 330;
 
 const LoginRegisterPage: React.FC = () => {
   const { t } = useTranslation();
   const [mode, setMode] = useState<AuthMode>("login");
+  const [sweeping, setSweeping] = useState(false);
+  const timers = useRef<number[]>([]);
+
+  const prefersReducedMotion =
+    typeof window !== "undefined" &&
+    !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  // Leaving the page mid-sweep would otherwise set state on a gone component.
+  useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
+
+  /**
+   * Change panes under the blade.
+   *
+   * The swap is scheduled for the moment the blade is over the card, not for
+   * when it has finished: waiting for the end would show the old form through
+   * the second half of the pass, and swapping at the start would show the new
+   * one through the first.
+   */
+  const switchTo = (next: AuthMode) => {
+    if (next === mode || sweeping) return;
+    if (prefersReducedMotion) {
+      setMode(next);
+      return;
+    }
+    setSweeping(true);
+    timers.current.push(
+      window.setTimeout(() => setMode(next), COVER_MS),
+      window.setTimeout(() => setSweeping(false), SWEEP_MS),
+    );
+  };
+
+  const heading =
+    mode === "login"
+      ? t("login.welcomeBack", "Welcome Back")
+      : t("login.createYourAccount", "Create Your Account");
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({ name: "", email: "", phoneNumber: "", password: "", confirmPassword: "" });
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -188,11 +228,36 @@ const LoginRegisterPage: React.FC = () => {
               {/* Tab Switcher */}
               <div className="flex bg-[var(--surface-2)] rounded-2xl p-1 mb-8 border border-[var(--border)]">
                 {(["login", "register"] as AuthMode[]).map((m) => (
-                  <button key={m} onClick={() => setMode(m)} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${mode === m ? "bg-[var(--surface)] text-[var(--text)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}>
+                  <button key={m} onClick={() => switchTo(m)} aria-pressed={mode === m} className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${mode === m ? "bg-[var(--surface)] text-[var(--text)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text)]"}`}>
                     {m === "login" ? t("login.signIn", "Sign In") : t("login.createAccount", "Create Account")}
                   </button>
                 ))}
               </div>
+
+              <div
+                className={`ab-stage${sweeping ? " is-sweeping" : ""}`}
+                style={
+                  {
+                    "--ab-rake": "-13deg",
+                    "--ab-sweep": `${SWEEP_MS}ms`,
+                  } as React.CSSProperties
+                }
+              >
+                {/* One blade, two lit seams. Decorative: the heading it slices
+                    is already on the page underneath, and the swap it covers is
+                    announced by the pressed state on the tabs. */}
+                {/* Keyed so React matches it across the swap. Without the key
+                    it is reconciled by position, and the pane changing beside
+                    it at the halfway point restarted the animation from zero —
+                    the blade reached the middle of the card and jumped back to
+                    the edge. */}
+                <span className="ab-blade" key="ab-blade" aria-hidden="true">
+                  <span className="ab-edge ab-edge--lead" />
+                  <span className="ab-edge ab-edge--trail" />
+                  <span className="ab-blade-inner">
+                    <span className="ab-slice">{heading}</span>
+                  </span>
+                </span>
 
               {/* ===== LOGIN FORM ===== */}
               {mode === "login" && (
@@ -280,7 +345,7 @@ const LoginRegisterPage: React.FC = () => {
                   <div className="mt-6 text-center">
                     <p className="text-sm text-[var(--text-muted)]">
                       {t("login.noAccount", "Don't have an account?")}{" "}
-                      <button onClick={() => setMode("register")} className="font-semibold text-[var(--brand-primary)] hover:underline">{t("login.createOne", "Create one")}</button>
+                      <button onClick={() => switchTo("register")} className="font-semibold text-[var(--brand-primary)] hover:underline">{t("login.createOne", "Create one")}</button>
                     </p>
                   </div>
                 </div>
@@ -385,11 +450,12 @@ const LoginRegisterPage: React.FC = () => {
                   <div className="mt-6 text-center">
                     <p className="text-sm text-[var(--text-muted)]">
                       {t("login.hasAccount", "Already have an account?")}{" "}
-                      <button onClick={() => setMode("login")} className="font-semibold text-[var(--brand-primary)] hover:underline">{t("login.signInLink", "Sign in")}</button>
+                      <button onClick={() => switchTo("login")} className="font-semibold text-[var(--brand-primary)] hover:underline">{t("login.signInLink", "Sign in")}</button>
                     </p>
                   </div>
                 </div>
               )}
+              </div>
 
               {/* ===== TRUST BADGES (below form) ===== */}
               <div className="mt-6 grid grid-cols-3 gap-3">

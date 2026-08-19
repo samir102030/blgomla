@@ -1,0 +1,108 @@
+/**
+ * The blade that changes the sign-in card over.
+ *
+ * One skewed rectangle sweeps across the card. It is opaque, so for the stretch
+ * of its travel that it sits over the card the two panes trade places behind
+ * it — no cross-fade, no two forms briefly on screen at once, just a card that
+ * was one thing before the blade passed and another after.
+ *
+ * The part worth understanding is the slice. The blade has `overflow: hidden`
+ * and carries a second copy of the heading inside it, and that copy is given
+ * the exact inverse of the blade's own transform. So while the blade moves,
+ * the heading inside it does not — it stays welded over the heading underneath.
+ * What travels is the *window*, which is why the letters look cut on a
+ * diagonal and lit as the edge crosses them, rather than sliding along with it.
+ *
+ * For that to line up, the blade's untransformed box has to start at the
+ * stage's own top-left corner: the inner layer is `inset: 0` of the blade, so
+ * its co-ordinates are the stage's co-ordinates, and the slice can then be
+ * placed with the same offsets the real heading has inside the card.
+ */
+
+.ab-stage {
+  position: relative;
+  isolation: isolate;
+}
+
+.ab-blade {
+  position: absolute;
+  /* Anchored at the stage's corner — see the note above. Narrower than the
+     card so it reads as a blade passing rather than a curtain dropping. */
+  inset-inline-start: 0;
+  top: 0;
+  width: 58%;
+  height: 100%;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transform: skewX(var(--ab-rake)) translateX(-180%);
+  background: linear-gradient(
+    100deg,
+    var(--brand-accent) 0%,
+    var(--brand-primary) 45%,
+    var(--brand-accent) 100%
+  );
+}
+
+/* Two lit seams: the leading edge reads as the cut, the trailing one as the
+   light coming off it. */
+.ab-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--brand-secondary);
+  box-shadow: 0 0 20px 3px rgba(var(--brand-secondary-rgb), 0.7);
+}
+.ab-edge--lead { inset-inline-start: 0; }
+.ab-edge--trail { inset-inline-end: 0; opacity: 0.4; }
+
+/* Back into the card's co-ordinates: the exact inverse of the blade's own
+   transform, frame for frame. */
+.ab-blade-inner {
+  position: absolute;
+  inset: 0;
+  transform: skewX(calc(-1 * var(--ab-rake))) translateX(180%);
+}
+
+/* The heading's second copy, sat where the real one sits inside the card:
+   the card's padding down and in from the stage corner. */
+.ab-slice {
+  position: absolute;
+  inset-inline-start: 1.5rem;
+  top: 1.5rem;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  white-space: nowrap;
+}
+@media (min-width: 640px) {
+  .ab-slice { inset-inline-start: 2rem; top: 2rem; }
+}
+
+.ab-stage.is-sweeping .ab-blade {
+  animation: ab-sweep var(--ab-sweep) cubic-bezier(0.72, 0, 0.24, 1) both;
+}
+.ab-stage.is-sweeping .ab-blade-inner {
+  animation: ab-sweep-inner var(--ab-sweep) cubic-bezier(0.72, 0, 0.24, 1) both;
+}
+
+@keyframes ab-sweep {
+  0% { opacity: 0; transform: skewX(var(--ab-rake)) translateX(-180%); }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: skewX(var(--ab-rake)) translateX(180%); }
+}
+
+@keyframes ab-sweep-inner {
+  0% { transform: skewX(calc(-1 * var(--ab-rake))) translateX(180%); }
+  100% { transform: skewX(calc(-1 * var(--ab-rake))) translateX(-180%); }
+}
+
+/* Asked for less motion: the card still changes, it just changes at once. The
+   blade is never drawn rather than being drawn and left frozen over the card. */
+@media (prefers-reduced-motion: reduce) {
+  .ab-blade { display: none; }
+}
