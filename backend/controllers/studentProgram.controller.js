@@ -2,6 +2,7 @@ import crypto from "crypto";
 import mongoose from "mongoose";
 
 import Coupon from "../models/coupon.model.js";
+import Product from "../models/product.model.js";
 import StudentProfile from "../models/studentProfile.model.js";
 import StudentProgram from "../models/studentProgram.model.js";
 import User from "../models/user.model.js";
@@ -199,6 +200,84 @@ export const getPublicProgram = controllerWrapper("getPublicProgram", async (req
       // their faculty address will be accepted before they type it in.
       domains: program.domains.filter((d) => d.active).map((d) => d.domain),
     },
+  });
+});
+
+/**
+ * The shelf: which products the student area shows.
+ *
+ * Two sources, one list — every product filed under a chosen department, plus
+ * anything picked out by hand. Both are the shop's own products; this decides
+ * what appears in the student area, never what a product is or costs. A
+ * department selected here is the same department the discount applies to,
+ * so the shelf and the offer cannot drift apart and leave a student looking at
+ * something their code will not pay for.
+ *
+ * Public on purpose. The point of the section is that a student can see what
+ * is in it before deciding whether to prove who they are.
+ */
+export const getStudentCatalogue = controllerWrapper("getStudentCatalogue", async (req, res) => {
+  const program = await StudentProgram.load();
+
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(60, Math.max(1, Number(req.query.limit) || 24));
+  const sort = String(req.query.sort || "");
+
+  // A department filter has to be one of the programme's own, or the section
+  // becomes a way to browse the whole catalogue through a student URL.
+  const chosen = (program.categories || []).map(String);
+  const requested = req.query.category ? String(req.query.category) : "";
+  const departments = requested ? (chosen.includes(requested) ? [requested] : []) : chosen;
+
+  const categoryIds = await expandScope(departments);
+  const handPicked = requested ? [] : (program.products || []).map(String);
+
+  // Nothing chosen at all means the whole catalogue, which is what the empty
+  // scope already means for the discount.
+  const reach =
+    categoryIds.length || handPicked.length
+      ? {
+          $or: [
+            ...(categoryIds.length ? [{ category: { $in: categoryIds } }] : []),
+            ...(handPicked.length ? [{ _id: { $in: handPicked } }] : []),
+          ],
+        }
+      : {};
+
+  const filter = {
+    isActive: true,
+    deleted: { $ne: true },
+    approvalStatus: "approved",
+    ...reach,
+  };
+
+  const order =
+    sort === "price-asc"
+      ? { price: 1 }
+      : sort === "price-desc"
+        ? { price: -1 }
+        : sort === "newest"
+          ? { createdAt: -1 }
+          : { soldCount: -1, rating: -1 };
+
+  const [products, total] = await Promise.all([
+    Product.find(filter)
+      .select("name nameAr slug price salePrice saleActive images rating stock soldCount")
+      .sort(order)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Product.countDocuments(filter),
+  ]);
+
+  await program.populate("categories", "name nameAr slug");
+
+  return ok(res, {
+    products,
+    total,
+    page,
+    pages: Math.max(1, Math.ceil(total / limit)),
+    departments: program.categories,
   });
 });
 
@@ -424,15 +503,25 @@ export const verifyStudentEmail = controllerWrapper("verifyStudentEmail", async 
 
 /* ────────────────────────── admin side ────────────────────────── */
 
+/**
+ * The departments and the hand-picked products, filled in enough for the
+ * dashboard to render a list without a second round trip.
+ */
+const populateShelf = (program) =>
+  program.populate([
+    { path: "categories", select: "name nameAr slug" },
+    { path: "products", select: "name nameAr slug price images stock isActive" },
+  ]);
+
 export const getProgramSettings = controllerWrapper("getProgramSettings", async (req, res) => {
   const program = await StudentProgram.load();
-  await program.populate("categories", "name nameAr slug");
+  await populateShelf(program);
   return ok(res, { program });
 });
 
 export const updateProgramSettings = controllerWrapper("updateProgramSettings", async (req, res) => {
   const program = await StudentProgram.load();
-  const { enabled, discount, renewal, categories, membershipDays } = req.body || {};
+  const { enabled, discount, renewal, categories, products, membershipDays } = req.body || {};
 
   if (typeof enabled === "boolean") program.enabled = enabled;
   if (discount && typeof discount === "object") {
@@ -448,11 +537,14 @@ export const updateProgramSettings = controllerWrapper("updateProgramSettings", 
   if (Array.isArray(categories)) {
     program.categories = categories.filter((id) => mongoose.isValidObjectId(id));
   }
+  if (Array.isArray(products)) {
+    program.products = products.filter((id) => mongoose.isValidObjectId(id));
+  }
   if (membershipDays !== undefined) program.membershipDays = membershipDays;
   program.updatedBy = req.user._id;
 
   await program.save();
-  await program.populate("categories", "name nameAr slug");
+  await populateShelf(program);
   return ok(res, { program, message: "Programme settings saved." });
 });
 

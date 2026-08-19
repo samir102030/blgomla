@@ -45,6 +45,26 @@ export interface PublicProgram {
   domains: string[];
 }
 
+/** A category as the settings endpoint returns it once populated. */
+export interface ShelfCategory {
+  _id: string;
+  name: string;
+  nameAr?: string;
+  slug?: string;
+}
+
+/** A product on the student shelf, filled in enough to list it. */
+export interface ShelfProduct {
+  _id: string;
+  name: string;
+  nameAr?: string;
+  slug?: string;
+  price: number;
+  images?: Array<{ url?: string } | string>;
+  stock?: number;
+  isActive?: boolean;
+}
+
 /** The full settings document, dashboard side. */
 export interface ProgramSettings {
   _id: string;
@@ -52,7 +72,9 @@ export interface ProgramSettings {
   domains: ProgramDomain[];
   discount: ProgramDiscount;
   renewal: ProgramRenewal;
-  categories: Array<{ _id: string; name: string; nameAr?: string; slug?: string } | string>;
+  categories: Array<ShelfCategory | string>;
+  /** Hand-picked products, on top of whatever the departments bring in. */
+  products: Array<ShelfProduct | string>;
   membershipDays: number;
   updatedAt?: string;
 }
@@ -103,6 +125,15 @@ export interface StudentStats {
 const message = (error: any, fallback: string) =>
   error?.response?.data?.message || error?.message || fallback;
 
+/** One page of the student shelf, as the storefront reads it. */
+export interface StudentCatalogue {
+  products: any[];
+  total: number;
+  page: number;
+  pages: number;
+  departments: ShelfCategory[];
+}
+
 interface StudentStore {
   publicProgram: PublicProgram | undefined;
   myProfile: MyStudentProfile | null | undefined;
@@ -111,6 +142,8 @@ interface StudentStore {
   membersTotal: number;
   membersPages: number;
   stats: StudentStats | undefined;
+  catalogue: StudentCatalogue | undefined;
+  catalogueLoading: boolean;
   loading: boolean;
   saving: boolean;
   error: string | undefined;
@@ -129,6 +162,7 @@ interface StudentStore {
   setMemberStatus: (id: string, status: StudentStatus, rejectionReason?: string) => Promise<boolean>;
   fetchStats: () => Promise<void>;
   runMaintenance: () => Promise<boolean>;
+  fetchCatalogue: (params?: Record<string, any>) => Promise<void>;
   clearError: () => void;
 }
 
@@ -140,9 +174,32 @@ export const useStudentStore = create<StudentStore>((set, get) => ({
   membersTotal: 0,
   membersPages: 1,
   stats: undefined,
+  catalogue: undefined,
+  catalogueLoading: false,
   loading: false,
   saving: false,
   error: undefined,
+
+  fetchCatalogue: async (params) => {
+    // Its own loading flag: the shelf sits under the membership panel on the
+    // same page, and sharing `loading` would blank one while the other reads.
+    set({ catalogueLoading: true });
+    try {
+      const { data } = await axiosInstance.get("/students/catalogue", { params });
+      set({
+        catalogue: {
+          products: data.products || [],
+          total: data.total || 0,
+          page: data.page || 1,
+          pages: data.pages || 1,
+          departments: data.departments || [],
+        },
+        catalogueLoading: false,
+      });
+    } catch (error: any) {
+      set({ error: message(error, "Could not load the products."), catalogueLoading: false });
+    }
+  },
 
   fetchPublicProgram: async () => {
     set({ loading: true, error: undefined });

@@ -5,6 +5,7 @@ import {
   getMyStudentProfile,
   getProgramSettings,
   getPublicProgram,
+  getStudentCatalogue,
   getStudentStats,
   listStudentMembers,
   removeProgramDomain,
@@ -28,6 +29,9 @@ const router = express.Router();
    without a session: the link is opened from a university webmail that may be
    signed into nothing on this site. */
 router.get("/program", getPublicProgram);
+// The shelf is readable by anyone: a student decides whether the section is
+// worth proving enrolment for by looking at what is on it.
+router.get("/catalogue", getStudentCatalogue);
 router.post("/verify", studentVerifyLimiter, verifyStudentEmail);
 router.post("/verify/:token", studentVerifyLimiter, verifyStudentEmail);
 

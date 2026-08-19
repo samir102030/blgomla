@@ -119,6 +119,23 @@ const studentProgramSchema = new mongoose.Schema(
       },
     ],
 
+    /**
+     * Products put in the student shop by hand, on top of whatever the
+     * categories above already bring in.
+     *
+     * They are references, not copies. The student area is a different way
+     * into the same catalogue — one price list, one stock count, one place a
+     * product is edited. A second product collection would drift from the
+     * first within a week and there would be no way to tell which of the two
+     * a customer was looking at.
+     */
+    products: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+
     /** How long a verified membership lasts before it has to be renewed. */
     membershipDays: {
       type: Number,
