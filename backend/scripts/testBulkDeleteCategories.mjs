@@ -10,11 +10,21 @@ import Category from "../models/category.model.js";
 import Product from "../models/product.model.js";
 
 const BASE = "http://127.0.0.1:5000/api";
+
+// Credentials come from the environment. They used to be written here, which
+// put a working super_admin login in a public repository — and these scripts
+// only ever run against a database somebody already has.
+const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL || "admin@belgomla.com";
+const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  console.error("SEED_ADMIN_PASSWORD is not set — this script signs in as the admin to run.");
+  process.exit(1);
+}
 const login = async () => {
   const res = await fetch(`${BASE}/users/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "admin@belgomla.com", password: "Admin@123" }),
+    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
   });
   return res.headers.getSetCookie().map((c) => c.split(";")[0]).join("; ");
 };
