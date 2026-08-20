@@ -10,6 +10,15 @@ import "../styles/auth-blade.css";
 
 type AuthMode = "login" | "register";
 
+/**
+ * Google sign-in needs a client id from the Google Cloud console, and a
+ * deployment without one is a perfectly good deployment — everything else
+ * about signing in works. What is not good is the button: with an empty id it
+ * still draws, and pressing it fails silently. So the whole block, divider and
+ * all, appears only where it can actually do something.
+ */
+const GOOGLE_ENABLED = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
 /** The blade's whole pass. */
 const SWEEP_MS = 1100;
 /**
@@ -359,24 +368,28 @@ const LoginRegisterPage: React.FC = () => {
                     </button>
                   </form>
 
-                  <div className="my-6 flex items-center gap-3">
-                    <div className="flex-1 h-px bg-[var(--border)]" />
-                    <span className="text-xs text-[var(--text-subtle)] uppercase tracking-wider">
-                      {t("login.or", "or")}
-                    </span>
-                    <div className="flex-1 h-px bg-[var(--border)]" />
-                  </div>
+                  {GOOGLE_ENABLED && (
+                    <>
+                      <div className="my-6 flex items-center gap-3">
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                        <span className="text-xs text-[var(--text-subtle)] uppercase tracking-wider">
+                          {t("login.or", "or")}
+                        </span>
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                      </div>
 
-                  <div className="flex justify-center">
-                    <GoogleLogin
-                      onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
-                      onError={() => setLoginError(t("login.googleFailed", "Google sign-in failed."))}
-                      useOneTap={false}
-                      theme="outline"
-                      size="large"
-                      width="320"
-                    />
-                  </div>
+                      <div className="flex justify-center">
+                        <GoogleLogin
+                          onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
+                          onError={() => setLoginError(t("login.googleFailed", "Google sign-in failed."))}
+                          useOneTap={false}
+                          theme="outline"
+                          size="large"
+                          width="320"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="mt-6 text-center">
                     <p className="text-sm text-[var(--text-muted)]">
@@ -456,25 +469,29 @@ const LoginRegisterPage: React.FC = () => {
                     </button>
                   </form>
 
-                  <div className="my-6 flex items-center gap-3">
-                    <div className="flex-1 h-px bg-[var(--border)]" />
-                    <span className="text-xs text-[var(--text-subtle)] uppercase tracking-wider">
-                      {t("login.or", "or")}
-                    </span>
-                    <div className="flex-1 h-px bg-[var(--border)]" />
-                  </div>
+                  {GOOGLE_ENABLED && (
+                    <>
+                      <div className="my-6 flex items-center gap-3">
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                        <span className="text-xs text-[var(--text-subtle)] uppercase tracking-wider">
+                          {t("login.or", "or")}
+                        </span>
+                        <div className="flex-1 h-px bg-[var(--border)]" />
+                      </div>
 
-                  <div className="flex justify-center">
-                    <GoogleLogin
-                      onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
-                      onError={() => setRegisterError(t("login.googleFailed", "Google sign-in failed."))}
-                      useOneTap={false}
-                      theme="outline"
-                      size="large"
-                      text="signup_with"
-                      width="320"
-                    />
-                  </div>
+                      <div className="flex justify-center">
+                        <GoogleLogin
+                          onSuccess={(cred) => handleGoogleSuccess(cred.credential)}
+                          onError={() => setRegisterError(t("login.googleFailed", "Google sign-in failed."))}
+                          useOneTap={false}
+                          theme="outline"
+                          size="large"
+                          text="signup_with"
+                          width="320"
+                        />
+                      </div>
+                    </>
+                  )}
 
                   <div className="mt-5 text-center text-xs text-[var(--text-subtle)] leading-relaxed">
                     {t("login.termsNotice", "By creating an account, you agree to our")}{" "}
