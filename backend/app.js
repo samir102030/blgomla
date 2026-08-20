@@ -133,7 +133,7 @@ app.get("/api/v1/health", async (req, res) => {
   const ok = dbState === 1;
   res.status(ok ? 200 : 503).json({
     ok,
-    service: "halafawyStore-backend",
+    service: "blgomla-api",
     uptime: Math.round(process.uptime()),
     db: ["disconnected", "connected", "connecting", "disconnecting"][dbState] ?? "unknown",
     // Which commit is actually serving. Vercel injects these at build time.
@@ -206,7 +206,7 @@ app.use((req, res, next) => {
 app.use("/api", systemRoutes);
 
 app.get("/", (req, res) => {
-  res.json({ ok: true, service: "halafawyStore-backend" });
+  res.json({ ok: true, service: "blgomla-api" });
 });
 
 app.use((err, req, res, next) => {

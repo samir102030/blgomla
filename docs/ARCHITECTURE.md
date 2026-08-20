@@ -40,7 +40,7 @@
 ## 2. Repo layout
 
 ```
-halafawyStore/
+blgomla/
 ├── frontend/                React + Vite app (TS)
 │   ├── src/
 │   │   ├── pages/           routed pages (lazy except HomePage)
