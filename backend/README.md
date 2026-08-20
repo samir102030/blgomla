@@ -64,3 +64,18 @@ category tree rebuilds, import audits. They are run by hand and several of them
 write. **`scripts/seed.js` deletes every document in eight collections before
 it writes anything.** Read a script before running it against data anyone cares
 about.
+
+## Cron schedules
+
+The five jobs in `vercel.json` all run **once a day**, and not because once a
+day is right for them. Hobby accounts cap every cron at a single daily run, and
+Vercel enforces it by rejecting the whole deployment — a 400 that the dashboard
+swallows, so the project simply never produces a deployment and gives no reason
+why. Cart recovery wants hourly, the sale scheduler wants every fifteen
+minutes, stock alerts want every thirty; on this plan they each get one run.
+
+The times are UTC and deliberately spread out. `sale-scheduler` at 21:00 UTC is
+midnight in Cairo, so scheduled sales flip over at the start of the local day.
+
+If any of these need their real frequency, either the account moves to Pro or
+an external scheduler calls the same endpoints on the tighter interval.
