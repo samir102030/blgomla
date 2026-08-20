@@ -183,7 +183,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
             <div className="mt-4 p-3 bg-yellow-50 dark:bg-amber-500/10 border border-yellow-200 dark:border-amber-500/30 rounded-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <span className="text-yellow-400 dark:text-amber-200">⚠️</span>
+ <span className="text-yellow-400 dark:text-amber-200"></span>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-yellow-800 dark:text-amber-200">
@@ -220,7 +220,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
               </>
             ) : (
               <>
-                <span>🗑️</span>
+ <span></span>
                 {t("modal.deleteProduct.deleteButton")}
               </>
             )}

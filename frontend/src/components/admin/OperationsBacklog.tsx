@@ -85,12 +85,12 @@ const OperationsBacklog: React.FC = () => {
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 sm:p-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-          📋 {t("Needs attention")}
+ {t("Needs attention")}
         </h2>
       </div>
       {active.length === 0 ? (
         <p className="text-sm text-emerald-600">
-          ✅ {t("All clear — nothing waiting on you.")}
+ {t("All clear — nothing waiting on you.")}
         </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

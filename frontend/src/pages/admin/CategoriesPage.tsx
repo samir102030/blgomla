@@ -225,7 +225,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
-              <span className="text-2xl">📁</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -238,7 +238,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <span className="text-2xl">✅</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -251,7 +251,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
-              <span className="text-2xl">🏷️</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -264,7 +264,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-orange-100 p-3 rounded-full">
-              <span className="text-2xl">📂</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -430,7 +430,7 @@ const CategoriesPage: React.FC = () => {
                           }`}
                         title={category.isActive ? t("categories.deactivate") : t("categories.activate")}
                       >
-                        {category.isActive ? "✓" : "✗"}
+ {category.isActive ? "" : ""}
                       </button>
                       <button
                         onClick={() => handleEditCategory(category)}

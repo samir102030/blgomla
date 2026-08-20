@@ -419,7 +419,7 @@ const VisitorAnalyticsPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-amber-200 dark:border-amber-900/40 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-            🔎 {t("Searches with no results")}
+ {t("Searches with no results")}
           </h2>
           <p className="text-xs text-gray-500 mb-4">
             {t("Demand you aren't meeting — consider stocking or renaming these")}
@@ -440,7 +440,7 @@ const VisitorAnalyticsPage: React.FC = () => {
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            🔥 {t("Top searches")}
+ {t("Top searches")}
           </h2>
           {insights?.topSearches?.length ? (
             <ul className="space-y-2">
@@ -458,7 +458,7 @@ const VisitorAnalyticsPage: React.FC = () => {
 
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            👁️ {t("Most viewed products")}
+ {t("Most viewed products")}
           </h2>
           {insights?.topViewed?.length ? (
             <ul className="space-y-2">
@@ -511,7 +511,7 @@ const StatCard: React.FC<{
 
 const EmptyState: React.FC<{ message: string }> = ({ message }) => (
   <div className="flex flex-col items-center justify-center py-8 text-center">
-    <div className="text-4xl mb-3 text-gray-300">📊</div>
+ <div className="text-4xl mb-3 text-gray-300"></div>
     <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
   </div>
 );

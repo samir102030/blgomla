@@ -146,7 +146,7 @@ const InventoryAlertsPage: React.FC = () => {
               {(summary?.totalValue || 0).toLocaleString()} <span className="text-lg font-normal">EGP</span>
             </p>
           </div>
-          <div className="text-5xl opacity-30">📦</div>
+ <div className="text-5xl opacity-30"></div>
         </div>
       </div>
 
@@ -187,7 +187,7 @@ const InventoryAlertsPage: React.FC = () => {
                     {product.image ? (
                       <img loading="lazy" decoding="async" src={product.image} alt={product.name} onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }} className="w-full h-full object-contain" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xl">📦</div>
+ <div className="w-full h-full flex items-center justify-center text-xl"></div>
                     )}
                   </div>
                   <div className="flex-grow min-w-0">
@@ -211,7 +211,7 @@ const InventoryAlertsPage: React.FC = () => {
               ))
             ) : (
               <div className="px-6 py-12 text-center">
-                <div className="text-4xl mb-3">🎉</div>
+ <div className="text-4xl mb-3"></div>
                 <p className="text-gray-500 font-medium">
                   {activeTab === "outOfStock" ? t("inventory.noOutOfStock") : t("inventory.noLowStock")}
                 </p>
@@ -274,7 +274,7 @@ const InventoryAlertsPage: React.FC = () => {
                 {urgentRestock.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
-                      <div className="text-3xl mb-2">✅</div>
+ <div className="text-3xl mb-2"></div>
                       {t("inventory.noUrgentRestock")}
                     </td>
                   </tr>

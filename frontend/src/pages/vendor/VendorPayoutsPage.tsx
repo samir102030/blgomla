@@ -100,7 +100,7 @@ const VendorPayoutsPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 max-w-4xl">
       <h1 className="text-2xl font-bold text-[var(--text)] mb-1">
-        💸 {t("My Payouts")}
+ {t("My Payouts")}
       </h1>
       <p className="text-sm text-[var(--text-muted)] mb-6">
         {t(

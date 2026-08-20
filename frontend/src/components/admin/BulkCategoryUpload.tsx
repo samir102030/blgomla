@@ -127,7 +127,7 @@ const BulkCategoryUpload: React.FC<Props> = ({ onDone }) => {
           disabled={downloading}
           className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
         >
-          {downloading ? t("bulkCategory.preparing") : `⬇ ${t("bulkCategory.downloadTemplate")}`}
+          {downloading ? t("bulkCategory.preparing") : `${t("bulkCategory.downloadTemplate")}`}
         </button>
       </div>
 
@@ -147,7 +147,7 @@ const BulkCategoryUpload: React.FC<Props> = ({ onDone }) => {
           disabled={!file || busy}
           className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 whitespace-nowrap"
         >
-          {busy ? t("bulkCategory.working") : `🔍 ${t("bulkCategory.preview")}`}
+ {busy ? t("bulkCategory.working") : ` ${t("bulkCategory.preview")}`}
         </button>
         {isPreview && results && (
           <button

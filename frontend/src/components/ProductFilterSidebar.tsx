@@ -293,7 +293,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
             onClick={clearFilters}
             className="w-full bg-[var(--surface-2)] hover:bg-red-500/10 text-[var(--text-muted)] hover:text-red-500 py-2 px-3 rounded-lg text-xs font-medium transition-all duration-200 border border-[var(--border)]"
           >
-            ✕ {t("Clear All Filters")}
+ {t("Clear All Filters")}
           </button>
         )}
       </div>

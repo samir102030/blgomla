@@ -79,7 +79,7 @@ const AnnouncementBar: React.FC = () => {
       }`}
     >
       <span className="inline-flex items-center gap-2 justify-center flex-wrap">
-        <span aria-hidden="true">🔥</span>
+ <span aria-hidden="true"></span>
         <span className="font-semibold">{text}</span>
         {sub && sub !== text && (
           <span className="opacity-90 font-normal">— {sub}</span>

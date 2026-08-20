@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { StarIcon } from "@heroicons/react/24/outline";
 import { useParams, Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -453,7 +454,7 @@ const ProductDetailPage: React.FC = () => {
         className={`text-lg ${i < rating ? "text-yellow-400" : "text-gray-300"
           }`}
       >
-        ★
+        <StarIcon className="w-6 h-6" aria-hidden="true" />
       </span>
     ));
   };
@@ -519,7 +520,7 @@ const ProductDetailPage: React.FC = () => {
                 {(product.soldCount ?? 0) >= 10 && (
                   <span className="ml-3 text-sm font-medium text-amber-600">
                     {(product.soldCount ?? 0) >= 50
-                      ? `🔥 ${t("Bestseller")}`
+ ? ` ${t("Bestseller")}`
                       : t("{{count}} sold", { count: product.soldCount })}
                   </span>
                 )}
@@ -698,7 +699,7 @@ const ProductDetailPage: React.FC = () => {
                   />
                   <span className="min-w-0">
                     <span className="block text-sm font-semibold text-[var(--text)]">
-                      🔧 {t("Do you want us to install it for you?")}
+ {t("Do you want us to install it for you?")}
                     </span>
                     <span className="block text-xs text-[var(--text-muted)] mt-0.5">
                       {product.installation.note
@@ -745,8 +746,8 @@ const ProductDetailPage: React.FC = () => {
                     } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {isProductLoved()
-                    ? t("❤️ Remove from Wishlist")
-                    : t("❤️ Add to Wishlist")}
+ ? t(" Remove from Wishlist")
+ : t(" Add to Wishlist")}
                 </button>
               </div>
 
@@ -882,7 +883,7 @@ const ProductDetailPage: React.FC = () => {
                                       : "text-gray-300"
                                     }`}
                                 >
-                                  ★
+                                  <StarIcon className="w-6 h-6" aria-hidden="true" />
                                 </button>
                               ))}
                             </div>
@@ -955,8 +956,8 @@ const ProductDetailPage: React.FC = () => {
                                 {review.user.name || t("Anonymous")}
                               </span>
                               <span className="text-yellow-400">
-                                {"★".repeat(review.rating)}
-                                {"☆".repeat(5 - review.rating)}
+ {"".repeat(review.rating)}
+ {"".repeat(5 - review.rating)}
                               </span>
                               {/* Hidden badge for user's own hidden reviews */}
                               {user &&
@@ -1014,7 +1015,7 @@ const ProductDetailPage: React.FC = () => {
 
       {productId && (
         <ProductRail
-          icon="🧩"
+ icon=""
           title="Frequently bought together"
           fetchUrl={`/products/${productId}/frequently-bought-together`}
           excludeId={productId}
@@ -1023,7 +1024,7 @@ const ProductDetailPage: React.FC = () => {
 
       {productId && (
         <ProductRail
-          icon="🛍️"
+ icon=""
           title="You may also like"
           fetchUrl={`/products/${productId}/related`}
           excludeId={productId}

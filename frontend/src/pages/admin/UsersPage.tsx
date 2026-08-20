@@ -183,7 +183,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
-              <span className="text-2xl">👥</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -196,7 +196,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <span className="text-2xl">✅</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -209,7 +209,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <span className="text-2xl">🚫</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -222,7 +222,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <span className="text-2xl">🗑️</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>

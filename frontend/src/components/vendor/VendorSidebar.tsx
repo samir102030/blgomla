@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ArrowTrendingUpIcon, BanknotesIcon, BuildingStorefrontIcon, ChartBarIcon, Cog6ToothIcon, CubeIcon, MegaphoneIcon, ShoppingCartIcon, SpeakerWaveIcon, UsersIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link, useLocation } from 'react-router-dom';
 
 interface VendorSidebarProps {
@@ -13,19 +14,19 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
   const menuItems = [
     {
       title: 'Dashboard',
-      icon: '📊',
+      icon: ChartBarIcon,
       path: '/vendor',
       children: []
     },
     {
       title: 'Store',
-      icon: '🏪',
+      icon: BuildingStorefrontIcon,
       path: '/vendor/store',
       children: []
     },
     {
       title: 'Products',
-      icon: '📦',
+      icon: CubeIcon,
       path: '/vendor/products',
       children: [
         { title: 'All Products', path: '/vendor/products' },
@@ -36,7 +37,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       title: 'Orders',
-      icon: '🛒',
+      icon: ShoppingCartIcon,
       path: '/vendor/orders',
       children: [
         { title: 'All Orders', path: '/vendor/orders' },
@@ -48,7 +49,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       title: 'Analytics',
-      icon: '📈',
+      icon: ArrowTrendingUpIcon,
       path: '/vendor/analytics',
       children: [
         { title: 'Overview', path: '/vendor/analytics' },
@@ -58,7 +59,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       title: 'Customers',
-      icon: '👥',
+      icon: UsersIcon,
       path: '/vendor/customers',
       children: [
         { title: 'All Customers', path: '/vendor/customers' },
@@ -67,7 +68,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       title: 'Marketing',
-      icon: '📢',
+      icon: MegaphoneIcon,
       path: '/vendor/marketing',
       children: [
         { title: 'Overview', path: '/vendor/marketing' },
@@ -77,13 +78,13 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       title: 'Payouts',
-      icon: '💸',
+      icon: BanknotesIcon,
       path: '/vendor/payouts',
       children: []
     },
     {
       title: 'Settings',
-      icon: '⚙️',
+      icon: Cog6ToothIcon,
       path: '/vendor/settings',
       children: [
         { title: 'Profile', path: '/vendor/settings/profile' },
@@ -93,7 +94,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       title: 'Support',
-      icon: '🎧',
+      icon: SpeakerWaveIcon,
       path: '/vendor/support',
       children: [
         { title: 'Help Center', path: '/vendor/support' },
@@ -141,7 +142,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                         }`}
                       >
-                        <span className="mr-3 text-lg">{item.icon}</span>
+                        <item.icon className="mr-3 w-5 h-5 shrink-0" aria-hidden="true" />
                         <span className="flex-1 text-left">{item.title}</span>
                         <span className={`ml-3 transform transition-transform ${
                           expandedMenus.includes(item.title) ? 'rotate-90' : ''
@@ -178,7 +179,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <span className="mr-3 text-lg">{item.icon}</span>
+                      <item.icon className="mr-3 w-5 h-5 shrink-0" aria-hidden="true" />
                       {item.title}
                     </Link>
                   )}
@@ -212,7 +213,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
             >
-              ✕
+              <XMarkIcon className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
 
@@ -230,7 +231,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <span className="mr-3 text-lg">{item.icon}</span>
+                      <item.icon className="mr-3 w-5 h-5 shrink-0" aria-hidden="true" />
                       <span className="flex-1 text-left">{item.title}</span>
                       <span className={`ml-3 transform transition-transform ${
                         expandedMenus.includes(item.title) ? 'rotate-90' : ''
@@ -267,7 +268,7 @@ const VendorSidebar: React.FC<VendorSidebarProps> = ({ isOpen, onClose }) => {
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
-                    <span className="mr-3 text-lg">{item.icon}</span>
+                    <item.icon className="mr-3 w-5 h-5 shrink-0" aria-hidden="true" />
                     {item.title}
                   </Link>
                 )}

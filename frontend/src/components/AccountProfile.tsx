@@ -76,7 +76,7 @@ const AccountProfile: React.FC = () => {
             ) : user?.profilePicture ? (
               <img loading="lazy" decoding="async" src={user.profilePicture} alt="Profile" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-3xl text-[var(--text-subtle)]">{user?.name?.[0]?.toUpperCase() || "👤"}</span>
+ <span className="text-3xl text-[var(--text-subtle)]">{user?.name?.[0]?.toUpperCase() || ""}</span>
             )}
           </div>
           <div className="flex-1">

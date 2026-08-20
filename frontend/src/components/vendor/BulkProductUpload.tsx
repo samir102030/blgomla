@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from 'react-i18next';
 import { axiosInstance } from '../../lib/axios';
 import { toast } from 'react-hot-toast';
@@ -328,7 +329,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
             success: response.data.results.successful.length,
             failed: response.data.results.failed.length,
           }),
-          { icon: "⚠️" }
+          { icon: <ExclamationTriangleIcon className="w-5 h-5 text-amber-500" aria-hidden="true" /> }
         );
       }
 
@@ -494,7 +495,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
                 </>
               ) : (
                 <>
-                  📥 {t('vendor.bulk.downloadTemplate')}
+ {t('vendor.bulk.downloadTemplate')}
                 </>
               )}
             </button>
@@ -507,7 +508,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
               disabled={exporting}
               className="inline-flex items-center px-4 py-2 ms-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 disabled:opacity-50 transition-colors"
             >
-              {exporting ? t('vendor.bulk.exporting') : `📤 ${t('vendor.bulk.exportProducts')}`}
+ {exporting ? t('vendor.bulk.exporting') : ` ${t('vendor.bulk.exportProducts')}`}
             </button>
             <p className="text-xs text-gray-500 mt-2">
               {t('vendor.bulk.exportHint')}
@@ -546,7 +547,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
               {selectedFile && (
                 <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-slate-700">
                   <div className="flex items-center space-x-2">
-                    <span className="text-2xl">📄</span>
+ <span className="text-2xl"></span>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedFile.name}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -558,7 +559,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
                     onClick={handleClearFile}
                     className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                   >
-                    ✕
+                    <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                   </button>
                 </div>
               )}
@@ -578,7 +579,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
                       Validate & Preview
                     </span>
                   ) : (
-                    <>🔍 Validate & Preview</>
+ <> Validate & Preview</>
                   )}
                 </button>
                 {isPreview && (
@@ -674,7 +675,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
           {!isPreview && uploadResult.successful.length > 0 && (
             <div className="mb-4">
               <h4 className="text-md font-semibold text-green-700 dark:text-emerald-200 mb-2">
-                ✅ {t('vendor.bulk.successfulProducts')}
+ {t('vendor.bulk.successfulProducts')}
               </h4>
               <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 max-h-60 overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
@@ -711,7 +712,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
           {needsPriceRows.length > 0 && (
             <div className="mb-4">
               <h4 className="text-md font-semibold text-amber-800 dark:text-amber-200 mb-1">
-                ⚠️ {t('vendor.bulk.needsPriceProducts')}
+ {t('vendor.bulk.needsPriceProducts')}
               </h4>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                 {t('vendor.bulk.needsPriceHint')}
@@ -745,7 +746,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
           {uploadResult.failed.length > 0 && (
             <div>
               <h4 className="text-md font-semibold text-red-700 dark:text-red-200 mb-2">
-                ❌ {t('vendor.bulk.failedProducts')}
+ {t('vendor.bulk.failedProducts')}
               </h4>
               <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 max-h-60 overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">

@@ -136,7 +136,7 @@ const ProductQuestions: React.FC<ProductQuestionsProps> = ({ productId }) => {
                         <span className="text-[var(--text-muted)]">{a.text}</span>
                         {a.isOfficial && (
                           <span className="ml-2 inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-semibold px-2 py-0.5">
-                            ✓ {t("Official")}
+ {t("Official")}
                           </span>
                         )}
                         <span className="block text-[11px] text-[var(--text-subtle)]">

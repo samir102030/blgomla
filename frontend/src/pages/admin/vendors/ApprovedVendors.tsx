@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { useVendorStore } from '../../../stores/vendor.store';
@@ -170,7 +171,7 @@ const ApprovedVendors: React.FC = () => {
 
       {approvedVendors.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">🏪</div>
+ <div className="text-6xl mb-4"></div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">{t('approvedVendors.noVendors')}</h3>
           <p className="text-gray-500">{t('approvedVendors.noMatch')}</p>
         </div>
@@ -186,7 +187,7 @@ const ApprovedVendors: React.FC = () => {
                 onClick={() => setShowDetailsModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                ✕
+                <XMarkIcon className="w-6 h-6" aria-hidden="true" />
               </button>
             </div>
 

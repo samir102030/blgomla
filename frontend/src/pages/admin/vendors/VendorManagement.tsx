@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ClockIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { useVendorStore } from "../../../stores/vendor.store";
@@ -591,7 +592,7 @@ const VendorManagement: React.FC = () => {
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-2 bg-[var(--brand-primary)]/10 rounded-lg">
-                      <span className="text-2xl">🏪</span>
+ <span className="text-2xl"></span>
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
@@ -607,7 +608,7 @@ const VendorManagement: React.FC = () => {
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-2 bg-green-100 rounded-lg">
-                      <span className="text-2xl">✅</span>
+ <span className="text-2xl"></span>
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
@@ -623,7 +624,7 @@ const VendorManagement: React.FC = () => {
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-2 bg-yellow-100 rounded-lg">
-                      <span className="text-2xl">⏳</span>
+                      <ClockIcon className="w-6 h-6" aria-hidden="true" />
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
@@ -639,7 +640,7 @@ const VendorManagement: React.FC = () => {
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center">
                     <div className="p-2 bg-red-100 rounded-lg">
-                      <span className="text-2xl">❌</span>
+ <span className="text-2xl"></span>
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-600">
@@ -902,7 +903,7 @@ const VendorManagement: React.FC = () => {
                   onClick={() => setShowDetailsModal(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  ✕
+                  <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
 

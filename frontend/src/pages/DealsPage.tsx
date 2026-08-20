@@ -54,7 +54,7 @@ const DealsPage: React.FC = () => {
             </div>
           ) : saleProducts.length === 0 ? (
             <div className="text-center py-16 text-[var(--text-muted)]">
-              <div className="text-5xl mb-3">🛍️</div>
+ <div className="text-5xl mb-3"></div>
               <p>{t("No active deals right now. Check back soon!")}</p>
             </div>
           ) : (

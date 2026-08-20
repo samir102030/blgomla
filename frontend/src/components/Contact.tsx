@@ -327,7 +327,7 @@ const Contact: React.FC = () => {
               </div>
               <div className="mt-4 pt-4 border-t border-[var(--border)]">
                 <p className="text-xs text-[var(--text-muted)]">
-                  ⏱️ {t("Average response time: 2-4 hours during business hours")}
+                  {t("Average response time: 2-4 hours during business hours")}
                 </p>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../stores/user.store";
 
@@ -21,7 +22,7 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
   ];
 
   const iconFor = (t: string) =>
-    t === "order" ? "🛒" : t === "vendor" ? "🏪" : t === "payment" ? "💰" : "🎧";
+ t === "order" ? "" : t === "vendor" ? "" : t === "payment" ? "" : "";
 
   const handleLogout = async () => {
     await logout?.();
@@ -41,12 +42,12 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
             className="lg:hidden p-2 rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
             aria-label="Open menu"
           >
-            <span className="text-xl">☰</span>
+ <span className="text-xl"></span>
           </button>
 
           <div className="hidden sm:block relative flex-1 max-w-lg">
             <span className="absolute inset-y-0 left-3 flex items-center text-[var(--text-subtle)] pointer-events-none">
-              🔍
+              <MagnifyingGlassIcon className="w-6 h-6" aria-hidden="true" />
             </span>
             <input
               type="text"
@@ -82,7 +83,7 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
               className="relative p-2 rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
               aria-label="Notifications"
             >
-              <span className="text-lg">🔔</span>
+ <span className="text-lg"></span>
               {notifications.length > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 text-[10px] font-bold rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center">
                   {notifications.length}
@@ -165,21 +166,21 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
                     onClick={() => setShowProfile(false)}
                     className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
                   >
-                    👤 Your Profile
+ Your Profile
                   </Link>
                   <Link
                     to="/dashboard/settings/general"
                     onClick={() => setShowProfile(false)}
                     className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
                   >
-                    ⚙️ Settings
+ Settings
                   </Link>
                   <Link
                     to="/"
                     onClick={() => setShowProfile(false)}
                     className="block px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
                   >
-                    🏠 Back to site
+ Back to site
                   </Link>
                 </div>
                 <div className="border-t border-[var(--border)] py-1">
@@ -187,7 +188,7 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-[var(--surface-2)]"
                   >
-                    🚪 Sign out
+ Sign out
                   </button>
                 </div>
               </div>

@@ -183,7 +183,7 @@ const NotificationBell: React.FC = () => {
                 >
                   <div className="flex items-start space-x-3">
                     <span className="text-lg">
-                      {getNotificationIcon(notification.type)}
+                      {(() => { const Icon = getNotificationIcon(notification.type); return <Icon className="w-5 h-5" aria-hidden="true" />; })()}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate">

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { useCollectionStore } from "../../stores/collection.store";
 import { axiosInstance } from "../../lib/axios";
@@ -400,7 +401,7 @@ const AdminCollectionsPage: React.FC = () => {
                     aria-label={t("adminCollections.removeBrand", "Remove brand")}
                     className="w-4 h-4 rounded-full hover:bg-[var(--brand-primary)]/20 flex items-center justify-center"
                   >
-                    ✕
+                    <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                   </button>
                 </span>
               ))}
@@ -600,7 +601,7 @@ const AdminCollectionsPage: React.FC = () => {
                               aria-label={t("adminCollections.removeItem", "Remove item")}
                               className="text-red-500 hover:text-red-700 text-base leading-none px-1"
                             >
-                              ✕
+                              <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                             </button>
                           </td>
                         </tr>

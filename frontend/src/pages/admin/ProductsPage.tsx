@@ -414,7 +414,7 @@ const ProductsPage: React.FC = () => {
               onClick={() => setShowBulkUpload(!showBulkUpload)}
               className="bg-[var(--brand-primary)] text-white px-4 py-2 rounded-lg hover:bg-[var(--brand-accent)] transition-colors flex items-center gap-2 font-medium"
             >
-              📊 {t("product.bulkUpload")}
+ {t("product.bulkUpload")}
             </button>
           )}
           <button
@@ -495,7 +495,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
-              <span className="text-2xl">📦</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -510,7 +510,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <span className="text-2xl">✅</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -526,7 +526,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
-              <span className="text-2xl">⚠️</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -539,7 +539,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <span className="text-2xl">❌</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -596,14 +596,14 @@ const ProductsPage: React.FC = () => {
             className="px-3 py-1.5 border border-[var(--brand-primary)] rounded-lg text-sm bg-white focus:ring-2 focus:ring-[var(--brand-primary)]"
           >
             <option value="">Select action...</option>
-            <option value="activate">✅ Activate</option>
-            <option value="deactivate">🚫 Deactivate</option>
-            <option value="set_price">💰 Set Price</option>
-            <option value="set_stock">📦 Set Stock</option>
-            <option value="set_sale">🏷️ Set Sale %</option>
-            <option value="remove_sale">❌ Remove Sale</option>
-            <option value="feature">⭐ Mark Featured</option>
-            <option value="unfeature">☆ Unmark Featured</option>
+ <option value="activate"> Activate</option>
+ <option value="deactivate"> Deactivate</option>
+ <option value="set_price"> Set Price</option>
+ <option value="set_stock"> Set Stock</option>
+ <option value="set_sale"> Set Sale %</option>
+ <option value="remove_sale"> Remove Sale</option>
+            <option value="feature">Mark Featured</option>
+ <option value="unfeature"> Unmark Featured</option>
           </select>
           {["set_price", "set_stock", "set_sale"].includes(bulkAction) && (
             <input
@@ -674,7 +674,7 @@ const ProductsPage: React.FC = () => {
                       </span>
                       <span className={product.stock < 30 ? "text-red-600" : "text-gray-700"}>
                         {t("Stock")}: {product.stock}
-                        {product.stock === 0 ? " ❌" : product.stock < 30 ? " ⚠️" : ""}
+ {product.stock === 0 ? " " : product.stock < 30 ? " " : ""}
                       </span>
                       <span className="text-gray-700">{t("Sold")}: {product.soldCount ?? 0}</span>
                     </div>
@@ -814,10 +814,10 @@ const ProductsPage: React.FC = () => {
                         {product.stock}
                       </span>
                       {product.stock < 30 && product.stock > 0 && (
-                        <span className="text-yellow-500">⚠️</span>
+ <span className="text-yellow-500"></span>
                       )}
                       {product.stock === 0 && (
-                        <span className="text-red-500">❌</span>
+ <span className="text-red-500"></span>
                       )}
                     </div>
                   </td>

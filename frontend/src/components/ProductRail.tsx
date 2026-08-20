@@ -8,7 +8,7 @@ import type { Product } from "../types/product.type";
 interface ProductRailProps {
   title: string;
   subtitle?: string;
-  icon?: string;
+  icon?: React.ReactNode;
   /** Pass products directly (e.g. from the home feed)… */
   products?: Product[];
   /** …or a GET endpoint that returns { data: Product[] } / { products: Product[] }. */

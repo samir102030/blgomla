@@ -82,7 +82,7 @@ const ExitIntentPopup: React.FC = () => {
         </button>
 
         <div className="bg-gradient-to-br from-[#00A8E8] to-[#0077B6] p-6 text-center text-white">
-          <div className="text-4xl mb-2">🎁</div>
+ <div className="text-4xl mb-2"></div>
           <h2 className="text-2xl font-extrabold">{t("Wait! Don't go yet")}</h2>
           <p className="text-white/90 text-sm mt-1">
             {t("Get 10% off your first order")}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BanknotesIcon, BellIcon, ShoppingCartIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserStore } from '../../stores/user.store';
 import { useVendorStore } from '../../stores/vendor.store';
 import { useTranslation } from 'react-i18next';
@@ -26,11 +27,11 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'order': return '🛒';
-      case 'review': return '⭐';
-      case 'inventory': return '📦';
-      case 'payment': return '💰';
-      default: return '🔔';
+ case 'order': return ShoppingCartIcon;
+      case 'review': return StarIcon;
+ case 'inventory': return BellIcon;
+ case 'payment': return BanknotesIcon;
+ default: return BellIcon;
     }
   };
 
@@ -70,7 +71,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
           <div className="ml-4 flex-1 max-w-lg">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <span className="text-gray-400">🔍</span>
+ <span className="text-gray-400"></span>
               </div>
               <input
                 type="text"
@@ -117,7 +118,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 text-gray-400 hover:text-gray-500 relative"
             >
-              <span className="text-xl">🔔</span>
+ <span className="text-xl"></span>
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
             </button>
 
@@ -132,7 +133,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
                     {notifications.map((notification) => (
                       <div key={notification.id} className="px-4 py-3 hover:bg-gray-50 border-b border-gray-50">
                         <div className="flex items-start">
-                          <span className="text-lg mr-3">{getNotificationIcon(notification.type)}</span>
+                          {(() => { const Icon = getNotificationIcon(notification.type); return <Icon className="w-5 h-5 mr-3 shrink-0" aria-hidden="true" />; })()}
                           <div className="flex-1">
                             <p className="text-sm text-gray-900">{notification.title}</p>
                             <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
@@ -153,7 +154,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
 
           {/* Quick Actions */}
           <button className="p-2 text-gray-400 hover:text-gray-500" title={t('vendor.quickAddProduct')}>
-            <span className="text-xl">➕</span>
+ <span className="text-xl"></span>
           </button>
 
           {/* Profile Dropdown */}
@@ -182,23 +183,23 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
                   <a href="/vendor/settings/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    👤 {t('vendor.yourProfile')}
+ {t('vendor.yourProfile')}
                   </a>
                   <a href="/vendor/store" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    🏪 {t('vendor.storeSettings')}
+ {t('vendor.storeSettings')}
                   </a>
                   <a href="/vendor/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    ⚙️ {t('vendor.settings')}
+ {t('vendor.settings')}
                   </a>
                   <a href="/vendor/support" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    🎧 {t('vendor.support')}
+ {t('vendor.support')}
                   </a>
                   <div className="border-t border-gray-100"></div>
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    🚪 {t('vendor.signOut')}
+ {t('vendor.signOut')}
                   </button>
                 </div>
               </div>

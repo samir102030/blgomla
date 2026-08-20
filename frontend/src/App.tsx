@@ -65,7 +65,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (this.state.hasError) {
       return (
         <div style={{ padding: "2rem", fontFamily: "monospace", background: "#1a1a2e", color: "#e94560", minHeight: "100vh" }}>
-          <h1 style={{ color: "#e94560", fontSize: "1.5rem", marginBottom: "1rem" }}>⚠️ Something went wrong</h1>
+ <h1 style={{ color: "#e94560", fontSize: "1.5rem", marginBottom: "1rem" }}> Something went wrong</h1>
           <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-all", color: "#eaeaea", background: "#16213e", padding: "1rem", borderRadius: "8px", fontSize: "0.85rem" }}>
             {this.state.error?.toString()}
             {"\n\n"}

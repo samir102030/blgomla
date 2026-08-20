@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ArrowPathIcon, CheckCircleIcon, ClockIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useOrderStore } from "../stores/order.store";
 import { useReturnStore } from "../stores/return.store";
 import { useTranslation } from "react-i18next";
@@ -65,7 +66,11 @@ const AccountOrders: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
-      case "delivered": return "✅"; case "processing": return "⏳"; case "shipped": return "🚚"; case "cancelled": return "❌"; default: return "📋";
+      case "delivered": return CheckCircleIcon;
+      case "processing": return ArrowPathIcon;
+      case "shipped": return TruckIcon;
+      case "cancelled": return XCircleIcon;
+      default: return ClockIcon;
     }
   };
 
@@ -80,7 +85,7 @@ const AccountOrders: React.FC = () => {
 
       {(!orders || orders.length === 0) ? (
         <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-10 text-center">
-          <span className="text-4xl">📭</span>
+ <span className="text-4xl"></span>
           <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noOrders", "No orders yet.")}</p>
           <Link to="/products" className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-[var(--brand-primary)] hover:underline">{t("account.startShopping", "Start Shopping")} →</Link>
         </div>
@@ -89,7 +94,7 @@ const AccountOrders: React.FC = () => {
           {orders.map((order) => (
             <div key={order._id} className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4 hover:border-[var(--brand-primary)]/30 transition-all">
               <div className="flex items-center gap-4">
-                <div className="text-2xl shrink-0">{getStatusIcon(order.status)}</div>
+                {(() => { const Icon = getStatusIcon(order.status); return <Icon className="w-6 h-6 shrink-0" aria-hidden="true" />; })()}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-[var(--text)]">#{order._id.slice(-8).toUpperCase()}</p>
@@ -123,7 +128,7 @@ const AccountOrders: React.FC = () => {
       {showOrderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowOrderModal(false)} aria-label="Close">✕</button>
+ <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowOrderModal(false)} aria-label="Close"></button>
             <div className="mb-6">
               <h2 className="text-xl font-bold text-[var(--text)]">{t("account.orderDetails", "Order Details")}</h2>
               <div className="h-1 w-16 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-full mt-2"></div>
@@ -136,7 +141,7 @@ const AccountOrders: React.FC = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4">
-                    <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">📋 {t("account.orderInfo", "Order Information")}</h3>
+ <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2"> {t("account.orderInfo", "Order Information")}</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.orderId", "Order ID")}:</span><span className="font-medium text-[var(--text)]">#{selectedOrder?._id?.slice(-8)?.toUpperCase()}</span></div>
                       <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.status", "Status")}:</span><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(selectedOrder?.status || "")}`}>{selectedOrder?.status}</span></div>
@@ -153,7 +158,7 @@ const AccountOrders: React.FC = () => {
                     </div>
                   </div>
                   <div className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4">
-                    <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">📍 {t("account.shippingPayment", "Shipping & Payment")}</h3>
+ <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2"> {t("account.shippingPayment", "Shipping & Payment")}</h3>
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="text-[var(--text-muted)]">{t("account.address", "Address")}:</span>
@@ -162,7 +167,7 @@ const AccountOrders: React.FC = () => {
                             <p>{orderAddress.name}</p><p>{orderAddress.address}</p>
                             <p>{orderAddress.city}{orderAddress.state ? `, ${orderAddress.state}` : ""} {orderAddress.zipCode}</p>
                             <p>{orderAddress.country}</p>
-                            {orderAddress.phone && <p className="text-xs text-[var(--text-subtle)]">📞 {orderAddress.phone}</p>}
+ {orderAddress.phone && <p className="text-xs text-[var(--text-subtle)]"> {orderAddress.phone}</p>}
                           </div>
                         ) : <p className="font-medium text-[var(--text)] mt-1">{selectedOrder?.shippingAddress}</p>}
                       </div>
@@ -171,7 +176,7 @@ const AccountOrders: React.FC = () => {
                   </div>
                 </div>
                 <div className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4">
-                  <h3 className="text-sm font-semibold text-[var(--text)] mb-4 flex items-center gap-2">🛍️ {t("account.orderItems", "Order Items")}</h3>
+ <h3 className="text-sm font-semibold text-[var(--text)] mb-4 flex items-center gap-2"> {t("account.orderItems", "Order Items")}</h3>
                   <div className="space-y-3">
                     {orderProducts.map((product, idx) => (
                       <div key={idx} className="flex items-center justify-between bg-[var(--surface)] rounded-xl p-3 border border-[var(--border)]">
@@ -186,7 +191,7 @@ const AccountOrders: React.FC = () => {
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
                                 className="w-full h-full object-cover"
                               />
-                            ) : <span className="text-lg text-[var(--text-subtle)]">📦</span>}
+ ) : <span className="text-lg text-[var(--text-subtle)]"></span>}
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-[var(--text)] truncate">
@@ -219,7 +224,7 @@ const AccountOrders: React.FC = () => {
       {showReturnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
-            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowReturnModal(false)} aria-label="Close">✕</button>
+ <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowReturnModal(false)} aria-label="Close"></button>
             <div className="mb-5">
               <h2 className="text-xl font-bold text-[var(--text)]">{t("account.requestReturn", "Request Return")}</h2>
               <p className="text-xs text-[var(--text-muted)] mt-1">{t("account.returnOrderId", "Order")} #{selectedReturnOrder?._id?.slice(-8)?.toUpperCase()}</p>

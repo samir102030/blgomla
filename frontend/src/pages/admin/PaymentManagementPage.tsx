@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
+import type { ComponentType, SVGProps } from "react";
+import { BanknotesIcon, BuildingLibraryIcon, CreditCardIcon, QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../../lib/axios";
 
@@ -66,11 +68,11 @@ const PaymentManagementPage: React.FC = () => {
     fetchData();
   }, [fetchData]);
 
-  const methodLabels: Record<string, { label: string; icon: string; color: string }> = {
-    cod: { label: t("payments.cod"), icon: "💵", color: "from-emerald-500 to-emerald-600" },
-    stripe: { label: t("payments.stripe"), icon: "💳", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
-    paymob: { label: t("payments.paymob"), icon: "🏦", color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
-    unknown: { label: t("payments.unknown"), icon: "❓", color: "from-gray-400 to-gray-500" },
+  const methodLabels: Record<string, { label: string; icon: ComponentType<SVGProps<SVGSVGElement>>; color: string }> = {
+    cod: { label: t("payments.cod"), icon: BanknotesIcon, color: "from-emerald-500 to-emerald-600" },
+    stripe: { label: t("payments.stripe"), icon: CreditCardIcon, color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
+    paymob: { label: t("payments.paymob"), icon: BuildingLibraryIcon, color: "from-[var(--brand-primary)] to-[var(--brand-accent)]" },
+    unknown: { label: t("payments.unknown"), icon: QuestionMarkCircleIcon, color: "from-gray-400 to-gray-500" },
   };
 
   const statusColors: Record<string, string> = {
@@ -157,7 +159,7 @@ const PaymentManagementPage: React.FC = () => {
                 <div key={m.method} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">{meta.icon}</span>
+                      <meta.icon className="w-5 h-5" aria-hidden="true" />
                       <span className="text-sm font-medium text-gray-900">{meta.label}</span>
                     </div>
                     <span className="text-sm font-bold text-gray-700">
@@ -250,7 +252,7 @@ const PaymentManagementPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center gap-1">
-                        <span>{meta.icon}</span>
+                        <meta.icon className="w-5 h-5" aria-hidden="true" />
                         <span className="text-gray-700">{meta.label}</span>
                       </span>
                     </td>

@@ -65,12 +65,12 @@ const STEPS = [
 ] as const;
 
 const STEP_ICON: Record<string, string> = {
-  pending: "📝",
-  confirmed: "✅",
-  processing: "⚙️",
-  shipped: "🚚",
-  out_for_delivery: "📦",
-  delivered: "🎉",
+ pending: "",
+ confirmed: "",
+ processing: "",
+ shipped: "",
+ out_for_delivery: "",
+ delivered: "",
 };
 
 const OrderTrackingPage: React.FC = () => {
@@ -119,7 +119,7 @@ const OrderTrackingPage: React.FC = () => {
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!user ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-10 text-center">
-            <span className="text-4xl">🔒</span>
+ <span className="text-4xl"></span>
             <p className="text-sm text-[var(--text-muted)] mt-3">
               {t("tracking.signInPrompt", "Please sign in to track your order.")}
             </p>
@@ -136,7 +136,7 @@ const OrderTrackingPage: React.FC = () => {
           </div>
         ) : !showThisOrder ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-10 text-center">
-            <span className="text-4xl">📭</span>
+ <span className="text-4xl"></span>
             <p className="text-sm text-[var(--text-muted)] mt-3">
               {error ||
                 t(
@@ -175,7 +175,7 @@ const OrderTrackingPage: React.FC = () => {
             {/* Stepper / cancelled banner */}
             {isCancelled ? (
               <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl p-5 flex items-center gap-3">
-                <span className="text-2xl">❌</span>
+ <span className="text-2xl"></span>
                 <div>
                   <p className="font-semibold text-red-700 dark:text-red-400">
                     {t("tracking.cancelledTitle", "This order was cancelled")}
@@ -243,7 +243,7 @@ const OrderTrackingPage: React.FC = () => {
               order.shipment?.provider) && (
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
                 <h2 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
-                  🚚 {t("tracking.shipmentInfo", "Shipment Information")}
+ {t("tracking.shipmentInfo", "Shipment Information")}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   {order.shipment?.provider && (
@@ -293,7 +293,7 @@ const OrderTrackingPage: React.FC = () => {
             {/* Timeline */}
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
               <h2 className="text-sm font-semibold text-[var(--text)] mb-4 flex items-center gap-2">
-                📋 {t("tracking.history", "Tracking History")}
+ {t("tracking.history", "Tracking History")}
               </h2>
               <OrderTimeline
                 events={order.statusTimeline || []}
@@ -304,7 +304,7 @@ const OrderTrackingPage: React.FC = () => {
             {/* Items */}
             <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
               <h2 className="text-sm font-semibold text-[var(--text)] mb-4 flex items-center gap-2">
-                🛍️ {t("tracking.items", "Items")} ({order.orderItems?.length || 0})
+ {t("tracking.items", "Items")} ({order.orderItems?.length || 0})
               </h2>
               <div className="space-y-3">
                 {(order.orderItems || []).map((item, idx) => {
@@ -324,7 +324,7 @@ const OrderTrackingPage: React.FC = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-lg text-[var(--text-subtle)]">📦</span>
+ <span className="text-lg text-[var(--text-subtle)]"></span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -353,7 +353,7 @@ const OrderTrackingPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
                 <h2 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
-                  📍 {t("tracking.deliveryAddress", "Delivery Address")}
+ {t("tracking.deliveryAddress", "Delivery Address")}
                 </h2>
                 {addr ? (
                   <div className="text-sm text-[var(--text)] space-y-0.5">
@@ -365,7 +365,7 @@ const OrderTrackingPage: React.FC = () => {
                     </p>
                     {addr.country && <p>{addr.country}</p>}
                     {addr.phone && (
-                      <p className="text-xs text-[var(--text-subtle)]">📞 {addr.phone}</p>
+ <p className="text-xs text-[var(--text-subtle)]"> {addr.phone}</p>
                     )}
                   </div>
                 ) : (
@@ -375,7 +375,7 @@ const OrderTrackingPage: React.FC = () => {
 
               <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5">
                 <h2 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2">
-                  🧾 {t("tracking.summary", "Order Summary")}
+ {t("tracking.summary", "Order Summary")}
                 </h2>
                 <div className="space-y-1.5 text-sm">
                   <div className="flex justify-between">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { axiosInstance } from "../lib/axios";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -224,7 +225,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 rounded-full transition-colors duration-200"
             aria-label={t("modal.common.close")}
           >
-            ✕
+            <XMarkIcon className="w-6 h-6" aria-hidden="true" />
           </button>
         </div>
 
@@ -253,7 +254,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         onClick={() => removeExistingImage(idx)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        ✕
+                        <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -310,7 +311,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                         onClick={() => removeFile(idx)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        ✕
+                        <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -437,7 +438,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
             {/* Flash-sale scheduler */}
             <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-3">
               <p className="text-sm font-semibold text-amber-800">
-                ⚡ {t("modal.editProduct.scheduleSaleTitle")}
+ {t("modal.editProduct.scheduleSaleTitle")}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
@@ -793,7 +794,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       }
                       className="text-blue-600 hover:text-blue-800 ml-1"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </span>
                 ))}
@@ -847,7 +848,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       }
                       className="text-green-600 hover:text-green-800 ml-1"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </span>
                 ))}
@@ -921,7 +922,7 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
                       }
                       className="ml-auto text-purple-600 hover:text-purple-800"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </div>
                 ))}

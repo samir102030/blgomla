@@ -140,7 +140,7 @@ const InstallationOrdersPage: React.FC = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-[var(--text)]">
-          🔧 {t("installations.title", "Installation jobs")}
+ {t("installations.title", "Installation jobs")}
         </h1>
         <p className="text-sm text-[var(--text-muted)]">
           {t(
@@ -183,7 +183,7 @@ const InstallationOrdersPage: React.FC = () => {
         </div>
       ) : orders.length === 0 ? (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-12 text-center">
-          <div className="text-4xl mb-3">🔧</div>
+ <div className="text-4xl mb-3"></div>
           <p className="text-sm font-medium text-[var(--text)]">
             {t("installations.empty", "No installation jobs here")}
           </p>
@@ -255,7 +255,7 @@ const InstallationOrdersPage: React.FC = () => {
                           key={i}
                           className="inline-flex items-center gap-1 bg-[var(--bg)] border border-[var(--border)] rounded-lg px-2 py-1 text-[11px] text-[var(--text-muted)]"
                         >
-                          {f.kind === "product" ? "📦" : "🧩"} {f.name}
+ {f.kind === "product" ? "" : ""} {f.name}
                           {(f.quantity ?? 1) > 1 ? ` ×${f.quantity}` : ""}
                         </span>
                       ))}
@@ -265,7 +265,7 @@ const InstallationOrdersPage: React.FC = () => {
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     {o.installationScheduledAt && (
                       <span className="text-xs text-[var(--text)]">
-                        📅 {fmtDate(o.installationScheduledAt)}
+ {fmtDate(o.installationScheduledAt)}
                       </span>
                     )}
                     <button

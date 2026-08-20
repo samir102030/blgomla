@@ -140,7 +140,7 @@ const StockRequestsPage: React.FC = () => {
       {topProducts.length > 0 && (
         <div className="bg-white rounded-xl shadow-lg p-5">
           <h2 className="text-base font-semibold text-gray-900 mb-1">
-            🔥 {t("stockRequests.mostWanted")}
+ {t("stockRequests.mostWanted")}
           </h2>
           <p className="text-xs text-gray-500 mb-4">{t("stockRequests.mostWantedHint")}</p>
           <div className="space-y-3">
@@ -306,7 +306,7 @@ const StockRequestsPage: React.FC = () => {
               {requests.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-12 text-center">
-                    <div className="text-3xl mb-2">📭</div>
+ <div className="text-3xl mb-2"></div>
                     <p className="text-gray-500 font-medium">{t("stockRequests.empty")}</p>
                     <p className="text-sm text-gray-400 mt-1">{t("stockRequests.emptyHint")}</p>
                   </td>

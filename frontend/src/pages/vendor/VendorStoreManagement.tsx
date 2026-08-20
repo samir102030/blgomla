@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useVendorStore } from '../../stores/vendor.store';
@@ -148,7 +149,7 @@ const VendorStoreManagement: React.FC = () => {
   if (!vendorStore && !isEditing) {
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">🏪</div>
+ <div className="text-6xl mb-4"></div>
         <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('vendor.createNewStoreTitle')}</h2>
         <p className="text-gray-600 mb-6">{t('vendor.createNewStoreDesc')}</p>
         <button
@@ -331,7 +332,7 @@ const VendorStoreManagement: React.FC = () => {
                     onClick={() => removeSocialLink(index)}
                     className="text-red-600 hover:text-red-700 px-3 py-2"
                   >
-                    ✕
+                    <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                   </button>
                 </div>
               ))}

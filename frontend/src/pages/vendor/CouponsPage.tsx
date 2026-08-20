@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMoney } from "../../lib/money";
-import {
-  MagnifyingGlassIcon,
-  PlusIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  TagIcon,
-} from "@heroicons/react/24/outline";
+import { ClockIcon, EyeIcon, MagnifyingGlassIcon, PauseCircleIcon, PencilIcon, PlayCircleIcon, PlusIcon, TagIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useCouponStore } from "../../stores/coupon.store";
 import { useUserStore } from "../../stores/user.store";
 import { useVendorStore } from "../../stores/vendor.store";
@@ -227,7 +220,7 @@ const CouponsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <span className="text-2xl">✅</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -242,7 +235,7 @@ const CouponsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <span className="text-2xl">⏰</span>
+              <ClockIcon className="w-6 h-6" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -255,7 +248,7 @@ const CouponsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
-              <span className="text-2xl">📊</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -382,7 +375,7 @@ const CouponsPage: React.FC = () => {
                             : t("coupon.activate")
                         }
                       >
-                        {coupon.isActive ? "⏸️" : "▶️"}
+                        {coupon.isActive ? <PauseCircleIcon className="w-5 h-5" aria-hidden="true" /> : <PlayCircleIcon className="w-5 h-5" aria-hidden="true" />}
                       </button>
                       <button
                         onClick={() => handleDeleteCoupon(coupon)}

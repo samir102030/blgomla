@@ -48,7 +48,7 @@ const PricingInsights: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mt-6">
       <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-        💰 {t("Pricing intelligence")}
+ {t("Pricing intelligence")}
       </h2>
       <p className="text-xs text-gray-500 mb-4">
         {t("Products priced above the cheapest competitor — consider repricing")}

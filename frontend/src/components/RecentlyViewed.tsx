@@ -42,7 +42,7 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({ excludeId }) => {
 
   return (
     <ProductRail
-      icon="🕘"
+ icon=""
       title="Recently Viewed"
       products={products}
       excludeId={excludeId}

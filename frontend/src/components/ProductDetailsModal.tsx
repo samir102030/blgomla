@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { useBrandStore } from "../stores/brand.store";
 import { useMoney } from "../lib/money";
@@ -96,7 +96,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           i < rating ? "text-yellow-400" : "text-gray-300"
         }`}
       >
-        ★
+        <StarIcon className="w-6 h-6" aria-hidden="true" />
       </span>
     ));
   };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { StarIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../stores/user.store";
 import { useCompareStore, COMPARE_MAX } from "../stores/compare.store";
@@ -77,7 +78,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             : "text-[var(--border-strong)]"
         }`}
       >
-        ★
+        <StarIcon className="w-6 h-6" aria-hidden="true" />
       </span>
     ));
   };
@@ -262,7 +263,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
             {soldCount >= 50 ? (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700">
-                🔥 {t("Bestseller")}
+ {t("Bestseller")}
               </span>
             ) : soldCount >= 10 ? (
               <span className="text-[10px] font-medium text-[var(--text-subtle)]">

@@ -464,7 +464,7 @@ const ProductsContent: React.FC = () => {
                 ))
               ) : error ? (
                 <div className="col-span-full text-center py-12">
-                  <p className="text-4xl mb-3">⚠️</p>
+ <p className="text-4xl mb-3"></p>
                   <p className="text-[var(--text-muted)]">{error}</p>
                 </div>
               ) : (
@@ -537,7 +537,7 @@ const ProductsContent: React.FC = () => {
             {/* No Products */}
             {totalProducts === 0 && !loading && (
               <div className="text-center py-16">
-                <div className="text-6xl mb-4">🔍</div>
+ <div className="text-6xl mb-4"></div>
                 <h3 className="text-lg font-bold text-[var(--text)] mb-2">
                   {t("No products found")}
                 </h3>

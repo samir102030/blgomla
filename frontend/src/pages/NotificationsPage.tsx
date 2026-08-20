@@ -244,7 +244,7 @@ const NotificationsPage: React.FC = () => {
                             />
                           )}
                           <span className="text-2xl flex-shrink-0 ml-2 sm:ml-3">
-                            {getNotificationIcon(n.type)}
+                            {(() => { const Icon = getNotificationIcon(n.type); return <Icon className="w-5 h-5" aria-hidden="true" />; })()}
                           </span>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">

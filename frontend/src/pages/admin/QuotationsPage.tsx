@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../../lib/axios";
 import toast from "react-hot-toast";
@@ -140,7 +141,7 @@ const QuotationsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-            📋 {t("Quotation Management")}
+ {t("Quotation Management")}
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             {t("Review and respond to customer quotation requests")}
@@ -240,7 +241,7 @@ const QuotationsPage: React.FC = () => {
                           onClick={() => handleDelete(q._id)}
                           className="px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors"
                         >
-                          ✕
+                          <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                         </button>
                       </div>
                     </td>
@@ -293,7 +294,7 @@ const QuotationsPage: React.FC = () => {
                 onClick={() => setSelectedQuotation(null)}
                 className="p-2 hover:bg-white rounded-full transition-colors"
               >
-                ✕
+                <XMarkIcon className="w-6 h-6" aria-hidden="true" />
               </button>
             </div>
 

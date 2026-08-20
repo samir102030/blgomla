@@ -262,9 +262,9 @@ const CustomerAnalyticsPage: React.FC = () => {
             <tbody className="divide-y divide-gray-100">
               {topCustomers.map((customer, index) => {
                 const tier =
-                  customer.totalSpent >= 10000 ? `🥇 ${t("customerAnalytics.tierVIP")}` :
-                  customer.totalSpent >= 5000 ? `🥈 ${t("customerAnalytics.tierPremium")}` :
-                  customer.totalSpent >= 1000 ? `🥉 ${t("customerAnalytics.tierRegular")}` : t("customerAnalytics.tierStandard");
+ customer.totalSpent >= 10000 ? ` ${t("customerAnalytics.tierVIP")}` :
+ customer.totalSpent >= 5000 ? ` ${t("customerAnalytics.tierPremium")}` :
+ customer.totalSpent >= 1000 ? ` ${t("customerAnalytics.tierRegular")}` : t("customerAnalytics.tierStandard");
                 const tierColor =
                   customer.totalSpent >= 10000 ? "bg-yellow-100 text-yellow-800" :
                   customer.totalSpent >= 5000 ? "bg-gray-100 text-gray-700" :

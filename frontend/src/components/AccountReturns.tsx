@@ -1,4 +1,5 @@
 import React from "react";
+import { BanknotesIcon, CheckCircleIcon, ClockIcon, InboxIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useReturnStore } from "../stores/return.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -20,11 +21,11 @@ const AccountReturns: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "approved": return "✅";
-      case "rejected": return "❌";
-      case "received": return "📬";
-      case "refunded": return "💸";
-      default: return "⏳";
+      case "approved": return CheckCircleIcon;
+      case "rejected": return XCircleIcon;
+      case "received": return InboxIcon;
+      case "refunded": return BanknotesIcon;
+      default: return ClockIcon;
     }
   };
 
@@ -45,7 +46,7 @@ const AccountReturns: React.FC = () => {
 
       {returns.length === 0 ? (
         <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-10 text-center">
-          <span className="text-4xl">📭</span>
+ <span className="text-4xl"></span>
           <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noReturns", "No return requests yet.")}</p>
           <Link to="/products" className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-[var(--brand-primary)] hover:underline">{t("account.continueShopping", "Continue Shopping")} →</Link>
         </div>
@@ -55,7 +56,7 @@ const AccountReturns: React.FC = () => {
             const orderId = typeof item.order === "string" ? item.order : item.order?._id;
             return (
               <div key={item._id} className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4 flex items-center gap-4 hover:border-[var(--brand-primary)]/30 transition-all">
-                <div className="text-2xl shrink-0">{getStatusIcon(item.status)}</div>
+                {(() => { const Icon = getStatusIcon(item.status); return <Icon className="w-6 h-6 shrink-0" aria-hidden="true" />; })()}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-[var(--text)] truncate">#{item._id.slice(-8).toUpperCase()}</p>

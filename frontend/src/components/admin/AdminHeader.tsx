@@ -165,7 +165,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick }) => {
                     onClick={() => setShowUserDropdown(false)}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-[var(--text)] hover:bg-[var(--surface-2)]"
                   >
-                    🏠 <span>{t('admin.backToSite')}</span>
+ <span>{t('admin.backToSite')}</span>
                   </Link>
                 </div>
                 <div className="border-t border-[var(--border)] py-1">

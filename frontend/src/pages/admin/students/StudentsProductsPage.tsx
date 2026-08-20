@@ -126,10 +126,10 @@ const StudentsProductsPage: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[
-          [t("Products"), catalogTotal, "text-gray-900", "📦"],
-          [t("Shown"), shown, "text-green-600", "✅"],
-          [t("Out of stock"), outOfStock, "text-orange-600", "📉"],
-          [t("Unpriced"), unpriced, "text-red-600", "🏷️"],
+ [t("Products"), catalogTotal, "text-gray-900", ""],
+ [t("Shown"), shown, "text-green-600", ""],
+ [t("Out of stock"), outOfStock, "text-orange-600", ""],
+ [t("Unpriced"), unpriced, "text-red-600", ""],
         ].map(([label, value, tone, icon]) => (
           <div key={String(label)} className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center justify-between">

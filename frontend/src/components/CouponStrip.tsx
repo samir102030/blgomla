@@ -31,7 +31,7 @@ const CouponStrip: React.FC<{ title?: string }> = ({ title }) => {
   return (
     <section className="shell py-6">
       <h2 className="text-lg sm:text-xl font-bold text-[var(--text)] mb-3 flex items-center gap-2">
-        <span aria-hidden="true">🏷️</span>
+ <span aria-hidden="true"></span>
         {title || t("Collect Coupons")}
       </h2>
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x">

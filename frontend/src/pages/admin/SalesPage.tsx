@@ -504,7 +504,7 @@ const SalesPage: React.FC = () => {
                 }`}
               >
                 <span className="text-2xl">
-                  {item.isPositive ? "📈" : "📉"}
+ {item.isPositive ? "" : ""}
                 </span>
               </div>
             </div>
@@ -600,7 +600,7 @@ const SalesPage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center">
-                <div className="text-4xl mb-2">📊</div>
+ <div className="text-4xl mb-2"></div>
                 <p className="text-gray-600">{t("sales.loadingTrend")}</p>
                 <p className="text-sm text-gray-500">
                   {t("sales.chartPlaceholder")}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import PageHero from "../components/PageHero";
@@ -65,7 +66,7 @@ const ComparePage: React.FC = () => {
         </span>
       ),
     },
-    { label: t("Rating"), render: (p) => <>★ {(p.rating || 0).toFixed(1)}</> },
+ { label: t("Rating"), render: (p) => <> {(p.rating || 0).toFixed(1)}</> },
     { label: t("Brand"), render: (p) => <>{brandName(p) || "—"}</> },
     {
       label: t("Availability"),
@@ -140,7 +141,7 @@ const ComparePage: React.FC = () => {
                             className="text-[var(--text-subtle)] hover:text-red-600"
                             aria-label={t("Remove")}
                           >
-                            ✕
+                            <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                           </button>
                         </div>
                         <Link to={`/product/${p._id}`}>

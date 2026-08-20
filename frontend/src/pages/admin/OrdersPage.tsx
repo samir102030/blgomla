@@ -1,12 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  MagnifyingGlassIcon,
-  FunnelIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import { ClockIcon, EyeIcon, FunnelIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
 import { useIsPlatformStaff } from "../../lib/permissions";
 import { axiosInstance } from "../../lib/axios";
@@ -329,7 +323,7 @@ const OrdersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[#FFD600]/10 p-3 rounded-full">
-              <span className="text-2xl">⏳</span>
+              <ClockIcon className="w-6 h-6" aria-hidden="true" />
             </div>
           </div>
         </div>
@@ -347,7 +341,7 @@ const OrdersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
-              <span className="text-2xl">✅</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useCollectionStore } from "../stores/collection.store";
@@ -93,7 +94,7 @@ const AddBundleDialog: React.FC<AddBundleDialogProps> = ({
             className="p-1.5 hover:bg-[var(--bg)] rounded-full transition-colors text-[var(--text-muted)] shrink-0 disabled:opacity-40"
             aria-label={t("Close")}
           >
-            ✕
+            <XMarkIcon className="w-6 h-6" aria-hidden="true" />
           </button>
         </div>
 
@@ -130,7 +131,7 @@ const AddBundleDialog: React.FC<AddBundleDialogProps> = ({
           {installOffered && (
             <div>
               <p className="text-sm font-semibold text-[var(--text)] mb-2">
-                🔧 {t("Do you want us to install it for you?")}
+ {t("Do you want us to install it for you?")}
               </p>
               {collection.installation?.note && (
                 <p className="text-xs text-[var(--text-muted)] mb-2">
@@ -227,7 +228,7 @@ const AddBundleDialog: React.FC<AddBundleDialogProps> = ({
                 {t("Adding...")}
               </>
             ) : (
-              <>🛒 {t("Add to cart")}</>
+ <> {t("Add to cart")}</>
             )}
           </button>
         </div>

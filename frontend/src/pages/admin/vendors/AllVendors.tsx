@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useVendorStore } from '../../../stores/vendor.store';
@@ -219,7 +220,7 @@ const AllVendors: React.FC = () => {
                 onClick={() => setShowDetailsModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                ✕
+                <XMarkIcon className="w-6 h-6" aria-hidden="true" />
               </button>
             </div>
 

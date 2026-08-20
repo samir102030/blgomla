@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { CheckCircleIcon, ShieldCheckIcon, StarIcon, TruckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import PageHero from "../components/PageHero";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -131,7 +132,7 @@ const CollectionDetailPage: React.FC = () => {
         <Header />
         <div className="flex items-center justify-center py-24">
           <div className="text-center">
-            <div className="text-5xl mb-4">🔍</div>
+ <div className="text-5xl mb-4"></div>
             <h2 className="text-xl font-bold text-[var(--text)] mb-2">
               {t("Bundle Not Found")}
             </h2>
@@ -246,7 +247,7 @@ const CollectionDetailPage: React.FC = () => {
                   <div className="flex items-center gap-2 mt-1.5">
                     {item.product?.rating && (
                       <span className="flex items-center gap-0.5 text-[11px] text-amber-500">
-                        ⭐ {item.product.rating}
+                        <StarIcon className="w-4 h-4 inline-block align-text-bottom me-1" aria-hidden="true" />{item.product.rating}
                       </span>
                     )}
                     {item.product?.numReviews && (
@@ -310,7 +311,7 @@ const CollectionDetailPage: React.FC = () => {
                   disagree about what the customer asked for. */}
               {installOffered && (
                 <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 mb-5">
-                  <span className="text-base">🔧</span>
+ <span className="text-base"></span>
                   <span className="text-xs text-[var(--text-muted)]">
                     {installPrice > 0
                       ? `${t("Installation available for")} EGP ${installPrice.toLocaleString()}`
@@ -328,7 +329,7 @@ const CollectionDetailPage: React.FC = () => {
                     </p>
                     {savings > 0 && (
                       <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
-                        💰 {t("Save")} {t("EGP")} {savings.toLocaleString()} ({savingsPercent}%)
+ {t("Save")} {t("EGP")} {savings.toLocaleString()} ({savingsPercent}%)
                       </p>
                     )}
                   </div>
@@ -339,7 +340,7 @@ const CollectionDetailPage: React.FC = () => {
                 onClick={openConfirm}
                 className="w-full bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white py-3.5 rounded-xl font-semibold text-sm hover:shadow-lg hover:shadow-[var(--brand-primary)]/25 transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-3"
               >
-                🛒 {t("Add Bundle to Cart")}
+ {t("Add Bundle to Cart")}
               </button>
 
               {/* Request Quotation Button */}
@@ -347,7 +348,7 @@ const CollectionDetailPage: React.FC = () => {
                 onClick={() => { setShowQuotationModal(true); setQuotationSuccess(false); }}
                 className="w-full border-2 border-[var(--brand-primary)] text-[var(--brand-primary)] py-3 rounded-xl font-semibold text-sm hover:bg-[var(--brand-primary)]/5 transition-all duration-300 flex items-center justify-center gap-2"
               >
-                📋 {t("Request Quotation")}
+ {t("Request Quotation")}
               </button>
 
               <Link
@@ -361,13 +362,13 @@ const CollectionDetailPage: React.FC = () => {
             {/* Trust signals */}
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 space-y-3">
               {[
-                { icon: "✅", text: t("All items verified in stock") },
-                { icon: "🛡️", text: t("Full warranty on every product") },
-                { icon: "🚚", text: t("Free insured shipping") },
+                { icon: CheckCircleIcon, text: t("All items verified in stock") },
+                { icon: ShieldCheckIcon, text: t("Full warranty on every product") },
+                { icon: TruckIcon, text: t("Free insured shipping") },
                 { icon: "↩️", text: t("3-day hassle-free returns") },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5 text-xs text-[var(--text-muted)]">
-                  <span className="text-sm">{item.icon}</span>
+                  <item.icon className="w-4 h-4" aria-hidden="true" />
                   {item.text}
                 </div>
               ))}
@@ -394,7 +395,7 @@ const CollectionDetailPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold text-[var(--text)]">
-                    📋 {t("Request Quotation")}
+ {t("Request Quotation")}
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] mt-1">
                     {t("Get a custom price for")} "{collection.name}"
@@ -404,14 +405,14 @@ const CollectionDetailPage: React.FC = () => {
                   onClick={() => setShowQuotationModal(false)}
                   className="p-2 hover:bg-[var(--bg)] rounded-full transition-colors text-[var(--text-muted)]"
                 >
-                  ✕
+                  <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
             {quotationSuccess ? (
               <div className="p-8 text-center">
-                <div className="text-5xl mb-4">✅</div>
+ <div className="text-5xl mb-4"></div>
                 <h3 className="text-lg font-bold text-[var(--text)] mb-2">
                   {t("Quotation Submitted!")}
                 </h3>

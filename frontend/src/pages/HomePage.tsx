@@ -1,4 +1,5 @@
 import React, { useMemo, useState, lazy, Suspense } from "react";
+import { BriefcaseIcon, CameraIcon, GlobeAltIcon, PuzzlePieceIcon } from "@heroicons/react/24/outline";
 import { useSectionOrder } from "../layout/useLayout";
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
@@ -141,10 +142,10 @@ const Ico = {
 // Warm orange spectrum derived from the Belgomla palette
 // (orange #00A8E8, orangeDeep #0077B6, orangeSoft #7FD8FF, ink #0B0B10).
 const bundleThemes = [
-  { gradient: "from-[#00A8E8] to-[#0077B6]", badge: "📸" },
-  { gradient: "from-[#7FD8FF] to-[#00A8E8]", badge: "💼" },
-  { gradient: "from-[#0077B6] to-[#00A8E8]", badge: "🎮" },
-  { gradient: "from-[#00A8E8] to-[#0B0B10]", badge: "🌐" },
+  { gradient: "from-[#00A8E8] to-[#0077B6]", badge: CameraIcon },
+  { gradient: "from-[#7FD8FF] to-[#00A8E8]", badge: BriefcaseIcon },
+  { gradient: "from-[#0077B6] to-[#00A8E8]", badge: PuzzlePieceIcon },
+  { gradient: "from-[#00A8E8] to-[#0B0B10]", badge: GlobeAltIcon },
 ];
 
 /* ═════════════════════ Main Page ═════════════════════ */
@@ -434,7 +435,7 @@ const HomePage: React.FC = () => {
           <ScrollReveal>
             <Suspense fallback={null}>
               <ProductRail
-                icon="🏆"
+ icon=""
                 title="Bestsellers"
                 subtitle="Most-ordered products this season"
                 products={bestSellers}
@@ -451,7 +452,7 @@ const HomePage: React.FC = () => {
           <ScrollReveal>
             <Suspense fallback={null}>
               <ProductRail
-                icon="⭐"
+                icon={Ico.sparkles}
                 title="Top Rated"
                 subtitle="Highest-rated by our customers"
                 products={topRated}
@@ -589,7 +590,7 @@ const HomePage: React.FC = () => {
                         <div className="p-4 sm:p-5">
                           <div className="flex items-start justify-between gap-2 mb-3">
                             <div>
-                              <span className="text-lg">{theme.badge}</span>
+                              <theme.badge className="w-5 h-5" aria-hidden="true" />
                               <h3 className="text-sm font-bold text-[var(--text)] leading-snug mt-0.5 line-clamp-1">
                                 {collection.name}
                               </h3>
@@ -639,7 +640,7 @@ const HomePage: React.FC = () => {
                               </span>
                               {savings > 0 && (
                                 <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                  💰 {t("Save")} {t("EGP")} {savings.toLocaleString()}
+ {t("Save")} {t("EGP")} {savings.toLocaleString()}
                                 </p>
                               )}
                             </div>
@@ -647,7 +648,7 @@ const HomePage: React.FC = () => {
                               onClick={() => setPendingBundle(collection)}
                               className={`text-xs font-semibold text-white px-3 py-1.5 rounded-lg bg-gradient-to-r ${theme.gradient} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
                             >
-                              🛒 {t("Add")}
+ {t("Add")}
                             </button>
                           </div>
                         </div>
@@ -682,7 +683,7 @@ const HomePage: React.FC = () => {
             {/* Empty state */}
             {!loadingAll && allProducts.length === 0 && (
               <div className="text-center py-16 animate-fadeIn">
-                <p className="text-5xl mb-4 animate-float">🛍️</p>
+ <p className="text-5xl mb-4 animate-float"></p>
                 <h3 className="text-xl font-bold text-[var(--text)] mb-2">
                   {t("No products yet")}
                 </h3>

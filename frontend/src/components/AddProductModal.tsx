@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { axiosInstance } from "../lib/axios";
 import { useTranslation } from "react-i18next";
 import { useUserStore } from "../stores/user.store";
@@ -221,7 +222,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               aria-label={t("modal.addProduct.closeModal")}
               className="text-gray-500 hover:text-gray-700 rounded-md p-1"
             >
-              ✕
+              <XMarkIcon className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -273,7 +274,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       onClick={() => removeFile(idx)}
                       className="absolute top-0 right-0 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition text-xs"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </div>
                 ))}
@@ -366,7 +367,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     />
                     <p className="text-xs text-amber-600">
-                      ⚠️ {t("modal.addProduct.brandApprovalWarning")}
+ {t("modal.addProduct.brandApprovalWarning")}
                     </p>
                   </div>
                 )}
@@ -413,7 +414,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       className="block w-full text-sm border border-gray-300 rounded-md px-2 sm:px-3 py-2 h-20 focus:outline-none focus:ring-2 focus:ring-yellow-300"
                     />
                     <p className="text-xs text-amber-600">
-                      ⚠️ {t("modal.addProduct.categoryApprovalWarning")}
+ {t("modal.addProduct.categoryApprovalWarning")}
                     </p>
                   </div>
                 )}
@@ -654,7 +655,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       }
                       className="text-blue-600 hover:text-blue-800"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </span>
                 ))}
@@ -708,7 +709,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       }
                       className="text-green-600 hover:text-green-800"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </span>
                 ))}
@@ -782,7 +783,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                       }
                       className="ml-auto text-purple-600 hover:text-purple-800"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                     </button>
                   </div>
                 ))}

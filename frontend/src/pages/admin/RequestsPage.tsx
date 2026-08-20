@@ -198,7 +198,7 @@ const RequestsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
-              <span className="text-2xl">🏷️</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>
@@ -211,7 +211,7 @@ const RequestsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
-              <span className="text-2xl">📁</span>
+ <span className="text-2xl"></span>
             </div>
           </div>
         </div>

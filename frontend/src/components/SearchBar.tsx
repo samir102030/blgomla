@@ -321,7 +321,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
                                   className="w-full h-full object-contain"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-lg">📦</div>
+ <div className="w-full h-full flex items-center justify-center text-lg"></div>
                               )}
                             </div>
                             <div className="flex-grow min-w-0">

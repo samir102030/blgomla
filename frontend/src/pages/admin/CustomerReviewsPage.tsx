@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  MagnifyingGlassIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  TrashIcon,
-  FunnelIcon,
-  StarIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { CheckIcon, EyeIcon, EyeSlashIcon, FunnelIcon, MagnifyingGlassIcon, StarIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { useReviewStore } from "../../stores/review.store";
 import { useUserStore } from "../../stores/user.store";
@@ -353,7 +345,7 @@ const CustomerReviewsPage: React.FC = () => {
                   </p>
                 </div>
                 <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
-                  <span className="text-2xl">💬</span>
+ <span className="text-2xl"></span>
                 </div>
               </div>
             </div>
@@ -816,7 +808,7 @@ const CustomerReviewsPage: React.FC = () => {
 
             {reviews.length === 0 && !loading && (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">💬</div>
+ <div className="text-gray-400 text-6xl mb-4"></div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   {t("reviews.noReviewsFound")}
                 </h3>
@@ -1050,7 +1042,7 @@ const CustomerReviewsPage: React.FC = () => {
                                 className="text-green-600 hover:text-green-900"
                                 title="Approve Request"
                               >
-                                ✓
+                                <CheckIcon className="w-6 h-6" aria-hidden="true" />
                               </button>
                               <button
                                 onClick={() =>
@@ -1062,7 +1054,7 @@ const CustomerReviewsPage: React.FC = () => {
                                 className="text-red-600 hover:text-red-900"
                                 title="Reject Request"
                               >
-                                ✕
+                                <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                               </button>
                             </div>
                           )}
@@ -1234,13 +1226,13 @@ const CustomerReviewsPage: React.FC = () => {
                           )}
                           {request.status === "approved" && (
                             <span className="text-xs text-green-600 font-medium">
-                              ✓ Approved
+ Approved
                             </span>
                           )}
                           {request.status === "rejected" && (
                             <div className="text-xs">
                               <span className="text-red-600 font-medium">
-                                ✕ Rejected
+ Rejected
                               </span>
                               {request.rejectionReason && (
                                 <div className="mt-1 text-gray-600 max-w-xs">

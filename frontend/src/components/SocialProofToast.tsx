@@ -115,7 +115,7 @@ const SocialProofToast: React.FC = () => {
             bought <span className="text-[var(--text)]">{name}</span>
           </p>
           <p className="text-[10px] text-[var(--text-subtle)] mt-0.5">
-            {timeAgo(p.createdAt)} · ✅ verified
+ {timeAgo(p.createdAt)} · verified
           </p>
         </div>
         <button

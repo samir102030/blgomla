@@ -241,7 +241,7 @@ const ProductChat: React.FC<ProductChatProps> = ({
         ) : error ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="text-red-500 mb-2">⚠️ Error</div>
+ <div className="text-red-500 mb-2"> Error</div>
               <div className="text-gray-600 text-sm">{error}</div>
             </div>
           </div>

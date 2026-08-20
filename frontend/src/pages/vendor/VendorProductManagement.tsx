@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
 import { useProductStore } from "../../stores/product.store";
 import { useBrandStore } from "../../stores/brand.store";
@@ -171,7 +172,7 @@ const VendorProductManagement: React.FC = () => {
             onClick={() => setShowBulkUpload(!showBulkUpload)}
             className="bg-blue-500 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md hover:bg-blue-600 flex items-center gap-2"
           >
-            📊 Bulk Upload
+ Bulk Upload
           </button>
           <button
             onClick={() => {
@@ -265,7 +266,7 @@ const VendorProductManagement: React.FC = () => {
             {(product as any).hasPendingRequests && (
               <div className="bg-yellow-100 border-b border-yellow-200 px-4 py-2 flex items-center gap-2">
                 <span className="text-yellow-700 text-sm font-medium">
-                  ⏳ Pending Admin Approval
+                  Pending Admin Approval
                 </span>
               </div>
             )}
@@ -316,7 +317,7 @@ const VendorProductManagement: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1">
-                  <span className="text-yellow-400">⭐</span>
+                  <StarIcon className="w-4 h-4 text-yellow-400" aria-hidden="true" />
                   <span className="text-sm text-gray-600">
                     {product.rating?.toFixed(1) || "0.0"}
                   </span>
@@ -368,7 +369,7 @@ const VendorProductManagement: React.FC = () => {
                   }}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  ✕
+                  <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
 

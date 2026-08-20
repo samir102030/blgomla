@@ -94,7 +94,7 @@ const VerifyEmailPage: React.FC = () => {
         <div className="max-w-md mx-auto px-4 sm:px-6">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 shadow-sm">
             <div className="mb-6 text-center">
-              <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[var(--brand-primary)]/10 flex items-center justify-center text-2xl">📧</div>
+ <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[var(--brand-primary)]/10 flex items-center justify-center text-2xl"></div>
               <h1 className="text-2xl font-bold text-[var(--text)]">
                 {t("verify.title", "Verify your email")}
               </h1>

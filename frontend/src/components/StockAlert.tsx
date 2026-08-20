@@ -68,12 +68,12 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
       <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
         {done ? (
           <p className="text-sm font-medium text-emerald-600">
-            ✅ {t("inventory.stockAlert.emailWhenAvailable")}
+ {t("inventory.stockAlert.emailWhenAvailable")}
           </p>
         ) : (
           <>
             <p className="text-sm font-semibold text-[var(--text)]">
-              📦 {t("inventory.stockAlert.requestTitle")}
+ {t("inventory.stockAlert.requestTitle")}
             </p>
             <p className="mt-1 mb-3 text-xs text-[var(--text-muted)]">
               {t("inventory.stockAlert.requestHint")}
@@ -98,7 +98,7 @@ const StockAlert: React.FC<StockAlertProps> = ({ productId, inStock }) => {
   if (done) {
     return (
       <p className="text-sm text-emerald-600 mt-3">
-        ✅ {t("inventory.stockAlert.emailWhenAvailable")}
+ {t("inventory.stockAlert.emailWhenAvailable")}
       </p>
     );
   }

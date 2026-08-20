@@ -895,7 +895,7 @@ const CheckoutPage: React.FC = () => {
                       onClick={() => setShowMap((s) => !s)}
                       className="text-sm font-medium text-blue-600 hover:text-blue-800"
                     >
-                      📍 {showMap ? t("Hide map") : t("Pick address on map")}
+ {showMap ? t("Hide map") : t("Pick address on map")}
                     </button>
                     {showMap && (
                       <div className="mt-3">
@@ -1097,7 +1097,7 @@ const CheckoutPage: React.FC = () => {
                     </div>
                     {installationFee > 0 && (
                       <div className="flex justify-between text-xs sm:text-sm">
-                        <span>🔧 {t("Installation")}</span>
+ <span> {t("Installation")}</span>
                         <span>{(installationFee).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                       </div>
                     )}

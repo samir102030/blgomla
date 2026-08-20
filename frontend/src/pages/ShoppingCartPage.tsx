@@ -80,7 +80,7 @@ const InstallationToggle: React.FC<{
       />
       <span className="min-w-0">
         <span className="block text-xs font-semibold text-[var(--text)]">
-          🔧 {t("Do you want us to install it for you?")}
+ {t("Do you want us to install it for you?")}
         </span>
         <span className="block text-[11px] text-[var(--text-muted)] mt-0.5">
           {price > 0
@@ -1181,7 +1181,7 @@ const ShoppingCartPage: React.FC = () => {
                         </p>
                       ) : (
                         <p className="text-xs font-semibold text-green-500 mb-1.5 inline-flex items-center gap-1">
-                          🎉 {t("You unlocked FREE shipping!")}
+ {t("You unlocked FREE shipping!")}
                         </p>
                       )}
                       <div className="h-2 w-full rounded-full bg-[var(--surface-3)] overflow-hidden">
@@ -1268,7 +1268,7 @@ const ShoppingCartPage: React.FC = () => {
                 </div>
                 {installationTotal > 0 && (
                   <div className="flex justify-between text-xs sm:text-sm">
-                    <span className="text-[var(--text-muted)]">🔧 {t("Installation")}</span>
+ <span className="text-[var(--text-muted)]"> {t("Installation")}</span>
                     <span className="font-medium text-[var(--text)]">
                       {(installationTotal).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                     </span>

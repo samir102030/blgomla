@@ -162,10 +162,10 @@ const StudentsCategoriesPage: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[
-          [t("Departments"), catalogCategories.length, "text-gray-900", "📁"],
-          [t("Shown"), active, "text-green-600", "✅"],
-          [t("Top level"), roots, "text-[var(--brand-primary)]", "🏷️"],
-          [t("Nested"), catalogCategories.length - roots, "text-orange-600", "📂"],
+ [t("Departments"), catalogCategories.length, "text-gray-900", ""],
+ [t("Shown"), active, "text-green-600", ""],
+ [t("Top level"), roots, "text-[var(--brand-primary)]", ""],
+ [t("Nested"), catalogCategories.length - roots, "text-orange-600", ""],
         ].map(([label, value, tone, icon]) => (
           <div key={String(label)} className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center justify-between">
@@ -314,7 +314,7 @@ const StudentsCategoriesPage: React.FC = () => {
                         }`}
                         title={(category.active ? t("Hide") : t("Show")) as string}
                       >
-                        {category.active ? "✓" : "✗"}
+ {category.active ? "" : ""}
                       </button>
                       <button
                         onClick={() => openEdit(category)}

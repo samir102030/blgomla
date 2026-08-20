@@ -158,7 +158,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
           {/* Content side */}
           <div className="flex flex-col p-6 md:p-8 gap-3 overflow-y-auto">
             <span className="inline-flex items-center gap-1.5 self-start text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-gradient-to-r from-[#00A8E8] to-[#0077B6] text-white shadow-sm">
-              ✨ {t("Limited Offer")}
+ {t("Limited Offer")}
             </span>
 
             <h2

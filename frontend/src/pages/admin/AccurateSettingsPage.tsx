@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
@@ -138,7 +139,7 @@ const AccurateSettingsPage: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 max-w-3xl">
       <h1 className="text-2xl font-bold text-[var(--text)] mb-1">
-        📦 {t("Accurate shipping")}
+ {t("Accurate shipping")}
       </h1>
       <p className="text-sm text-[var(--text-muted)] mb-4">
         {t(
@@ -421,7 +422,7 @@ const AccurateSettingsPage: React.FC = () => {
                   className="text-red-500 hover:text-red-600 text-sm px-2"
                   aria-label={t("Remove mapping")}
                 >
-                  ✕
+                  <XMarkIcon className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
             ))}

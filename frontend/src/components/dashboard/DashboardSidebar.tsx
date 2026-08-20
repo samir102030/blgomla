@@ -1,4 +1,6 @@
 import React from "react";
+import type { ComponentType, SVGProps } from "react";
+import { ArrowTrendingUpIcon, BanknotesIcon, BuildingStorefrontIcon, ChartBarIcon, ChatBubbleLeftRightIcon, Cog6ToothIcon, CubeIcon, ShoppingCartIcon, UsersIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link, useLocation } from "react-router-dom";
 import Logo, { BRAND } from "../Logo";
 
@@ -9,16 +11,16 @@ interface SidebarProps {
 
 interface MenuItem {
   title: string;
-  icon: string;
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
   path: string;
   children: { title: string; path: string }[];
 }
 
 const menuItems: MenuItem[] = [
-  { title: "Dashboard", icon: "📊", path: "/dashboard", children: [] },
+  { title: "Dashboard", icon: ChartBarIcon, path: "/dashboard", children: [] },
   {
     title: "Vendors",
-    icon: "🏪",
+    icon: BuildingStorefrontIcon,
     path: "/dashboard/vendors",
     children: [
       { title: "All Vendors", path: "/dashboard/vendors" },
@@ -29,7 +31,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Products",
-    icon: "📦",
+    icon: CubeIcon,
     path: "/dashboard/products",
     children: [
       { title: "All Products", path: "/dashboard/products" },
@@ -40,7 +42,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Orders",
-    icon: "🛒",
+    icon: ShoppingCartIcon,
     path: "/dashboard/orders",
     children: [
       { title: "All Orders", path: "/dashboard/orders" },
@@ -51,7 +53,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "CRM",
-    icon: "👥",
+    icon: UsersIcon,
     path: "/dashboard/crm",
     children: [
       { title: "Customers", path: "/dashboard/crm/customers" },
@@ -62,7 +64,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Analytics",
-    icon: "📈",
+    icon: ArrowTrendingUpIcon,
     path: "/dashboard/analytics",
     children: [
       { title: "Sales Reports", path: "/dashboard/analytics/sales" },
@@ -73,7 +75,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Finance",
-    icon: "💰",
+    icon: BanknotesIcon,
     path: "/dashboard/finance",
     children: [
       { title: "Payments", path: "/dashboard/finance/payments" },
@@ -84,7 +86,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Messages",
-    icon: "💬",
+    icon: ChatBubbleLeftRightIcon,
     path: "/dashboard/messages",
     children: [
       { title: "Inbox", path: "/dashboard/messages/inbox" },
@@ -94,7 +96,7 @@ const menuItems: MenuItem[] = [
   },
   {
     title: "Settings",
-    icon: "⚙️",
+    icon: Cog6ToothIcon,
     path: "/dashboard/settings",
     children: [
       { title: "General", path: "/dashboard/settings/general" },
@@ -125,7 +127,7 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                   : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
               }`}
             >
-              <span className="text-base leading-none">{item.icon}</span>
+              <item.icon className="w-5 h-5 shrink-0" aria-hidden="true" />
               <span>{item.title}</span>
               {active && (
                 <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[var(--brand-primary)]" />
@@ -198,7 +200,7 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               className="p-2 text-[var(--text-muted)] hover:text-[var(--text)]"
               aria-label="Close menu"
             >
-              ✕
+              <XMarkIcon className="w-6 h-6" aria-hidden="true" />
             </button>
           </div>
           {renderNav(onClose)}

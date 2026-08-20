@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import type { ComponentType, SVGProps } from "react";
+import { ArrowUpTrayIcon, BellIcon, BuildingStorefrontIcon, ChartBarIcon, CubeIcon, LockClosedIcon, MapPinIcon, ShieldCheckIcon, UserIcon } from "@heroicons/react/24/outline";
 import Breadcrumb from "../components/Breadcrumb";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
@@ -42,18 +44,18 @@ const MyAccountPage: React.FC = () => {
     }
   }, [user?._id, fetchUserAddresses, fetchUserOrders, fetchVendorStore, fetchMyReturns, user?.role]);
 
-  type MenuItem = { id: string; label: string; icon: string; desc: string; href?: string };
+  type MenuItem = { id: string; label: string; icon: ComponentType<SVGProps<SVGSVGElement>>; desc: string; href?: string };
   const menuItems: MenuItem[] = [
-    { id: "dashboard", label: t("account.dashboard", "Dashboard"), icon: "📊", desc: t("account.dashboardDesc", "Overview & stats") },
-    { id: "orders", label: t("account.orders", "Orders"), icon: "📦", desc: t("account.ordersDesc", "Track & manage") },
-    { id: "returns", label: t("account.returns", "Returns"), icon: "📤", desc: t("account.returnsDesc", "Return requests") },
-    { id: "addresses", label: t("account.addresses", "Addresses"), icon: "📍", desc: t("account.addressesDesc", "Shipping info") },
-    { id: "profile", label: t("account.accountDetails", "Profile"), icon: "👤", desc: t("account.profileDesc", "Personal info") },
-    { id: "password", label: t("account.changePassword", "Password"), icon: "🔒", desc: t("account.passwordDesc", "Security settings") },
-    { id: "security", label: t("account.security", "2FA"), icon: "🛡️", desc: t("account.securityDesc", "Two-factor authentication") },
-    { id: "privacy", label: t("account.privacy", "Privacy & Data"), icon: "🔐", desc: t("account.privacyDesc", "Export or delete your data") },
-    { id: "notifications", label: t("account.notifications", "Notifications"), icon: "🔔", desc: t("account.notificationsDesc", "Email & alert preferences"), href: "/account/notifications" },
-    ...(user?.role === "store" ? [{ id: "store", label: t("account.myStore", "My Store"), icon: "🏪", desc: t("account.storeDesc", "Vendor panel") }] : []),
+    { id: "dashboard", label: t("account.dashboard", "Dashboard"), icon: ChartBarIcon, desc: t("account.dashboardDesc", "Overview & stats") },
+    { id: "orders", label: t("account.orders", "Orders"), icon: CubeIcon, desc: t("account.ordersDesc", "Track & manage") },
+    { id: "returns", label: t("account.returns", "Returns"), icon: ArrowUpTrayIcon, desc: t("account.returnsDesc", "Return requests") },
+    { id: "addresses", label: t("account.addresses", "Addresses"), icon: MapPinIcon, desc: t("account.addressesDesc", "Shipping info") },
+    { id: "profile", label: t("account.accountDetails", "Profile"), icon: UserIcon, desc: t("account.profileDesc", "Personal info") },
+    { id: "password", label: t("account.changePassword", "Password"), icon: LockClosedIcon, desc: t("account.passwordDesc", "Security settings") },
+    { id: "security", label: t("account.security", "2FA"), icon: ShieldCheckIcon, desc: t("account.securityDesc", "Two-factor authentication") },
+    { id: "privacy", label: t("account.privacy", "Privacy & Data"), icon: LockClosedIcon, desc: t("account.privacyDesc", "Export or delete your data") },
+    { id: "notifications", label: t("account.notifications", "Notifications"), icon: BellIcon, desc: t("account.notificationsDesc", "Email & alert preferences"), href: "/account/notifications" },
+    ...(user?.role === "store" ? [{ id: "store", label: t("account.myStore", "My Store"), icon: BuildingStorefrontIcon, desc: t("account.storeDesc", "Vendor panel") }] : []),
   ];
 
   const handleMenuClick = (id: string) => {
@@ -98,10 +100,10 @@ const MyAccountPage: React.FC = () => {
                 {user?.profilePicture ? (
                   <img loading="lazy" decoding="async" src={user.profilePicture} alt="Profile" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-4xl">{user?.name?.[0]?.toUpperCase() || "👤"}</span>
+ <span className="text-4xl">{user?.name?.[0]?.toUpperCase() || ""}</span>
                 )}
               </div>
-              <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 ltr:-right-1 rtl:-left-1 w-7 h-7 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform" aria-label={t("account.editProfile", "Edit profile")}>✏️</button>
+ <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 ltr:-right-1 rtl:-left-1 w-7 h-7 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform" aria-label={t("account.editProfile", "Edit profile")}></button>
             </div>
             {/* Info */}
             <div className="text-center sm:text-start">
@@ -109,13 +111,13 @@ const MyAccountPage: React.FC = () => {
               <p className="text-[var(--on-ink-muted)] text-sm mt-1">{user?.email}</p>
               <div className="flex items-center justify-center sm:justify-start gap-2 mt-3">
                 {memberSince && <span className="chip chip-on-ink">{t("account.memberSince", "Member since")} {memberSince}</span>}
-                {user.role === "store" && <span className="chip chip-on-ink">🏪 {t("account.vendor", "Vendor")}</span>}
+ {user.role === "store" && <span className="chip chip-on-ink"> {t("account.vendor", "Vendor")}</span>}
               </div>
             </div>
             {/* Quick Actions */}
             <div className="sm:ms-auto flex gap-2">
-              <Link to="/wishlist" className="btn btn-sm btn-on-ink">❤️ {t("account.wishlist", "Wishlist")}</Link>
-              <Link to="/cart" className="btn btn-sm btn-on-ink">🛒 {t("account.cart", "Cart")}</Link>
+ <Link to="/wishlist" className="btn btn-sm btn-on-ink"> {t("account.wishlist", "Wishlist")}</Link>
+ <Link to="/cart" className="btn btn-sm btn-on-ink"> {t("account.cart", "Cart")}</Link>
             </div>
           </div>
         </div>
@@ -126,7 +128,7 @@ const MyAccountPage: React.FC = () => {
         <div className="flex items-center justify-between px-4 py-2">
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="flex items-center gap-2 text-sm font-medium text-[var(--text)]">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-            {menuItems.find(m => m.id === activeTab)?.icon} {menuItems.find(m => m.id === activeTab)?.label}
+            {menuItems.find(m => m.id === activeTab)?.label}
           </button>
         </div>
         {sidebarOpen && (
@@ -134,17 +136,17 @@ const MyAccountPage: React.FC = () => {
             {menuItems.map((item) => (
               item.href ? (
                 <Link key={item.id} to={item.href} onClick={() => setSidebarOpen(false)} className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 transition-all text-[var(--text-muted)] hover:bg-[var(--surface-2)]">
-                  <span className="text-base">{item.icon}</span>{item.label}
+                  <item.icon className="w-5 h-5 shrink-0" aria-hidden="true" />{item.label}
                 </Link>
               ) : (
                 <button key={item.id} onClick={() => handleMenuClick(item.id)} className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 transition-all ${activeTab === item.id ? "bg-[var(--brand-primary)]/10 text-[var(--brand-primary)] font-semibold" : "text-[var(--text-muted)] hover:bg-[var(--surface-2)]"}`}>
-                  <span className="text-base">{item.icon}</span>{item.label}
+                  <item.icon className="w-5 h-5 shrink-0" aria-hidden="true" />{item.label}
                 </button>
               )
             ))}
             <hr className="border-[var(--border)] my-1" />
             <button onClick={() => { if (confirm(t("account.logoutConfirm", "Are you sure you want to logout?"))) logout(); }} className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
-              <span className="text-base">🚪</span>{t("account.logout", "Logout")}
+ <span className="text-base"></span>{t("account.logout", "Logout")}
             </button>
           </div>
         )}
@@ -162,7 +164,7 @@ const MyAccountPage: React.FC = () => {
                     {menuItems.map((item) => (
                       item.href ? (
                         <Link key={item.id} to={item.href} className="w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all group hover:bg-[var(--surface-2)]">
-                          <span className="text-lg shrink-0 group-hover:scale-105 transition-transform">{item.icon}</span>
+                          <item.icon className="w-5 h-5 shrink-0 group-hover:scale-105 transition-transform" aria-hidden="true" />
                           <div className="min-w-0">
                             <div className="text-sm font-medium text-[var(--text)]">{item.label}</div>
                             <div className="text-[10px] text-[var(--text-subtle)] truncate">{item.desc}</div>
@@ -170,7 +172,7 @@ const MyAccountPage: React.FC = () => {
                         </Link>
                       ) : (
                         <button key={item.id} onClick={() => setActiveTab(item.id)} className={`w-full text-left px-3.5 py-3 rounded-xl flex items-center gap-3 transition-all group ${activeTab === item.id ? "bg-gradient-to-r from-[var(--brand-primary)]/10 to-[var(--brand-accent)]/5 border border-[var(--brand-primary)]/20" : "hover:bg-[var(--surface-2)]"}`}>
-                          <span className={`text-lg shrink-0 ${activeTab === item.id ? "scale-110" : "group-hover:scale-105"} transition-transform`}>{item.icon}</span>
+                          <item.icon className={`w-5 h-5 shrink-0 ${activeTab === item.id ? "scale-110" : "group-hover:scale-105"} transition-transform`} aria-hidden="true" />
                           <div className="min-w-0">
                             <div className={`text-sm font-medium ${activeTab === item.id ? "text-[var(--brand-primary)]" : "text-[var(--text)]"}`}>{item.label}</div>
                             <div className="text-[10px] text-[var(--text-subtle)] truncate">{item.desc}</div>
@@ -184,7 +186,7 @@ const MyAccountPage: React.FC = () => {
 
                 {/* Logout */}
                 <button onClick={() => { if (confirm(t("account.logoutConfirm", "Are you sure you want to logout?"))) logout(); }} className="w-full px-3.5 py-3 rounded-2xl border border-red-200 dark:border-red-500/20 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all group">
-                  <span className="text-lg">🚪</span>
+ <span className="text-lg"></span>
                   <span className="text-sm font-medium">{t("account.logout", "Logout")}</span>
                 </button>
 

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import type { ComponentType, SVGProps } from "react";
+import { ArrowTrendingUpIcon, BanknotesIcon, BoltIcon, BuildingOffice2Icon, BuildingStorefrontIcon, CameraIcon, ChartBarIcon, CheckCircleIcon, ClipboardDocumentListIcon, CreditCardIcon, CubeIcon, DevicePhoneMobileIcon, DocumentTextIcon, EnvelopeIcon, FlagIcon, LockClosedIcon, PencilSquareIcon, PhoneIcon, ShieldCheckIcon, TagIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useVendorStore } from "../stores/vendor.store";
@@ -9,11 +11,11 @@ import { useTranslation } from "react-i18next";
 
 /* ─── Step Metadata ─── */
 const STEPS = [
-  { num: 1, icon: "📋", label: "License" },
-  { num: 2, icon: "🏢", label: "Business" },
-  { num: 3, icon: "🏪", label: "Store" },
-  { num: 4, icon: "📄", label: "Documents" },
-  { num: 5, icon: "🔐", label: "Account" },
+  { num: 1, icon: ClipboardDocumentListIcon, label: "License" },
+  { num: 2, icon: BuildingOffice2Icon, label: "Business" },
+  { num: 3, icon: BuildingStorefrontIcon, label: "Store" },
+  { num: 4, icon: DocumentTextIcon, label: "Documents" },
+  { num: 5, icon: LockClosedIcon, label: "Account" },
 ];
 
 const egyptianGovernorates = [
@@ -541,7 +543,7 @@ const VendorRegistrationPage: React.FC = () => {
                   : "bg-[var(--surface-2)] text-[var(--text-subtle)] border border-[var(--border)]"
               }`}
             >
-              {step.num < currentStep ? "✓" : step.icon}
+ {step.num < currentStep ? null : <step.icon className="w-5 h-5" aria-hidden="true" />}
             </div>
             <span
               className={`text-[11px] font-medium transition-colors hidden sm:block ${
@@ -709,7 +711,7 @@ const VendorRegistrationPage: React.FC = () => {
             htmlFor="commercial-registration-upload"
             className="cursor-pointer flex flex-col items-center"
           >
-            <div className="text-4xl mb-2">📄</div>
+ <div className="text-4xl mb-2"></div>
             <p className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step1.clickToUpload")}
             </p>
@@ -1036,7 +1038,7 @@ const VendorRegistrationPage: React.FC = () => {
             htmlFor="store-logo-upload"
             className="cursor-pointer flex flex-col items-center"
           >
-            <div className="text-4xl mb-2">🏪</div>
+ <div className="text-4xl mb-2"></div>
             <p className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step3.uploadLogoDescription")}
             </p>
@@ -1080,7 +1082,7 @@ const VendorRegistrationPage: React.FC = () => {
               htmlFor="tax-card-upload"
               className="cursor-pointer flex flex-col items-center"
             >
-              <div className="text-2xl mb-2">📄</div>
+ <div className="text-2xl mb-2"></div>
               <p className="text-sm text-[var(--text-muted)]">{t("vendorRegistration.step4.uploadTaxCard", "Upload Tax Card")}</p>
             </label>
             {documents.taxCard && (
@@ -1141,7 +1143,7 @@ const VendorRegistrationPage: React.FC = () => {
             htmlFor="bank-statement-upload"
             className="cursor-pointer flex flex-col items-center"
           >
-            <div className="text-2xl mb-2">🏦</div>
+ <div className="text-2xl mb-2"></div>
             <p className="text-sm text-[var(--text-muted)]">{t("vendorRegistration.step4.uploadBankStatement", "Upload Bank Statement")}</p>
           </label>
           {documents.bankStatement && (
@@ -1255,7 +1257,7 @@ const VendorRegistrationPage: React.FC = () => {
 
       <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/25 p-6 rounded-lg mb-6">
         <div className="flex items-center mb-3">
-          <div className="text-2xl mr-3">🔐</div>
+ <div className="text-2xl mr-3"></div>
           <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100">
             {t("vendorRegistration.step5.accountSection.title")}
           </h3>
@@ -1348,7 +1350,7 @@ const VendorRegistrationPage: React.FC = () => {
                     : "text-[var(--text-subtle)]"
                 }`}
               >
-                {accountData.password.length >= 8 ? "✓" : "○"}
+ {accountData.password.length >= 8 ? "" : "○"}
               </span>
               {t("vendorRegistration.step5.minLength")}
             </li>
@@ -1360,7 +1362,7 @@ const VendorRegistrationPage: React.FC = () => {
                     : "text-[var(--text-subtle)]"
                 }`}
               >
-                {/[A-Z]/.test(accountData.password) ? "✓" : "○"}
+ {/[A-Z]/.test(accountData.password) ? "" : "○"}
               </span>
               {t("vendorRegistration.step5.uppercase")}
             </li>
@@ -1372,7 +1374,7 @@ const VendorRegistrationPage: React.FC = () => {
                     : "text-[var(--text-subtle)]"
                 }`}
               >
-                {/[a-z]/.test(accountData.password) ? "✓" : "○"}
+ {/[a-z]/.test(accountData.password) ? "" : "○"}
               </span>
               {t("vendorRegistration.step5.lowercase")}
             </li>
@@ -1384,7 +1386,7 @@ const VendorRegistrationPage: React.FC = () => {
                     : "text-[var(--text-subtle)]"
                 }`}
               >
-                {/[0-9]/.test(accountData.password) ? "✓" : "○"}
+ {/[0-9]/.test(accountData.password) ? "" : "○"}
               </span>
               {t("vendorRegistration.step5.number")}
             </li>
@@ -1393,7 +1395,7 @@ const VendorRegistrationPage: React.FC = () => {
 
         <div className="bg-amber-50 dark:bg-amber-500/10 p-4 rounded-lg border border-amber-200 dark:border-amber-500/30">
           <div className="flex items-start">
-            <div className="text-amber-600 dark:text-amber-300 mr-2">⚠️</div>
+ <div className="text-amber-600 dark:text-amber-300 mr-2"></div>
             <div>
               <h4 className="text-sm font-medium text-amber-800 dark:text-amber-100 mb-1">
                 {t("vendorRegistration.step5.securityNote.title")}
@@ -1409,26 +1411,26 @@ const VendorRegistrationPage: React.FC = () => {
   );
 
   /* ── Sidebar tips per step ── */
-  const sidebarTips: Record<number, { icon: string; title: string; text: string }[]> = {
+  const sidebarTips: Record<number, { icon: ComponentType<SVGProps<SVGSVGElement>>; title: string; text: string }[]> = {
     1: [
-      { icon: "📋", title: t("vendorRegistration.tips.license1Title", "Valid License"), text: t("vendorRegistration.tips.license1", "Make sure your commercial registration is up-to-date and not expired.") },
-      { icon: "📸", title: t("vendorRegistration.tips.license2Title", "Clear Scans"), text: t("vendorRegistration.tips.license2", "Upload high-quality, color scans of all document pages.") },
+      { icon: ClipboardDocumentListIcon, title: t("vendorRegistration.tips.license1Title", "Valid License"), text: t("vendorRegistration.tips.license1", "Make sure your commercial registration is up-to-date and not expired.") },
+      { icon: CameraIcon, title: t("vendorRegistration.tips.license2Title", "Clear Scans"), text: t("vendorRegistration.tips.license2", "Upload high-quality, color scans of all document pages.") },
     ],
     2: [
-      { icon: "📧", title: t("vendorRegistration.tips.business1Title", "Business Email"), text: t("vendorRegistration.tips.business1", "Use your official business email for faster verification.") },
-      { icon: "📱", title: t("vendorRegistration.tips.business2Title", "Phone Number"), text: t("vendorRegistration.tips.business2", "Provide a phone number where we can reach you during business hours.") },
+      { icon: EnvelopeIcon, title: t("vendorRegistration.tips.business1Title", "Business Email"), text: t("vendorRegistration.tips.business1", "Use your official business email for faster verification.") },
+      { icon: DevicePhoneMobileIcon, title: t("vendorRegistration.tips.business2Title", "Phone Number"), text: t("vendorRegistration.tips.business2", "Provide a phone number where we can reach you during business hours.") },
     ],
     3: [
-      { icon: "🏷️", title: t("vendorRegistration.tips.store1Title", "Store Name"), text: t("vendorRegistration.tips.store1", "Choose a unique, memorable store name that reflects your brand.") },
-      { icon: "📦", title: t("vendorRegistration.tips.store2Title", "Categories"), text: t("vendorRegistration.tips.store2", "Select all categories that match your product range for better visibility.") },
+      { icon: TagIcon, title: t("vendorRegistration.tips.store1Title", "Store Name"), text: t("vendorRegistration.tips.store1", "Choose a unique, memorable store name that reflects your brand.") },
+      { icon: CubeIcon, title: t("vendorRegistration.tips.store2Title", "Categories"), text: t("vendorRegistration.tips.store2", "Select all categories that match your product range for better visibility.") },
     ],
     4: [
-      { icon: "✅", title: t("vendorRegistration.tips.docs1Title", "Required Docs"), text: t("vendorRegistration.tips.docs1", "Tax card and national ID are required. Bank statement is optional but speeds up verification.") },
-      { icon: "📝", title: t("vendorRegistration.tips.docs2Title", "Review Summary"), text: t("vendorRegistration.tips.docs2", "Double-check all your details in the summary section before proceeding.") },
+      { icon: CheckCircleIcon, title: t("vendorRegistration.tips.docs1Title", "Required Docs"), text: t("vendorRegistration.tips.docs1", "Tax card and national ID are required. Bank statement is optional but speeds up verification.") },
+      { icon: PencilSquareIcon, title: t("vendorRegistration.tips.docs2Title", "Review Summary"), text: t("vendorRegistration.tips.docs2", "Double-check all your details in the summary section before proceeding.") },
     ],
     5: [
-      { icon: "🔒", title: t("vendorRegistration.tips.account1Title", "Strong Password"), text: t("vendorRegistration.tips.account1", "Use a mix of uppercase, lowercase, numbers, and symbols.") },
-      { icon: "📩", title: t("vendorRegistration.tips.account2Title", "Confirmation Email"), text: t("vendorRegistration.tips.account2", "You'll receive login credentials at the email address you provide here.") },
+      { icon: LockClosedIcon, title: t("vendorRegistration.tips.account1Title", "Strong Password"), text: t("vendorRegistration.tips.account1", "Use a mix of uppercase, lowercase, numbers, and symbols.") },
+      { icon: EnvelopeIcon, title: t("vendorRegistration.tips.account2Title", "Confirmation Email"), text: t("vendorRegistration.tips.account2", "You'll receive login credentials at the email address you provide here.") },
     ],
   };
 
@@ -1470,12 +1472,12 @@ const VendorRegistrationPage: React.FC = () => {
             {/* Benefit pills */}
             <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
               {[
-                { icon: "💰", text: t("vendorRegistration.heroBenefit1", "No Listing Fees") },
-                { icon: "🎯", text: t("vendorRegistration.heroBenefit2", "Dedicated Support") },
-                { icon: "⚡", text: t("vendorRegistration.heroBenefit3", "Fast Payouts") },
+                { icon: BanknotesIcon, text: t("vendorRegistration.heroBenefit1", "No Listing Fees") },
+                { icon: FlagIcon, text: t("vendorRegistration.heroBenefit2", "Dedicated Support") },
+                { icon: BoltIcon, text: t("vendorRegistration.heroBenefit3", "Fast Payouts") },
               ].map((b) => (
                 <span key={b.text} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 border border-white/15 text-sm text-white/80">
-                  <span>{b.icon}</span> {b.text}
+                  <b.icon className="w-4 h-4" aria-hidden="true" /> {b.text}
                 </span>
               ))}
             </div>
@@ -1576,18 +1578,18 @@ const VendorRegistrationPage: React.FC = () => {
               {/* Why sell on Belgomla */}
               <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
                 <h3 className="text-sm font-bold text-[var(--text)] mb-4">
-                  ✨ {t("vendorRegistration.sidebar.whySell", "Why Sell on Belgomla?")}
+ {t("vendorRegistration.sidebar.whySell", "Why Sell on Belgomla?")}
                 </h3>
                 <ul className="space-y-3">
                   {[
-                    { icon: "🎯", text: t("vendorRegistration.sidebar.benefit1", "Access to thousands of B2B buyers") },
-                    { icon: "📊", text: t("vendorRegistration.sidebar.benefit2", "Real-time analytics dashboard") },
-                    { icon: "💳", text: t("vendorRegistration.sidebar.benefit3", "Secure, on-time payments") },
-                    { icon: "📦", text: t("vendorRegistration.sidebar.benefit4", "Easy inventory management") },
-                    { icon: "📈", text: t("vendorRegistration.sidebar.benefit5", "Marketing tools to boost sales") },
+                    { icon: FlagIcon, text: t("vendorRegistration.sidebar.benefit1", "Access to thousands of B2B buyers") },
+                    { icon: ChartBarIcon, text: t("vendorRegistration.sidebar.benefit2", "Real-time analytics dashboard") },
+                    { icon: CreditCardIcon, text: t("vendorRegistration.sidebar.benefit3", "Secure, on-time payments") },
+                    { icon: CubeIcon, text: t("vendorRegistration.sidebar.benefit4", "Easy inventory management") },
+                    { icon: ArrowTrendingUpIcon, text: t("vendorRegistration.sidebar.benefit5", "Marketing tools to boost sales") },
                   ].map((item) => (
                     <li key={item.text} className="flex items-start gap-2.5">
-                      <span className="text-base shrink-0 mt-0.5">{item.icon}</span>
+                      <item.icon className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
                       <span className="text-xs text-[var(--text-muted)] leading-relaxed">{item.text}</span>
                     </li>
                   ))}
@@ -1597,12 +1599,12 @@ const VendorRegistrationPage: React.FC = () => {
               {/* Step-contextual tips */}
               <div className="bg-gradient-to-br from-[var(--brand-primary)]/5 to-[var(--brand-accent)]/5 rounded-2xl border border-[var(--brand-primary)]/15 p-5">
                 <h4 className="text-xs font-bold text-[var(--brand-primary)] dark:text-[var(--brand-accent)] uppercase tracking-wider mb-3">
-                  💡 {t("vendorRegistration.sidebar.tips", "Tips for this step")}
+ {t("vendorRegistration.sidebar.tips", "Tips for this step")}
                 </h4>
                 <div className="space-y-3">
                   {(sidebarTips[currentStep] || []).map((tip, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <span className="text-sm shrink-0">{tip.icon}</span>
+                      <span className="text-sm shrink-0"><tip.icon className="w-4 h-4" aria-hidden="true" /></span>
                       <div>
                         <p className="text-xs font-semibold text-[var(--text)]">{tip.title}</p>
                         <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">{tip.text}</p>
@@ -1616,13 +1618,13 @@ const VendorRegistrationPage: React.FC = () => {
               <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5">
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { icon: "🔒", text: t("vendorRegistration.sidebar.trust1", "SSL Secured") },
-                    { icon: "🛡️", text: t("vendorRegistration.sidebar.trust2", "Data Protected") },
-                    { icon: "✅", text: t("vendorRegistration.sidebar.trust3", "Verified Platform") },
-                    { icon: "📞", text: t("vendorRegistration.sidebar.trust4", "24/7 Support") },
+                    { icon: LockClosedIcon, text: t("vendorRegistration.sidebar.trust1", "SSL Secured") },
+                    { icon: ShieldCheckIcon, text: t("vendorRegistration.sidebar.trust2", "Data Protected") },
+                    { icon: CheckCircleIcon, text: t("vendorRegistration.sidebar.trust3", "Verified Platform") },
+                    { icon: PhoneIcon, text: t("vendorRegistration.sidebar.trust4", "24/7 Support") },
                   ].map((badge) => (
                     <div key={badge.text} className="flex items-center gap-1.5 text-[11px] text-[var(--text-muted)]">
-                      <span>{badge.icon}</span> {badge.text}
+                      <badge.icon className="w-4 h-4" aria-hidden="true" /> {badge.text}
                     </div>
                   ))}
                 </div>

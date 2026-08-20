@@ -97,7 +97,7 @@ const AccountSecurity: React.FC = () => {
       <div className={`rounded-2xl p-4 mb-6 flex items-start gap-3 border ${enabled
         ? "bg-green-50 dark:bg-green-500/10 border-green-200 dark:border-green-500/25"
         : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/25"}`}>
-        <span className="text-xl shrink-0">{enabled ? "🛡️" : "⚠️"}</span>
+ <span className="text-xl shrink-0">{enabled ? "" : ""}</span>
         <div className="text-sm">
           <div className={`font-semibold ${enabled ? "text-green-800 dark:text-green-200" : "text-amber-800 dark:text-amber-200"}`}>
             {enabled ? t("security.statusOn", "Two-factor authentication is ON.") : t("security.statusOff", "Two-factor authentication is OFF.")}

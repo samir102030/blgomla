@@ -67,7 +67,7 @@ const AccountAddresses: React.FC = () => {
 
       {addresses.length === 0 ? (
         <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-10 text-center">
-          <span className="text-4xl">📍</span>
+ <span className="text-4xl"></span>
           <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noAddresses", "No addresses saved yet. Add one to speed up checkout!")}</p>
         </div>
       ) : (
@@ -76,7 +76,7 @@ const AccountAddresses: React.FC = () => {
             <div key={address._id} className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-2xl p-5 hover:border-[var(--brand-primary)]/30 transition-all relative group">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{address.type === "Billing" ? "🏦" : "🚚"}</span>
+ <span className="text-lg">{address.type === "Billing" ? "" : ""}</span>
                   <h3 className="text-sm font-semibold text-[var(--text)]">{address.type} {t("account.addressLabel", "Address")}</h3>
                 </div>
                 {address.isDefault && (
@@ -88,7 +88,7 @@ const AccountAddresses: React.FC = () => {
                 <p>{address.address}</p>
                 <p>{address.city}{address.state ? `, ${address.state}` : ""} {address.zipCode}</p>
                 <p>{address.country}</p>
-                {address.phone && <p className="text-xs text-[var(--text-subtle)]">📞 {address.phone}</p>}
+ {address.phone && <p className="text-xs text-[var(--text-subtle)]"> {address.phone}</p>}
               </div>
               <div className="mt-4 flex gap-3 pt-3 border-t border-[var(--border)]">
                 <button onClick={() => handleEditAddress(address)} className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">{t("account.edit", "Edit")}</button>
@@ -103,7 +103,7 @@ const AccountAddresses: React.FC = () => {
       {showAddressModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
-            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors" onClick={() => setShowAddressModal(false)} aria-label="Close">✕</button>
+ <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors" onClick={() => setShowAddressModal(false)} aria-label="Close"></button>
             <div className="mb-5">
               <h2 className="text-xl font-bold text-[var(--text)]">{editingAddress ? t("account.editAddress", "Edit Address") : t("account.addNewAddress", "Add New Address")}</h2>
               <p className="text-xs text-[var(--text-muted)] mt-1">{t("account.addressFormDesc", "Fill in your shipping or billing details.")}</p>
