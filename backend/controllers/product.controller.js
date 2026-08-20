@@ -1,5 +1,5 @@
 import Product from "../models/product.model.js";
-import { ANY_AUDIENCE } from "../utils/electronicsVisibility.js";
+import { ANY_AUDIENCE, isElectronicsCategory } from "../utils/electronicsVisibility.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { paginateProducts } from "../utils/productPagination.js";
@@ -195,7 +195,20 @@ export const getAllProducts = controllerWrapper(
     if (searchAnd) filter.$and = searchAnd;
     // Searching by name reaches the unpublished section; browsing does not.
     if (searchAnd) filter.audience = ANY_AUDIENCE;
+
+    // Ask for one side of the shop and get exactly that.
+    //
+    // The dashboard uses this: its general product list is about the general
+    // catalogue, and the electronics section has a page of its own. Without it
+    // the two are one list of twelve thousand rows that nobody can work in.
+    // Set last, so it beats the search clause above rather than the other way
+    // round — a search inside one section stays inside it.
+    if (filters.audience === "public") filter.audience = { $ne: "electronics" };
+    else if (filters.audience === "electronics") filter.audience = "electronics";
     if (filters.categoryId) filter.category = filters.categoryId;
+    // Choosing a category inside the branch is the other way in. Without this
+    // the category page renders its own products as an empty list.
+    if (await isElectronicsCategory(filters.categoryId)) filter.audience = ANY_AUDIENCE;
     if (filters.brandId) filter.brand = filters.brandId;
     if (filters.storeId) filter.store = filters.storeId;
     // Booleans arrive as the strings "true"/"false" via query params; coerce
@@ -409,6 +422,7 @@ export const getStorefrontProducts = controllerWrapper(
     // products hang off the leaves. Matching the subtree is what makes clicking
     // "Laptop" show laptops instead of an empty page.
     if (category) query.category = await categoryFilterValue(category);
+    if (await isElectronicsCategory(category)) query.audience = ANY_AUDIENCE;
     if (brand) query.brand = brand;
     if (inStock === "true") query.stock = { $gt: 0 };
     if (rating) query.rating = { $gte: Number(rating) };

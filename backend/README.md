@@ -93,3 +93,19 @@ Legacy `routes` replaces Vercel's default routing instead of appending to it.
 With no `{"handle": "filesystem"}` entry, every request goes to the function
 and no path resolves to a file on disk. Do not convert this block back to
 `rewrites` without putting the source somewhere it cannot be served from.
+
+## Image uploads
+
+Three more variables, and the upload route checks for all three before it will
+accept anything:
+
+```
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+```
+
+Absent, the dashboard still edits products and the storefront still shows the
+images already stored — every image on the site is a URL, and most of them point
+at somewhere other than Cloudinary. What breaks is adding a new one: the picker
+returns "Image uploads aren't set up on this server yet."

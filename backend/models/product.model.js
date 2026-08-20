@@ -448,8 +448,7 @@ productSchema.pre(/^find/, async function () {
   const filter = this.getFilter() || {};
   if (filter.audience !== undefined) return;
   if (filter._id !== undefined || filter.slug !== undefined) return;
-  const { electronicsIsLive, HIDE_ELECTRONICS } = await import("../utils/electronicsVisibility.js");
-  if (await electronicsIsLive()) return;
+  const { HIDE_ELECTRONICS } = await import("../utils/electronicsVisibility.js");
   this.where(HIDE_ELECTRONICS);
 });
 

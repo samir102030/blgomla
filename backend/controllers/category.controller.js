@@ -1,4 +1,5 @@
 import Category from "../models/category.model.js";
+import { ANY_AUDIENCE, isElectronicsCategory } from "../utils/electronicsVisibility.js";
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { findByName } from "../utils/findOrCreateByName.js";
@@ -267,9 +268,16 @@ export const getProductsByCategory = controllerWrapper(
     const { page = 1, limit = 20 } = req.query;
 
     const categoryFilter = await categoryFilterValue(categoryId);
+    // Somebody asked for this category by name. If it is in the electronics
+    // branch, that is one of the two ways the section is meant to be reached,
+    // so the listing says so and the gate stands aside.
+    const audienceScope = (await isElectronicsCategory(categoryId))
+      ? { audience: ANY_AUDIENCE }
+      : {};
     const products = await Product.find({
       category: categoryFilter,
       deleted: { $ne: true },
+      ...audienceScope,
     })
       .populate("brand", "name slug logo")
       .skip((page - 1) * limit)
@@ -279,6 +287,7 @@ export const getProductsByCategory = controllerWrapper(
     const total = await Product.countDocuments({
       category: categoryFilter,
       deleted: { $ne: true },
+      ...audienceScope,
     });
 
     res.status(200).json({

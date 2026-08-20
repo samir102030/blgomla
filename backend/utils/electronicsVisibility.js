@@ -41,6 +41,7 @@ export const electronicsIsLive = async () => {
 /** Called when the switch is written, so the change is visible immediately. */
 export const forgetElectronicsVisibility = () => {
   cached = { value: null, at: 0 };
+  branch = { ids: null, at: 0 };
 };
 
 /**
@@ -63,3 +64,45 @@ export const HIDE_ELECTRONICS = { audience: { $ne: "electronics" } };
  * is most of the catalogue.
  */
 export const ANY_AUDIENCE = { $in: [null, "public", "electronics"] };
+
+/**
+ * Every category in the electronics branch, root included.
+ *
+ * A listing scoped to one of these is the second of the two ways the section
+ * is meant to be reachable — somebody chose it — so those listings drop the
+ * hiding. Cached on the same terms as the switch above: the shape of the tree
+ * changes when a department is added, not between two page loads.
+ */
+const BRANCH_TTL_MS = 30_000;
+let branch = { ids: null, at: 0 };
+
+export const electronicsCategoryIds = async () => {
+  const now = Date.now();
+  if (branch.ids && now - branch.at < BRANCH_TTL_MS) return branch.ids;
+
+  const root = await Category.findOne({ sectionKey: "electronics" }).select("_id").lean();
+  const ids = new Set();
+  if (root) {
+    ids.add(String(root._id));
+    const all = await Category.find({}).select("_id parentCategory").lean();
+    const childrenOf = new Map();
+    for (const c of all) {
+      const key = String(c.parentCategory || "");
+      if (!childrenOf.has(key)) childrenOf.set(key, []);
+      childrenOf.get(key).push(String(c._id));
+    }
+    const pending = [String(root._id)];
+    while (pending.length) {
+      for (const child of childrenOf.get(pending.pop()) || []) {
+        ids.add(child);
+        pending.push(child);
+      }
+    }
+  }
+
+  branch = { ids, at: now };
+  return ids;
+};
+
+export const isElectronicsCategory = async (id) =>
+  Boolean(id) && (await electronicsCategoryIds()).has(String(id));

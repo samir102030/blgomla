@@ -97,7 +97,7 @@ const ProductsPage: React.FC = () => {
   // Fetch products based on user role with pagination
   useEffect(() => {
     if (isAdminLike) {
-      fetchProducts({ page: currentPage, limit: pageSize });
+      fetchProducts({ audience: "public", page: currentPage, limit: pageSize });
     } else if (user?.role === "store") {
       fetchVendorStore();
     }
@@ -106,7 +106,7 @@ const ProductsPage: React.FC = () => {
   // Fetch products when vendor store is loaded
   useEffect(() => {
     if (user?.role === "store" && vendorStore?._id) {
-      fetchProducts({ storeId: vendorStore._id, page: currentPage, limit: pageSize });
+      fetchProducts({ audience: "public", storeId: vendorStore._id, page: currentPage, limit: pageSize });
     }
   }, [user?.role, vendorStore?._id, fetchProducts, currentPage, pageSize]);
 
@@ -267,9 +267,9 @@ const ProductsPage: React.FC = () => {
   // Helper function to refresh products based on user role
   const refreshProducts = () => {
     if (isAdminLike) {
-      fetchProducts({ page: currentPage, limit: pageSize });
+      fetchProducts({ audience: "public", page: currentPage, limit: pageSize });
     } else if (user?.role === "store" && vendorStore?._id) {
-      fetchProducts({ storeId: vendorStore._id, page: currentPage, limit: pageSize });
+      fetchProducts({ audience: "public", storeId: vendorStore._id, page: currentPage, limit: pageSize });
     }
   };
 

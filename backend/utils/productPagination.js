@@ -1,5 +1,5 @@
 import Product from "../models/product.model.js";
-import { electronicsIsLive, HIDE_ELECTRONICS } from "./electronicsVisibility.js";
+import { HIDE_ELECTRONICS } from "./electronicsVisibility.js";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -72,9 +72,7 @@ export async function paginateProducts({
   // The schema hook cannot reach an aggregation, and this function is behind
   // most of the storefront's listings, so it asks the same question here.
   const scoped =
-    filter.audience === undefined && !(await electronicsIsLive())
-      ? { ...filter, ...HIDE_ELECTRONICS }
-      : filter;
+    filter.audience === undefined ? { ...filter, ...HIDE_ELECTRONICS } : filter;
 
   const [result] = await Product.aggregate([
     { $match: scoped },
