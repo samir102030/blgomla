@@ -6,10 +6,19 @@ import PageHero from "./PageHero";
 import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
 import { ProductCardSkeleton } from "./Skeleton";
-import { useProductStore } from "../stores/product.store";
 import { useCategoryStore } from "../stores/category.store";
 import { useTranslation } from "react-i18next";
 import { getBaseUnitPrice } from "../lib/pricing";
+import { axiosInstance } from "../lib/axios";
+
+/** The sidebar's vocabulary for sorting, in the server's words. */
+const SORT_PARAM: Record<string, string> = {
+  "price-low": "price_asc",
+  "price-high": "price_desc",
+  rating: "top_rated",
+  newest: "newest",
+  name: "name_asc",
+};
 
 interface FilterState {
   categories: string[];
@@ -139,10 +148,10 @@ const ProductsContent: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 12;
 
-  const fetchProducts = useProductStore((state) => state.fetchProducts);
-  const products = useProductStore((state) => state.products);
-  const loading = useProductStore((state) => state.loading);
-  const error = useProductStore((state) => state.error);
+  const [rows, setRows] = useState<any[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>();
 
   const fetchBrands = useBrandStore((state) => state.fetchBrands);
   const brands = useBrandStore((state) => state.brands);
@@ -153,8 +162,7 @@ const ProductsContent: React.FC = () => {
   useEffect(() => {
     fetchBrands();
     fetchCategories();
-    fetchProducts({ isActive: true, deleted: false, approvalStatus: "approved", limit: 1000 });
-  }, [fetchBrands, fetchCategories, fetchProducts]);
+  }, [fetchBrands, fetchCategories]);
 
   // Any change to the filters — from the sidebar or from the menu upstairs —
   // starts the results again from the first page.
@@ -176,106 +184,76 @@ const ProductsContent: React.FC = () => {
     return m;
   }, [brands]);
 
-  // Filter — memoized so it only re-runs when inputs change.
-  const filteredProducts = useMemo(() => {
-    if (!products) return [];
+  /**
+   * The catalogue arrives a page at a time.
+   *
+   * It used to arrive whole: one request for a thousand products, then
+   * filtered, sorted and paged in the browser. That broke twice over once the
+   * shop grew past a thousand — the rest of the catalogue was simply
+   * unreachable, and the store wrote what it held into localStorage, where a
+   * thousand product documents overflow the quota and the page rendered the
+   * exception where the products should have been.
+   *
+   * Every control in the sidebar is a query parameter now, so the server
+   * returns the page that was asked for and the count of everything that
+   * matched it. The one thing that changes for a customer: search is the
+   * server's, which matches every word against name, Arabic name and tags,
+   * rather than a substring of the fields that happened to be loaded.
+   */
+  useEffect(() => {
+    let cancelled = false;
 
-    // Normalize price range: if user typed reversed, swap.
-    const minP = filters.minPrice ? parseFloat(filters.minPrice) : 0;
-    const maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : Infinity;
-    const [lo, hi] = minP > maxP && maxP > 0 ? [maxP, minP] : [minP, maxP];
+    const params: Record<string, string | number> = {
+      page: currentPage,
+      limit: pageSize,
+      sortBy: SORT_PARAM[sortBy] ?? "newest",
+    };
+    if (filters.categories.length) params.category = filters.categories.join(",");
+    if (filters.brands.length) params.brand = filters.brands.join(",");
+    if (filters.search.trim()) params.search = filters.search.trim();
+    if (filters.minPrice) params.minPrice = filters.minPrice;
+    if (filters.maxPrice) params.maxPrice = filters.maxPrice;
+    if (filters.rating) params.rating = filters.rating;
+    if (filters.inStock) params.inStock = "true";
+    if (filters.onSale) params.onSale = "true";
+    if (filters.featured) params.featured = "true";
 
-    // Expand selected categories to include all descendants.
-    const expandedCategoryIds =
-      filters.categories.length > 0
-        ? new Set(
-            filters.categories.flatMap((id) => collectCategoryIds(id, categories || []))
-          )
-        : null;
+    setLoading(true);
+    setError(undefined);
 
-    const term = filters.search.trim().toLowerCase();
+    axiosInstance
+      .get("/products/storefront", { params })
+      .then(({ data }: any) => {
+        if (cancelled) return;
+        setRows(data.data || []);
+        setTotalProducts(data.total ?? 0);
+      })
+      .catch((err: any) => {
+        if (cancelled) return;
+        setRows([]);
+        setTotalProducts(0);
+        setError(err?.response?.data?.message || err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-    return products.filter((product: any) => {
-      // Category filter (matches product's category or any descendant).
-      if (expandedCategoryIds) {
-        const pid = idOf(product.category);
-        if (!expandedCategoryIds.has(pid)) return false;
-      }
+    // `query` is the whole filter state and the sort, both of which live in the
+    // address bar. Depending on it rather than on the objects derived from it
+    // keeps this from re-firing on every render.
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, currentPage]);
 
-      // Brand filter.
-      if (filters.brands.length > 0) {
-        const pid = idOf(product.brand);
-        if (!filters.brands.includes(pid)) return false;
-      }
-
-      // Price range.
-      const price = getBaseUnitPrice(product);
-      if (price < lo) return false;
-      if (price > hi) return false;
-
-      // Rating: product must meet OR exceed the threshold.
-      if (filters.rating) {
-        const r = parseFloat(filters.rating);
-        if ((product.rating ?? 0) < r) return false;
-      }
-
-      // Toggles.
-      if (filters.featured && !product.featured) return false;
-      if (filters.onSale && !(product.saleActive && (product.salePercentage ?? 0) > 0)) {
-        return false;
-      }
-      if (filters.inStock && (product.stock ?? 0) <= 0) return false;
-
-      // Full-text search across name, description, brand name, category name, tags.
-      if (term) {
-        const haystack = [
-          product.name,
-          product.description,
-          typeof product.brand === "object" ? product.brand?.name : brandNameById.get(idOf(product.brand)),
-          typeof product.category === "object" ? product.category?.name : categoryNameById.get(idOf(product.category)),
-          ...(product.tags || []),
-          ...(product.attributes || []).map((a: any) => `${a.name} ${a.value}`),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-        if (!haystack.includes(term)) return false;
-      }
-
-      return true;
-    });
-  }, [products, filters, categories, brandNameById, categoryNameById]);
-
-  // Sort — also memoized.
-  const sortedProducts = useMemo(() => {
-    const arr = [...filteredProducts];
-    arr.sort((a: any, b: any) => {
-      switch (sortBy) {
-        case "price-low":
-          return getBaseUnitPrice(a) - getBaseUnitPrice(b);
-        case "price-high":
-          return getBaseUnitPrice(b) - getBaseUnitPrice(a);
-        case "rating":
-          return (b.rating ?? 0) - (a.rating ?? 0);
-        case "newest":
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        case "name":
-        default:
-          return a.name.localeCompare(b.name);
-      }
-    });
-    return arr;
-  }, [filteredProducts, sortBy]);
-
-  // Pagination — clamp page if filters shrank the result set below currentPage.
-  const totalProducts = sortedProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalProducts / pageSize));
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, totalPages]);
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, totalProducts);
-  const currentProducts = sortedProducts.slice(startIndex, endIndex);
+  const endIndex = startIndex + rows.length;
+  const currentProducts = rows;
 
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     write({ ...filters, ...newFilters }, sortBy);

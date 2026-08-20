@@ -433,6 +433,20 @@ export const useProductStore = create<ProductStore>()(
     {
       name: "product-store",
       skipHydration: true,
+      /**
+       * Persist nothing.
+       *
+       * The whole store went into localStorage, product documents and all.
+       * A catalogue page holding a thousand of them is several megabytes of
+       * JSON against a five-megabyte quota, so `setItem` threw and the page
+       * rendered the exception instead of the products.
+       *
+       * Nothing here is worth keeping across a reload anyway: every page
+       * fetches what it needs on mount, and `skipHydration` meant the saved
+       * copy was never read back. The store stays wrapped in `persist` so the
+       * existing key is claimed and cleaned up rather than left behind.
+       */
+      partialize: () => ({}) as any,
     }
   )
 );

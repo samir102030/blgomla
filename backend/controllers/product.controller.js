@@ -406,7 +406,7 @@ export const getStorefrontProducts = controllerWrapper(
   async (req, res) => {
     const {
       page = 1, limit = 20, search, category, brand,
-      minPrice, maxPrice, rating, sortBy, inStock,
+      minPrice, maxPrice, rating, sortBy, inStock, onSale, featured,
     } = req.query;
 
     const query = {
@@ -421,10 +421,39 @@ export const getStorefrontProducts = controllerWrapper(
     // A category selected from the menu may be a branch rather than a leaf, and
     // products hang off the leaves. Matching the subtree is what makes clicking
     // "Laptop" show laptops instead of an empty page.
-    if (category) query.category = await categoryFilterValue(category);
-    if (await isElectronicsCategory(category)) query.audience = ANY_AUDIENCE;
-    if (brand) query.brand = brand;
+    // The sidebar lets several categories and several brands be ticked at
+    // once, so both arrive as comma-separated lists. One value is the same
+    // thing with a list of one.
+    const list = (v) =>
+      String(v || "")
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+
+    const categoryIds = list(category);
+    if (categoryIds.length) {
+      // Each selection is expanded to its own subtree first — picking a branch
+      // has to mean everything under it — and the results are pooled.
+      const expanded = await Promise.all(categoryIds.map((id) => categoryFilterValue(id)));
+      const pool = expanded.flatMap((value) =>
+        value && value.$in ? value.$in : [String(value)],
+      );
+      query.category = pool.length === 1 ? pool[0] : { $in: [...new Set(pool)] };
+
+      const inBranch = await Promise.all(categoryIds.map((id) => isElectronicsCategory(id)));
+      if (inBranch.some(Boolean)) query.audience = ANY_AUDIENCE;
+    }
+
+    const brandIds = list(brand);
+    if (brandIds.length) query.brand = brandIds.length === 1 ? brandIds[0] : { $in: brandIds };
     if (inStock === "true") query.stock = { $gt: 0 };
+    // The catalogue page offers these two beside "In stock", and they were the
+    // only filters it could not hand to the server.
+    if (featured === "true") query.featured = true;
+    if (onSale === "true") {
+      query.saleActive = true;
+      query.salePercentage = { $gt: 0 };
+    }
     if (rating) query.rating = { $gte: Number(rating) };
     if (minPrice || maxPrice) {
       query.price = {};
