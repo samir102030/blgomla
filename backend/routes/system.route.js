@@ -34,6 +34,7 @@ import layoutRoutes from "./pageLayout.route.js";
 import paymobChannelRoutes from "./paymobChannel.route.js";
 import storefrontVisibilityRoutes from "./storefrontVisibility.route.js";
 import stockAlertRoutes from "./stockAlert.route.js";
+import dataResetRoutes from "./dataReset.route.js";
 import studentProgramRoutes from "./studentProgram.route.js";
 import supportAssistantRoutes from "./supportAssistant.route.js";
 
@@ -75,6 +76,7 @@ router.use("/paymob-channels", paymobChannelRoutes);
 router.use("/storefront-visibility", storefrontVisibilityRoutes);
 router.use("/stock-alerts", stockAlertRoutes);
 router.use("/students", studentProgramRoutes);
+router.use("/data-reset", dataResetRoutes);
 
 // ops module owns: /analytics, /audit-logs, /site-mode, /cron
 router.use("/", opsRoutes);

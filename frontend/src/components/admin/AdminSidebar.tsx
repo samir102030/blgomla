@@ -18,6 +18,7 @@ import {
   ClipboardDocumentCheckIcon,
   ShieldCheckIcon,
   RocketLaunchIcon,
+  TrashIcon,
   TruckIcon,
   BanknotesIcon,
   AcademicCapIcon,
@@ -191,6 +192,14 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       href: "/dashboard/site-mode",
       icon: RocketLaunchIcon,
       perm: "siteMode.view",
+    },
+    {
+      name: t("admin.dataReset", "Clear Data"),
+      href: "/dashboard/data-reset",
+      icon: TrashIcon,
+      // Not permission-gated on purpose: emptying a section of the site is
+      // not something a custom role should be able to be granted.
+      roles: ["super_admin"],
     },
     {
       name: t("admin.shipping", "Shipping"),

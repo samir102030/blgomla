@@ -2484,6 +2484,7 @@
   "Install": "Install",
   "Not now": "Not now",
   "admin.siteMode": "Coming Soon",
+  "admin.dataReset": "Clear Data",
   "comingSoon.badge": "Coming soon",
   "comingSoon.title": "Something big is coming.",
   "comingSoon.message": "Our new store is almost ready. Leave your email and we'll let you know the moment we launch.",
