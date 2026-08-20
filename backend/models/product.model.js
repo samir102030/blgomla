@@ -444,13 +444,25 @@ productSchema.index({ audience: 1, studentCategory: 1, createdAt: -1 }); // Stud
  * reading a line back, the order decrementing stock — staff need every one of
  * them to work on a section they have not published yet.
  */
-productSchema.pre(/^find/, async function () {
+async function hideUnpublishedSections() {
   const filter = this.getFilter() || {};
   if (filter.audience !== undefined) return;
   if (filter._id !== undefined || filter.slug !== undefined) return;
   const { HIDE_ELECTRONICS } = await import("../utils/electronicsVisibility.js");
   this.where(HIDE_ELECTRONICS);
-});
+}
+
+productSchema.pre(/^find/, hideUnpublishedSections);
+
+// Counting has to answer the same question the listing did.
+//
+// `countDocuments` is its own operation, so `/^find/` never reached it: the
+// storefront returned a correct page of the general catalogue under a total
+// that had counted both. Every pager on the site read the second number.
+// `estimatedDocumentCount` is deliberately left out — it ignores filters by
+// design and adding one to it throws.
+productSchema.pre("countDocuments", hideUnpublishedSections);
+productSchema.pre("count", hideUnpublishedSections);
 
 // ── Slug auto-generation ──
 productSchema.pre("save", function (next) {
