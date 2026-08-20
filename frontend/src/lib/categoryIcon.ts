@@ -1,66 +1,109 @@
-// Pick a contextual emoji for a category name. Falls back to 📦 for unknown.
-//
-// Order matters: more specific patterns come first so "DSLR Cameras" matches
-// before the generic "Cameras". Each entry is [regex, emoji].
-const ICON_RULES: Array<[RegExp, string]> = [
-  // Cameras
-  [/dslr|mirrorless/i, "📸"],
-  [/lens/i, "🔍"],
-  [/network camera|ip camera/i, "📹"],
-  [/turbo hd|surveillance/i, "📹"],
-  [/dvr|nvr/i, "📼"],
-  [/video intercom|intercom/i, "📞"],
-  [/security/i, "🛡️"],
-  [/camera|photo/i, "📷"],
+import type { ComponentType, SVGProps } from "react";
+import {
+  ArchiveBoxIcon,
+  BoltIcon,
+  BriefcaseIcon,
+  CameraIcon,
+  ComputerDesktopIcon,
+  CpuChipIcon,
+  CubeIcon,
+  DevicePhoneMobileIcon,
+  FilmIcon,
+  GlobeAltIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  PhoneIcon,
+  PrinterIcon,
+  PuzzlePieceIcon,
+  RectangleGroupIcon,
+  ServerStackIcon,
+  ShieldCheckIcon,
+  SignalIcon,
+  SpeakerWaveIcon,
+  SquaresPlusIcon,
+  TvIcon,
+  VideoCameraIcon,
+  WifiIcon,
+} from "@heroicons/react/24/outline";
+
+type Icon = ComponentType<SVGProps<SVGSVGElement>>;
+
+/**
+ * The line icon that goes beside a category name.
+ *
+ * These used to be emoji, which read as decoration on a shop that sells network
+ * switches to businesses — and rendered differently on every operating system,
+ * so the same menu was a different menu depending on who opened it. Heroicons
+ * are the set the dashboard already uses, they take a stroke colour from the
+ * surrounding text, and they scale with it.
+ *
+ * Order matters: the specific patterns come first, so "PoE Switch" is matched
+ * before the general "switch" and "Gaming Laptop" before "laptop".
+ */
+const ICON_RULES: Array<[RegExp, Icon]> = [
+  // Cameras and surveillance
+  [/dslr|mirrorless/i, CameraIcon],
+  [/lens/i, MagnifyingGlassIcon],
+  [/network camera|ip camera/i, VideoCameraIcon],
+  [/turbo hd|surveillance/i, VideoCameraIcon],
+  [/dvr|nvr/i, FilmIcon],
+  [/video intercom|intercom/i, PhoneIcon],
+  [/security/i, ShieldCheckIcon],
+  [/camera|photo/i, CameraIcon],
 
   // Networking — routers
-  [/3g\/?4g|lte|5g/i, "📶"],
-  [/portable router|mobile wi-?fi/i, "📱"],
-  [/mesh/i, "🕸️"],
-  [/range extender|extender/i, "📡"],
-  [/xdsl|modem/i, "📞"],
-  [/access point|desktop ap/i, "📡"],
-  [/router/i, "🌐"],
+  [/3g\/?4g|lte|5g/i, SignalIcon],
+  [/portable router|mobile wi-?fi/i, DevicePhoneMobileIcon],
+  [/mesh/i, SquaresPlusIcon],
+  [/range extender|extender/i, SignalIcon],
+  [/xdsl|modem/i, PhoneIcon],
+  [/access point|desktop ap/i, SignalIcon],
+  [/router/i, GlobeAltIcon],
 
-  // Networking — switches & wiring
-  [/poe switch/i, "⚡"],
-  [/switch/i, "🔀"],
-  [/powerline/i, "🔌"],
-  [/usb to ethernet|ethernet/i, "🔗"],
+  // Networking — switches and wiring
+  [/poe switch/i, BoltIcon],
+  [/switch/i, RectangleGroupIcon],
+  [/powerline/i, BoltIcon],
+  [/usb to ethernet|ethernet/i, LinkIcon],
 
   // Adapters
-  [/wi-?fi.*usb|wifi.*usb|usb.*adapter/i, "📶"],
-  [/bluetooth/i, "🔵"],
-  [/pci-?e/i, "🧩"],
-  [/usb type-?c hub|usb hub/i, "🔌"],
-  [/usb/i, "🔌"],
+  [/wi-?fi.*usb|wifi.*usb|usb.*adapter/i, SignalIcon],
+  [/bluetooth/i, WifiIcon],
+  [/pci-?e/i, PuzzlePieceIcon],
+  [/usb type-?c hub|usb hub/i, LinkIcon],
+  [/usb/i, LinkIcon],
 
   // Generic networking
-  [/networking|wi-?fi|wifi/i, "🌐"],
+  [/networking|wi-?fi|wifi/i, GlobeAltIcon],
+
+  // Printing, sound and screens
+  [/print|scan/i, PrinterIcon],
+  [/audio|speaker|sound/i, SpeakerWaveIcon],
+  [/\btv\b|television/i, TvIcon],
 
   // Computing
-  [/gaming laptop/i, "🎮"],
-  [/business laptop/i, "💼"],
-  [/laptop/i, "💻"],
-  [/processor|cpu/i, "🧠"],
-  [/graphics card|gpu/i, "🎮"],
-  [/monitor|display/i, "🖥️"],
-  [/storage|ssd|hdd/i, "💾"],
-  [/keyboard|mice|mouse/i, "⌨️"],
-  [/component/i, "🔧"],
+  [/gaming laptop/i, PuzzlePieceIcon],
+  [/business laptop/i, BriefcaseIcon],
+  [/laptop/i, ComputerDesktopIcon],
+  [/processor|cpu/i, CpuChipIcon],
+  [/graphics card|gpu/i, CpuChipIcon],
+  [/monitor|display/i, ComputerDesktopIcon],
+  [/storage|ssd|hdd/i, ArchiveBoxIcon],
+  [/keyboard|mice|mouse/i, RectangleGroupIcon],
+  [/component/i, CpuChipIcon],
 
-  // Peripherals & racks
-  [/peripheral|accessor/i, "🎧"],
-  [/rack|server/i, "🗄️"],
+  // Peripherals and racks
+  [/peripheral|accessor/i, SpeakerWaveIcon],
+  [/rack|server/i, ServerStackIcon],
 
   // Catch-alls
-  [/computer|it\b/i, "💻"],
+  [/computer|it\b/i, ComputerDesktopIcon],
 ];
 
-export const getCategoryIcon = (name?: string): string => {
-  if (!name) return "📦";
-  for (const [pattern, emoji] of ICON_RULES) {
-    if (pattern.test(name)) return emoji;
+export const getCategoryIcon = (name?: string): Icon => {
+  if (!name) return CubeIcon;
+  for (const [pattern, icon] of ICON_RULES) {
+    if (pattern.test(name)) return icon;
   }
-  return "📦";
+  return CubeIcon;
 };

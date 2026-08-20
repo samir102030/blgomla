@@ -316,12 +316,15 @@ const HomePage: React.FC = () => {
                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                           />
                         ) : (
-                          <span
-                            className="text-4xl sm:text-5xl group-hover:scale-105 transition-transform duration-300"
-                            aria-hidden="true"
-                          >
-                            {getCategoryIcon(cat.name)}
-                          </span>
+                          (() => {
+                            const Icon = getCategoryIcon(cat.name);
+                            return (
+                              <Icon
+                                className="w-10 h-10 sm:w-12 sm:h-12 text-[var(--text-muted)] group-hover:scale-105 group-hover:text-[var(--brand-primary)] transition-all duration-300"
+                                aria-hidden="true"
+                              />
+                            );
+                          })()
                         )}
                       </div>
                       <span className="px-2 py-2.5 text-xs sm:text-sm font-medium text-[var(--text-muted)] group-hover:text-[var(--text)] text-center line-clamp-2 transition-colors">

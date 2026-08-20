@@ -65,3 +65,7 @@ products/products_data.json
 
 # graphify writes its extraction cache here when the repo is scanned as a corpus
 graphify-out/
+
+# Price snapshots written by scripts/adjustPrices.mjs — a local safety net,
+# not something the repository needs a copy of.
+backend/scripts/price-snapshot-*.json

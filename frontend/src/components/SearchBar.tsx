@@ -400,7 +400,10 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
                               idx === selectedIndex ? "bg-[var(--brand-nav)]/10" : "hover:bg-[var(--surface-2)]"
                             }`}
                           >
-                            <span className="text-base shrink-0" aria-hidden="true">{getCategoryIcon(c.name)}</span>
+                            {(() => {
+                              const Icon = getCategoryIcon(c.name);
+                              return <Icon className="w-4 h-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />;
+                            })()}
                             <span className="text-sm text-[var(--text)] truncate">{pickName(c)}</span>
                           </button>
                         </li>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { TagIcon, StarIcon, CubeIcon } from "@heroicons/react/24/outline";
 import type { Category } from "../types/category.type";
 import type { Brand } from "../types/brand.type";
 import { useTranslation } from "react-i18next";
@@ -203,9 +204,10 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
               onChange={(e) => handleCategoryChange(node._id, e.target.checked)}
               className="w-4 h-4 shrink-0 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
             />
-            <span className="text-base shrink-0" aria-hidden="true">
-              {getCategoryIcon(node.name)}
-            </span>
+            {(() => {
+              const Icon = getCategoryIcon(node.name);
+              return <Icon className="w-4 h-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />;
+            })()}
             <span
               className={`truncate ${
                 depth === 0 ? "text-sm text-[var(--text)]" : "text-xs text-[var(--text-muted)]"
@@ -310,7 +312,8 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
             <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
           </div>
           <span className="text-sm text-[var(--text)] group-hover:text-[var(--brand-primary)] transition-colors flex items-center gap-1.5">
-            🏷️ {t("On Sale")}
+            <TagIcon className="w-4 h-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+            {t("On Sale")}
           </span>
         </label>
         <label className="flex items-center gap-3 cursor-pointer group">
@@ -325,7 +328,8 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
             <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
           </div>
           <span className="text-sm text-[var(--text)] group-hover:text-[var(--brand-accent)] transition-colors flex items-center gap-1.5">
-            ⭐ {t("Featured")}
+            <StarIcon className="w-4 h-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+            {t("Featured")}
           </span>
         </label>
         <label className="flex items-center gap-3 cursor-pointer group">
@@ -340,7 +344,8 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
             <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4 shadow-sm" />
           </div>
           <span className="text-sm text-[var(--text)] group-hover:text-green-500 transition-colors flex items-center gap-1.5">
-            📦 {t("In Stock Only")}
+            <CubeIcon className="w-4 h-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />
+            {t("In Stock Only")}
           </span>
         </label>
       </div>
