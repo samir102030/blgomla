@@ -7,7 +7,7 @@
 
 ```
 ┌─────────────────────────────┐         ┌──────────────────────────────┐
-│  Browser (PWA-capable)      │         │  Vercel — halafawystore      │
+│  Browser (PWA-capable)      │         │  Vercel — blgomla      │
 │  ───────────────────────    │         │  -frontend                   │
 │  · Vite + React 18 + TS     │         │  ───────────────────────     │
 │  · TanStack Query (cache)   │ HTTPS   │  · Static assets             │
@@ -18,7 +18,7 @@
                │ /api/*
                ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│  Vercel — halafawystore-backend  (api.belgmla.com)                │
+│  Vercel — blgomla  (api.belgmla.com)                │
 │  ───────────────────────────────────────────────────────────────  │
 │  Express + Node 20 (ESM) on Vercel Functions                      │
 │  · controllerWrapper → typed error envelopes                      │

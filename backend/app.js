@@ -68,12 +68,10 @@ const extraOrigins = (process.env.CLIENT_URL || "")
 // cross-origin calls with a logged-in customer's cookies.
 //
 // Preview deploys still need a wildcard, so scope it to this project's
-// prefix: that covers production (halafawystore-frontend.vercel.app) and
-// every preview (halafawystore-frontend-<hash>-<team>.vercel.app) without
-// admitting strangers. Override with VERCEL_PROJECT_PREFIX if the project is
-// ever renamed.
-const vercelProjectPrefix =
-  process.env.VERCEL_PROJECT_PREFIX || "halafawystore-frontend";
+// prefix: that covers production (blgomla.vercel.app) and every preview
+// (blgomla-<hash>-<team>.vercel.app) without admitting strangers. Override
+// with VERCEL_PROJECT_PREFIX if the project is ever renamed.
+const vercelProjectPrefix = process.env.VERCEL_PROJECT_PREFIX || "blgomla";
 
 const allowedOrigins = [
   "http://localhost:5173",

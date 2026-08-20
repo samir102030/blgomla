@@ -43,9 +43,10 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="/icons/og-image.png" />
 
-    <!-- Preconnect to backend so the TLS handshake happens in parallel with HTML parsing -->
-    <link rel="preconnect" href="https://halafawystore-backend.vercel.app" crossorigin />
-    <link rel="dns-prefetch" href="https://halafawystore-backend.vercel.app" />
+    <!-- The API is served from this same origin now (a Vercel services
+         project routes /api to the backend), so there is no second host to
+         open a connection to. The preconnect that used to be here named a
+         different deployment entirely and only cost a DNS lookup. -->
 
     <!-- Preconnect to Cloudinary so the first product-image TLS handshake starts before
          any <img> tag is parsed. Saves ~50-100ms on slow mobile. -->

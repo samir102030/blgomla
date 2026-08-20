@@ -414,8 +414,11 @@ const ProductDetailPage: React.FC = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: t("Home"), item: "https://halafawystore-frontend.vercel.app/" },
-      { "@type": "ListItem", position: 2, name: t("Products"), item: "https://halafawystore-frontend.vercel.app/products" },
+      // Built from wherever the page is actually being served. A domain
+      // written in here goes stale the moment the site moves, and a breadcrumb
+      // pointing at somebody else's deployment is worse for search than none.
+      { "@type": "ListItem", position: 1, name: t("Home"), item: `${window.location.origin}/` },
+      { "@type": "ListItem", position: 2, name: t("Products"), item: `${window.location.origin}/products` },
       { "@type": "ListItem", position: 3, name: product.name, item: pageUrl },
     ],
   };

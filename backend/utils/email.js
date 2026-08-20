@@ -4,7 +4,11 @@ import jwt from "jsonwebtoken";
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM_EMAIL = process.env.FROM_EMAIL || "Belgomla <noreply@belgmla.com>";
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "support@belgmla.com";
-const CLIENT_URL = process.env.CLIENT_URL || "https://halafawystore-frontend.vercel.app";
+// Every link a customer clicks out of an email is built from this — the
+// verification link most of all, which is the only way a new account can be
+// used. Set CLIENT_URL on every deployment: the fallback exists so a missing
+// variable doesn't produce `undefined/verify/...`, not because it is right.
+const CLIENT_URL = process.env.CLIENT_URL || "https://blgomla.vercel.app";
 const API_URL =
   process.env.API_URL ||
   process.env.PUBLIC_API_URL ||
