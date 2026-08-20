@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentType, SVGProps } from "react";
+import { ComputerDesktopIcon, CameraIcon, GlobeAltIcon, DevicePhoneMobileIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { cldImg, cldSrcSet } from "../lib/cldImage";
@@ -18,8 +20,8 @@ interface Slide {
   buttonText: string;
   buttonLink: string;
   accentColor: string;
-  icon: string;
-  // Optional square hero image (Cloudinary URL). Falls back to the emoji icon.
+  icon: ComponentType<SVGProps<SVGSVGElement>>;
+  // Optional square hero image (Cloudinary URL). Falls back to the line icon.
   image?: string;
 }
 
@@ -52,7 +54,7 @@ const HeroSlider: React.FC = () => {
       buttonText: t("Shop Now"),
       buttonLink: "/products",
       accentColor: "from-[#00A8E8] to-[#0077B6]",
-      icon: "💻",
+      icon: ComputerDesktopIcon,
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779668994/halafawy/hero/premium-tech.png",
     },
     {
@@ -64,7 +66,7 @@ const HeroSlider: React.FC = () => {
       buttonText: t("Explore Cameras"),
       buttonLink: "/products?category=cameras",
       accentColor: "from-[#7FD8FF] to-[#00A8E8]",
-      icon: "📸",
+      icon: CameraIcon,
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669608/halafawy/hero/cameras.png",
     },
     {
@@ -76,7 +78,7 @@ const HeroSlider: React.FC = () => {
       buttonText: t("View Products"),
       buttonLink: "/products?category=networking",
       accentColor: "from-[#0077B6] to-[#7FD8FF]",
-      icon: "🌐",
+      icon: GlobeAltIcon,
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669319/halafawy/hero/networking.png",
     },
     {
@@ -88,7 +90,7 @@ const HeroSlider: React.FC = () => {
       buttonText: t("Shop Phones"),
       buttonLink: "/products",
       accentColor: "from-[#0077B6] to-[#00A8E8]",
-      icon: "📱",
+      icon: DevicePhoneMobileIcon,
       image: "https://res.cloudinary.com/dcj3j5xn1/image/upload/v1779669088/halafawy/hero/smartphones.png",
     },
   ];
@@ -277,7 +279,7 @@ const HeroSlider: React.FC = () => {
                       />
                     ) : (
                       <span className="absolute inset-0 flex items-center justify-center text-8xl">
-                        {slide.icon}
+                        <slide.icon className="w-6 h-6" aria-hidden="true" />
                       </span>
                     )}
                     {/* Top sheen — sells the frame as glass rather than a flat box. */}

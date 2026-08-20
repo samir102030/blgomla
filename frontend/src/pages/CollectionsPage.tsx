@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { CameraIcon, PuzzlePieceIcon, FireIcon, ExclamationTriangleIcon, BanknotesIcon, TruckIcon, BriefcaseIcon, GlobeAltIcon, StarIcon, CubeIcon, CheckBadgeIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
@@ -12,12 +13,12 @@ import AddBundleDialog from "../components/AddBundleDialog";
 /* ─── gradient accents per bundle ─── */
 // Belgomla orange spectrum — keep all tiles on-brand instead of a rainbow.
 const bundleThemes = [
-  { gradient: "from-[#00A8E8] to-[#0077B6]", badge: "📸", tagline: "For Creators" },
-  { gradient: "from-[#7FD8FF] to-[#00A8E8]", badge: "💼", tagline: "For Business" },
-  { gradient: "from-[#0077B6] to-[#00A8E8]", badge: "🎮", tagline: "For Gamers" },
-  { gradient: "from-[#00A8E8] to-[#0B0B10]", badge: "🌐", tagline: "For Networks" },
-  { gradient: "from-[#7FD8FF] to-[#0077B6]", badge: "⭐", tagline: "Featured" },
-  { gradient: "from-[#0077B6] to-[#0B0B10]", badge: "🔥", tagline: "Hot Deal" },
+  { gradient: "from-[#00A8E8] to-[#0077B6]", badge: CameraIcon, tagline: "For Creators" },
+  { gradient: "from-[#7FD8FF] to-[#00A8E8]", badge: BriefcaseIcon, tagline: "For Business" },
+  { gradient: "from-[#0077B6] to-[#00A8E8]", badge: PuzzlePieceIcon, tagline: "For Gamers" },
+  { gradient: "from-[#00A8E8] to-[#0B0B10]", badge: GlobeAltIcon, tagline: "For Networks" },
+  { gradient: "from-[#7FD8FF] to-[#0077B6]", badge: StarIcon, tagline: "Featured" },
+  { gradient: "from-[#0077B6] to-[#0B0B10]", badge: FireIcon, tagline: "Hot Deal" },
 ];
 
 const CollectionsPage: React.FC = () => {
@@ -97,7 +98,7 @@ const CollectionsPage: React.FC = () => {
           </div>
         ) : error ? (
           <div className="text-center py-16">
-            <div className="text-4xl mb-4">⚠️</div>
+            <ExclamationTriangleIcon className="w-9 h-9 mb-4 mx-auto text-amber-500" aria-hidden="true" />
             <p className="text-[var(--text-muted)] mb-4">{error}</p>
             <button
               onClick={() => fetchCollections({ activeOnly: true })}
@@ -109,8 +110,8 @@ const CollectionsPage: React.FC = () => {
         ) : collections.length === 0 ? (
           /* Empty State */
           <div className="text-center py-20">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center text-4xl">
-              📦
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center">
+              <CubeIcon className="w-9 h-9 text-[var(--text-muted)]" aria-hidden="true" />
             </div>
             <h2 className="text-xl font-bold text-[var(--text)] mb-2">
               {t("No Bundles Available Yet")}
@@ -146,7 +147,7 @@ const CollectionsPage: React.FC = () => {
                     <div className="flex items-start justify-between gap-4 mb-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-lg">{theme.badge}</span>
+                          <theme.badge className="w-5 h-5 text-[var(--brand-primary)]" aria-hidden="true" />
                           <span className={`text-[10px] font-bold uppercase tracking-widest bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent`}>
                             {theme.tagline}
                           </span>
@@ -221,7 +222,7 @@ const CollectionsPage: React.FC = () => {
                         </div>
                         {savings > 0 && (
                           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
-                            💰 {t("You save")} {t("EGP")} {savings.toLocaleString()}
+                            {t("You save")} {t("EGP")} {savings.toLocaleString()}
                           </p>
                         )}
                       </div>
@@ -237,7 +238,7 @@ const CollectionsPage: React.FC = () => {
                           onClick={() => setPendingBundle(collection)}
                           className={`bg-gradient-to-r ${theme.gradient} text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap`}
                         >
-                          🛒 {t("Add Bundle")}
+                          {t("Add Bundle")}
                         </button>
                       </div>
                     </div>
@@ -261,12 +262,12 @@ const CollectionsPage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
               {[
-                { icon: "💰", title: t("Exclusive Savings"), desc: t("Save 10-25% compared to buying items individually. The more you bundle, the more you save.") },
-                { icon: "✅", title: t("Expertly Curated"), desc: t("Each bundle is hand-picked by our tech experts to ensure perfect compatibility and maximum value.") },
-                { icon: "🚚", title: t("Free Bundle Shipping"), desc: t("All bundles ship free regardless of destination. Fast, insured delivery across Egypt.") },
+                { icon: BanknotesIcon, title: t("Exclusive Savings"), desc: t("Save 10-25% compared to buying items individually. The more you bundle, the more you save.") },
+                { icon: CheckBadgeIcon, title: t("Expertly Curated"), desc: t("Each bundle is hand-picked by our tech experts to ensure perfect compatibility and maximum value.") },
+                { icon: TruckIcon, title: t("Free Bundle Shipping"), desc: t("All bundles ship free regardless of destination. Fast, insured delivery across Egypt.") },
               ].map((item, i) => (
                 <div key={i} className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-6 text-center hover:shadow-md transition-shadow">
-                  <div className="text-3xl mb-3">{item.icon}</div>
+                  <item.icon className="w-7 h-7 mb-3 text-[var(--brand-primary)]" aria-hidden="true" />
                   <h3 className="text-sm font-bold text-[var(--text)] mb-1.5">{item.title}</h3>
                   <p className="text-xs text-[var(--text-muted)] leading-relaxed">{item.desc}</p>
                 </div>

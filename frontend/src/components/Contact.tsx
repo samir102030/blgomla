@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { MapPinIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import PageHero from "./PageHero";
 import { useTranslation } from "react-i18next";
 
@@ -51,27 +52,27 @@ const Contact: React.FC = () => {
 
   const contactCards = [
     {
-      icon: "📍",
+      icon: MapPinIcon,
       title: t("Visit Our Store"),
       lines: [t("6 October City, Giza"), t("Cairo, Egypt")],
       accent: "from-blue-500 to-indigo-600",
     },
     {
-      icon: "📞",
+      icon: PhoneIcon,
       title: t("Call Us"),
       lines: ["+20 100 935 3639", t("Sun - Thu: 9AM - 6PM")],
       accent: "from-emerald-500 to-teal-600",
       href: "tel:+201009353639",
     },
     {
-      icon: "✉️",
+      icon: EnvelopeIcon,
       title: t("Email Us"),
       lines: ["info@belgomla.com", t("We reply within 24 hours")],
       accent: "from-purple-500 to-violet-600",
       href: "mailto:info@belgomla.com",
     },
     {
-      icon: "💬",
+      icon: ChatBubbleLeftRightIcon,
       title: t("WhatsApp"),
       lines: ["+20 100 935 3639", t("Quick response guaranteed")],
       accent: "from-green-500 to-emerald-600",
@@ -125,7 +126,7 @@ const Contact: React.FC = () => {
               {/* Top accent line */}
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${card.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
 
-              <div className="text-3xl mb-3">{card.icon}</div>
+              <card.icon className="w-7 h-7 mb-3 text-[var(--brand-primary)]" aria-hidden="true" />
               <h3 className="text-sm font-bold text-[var(--text)] mb-2 uppercase tracking-wide">
                 {card.title}
               </h3>
@@ -164,7 +165,7 @@ const Contact: React.FC = () => {
 
               {isSubmitted && (
                 <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-xl flex items-center gap-3">
-                  <span className="text-xl">✅</span>
+                  <CheckCircleIcon className="w-5 h-5 text-emerald-500" aria-hidden="true" />
                   <div>
                     <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
                       {t("Message sent successfully!")}
@@ -288,7 +289,7 @@ const Contact: React.FC = () => {
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] overflow-hidden">
               <div className="p-4 sm:p-5 border-b border-[var(--border)]">
                 <h3 className="text-sm font-bold text-[var(--text)] uppercase tracking-wide flex items-center gap-2">
-                  📍 {t("Our Location")}
+                  {t("Our Location")}
                 </h3>
               </div>
               <div className="aspect-[4/3] bg-[var(--bg)]">
@@ -306,7 +307,7 @@ const Contact: React.FC = () => {
             {/* Business Hours */}
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-5 sm:p-6">
               <h3 className="text-sm font-bold text-[var(--text)] uppercase tracking-wide flex items-center gap-2 mb-4">
-                🕐 {t("Business Hours")}
+                <ClockIcon className="w-5 h-5 inline-block me-2 align-text-bottom" aria-hidden="true" />{t("Business Hours")}
               </h3>
               <div className="space-y-2.5">
                 {[
@@ -387,7 +388,7 @@ const Contact: React.FC = () => {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 bg-white text-[var(--brand-primary)] px-6 py-3 rounded-xl font-semibold text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
           >
-            💬 {t("Chat on WhatsApp")}
+            {t("Chat on WhatsApp")}
           </a>
         </div>
       </section>

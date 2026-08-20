@@ -1,4 +1,5 @@
 import React from "react";
+import { FlagIcon, LightBulbIcon, TruckIcon, ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -45,28 +46,28 @@ const AboutUsPage: React.FC = () => {
 
   const values = [
     {
-      icon: "🎯",
+      icon: FlagIcon,
       title: t("Quality First"),
       description: t(
         "We only stock cameras and equipment from trusted brands known for their reliability and performance."
       ),
     },
     {
-      icon: "💡",
+      icon: LightBulbIcon,
       title: t("Expert Guidance"),
       description: t(
         "Our team of photography experts is here to help you find the perfect camera for your needs."
       ),
     },
     {
-      icon: "🚚",
+      icon: TruckIcon,
       title: t("Fast Delivery"),
       description: t(
         "Quick and secure shipping to get your new camera equipment to you as soon as possible."
       ),
     },
     {
-      icon: "🛡️",
+      icon: ShieldCheckIcon,
       title: t("Warranty Protection"),
       description: t(
         "All our products come with comprehensive warranty coverage for your peace of mind."
@@ -194,7 +195,7 @@ const AboutUsPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {values.map((value, index) => (
                 <div key={index} className="text-center">
-                  <div className="text-4xl mb-4">{value.icon}</div>
+                  <value.icon className="w-9 h-9 mb-4 text-[var(--brand-primary)]" aria-hidden="true" />
                   <h3 className="text-xl font-semibold text-[var(--text)] mb-3">
                     {value.title}
                   </h3>

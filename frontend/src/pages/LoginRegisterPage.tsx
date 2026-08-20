@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { BoltIcon, HeartIcon, TruckIcon, TagIcon, LockClosedIcon, ShieldCheckIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -227,10 +228,10 @@ const LoginRegisterPage: React.FC = () => {
   const inputClass = "w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm placeholder:text-[var(--text-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]/40 focus:border-[var(--brand-primary)] transition-all";
 
   const benefits = [
-    { icon: "🚀", title: t("login.benefit1Title", "Fast Checkout"), desc: t("login.benefit1Desc", "Save your details for one-click ordering") },
-    { icon: "❤️", title: t("login.benefit2Title", "Wishlist & Favorites"), desc: t("login.benefit2Desc", "Keep track of products you love") },
-    { icon: "📦", title: t("login.benefit3Title", "Order Tracking"), desc: t("login.benefit3Desc", "Monitor your orders in real-time") },
-    { icon: "🏷️", title: t("login.benefit4Title", "Exclusive Deals"), desc: t("login.benefit4Desc", "Access member-only prices & promotions") },
+    { icon: BoltIcon, title: t("login.benefit1Title", "Fast Checkout"), desc: t("login.benefit1Desc", "Save your details for one-click ordering") },
+    { icon: HeartIcon, title: t("login.benefit2Title", "Wishlist & Favorites"), desc: t("login.benefit2Desc", "Keep track of products you love") },
+    { icon: TruckIcon, title: t("login.benefit3Title", "Order Tracking"), desc: t("login.benefit3Desc", "Monitor your orders in real-time") },
+    { icon: TagIcon, title: t("login.benefit4Title", "Exclusive Deals"), desc: t("login.benefit4Desc", "Access member-only prices & promotions") },
   ];
 
   /**
@@ -281,7 +282,7 @@ const LoginRegisterPage: React.FC = () => {
                 <div className="relative z-10 space-y-3 mt-auto">
                   {benefits.map((b, i) => (
                     <div key={i} className="flex items-start gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-                      <span className="text-xl shrink-0">{b.icon}</span>
+                      <b.icon className="w-5 h-5 shrink-0" aria-hidden="true" />
                       <div>
                         <h4 className="text-white text-sm font-semibold">{b.title}</h4>
                         <p className="text-white/70 text-xs">{b.desc}</p>
@@ -333,7 +334,7 @@ const LoginRegisterPage: React.FC = () => {
                     {totpRequired && (
                       <div className="p-4 rounded-xl bg-[var(--brand-primary)]/5 border border-[var(--brand-primary)]/30">
                         <label className="block text-sm font-semibold text-[var(--text)] mb-1.5">
-                          🛡️ {t("login.totpLabel", "Authenticator code")}
+                          {t("login.totpLabel", "Authenticator code")}
                         </label>
                         <p className="text-xs text-[var(--text-muted)] mb-2.5">
                           {t("login.totpDesc", "Enter the 6-digit code from your authenticator app to finish signing in.")}
@@ -512,12 +513,12 @@ const LoginRegisterPage: React.FC = () => {
               {/* ===== TRUST BADGES (below form) ===== */}
               <div className="mt-6 grid grid-cols-3 gap-3">
                 {[
-                  { icon: "🔒", label: t("login.trustSSL", "SSL Encrypted") },
-                  { icon: "🛡️", label: t("login.trustSecure", "Secure Payments") },
-                  { icon: "📞", label: t("login.trustSupport", "24/7 Support") },
+                  { icon: LockClosedIcon, label: t("login.trustSSL", "SSL Encrypted") },
+                  { icon: ShieldCheckIcon, label: t("login.trustSecure", "Secure Payments") },
+                  { icon: PhoneIcon, label: t("login.trustSupport", "24/7 Support") },
                 ].map((badge, i) => (
                   <div key={i} className="bg-[var(--surface)] border border-[var(--border)] rounded-xl py-3 px-2 text-center">
-                    <div className="text-lg mb-1">{badge.icon}</div>
+                    <badge.icon className="w-5 h-5 mx-auto mb-1" aria-hidden="true" />
                     <div className="text-[10px] font-medium text-[var(--text-muted)]">{badge.label}</div>
                   </div>
                 ))}
@@ -527,7 +528,7 @@ const LoginRegisterPage: React.FC = () => {
               <div className="lg:hidden mt-8 grid grid-cols-2 gap-3">
                 {benefits.map((b, i) => (
                   <div key={i} className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-3">
-                    <span className="text-xl">{b.icon}</span>
+                    <b.icon className="w-5 h-5" aria-hidden="true" />
                     <h4 className="text-xs font-semibold text-[var(--text)] mt-1.5">{b.title}</h4>
                     <p className="text-[10px] text-[var(--text-muted)] mt-0.5">{b.desc}</p>
                   </div>
