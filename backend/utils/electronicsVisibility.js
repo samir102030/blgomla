@@ -49,3 +49,17 @@ export const forgetElectronicsVisibility = () => {
  * definitions of what "hidden" means.
  */
 export const HIDE_ELECTRONICS = { audience: { $ne: "electronics" } };
+
+/**
+ * Opts a query out of the hiding above.
+ *
+ * Both the schema hook and the aggregation helper stand aside as soon as a
+ * query says something about `audience`, so a search sets this to say "all of
+ * it, on purpose". Browsing does not: the section stays out of the menu, the
+ * category pages and the home rails until it is published, but somebody who
+ * types a product name finds the product.
+ *
+ * `null` inside `$in` also matches documents with no `audience` field, which
+ * is most of the catalogue.
+ */
+export const ANY_AUDIENCE = { $in: [null, "public", "electronics"] };

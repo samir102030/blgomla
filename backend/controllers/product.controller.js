@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import { ANY_AUDIENCE } from "../utils/electronicsVisibility.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { paginateProducts } from "../utils/productPagination.js";
@@ -192,6 +193,8 @@ export const getAllProducts = controllerWrapper(
     const filter = {};
     const searchAnd = buildSearchFilter(search);
     if (searchAnd) filter.$and = searchAnd;
+    // Searching by name reaches the unpublished section; browsing does not.
+    if (searchAnd) filter.audience = ANY_AUDIENCE;
     if (filters.categoryId) filter.category = filters.categoryId;
     if (filters.brandId) filter.brand = filters.brandId;
     if (filters.storeId) filter.store = filters.storeId;
@@ -251,6 +254,9 @@ export const getSearchSuggestions = controllerWrapper(
       isActive: true,
       deleted: { $ne: true },
       approvalStatus: "approved",
+      // Same rule as the full search: typing a name finds the product even
+      // while its section is unpublished.
+      audience: ANY_AUDIENCE,
       $and: rxs.map((rx) => ({
         $or: [{ name: rx }, { nameAr: rx }, { tags: { $in: [rx] } }],
       })),
@@ -268,7 +274,9 @@ export const getSearchSuggestions = controllerWrapper(
         .limit(6)
         .lean(),
       Brand.find(orNameFilter).select("name nameAr slug logo").limit(4).lean(),
-      Category.find(orNameFilter).select("name nameAr slug").limit(4).lean(),
+      // Products are findable while their section is unpublished; the section
+      // itself is not something to suggest browsing into.
+      Category.find({ ...orNameFilter, isActive: true }).select("name nameAr slug").limit(4).lean(),
     ]);
 
     // Slim products to a single image so the dropdown payload stays small.
@@ -396,6 +404,7 @@ export const getStorefrontProducts = controllerWrapper(
 
     const searchAnd = buildSearchFilter(search);
     if (searchAnd) query.$and = searchAnd;
+    if (searchAnd) query.audience = ANY_AUDIENCE;
     // A category selected from the menu may be a branch rather than a leaf, and
     // products hang off the leaves. Matching the subtree is what makes clicking
     // "Laptop" show laptops instead of an empty page.
