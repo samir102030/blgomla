@@ -79,3 +79,17 @@ midnight in Cairo, so scheduled sales flip over at the start of the local day.
 
 If any of these need their real frequency, either the account moves to Pro or
 an external scheduler calls the same endpoints on the tighter interval.
+
+## Why `routes` and not `rewrites`
+
+`rewrites` are consulted only after Vercel has looked for a real file, and on a
+project with no build step every file in this directory *is* a real file. The
+first production deploy served `config/db.js`, `utils/supportTools.js` and the
+rest of the source as plain JavaScript to anyone who asked, and `/` returned
+`server.js`. Nothing secret leaked — `.env` is not in the repository — but the
+whole server was readable.
+
+Legacy `routes` replaces Vercel's default routing instead of appending to it.
+With no `{"handle": "filesystem"}` entry, every request goes to the function
+and no path resolves to a file on disk. Do not convert this block back to
+`rewrites` without putting the source somewhere it cannot be served from.
