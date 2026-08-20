@@ -196,9 +196,18 @@ app.use((req, res, next) => {
   if (!isCacheable) return next();
   // Skip cache for authenticated requests (they may see admin/vendor data)
   if (req.headers.cookie && req.headers.cookie.includes("accessToken")) return next();
+  // The shape of the shop is edited by hand and the person editing it expects
+  // to see the result. Categories and brands are what the menu is built from,
+  // and five minutes of edge cache means an operator reorders the menu, looks
+  // at the site, and finds their change missing with nothing to tell them why.
+  // Thirty seconds is short enough to feel immediate and long enough to still
+  // absorb the traffic these two endpoints get.
+  const editorial = req.path.startsWith("/api/categories") || req.path.startsWith("/api/brands");
   res.setHeader(
     "Cache-Control",
-    "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
+    editorial
+      ? "public, max-age=0, s-maxage=30, stale-while-revalidate=300"
+      : "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
   );
   next();
 });
