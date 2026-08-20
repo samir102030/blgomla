@@ -356,10 +356,10 @@ const Header: React.FC = () => {
       condition: showBecomeVendor,
       mobileOnly: true,
     },
-    // Last of the links a visitor sees. The label matches the page title, so
-    // the link and the place it lands read as the same thing. The dashboard
-    // link below is staff-only and stays pinned at the end of the row.
-    { label: t("Electronics"), path: "/electronics" },
+    // Electronics used to sit here as its own page. It is a branch of the
+    // catalogue now, reached from the category menu like every other branch,
+    // so a second way in would only say the same thing twice. The /electronics
+    // route stays for the student sign-up and its verification links.
     {
       label: t("Admin Dashboard"),
       path: "/dashboard",

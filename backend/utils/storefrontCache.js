@@ -1,4 +1,5 @@
 import { clearCache } from "../middleware/cache.js";
+import { forgetElectronicsVisibility } from "./electronicsVisibility.js";
 
 /**
  * Drop every cached view that a change to the catalogue's shape can affect.
@@ -14,6 +15,9 @@ import { clearCache } from "../middleware/cache.js";
 export const clearStorefrontCaches = (...namespaces) => {
   for (const ns of namespaces) clearCache(ns);
   clearCache("home-feed");
+  // Publishing the electronics section is a category edit like any other,
+  // and the operator expects the shop to show it on the next page load.
+  forgetElectronicsVisibility();
 };
 
 /** Express middleware form, for route tables. */

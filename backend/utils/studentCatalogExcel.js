@@ -395,7 +395,7 @@ export const exportStudentProductsToExcel = (products, departmentName) => {
   const rows = products.map((p) => ({
     "Product Name": p.name || "",
     "Arabic Name": p.nameAr || "",
-    Department: departmentName(p.studentCategory) || "",
+    Department: departmentName(p.category) || "",
     Price: p.price ?? 0,
     Stock: p.stock ?? 0,
     SKU: p.sku || "",

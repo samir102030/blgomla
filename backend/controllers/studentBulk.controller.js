@@ -1,5 +1,5 @@
 import Product from "../models/product.model.js";
-import StudentCategory from "../models/studentCategory.model.js";
+import Category from "../models/category.model.js";
 import {
   describeUnreadableSheet,
   exportStudentProductsToExcel,
@@ -78,7 +78,32 @@ export const bulkUploadStudentCategories = async (req, res) => {
     // Retired departments are included: naming one in a sheet brings it back
     // with the products it still holds, rather than creating a second
     // department with the same name beside it.
-    const existing = await StudentCategory.find({});
+    const sectionRoot = await Category.findOne({ sectionKey: "electronics" }).select("_id name");
+    if (!sectionRoot) {
+      return res.status(409).json({
+        success: false,
+        message: "The electronics section has no root category yet.",
+      });
+    }
+
+    // Only this branch. Category names are unique shop-wide, but a sheet that
+    // says "Switches" means the one in this section, and matching against the
+    // whole catalogue would hand it the networking one instead.
+    const everyCategory = await Category.find({});
+    const childrenOf = new Map();
+    for (const c of everyCategory) {
+      const key = String(c.parentCategory || "");
+      if (!childrenOf.has(key)) childrenOf.set(key, []);
+      childrenOf.get(key).push(c);
+    }
+    const existing = [];
+    const pending = [String(sectionRoot._id)];
+    while (pending.length) {
+      for (const child of childrenOf.get(pending.pop()) || []) {
+        existing.push(child);
+        pending.push(String(child._id));
+      }
+    }
     const byName = new Map();
     for (const c of existing.filter((c) => c.deleted)) byName.set(norm(c.name), c);
     for (const c of existing.filter((c) => !c.deleted)) byName.set(norm(c.name), c);
@@ -104,12 +129,14 @@ export const bulkUploadStudentCategories = async (req, res) => {
       }
       inSheet.set(norm(row.name), row);
 
+      // The sheet keeps the section's vocabulary; the catalogue has its own
+      // names for the same two things.
       const fields = {
         nameAr: row.nameAr,
         description: row.description,
         descriptionAr: row.descriptionAr,
-        order: row.order,
-        active: row.active,
+        sortOrder: row.order,
+        isActive: row.active,
         ...(row.image ? { image: row.image } : {}),
       };
 
@@ -125,9 +152,12 @@ export const bulkUploadStudentCategories = async (req, res) => {
           if (!dryRun) await found.save();
           results.updated.push({ row: row.rowNumber, name: found.name });
         } else {
-          const doc = new StudentCategory({
+          const doc = new Category({
             name: row.name,
             ...fields,
+            // A row with no parent named hangs off the branch root, never off
+            // the catalogue itself — the section owns everything under it.
+            parentCategory: sectionRoot._id,
             createdBy: req.user._id,
           });
           if (!dryRun) await doc.save();
@@ -241,7 +271,7 @@ export const exportStudentProducts = async (req, res) => {
       Product.find({ audience: "electronics", deleted: { $ne: true } })
         .sort({ createdAt: -1 })
         .lean(),
-      StudentCategory.find({}).select("_id name").lean(),
+      Category.find({}).select("_id name").lean(),
     ]);
 
     const nameById = new Map(categories.map((c) => [String(c._id), c.name]));
@@ -281,10 +311,40 @@ export const bulkUploadStudentProducts = async (req, res) => {
       totalRows: rows.length,
     };
 
-    const [categories, existing] = await Promise.all([
-      StudentCategory.find({ deleted: { $ne: true } }).lean(),
+    // The section is a branch of the catalogue now, so its departments are
+    // ordinary categories. They are collected by walking down from the branch
+    // root rather than by name: names are unique shop-wide, but a sheet naming
+    // "Switches" must never file a product into the networking one on the
+    // other side of the tree.
+    const sectionRoot = await Category.findOne({ sectionKey: "electronics" })
+      .select("_id name")
+      .lean();
+    if (!sectionRoot) {
+      return res.status(409).json({
+        success: false,
+        message: "The electronics section has no root category yet.",
+      });
+    }
+
+    const [everyCategory, existing] = await Promise.all([
+      Category.find({ deleted: { $ne: true } }).select("_id name parentCategory").lean(),
       Product.find({ audience: "electronics" }).select("_id name"),
     ]);
+
+    const childrenOf = new Map();
+    for (const c of everyCategory) {
+      const key = String(c.parentCategory || "");
+      if (!childrenOf.has(key)) childrenOf.set(key, []);
+      childrenOf.get(key).push(c);
+    }
+    const categories = [];
+    const pending = [String(sectionRoot._id)];
+    while (pending.length) {
+      for (const child of childrenOf.get(pending.pop()) || []) {
+        categories.push(child);
+        pending.push(String(child._id));
+      }
+    }
 
     const categoryByName = new Map(categories.map((c) => [norm(c.name), c._id]));
     const productByName = new Map(existing.map((p) => [norm(p.name), p]));
@@ -313,8 +373,16 @@ export const bulkUploadStudentProducts = async (req, res) => {
         if (row.departmentName) {
           categoryId = categoryByName.get(norm(row.departmentName)) ?? null;
           if (!categoryId && !dryRun) {
-            const made = await StudentCategory.create({
-              name: row.departmentName,
+            // Category names are unique across the whole shop, so a department
+            // whose name is already taken elsewhere is suffixed instead of
+            // failing the row.
+            let deptName = row.departmentName;
+            if (await Category.exists({ name: deptName })) {
+              deptName = row.departmentName + " (" + sectionRoot.name + ")";
+            }
+            const made = await Category.create({
+              name: deptName,
+              parentCategory: sectionRoot._id,
               createdBy: req.user._id,
             });
             categoryId = made._id;
@@ -341,7 +409,7 @@ export const bulkUploadStudentProducts = async (req, res) => {
           // below writes whatever it is given, so passing null here would move
           // every product in a partial sheet out of its department without
           // saying so.
-          ...(row.departmentName ? { studentCategory: categoryId } : {}),
+          ...(row.departmentName ? { category: categoryId } : {}),
           ...(row.sku ? { sku: row.sku } : {}),
           ...(row.images.length ? { images: row.images } : {}),
         };

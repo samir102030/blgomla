@@ -427,25 +427,30 @@ productSchema.index({ rating: -1 }); // Most-rated
 productSchema.index({ audience: 1, studentCategory: 1, createdAt: -1 }); // Student shelf
 
 /**
- * Keep the student catalogue out of the storefront by default.
+ * Keep the electronics branch off the storefront until the shop publishes it.
  *
- * There are dozens of places that list products — the catalogue, search, the
- * home rails, sale strips, sitemaps, feeds — and adding `audience: "public"`
- * to each one would mean the next listing anybody writes leaks the student
- * shelf onto the shop. Defaulting here inverts that: a query says nothing
- * about audience and gets the public catalogue, which is the safe answer, and
- * asking for the student shelf has to be deliberate.
+ * `audience` marks which section a product belongs to. It is not itself a
+ * decision about visibility — the student coupon is scoped by it and has to
+ * keep matching whether the section is live or not — so the decision is read
+ * from the branch's root category each time, and the mark only says which
+ * products the decision covers.
  *
- * Lookups by id or slug are left alone. Those are not listings — they are the
- * product page, the cart reading a line back, the order decrementing stock —
- * and a student product has to work in every one of them or it cannot be
- * bought, which is the entire point of putting it on a shelf.
+ * Dozens of places list products, and adding a clause to each would mean the
+ * next listing anybody writes leaks the unpublished section. Defaulting here
+ * inverts that: a query that says nothing about audience gets whatever is
+ * live, and reaching past the switch has to be deliberate.
+ *
+ * Lookups by id or slug are left alone. Those are the product page, the cart
+ * reading a line back, the order decrementing stock — staff need every one of
+ * them to work on a section they have not published yet.
  */
-productSchema.pre(/^find/, function () {
+productSchema.pre(/^find/, async function () {
   const filter = this.getFilter() || {};
   if (filter.audience !== undefined) return;
   if (filter._id !== undefined || filter.slug !== undefined) return;
-  this.where({ audience: { $ne: "electronics" } });
+  const { electronicsIsLive, HIDE_ELECTRONICS } = await import("../utils/electronicsVisibility.js");
+  if (await electronicsIsLive()) return;
+  this.where(HIDE_ELECTRONICS);
 });
 
 // ── Slug auto-generation ──

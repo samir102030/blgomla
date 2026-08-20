@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import { electronicsIsLive, HIDE_ELECTRONICS } from "./electronicsVisibility.js";
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
@@ -68,11 +69,12 @@ export async function paginateProducts({
   limit = Math.max(Number(limit) || DEFAULT_LIMIT, 1);
   const skip = (page - 1) * limit;
 
-  // The schema's find hook cannot reach an aggregation, and this function is
-  // behind most of the storefront's listings, so the student shelf is excluded
-  // here for the same reason and on the same default: say nothing about
-  // audience and you get the public catalogue.
-  const scoped = filter.audience === undefined ? { ...filter, audience: { $ne: "electronics" } } : filter;
+  // The schema hook cannot reach an aggregation, and this function is behind
+  // most of the storefront's listings, so it asks the same question here.
+  const scoped =
+    filter.audience === undefined && !(await electronicsIsLive())
+      ? { ...filter, ...HIDE_ELECTRONICS }
+      : filter;
 
   const [result] = await Product.aggregate([
     { $match: scoped },

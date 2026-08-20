@@ -87,6 +87,19 @@ const categorySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    /**
+     * Marks a category as the root of a named section of the shop.
+     *
+     * Only the electronics branch uses it today, and it uses it so the code
+     * can find that root without matching on a name an operator is free to
+     * change. Unset on every ordinary category, which is why the index is
+     * sparse — a unique index would otherwise treat every null as a clash.
+     */
+    sectionKey: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
     deleted: {
       type: Boolean,
       default: false,
@@ -97,6 +110,7 @@ const categorySchema = new mongoose.Schema(
 
 // ── Indexes ──
 categorySchema.index({ slug: 1 }, { unique: true });
+categorySchema.index({ sectionKey: 1 }, { unique: true, sparse: true });
 categorySchema.index({ parentCategory: 1 });
 categorySchema.index({ path: 1 });
 categorySchema.index({ isActive: 1, deleted: 1 });
