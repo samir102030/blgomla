@@ -40,6 +40,10 @@ const memCache = cache({ namespace: "categories", ttl: 5 * 60_000 });
 const invalidate = invalidateStorefront("categories");
 
 // Public (static before dynamic)
+// The response depends on `includeHidden`. Both caches key on the full URL,
+// query string included, so the dashboard's answer and the storefront's are
+// stored apart — which is the only reason it is safe to vary the body by a
+// query parameter on a cached route at all.
 router.get("/", publicCache, memCache, translateResponse, getAllCategories);
 router.get("/tree", publicCache, memCache, translateResponse, getCategoryTree);
 router.get("/slug/:slug", publicCache, memCache, translateResponse, getCategoryBySlug);

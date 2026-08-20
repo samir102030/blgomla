@@ -42,10 +42,44 @@ export const createCategory = controllerWrapper(
 export const getAllCategories = controllerWrapper(
   "getAllCategories",
   async (req, res) => {
-    const categories = await Category.find({ deleted: { $ne: true } })
+    const all = await Category.find({ deleted: { $ne: true } })
       .populate("parentCategory", "name nameAr slug")
       .populate("subCategories", "name nameAr slug")
       .sort({ sortOrder: 1, name: 1 });
+
+    // A switched-off category takes its whole branch with it.
+    //
+    // Dropping only the category itself would leave its children in the list,
+    // and every flat consumer — the products filter, the coupon form — would
+    // still offer them. The menu happens to hide orphans, which is exactly the
+    // kind of accident that makes a leak somewhere else hard to believe.
+    //
+    // `includeHidden` is for the dashboard, which cannot switch a category back
+    // on if it can no longer see it.
+    const includeHidden = req.query.includeHidden === "true";
+    let categories = all;
+    if (!includeHidden) {
+      const off = new Set(
+        all.filter((c) => c.isActive === false).map((c) => String(c._id)),
+      );
+      const parentOf = new Map(
+        all.map((c) => [
+          String(c._id),
+          c.parentCategory ? String(c.parentCategory._id || c.parentCategory) : null,
+        ]),
+      );
+      const buried = (id) => {
+        let cursor = id;
+        const seen = new Set();
+        while (cursor && !seen.has(cursor)) {
+          if (off.has(cursor)) return true;
+          seen.add(cursor);
+          cursor = parentOf.get(cursor) || null;
+        }
+        return false;
+      };
+      categories = all.filter((c) => !buried(String(c._id)));
+    }
 
     // Aggregate product counts in one query
     const counts = await Product.aggregate([

@@ -46,7 +46,7 @@ const CategoriesPage: React.FC = () => {
   } = useCategoryStore();
 
   useEffect(() => {
-    fetchCategories();
+    fetchCategories({ includeHidden: true });
   }, [fetchCategories]);
 
   const getStatusColor = (isActive: boolean) => {
@@ -119,7 +119,7 @@ const CategoriesPage: React.FC = () => {
   const handleDelete = async (categoryId: string) => {
     if (window.confirm(t("categories.confirmDelete"))) {
       await safeDeleteCategory(categoryId);
-      fetchCategories(); // Refresh the list
+      fetchCategories({ includeHidden: true }); // Refresh the list
     }
   };
 
@@ -144,7 +144,7 @@ const CategoriesPage: React.FC = () => {
 
   const handleToggleStatus = async (category: any) => {
     await updateCategory(category._id, { isActive: !category.isActive });
-    fetchCategories(); // Refresh the list
+    fetchCategories({ includeHidden: true }); // Refresh the list
   };
 
   // Whether the storefront menu lists it. Kept beside the live/deleted controls
@@ -154,14 +154,14 @@ const CategoriesPage: React.FC = () => {
     await updateCategory(category._id, {
       showInMenu: category.showInMenu === false,
     });
-    fetchCategories();
+    fetchCategories({ includeHidden: true });
   };
 
   const handleModalClose = () => {
     setModalOpen(false);
     setEditingCategory(null);
     setAddingUnder("");
-    fetchCategories(); // Refresh after modal closes
+    fetchCategories({ includeHidden: true }); // Refresh after modal closes
   };
 
   const handleViewCategory = (category: any) => {
