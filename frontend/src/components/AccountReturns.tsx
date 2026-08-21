@@ -46,7 +46,7 @@ const AccountReturns: React.FC = () => {
 
       {returns.length === 0 ? (
         <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-10 text-center">
- <span className="text-4xl"></span>
+          <span className="text-4xl"><InboxIcon className="w-9 h-9" aria-hidden="true" /></span>
           <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noReturns", "No return requests yet.")}</p>
           <Link to="/products" className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-[var(--brand-primary)] hover:underline">{t("account.continueShopping", "Continue Shopping")} →</Link>
         </div>

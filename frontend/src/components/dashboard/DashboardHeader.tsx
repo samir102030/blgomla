@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, BellIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../stores/user.store";
 
@@ -42,7 +42,7 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
             className="lg:hidden p-2 rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
             aria-label="Open menu"
           >
- <span className="text-xl"></span>
+            <span className="text-xl"><Bars3Icon className="w-5 h-5" aria-hidden="true" /></span>
           </button>
 
           <div className="hidden sm:block relative flex-1 max-w-lg">
@@ -83,7 +83,7 @@ const DashboardHeader: React.FC<HeaderProps> = ({ onMenuClick }) => {
               className="relative p-2 rounded-md text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
               aria-label="Notifications"
             >
- <span className="text-lg"></span>
+              <span className="text-lg"><BellIcon className="w-5 h-5" aria-hidden="true" /></span>
               {notifications.length > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 text-[10px] font-bold rounded-full bg-[var(--brand-primary)] text-white flex items-center justify-center">
                   {notifications.length}

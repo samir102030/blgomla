@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { DocumentTextIcon, ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from 'react-i18next';
 import { axiosInstance } from '../../lib/axios';
 import { toast } from 'react-hot-toast';
@@ -547,7 +547,7 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
               {selectedFile && (
                 <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-md border border-gray-300 dark:border-slate-700">
                   <div className="flex items-center space-x-2">
- <span className="text-2xl"></span>
+                    <span className="text-2xl"><DocumentTextIcon className="w-6 h-6" aria-hidden="true" /></span>
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{selectedFile.name}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">

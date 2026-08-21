@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { CubeIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../lib/axios";
@@ -321,7 +322,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = "" }) => {
                                   className="w-full h-full object-contain"
                                 />
                               ) : (
- <div className="w-full h-full flex items-center justify-center text-lg"></div>
+                                <div className="w-full h-full flex items-center justify-center text-lg"><CubeIcon className="w-5 h-5" aria-hidden="true" /></div>
                               )}
                             </div>
                             <div className="flex-grow min-w-0">

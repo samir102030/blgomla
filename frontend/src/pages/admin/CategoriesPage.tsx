@@ -1,15 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  MagnifyingGlassIcon,
-  PlusIcon,
-  ArrowUpTrayIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowUpTrayIcon, ChevronDownIcon, ChevronRightIcon, EyeIcon, FolderIcon, MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useCategoryStore } from "../../stores/category.store";
 import type { Category } from "../../types/category.type";
 import CategoryModal from "../../components/CategoryModal";
@@ -225,7 +216,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><FolderIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -238,7 +229,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><FolderIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -251,7 +242,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><FolderIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -264,7 +255,7 @@ const CategoriesPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-orange-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><FolderIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>

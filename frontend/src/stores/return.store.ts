@@ -28,7 +28,7 @@ export const useReturnStore = create<ReturnStore>((set, get) => ({
         success: boolean;
         returns: ReturnRequest[];
       }>("/returns/my-returns");
-      set({ returns: res.data.returns, loading: false });
+      set({ returns: res.data.returns ?? [], loading: false });
     } catch (error: any) {
       set({
         error: error?.response?.data?.message || error.message,
@@ -44,7 +44,7 @@ export const useReturnStore = create<ReturnStore>((set, get) => ({
         success: boolean;
         returns: ReturnRequest[];
       }>("/returns");
-      set({ returns: res.data.returns, loading: false });
+      set({ returns: res.data.returns ?? [], loading: false });
     } catch (error: any) {
       set({
         error: error?.response?.data?.message || error.message,

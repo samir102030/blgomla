@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  MagnifyingGlassIcon,
-  PlusIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  FunnelIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon, CubeIcon, ExclamationTriangleIcon, EyeIcon, FunnelIcon, MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import { useProductStore } from "../../stores/product.store";
 import { useBrandStore } from "../../stores/brand.store";
@@ -495,7 +486,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><CubeIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -510,7 +501,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><CubeIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -526,7 +517,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><CubeIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -539,7 +530,7 @@ const ProductsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><CubeIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -814,10 +805,10 @@ const ProductsPage: React.FC = () => {
                         {product.stock}
                       </span>
                       {product.stock < 30 && product.stock > 0 && (
- <span className="text-yellow-500"></span>
+                        <span className="text-yellow-500"><ExclamationTriangleIcon className="w-5 h-5" aria-hidden="true" /></span>
                       )}
                       {product.stock === 0 && (
- <span className="text-red-500"></span>
+                        <span className="text-red-500"><XCircleIcon className="w-5 h-5" aria-hidden="true" /></span>
                       )}
                     </div>
                   </td>

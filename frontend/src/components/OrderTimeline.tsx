@@ -1,6 +1,6 @@
 import React from "react";
 import type { ComponentType, SVGProps } from "react";
-import { BanknotesIcon, CheckCircleIcon, ClockIcon, Cog6ToothIcon, CreditCardIcon, CubeIcon, SparklesIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { BanknotesIcon, CheckCircleIcon, ClipboardDocumentListIcon, ClockIcon, Cog6ToothIcon, CreditCardIcon, CubeIcon, SparklesIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 
 interface TimelineEvent {
@@ -33,7 +33,7 @@ const OrderTimeline: React.FC<OrderTimelineProps> = ({ events, currentStatus: _c
   if (!events || events.length === 0) {
     return (
       <div className="text-center py-6 text-[var(--text-muted)]">
- <p className="text-lg mb-1"></p>
+        <p className="text-lg mb-1"><ClipboardDocumentListIcon className="w-5 h-5" aria-hidden="true" /></p>
         <p className="text-sm">{t("No tracking updates yet")}</p>
       </div>
     );

@@ -49,7 +49,7 @@ export const useOrderStore = create<OrderStore>((set) => ({
         success: boolean;
         orders: Order[];
       }>("/orders", { params });
-      set({ orders: res.data.orders, loading: false });
+      set({ orders: res.data.orders ?? [], loading: false });
     } catch (error: any) {
       set({
         error: error?.response?.data?.message || error.message,
@@ -80,7 +80,7 @@ export const useOrderStore = create<OrderStore>((set) => ({
         success: boolean;
         orders: Order[];
       }>(`/orders/my-orders`);
-      set({ orders: res.data.orders, loading: false });
+      set({ orders: res.data.orders ?? [], loading: false });
     } catch (error: any) {
       set({
         error: error?.response?.data?.message || error.message,

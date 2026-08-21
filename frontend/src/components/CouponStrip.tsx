@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { TagIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { axiosInstance } from "../lib/axios";
 import type { Coupon } from "../types/coupon.type";
@@ -31,7 +32,7 @@ const CouponStrip: React.FC<{ title?: string }> = ({ title }) => {
   return (
     <section className="shell py-6">
       <h2 className="text-lg sm:text-xl font-bold text-[var(--text)] mb-3 flex items-center gap-2">
- <span aria-hidden="true"></span>
+        <span aria-hidden="true"><TagIcon className="w-5 h-5" aria-hidden="true" /></span>
         {title || t("Collect Coupons")}
       </h2>
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x">

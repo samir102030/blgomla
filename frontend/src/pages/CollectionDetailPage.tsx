@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CheckCircleIcon, ShieldCheckIcon, StarIcon, TruckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, MagnifyingGlassIcon, ShieldCheckIcon, StarIcon, TruckIcon, WrenchScrewdriverIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import PageHero from "../components/PageHero";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -132,7 +132,7 @@ const CollectionDetailPage: React.FC = () => {
         <Header />
         <div className="flex items-center justify-center py-24">
           <div className="text-center">
- <div className="text-5xl mb-4"></div>
+            <div className="text-5xl mb-4"><MagnifyingGlassIcon className="w-9 h-9" aria-hidden="true" /></div>
             <h2 className="text-xl font-bold text-[var(--text)] mb-2">
               {t("Bundle Not Found")}
             </h2>
@@ -311,7 +311,7 @@ const CollectionDetailPage: React.FC = () => {
                   disagree about what the customer asked for. */}
               {installOffered && (
                 <div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 mb-5">
- <span className="text-base"></span>
+                  <span className="text-base"><WrenchScrewdriverIcon className="w-5 h-5" aria-hidden="true" /></span>
                   <span className="text-xs text-[var(--text-muted)]">
                     {installPrice > 0
                       ? `${t("Installation available for")} EGP ${installPrice.toLocaleString()}`
@@ -412,7 +412,7 @@ const CollectionDetailPage: React.FC = () => {
 
             {quotationSuccess ? (
               <div className="p-8 text-center">
- <div className="text-5xl mb-4"></div>
+            <div className="text-5xl mb-4"><MagnifyingGlassIcon className="w-9 h-9" aria-hidden="true" /></div>
                 <h3 className="text-lg font-bold text-[var(--text)] mb-2">
                   {t("Quotation Submitted!")}
                 </h3>

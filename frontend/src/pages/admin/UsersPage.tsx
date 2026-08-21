@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  MagnifyingGlassIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
-  UserIcon,
-  ArrowPathIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowPathIcon, EyeIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon, UserIcon, UsersIcon } from "@heroicons/react/24/outline";
 import { useUserStore } from "../../stores/user.store";
 import AuditTrail from "../../components/admin/AuditTrail";
 import { axiosInstance } from "../../lib/axios";
@@ -183,7 +176,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><UsersIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -196,7 +189,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><UsersIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -209,7 +202,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><UsersIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -222,7 +215,7 @@ const UsersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><UsersIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>

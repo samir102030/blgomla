@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -183,7 +184,7 @@ const InstallationOrdersPage: React.FC = () => {
         </div>
       ) : orders.length === 0 ? (
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-12 text-center">
- <div className="text-4xl mb-3"></div>
+          <div className="text-4xl mb-3"><WrenchScrewdriverIcon className="w-9 h-9" aria-hidden="true" /></div>
           <p className="text-sm font-medium text-[var(--text)]">
             {t("installations.empty", "No installation jobs here")}
           </p>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { ComponentType, SVGProps } from "react";
-import { ArrowUpTrayIcon, BellIcon, BuildingStorefrontIcon, ChartBarIcon, CubeIcon, LockClosedIcon, MapPinIcon, ShieldCheckIcon, UserIcon } from "@heroicons/react/24/outline";
+import { ArrowRightOnRectangleIcon, ArrowUpTrayIcon, BellIcon, BuildingStorefrontIcon, ChartBarIcon, CubeIcon, LockClosedIcon, MapPinIcon, PencilIcon, ShieldCheckIcon, UserIcon } from "@heroicons/react/24/outline";
 import Breadcrumb from "../components/Breadcrumb";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
@@ -103,7 +103,7 @@ const MyAccountPage: React.FC = () => {
  <span className="text-4xl">{user?.name?.[0]?.toUpperCase() || ""}</span>
                 )}
               </div>
- <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 ltr:-right-1 rtl:-left-1 w-7 h-7 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform" aria-label={t("account.editProfile", "Edit profile")}></button>
+              <button onClick={() => setActiveTab("profile")} className="absolute -bottom-1 ltr:-right-1 rtl:-left-1 w-7 h-7 bg-[var(--surface)] rounded-full flex items-center justify-center shadow-md text-xs hover:scale-110 transition-transform" aria-label={t("account.editProfile", "Edit profile")}><PencilIcon className="w-5 h-5" aria-hidden="true" /></button>
             </div>
             {/* Info */}
             <div className="text-center sm:text-start">
@@ -146,7 +146,7 @@ const MyAccountPage: React.FC = () => {
             ))}
             <hr className="border-[var(--border)] my-1" />
             <button onClick={() => { if (confirm(t("account.logoutConfirm", "Are you sure you want to logout?"))) logout(); }} className="w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
- <span className="text-base"></span>{t("account.logout", "Logout")}
+              <span className="text-base"><ArrowRightOnRectangleIcon className="w-5 h-5" aria-hidden="true" /></span>{t("account.logout", "Logout")}
             </button>
           </div>
         )}
@@ -186,7 +186,7 @@ const MyAccountPage: React.FC = () => {
 
                 {/* Logout */}
                 <button onClick={() => { if (confirm(t("account.logoutConfirm", "Are you sure you want to logout?"))) logout(); }} className="w-full px-3.5 py-3 rounded-2xl border border-red-200 dark:border-red-500/20 flex items-center gap-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all group">
- <span className="text-lg"></span>
+                  <span className="text-lg"><ArrowRightOnRectangleIcon className="w-5 h-5" aria-hidden="true" /></span>
                   <span className="text-sm font-medium">{t("account.logout", "Logout")}</span>
                 </button>
 

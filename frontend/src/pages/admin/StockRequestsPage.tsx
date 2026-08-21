@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { InboxIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { axiosInstance } from "../../lib/axios";
@@ -306,7 +307,7 @@ const StockRequestsPage: React.FC = () => {
               {requests.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-4 py-12 text-center">
- <div className="text-3xl mb-2"></div>
+                    <div className="text-3xl mb-2"><InboxIcon className="w-7 h-7" aria-hidden="true" /></div>
                     <p className="text-gray-500 font-medium">{t("stockRequests.empty")}</p>
                     <p className="text-sm text-gray-400 mt-1">{t("stockRequests.emptyHint")}</p>
                   </td>

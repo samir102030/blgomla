@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { EyeIcon, MagnifyingGlassIcon, PauseCircleIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, MagnifyingGlassIcon, PauseCircleIcon, PencilIcon, PlusIcon, TagIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useBrandStore } from "../../stores/brand.store";
 import BrandModal from "../../components/BrandModal";
 import ViewBrandModal from "../../components/ViewBrandModal";
@@ -106,7 +106,7 @@ const BrandsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><TagIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -119,7 +119,7 @@ const BrandsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><TagIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -145,7 +145,7 @@ const BrandsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><TagIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>

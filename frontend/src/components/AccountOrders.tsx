@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowPathIcon, CheckCircleIcon, ClockIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, CheckCircleIcon, ClockIcon, CubeIcon, InboxIcon, TruckIcon, XCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useOrderStore } from "../stores/order.store";
 import { useReturnStore } from "../stores/return.store";
 import { useTranslation } from "react-i18next";
@@ -85,7 +85,7 @@ const AccountOrders: React.FC = () => {
 
       {(!orders || orders.length === 0) ? (
         <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-10 text-center">
- <span className="text-4xl"></span>
+          <span className="text-4xl"><InboxIcon className="w-9 h-9" aria-hidden="true" /></span>
           <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noOrders", "No orders yet.")}</p>
           <Link to="/products" className="inline-flex items-center gap-1.5 mt-3 text-sm font-semibold text-[var(--brand-primary)] hover:underline">{t("account.startShopping", "Start Shopping")} →</Link>
         </div>
@@ -128,7 +128,7 @@ const AccountOrders: React.FC = () => {
       {showOrderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
- <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowOrderModal(false)} aria-label="Close"></button>
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowOrderModal(false)} aria-label="Close"><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
             <div className="mb-6">
               <h2 className="text-xl font-bold text-[var(--text)]">{t("account.orderDetails", "Order Details")}</h2>
               <div className="h-1 w-16 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-full mt-2"></div>
@@ -191,7 +191,7 @@ const AccountOrders: React.FC = () => {
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>"; }}
                                 className="w-full h-full object-cover"
                               />
- ) : <span className="text-lg text-[var(--text-subtle)]"></span>}
+                            ) : <span className="text-lg text-[var(--text-subtle)]"><CubeIcon className="w-5 h-5" aria-hidden="true" /></span>}
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-[var(--text)] truncate">
@@ -224,7 +224,7 @@ const AccountOrders: React.FC = () => {
       {showReturnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
- <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowReturnModal(false)} aria-label="Close"></button>
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowReturnModal(false)} aria-label="Close"><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
             <div className="mb-5">
               <h2 className="text-xl font-bold text-[var(--text)]">{t("account.requestReturn", "Request Return")}</h2>
               <p className="text-xs text-[var(--text-muted)] mt-1">{t("account.returnOrderId", "Order")} #{selectedReturnOrder?._id?.slice(-8)?.toUpperCase()}</p>

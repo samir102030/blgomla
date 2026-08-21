@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { SignalIcon } from "@heroicons/react/24/outline";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import { useBrandStore } from "../stores/brand.store";
 import ProductCard from "./ProductCard";
@@ -241,7 +242,7 @@ const BrandsContent: React.FC = () => {
             {/* No Products Message */}
             {sortedProducts.length === 0 && (
               <div className="text-center py-12">
- <div className="text-gray-400 text-6xl mb-4"></div>
+                <div className="text-gray-400 text-6xl mb-4"><SignalIcon className="w-9 h-9" aria-hidden="true" /></div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   No products found
                 </h3>

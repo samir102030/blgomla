@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { GiftIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
@@ -53,7 +54,7 @@ const ReferralCard: React.FC = () => {
   return (
     <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border border-amber-500/15 rounded-2xl p-4 mb-8">
       <div className="flex items-center gap-2 mb-2">
- <span className="text-xl"></span>
+        <span className="text-xl"><GiftIcon className="w-5 h-5" aria-hidden="true" /></span>
         <h3 className="text-base font-bold text-[var(--text)]">
           {t("Refer friends, earn points")}
         </h3>

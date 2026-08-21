@@ -1,5 +1,5 @@
 import React, { useMemo, useState, lazy, Suspense } from "react";
-import { BriefcaseIcon, CameraIcon, GlobeAltIcon, PuzzlePieceIcon } from "@heroicons/react/24/outline";
+import { BriefcaseIcon, CameraIcon, GlobeAltIcon, PuzzlePieceIcon, ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { useSectionOrder } from "../layout/useLayout";
 import ProductCard from "../components/ProductCard";
 import Header from "../components/Header";
@@ -683,7 +683,7 @@ const HomePage: React.FC = () => {
             {/* Empty state */}
             {!loadingAll && allProducts.length === 0 && (
               <div className="text-center py-16 animate-fadeIn">
- <p className="text-5xl mb-4 animate-float"></p>
+                <p className="text-5xl mb-4 animate-float"><ShoppingBagIcon className="w-9 h-9" aria-hidden="true" /></p>
                 <h3 className="text-xl font-bold text-[var(--text)] mb-2">
                   {t("No products yet")}
                 </h3>

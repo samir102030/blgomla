@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  CalendarIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import { useAnalyticsStore } from "../../stores/analytics.store";
 import { useTranslation } from "react-i18next";
 import { useMoney } from "../../lib/money";
@@ -600,7 +596,7 @@ const SalesPage: React.FC = () => {
               </div>
             ) : (
               <div className="text-center">
- <div className="text-4xl mb-2"></div>
+                <div className="text-4xl mb-2"><ChartBarIcon className="w-9 h-9" aria-hidden="true" /></div>
                 <p className="text-gray-600">{t("sales.loadingTrend")}</p>
                 <p className="text-sm text-gray-500">
                   {t("sales.chartPlaceholder")}

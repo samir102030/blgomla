@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -38,7 +39,7 @@ const AccountPassword: React.FC = () => {
       </div>
 
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 mb-6 flex items-start gap-3">
- <span className="text-xl shrink-0"></span>
+        <span className="text-xl shrink-0"><LockClosedIcon className="w-5 h-5" aria-hidden="true" /></span>
         <div>
           <p className="text-sm font-medium text-blue-800 dark:text-blue-300">{t("account.passwordTip", "Security Tip")}</p>
           <p className="text-xs text-blue-600 dark:text-blue-400/70">{t("account.passwordTipDesc", "Use a strong password with at least 8 characters, including uppercase, lowercase, numbers, and symbols.")}</p>

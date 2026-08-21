@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { ShoppingBagIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
 import PageHero from "../components/PageHero";
@@ -54,7 +55,7 @@ const DealsPage: React.FC = () => {
             </div>
           ) : saleProducts.length === 0 ? (
             <div className="text-center py-16 text-[var(--text-muted)]">
- <div className="text-5xl mb-3"></div>
+              <div className="text-5xl mb-3"><ShoppingBagIcon className="w-9 h-9" aria-hidden="true" /></div>
               <p>{t("No active deals right now. Check back soon!")}</p>
             </div>
           ) : (

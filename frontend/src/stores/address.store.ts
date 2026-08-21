@@ -50,7 +50,7 @@ export const useAddressStore = create<AddressStore>((set) => ({
         success: boolean;
         addresses: Address[];
       }>("/addresses", { params });
-      set({ addresses: res.data.addresses, loading: false });
+      set({ addresses: res.data.addresses ?? [], loading: false });
     } catch (error: any) {
       set({
         error: error?.response?.data?.message || error.message,
@@ -78,12 +78,16 @@ export const useAddressStore = create<AddressStore>((set) => ({
   fetchUserAddresses: async () => {
     set({ loading: true, error: undefined });
     try {
+      // No trailing slash. One was there, and Vercel's rewrite did not match
+      // it, so this asked the API for addresses and got the single-page app's
+      // own HTML back with a 200 — from which res.data.addresses read
+      // undefined and the page rendered a crash.
       const res = await axiosInstance.get<{
         success: boolean;
         addresses: Address[];
-      }>(`/addresses/`);
+      }>(`/addresses`);
       // }>(`/addresses/user/${userId}`);
-      set({ addresses: res.data.addresses, loading: false });
+      set({ addresses: res.data.addresses ?? [], loading: false });
     } catch (error: any) {
       set({
         error: error?.response?.data?.message || error.message,

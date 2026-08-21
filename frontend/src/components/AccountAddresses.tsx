@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { MapPinIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAddressStore } from "../stores/address.store";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
@@ -67,7 +68,7 @@ const AccountAddresses: React.FC = () => {
 
       {addresses.length === 0 ? (
         <div className="bg-[var(--surface-2)] rounded-2xl border border-[var(--border)] p-10 text-center">
- <span className="text-4xl"></span>
+          <span className="text-4xl"><MapPinIcon className="w-9 h-9" aria-hidden="true" /></span>
           <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noAddresses", "No addresses saved yet. Add one to speed up checkout!")}</p>
         </div>
       ) : (
@@ -103,7 +104,7 @@ const AccountAddresses: React.FC = () => {
       {showAddressModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
- <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors" onClick={() => setShowAddressModal(false)} aria-label="Close"></button>
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors" onClick={() => setShowAddressModal(false)} aria-label="Close"><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
             <div className="mb-5">
               <h2 className="text-xl font-bold text-[var(--text)]">{editingAddress ? t("account.editAddress", "Edit Address") : t("account.addNewAddress", "Add New Address")}</h2>
               <p className="text-xs text-[var(--text-muted)] mt-1">{t("account.addressFormDesc", "Fill in your shipping or billing details.")}</p>

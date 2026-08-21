@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClockIcon } from "@heroicons/react/24/outline";
+import { BuildingStorefrontIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from 'react-i18next';
 import { useVendorStore } from '../../../stores/vendor.store';
 
@@ -81,7 +81,7 @@ const VendorAnalytics: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-[var(--brand-primary)]/10 rounded-lg">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><BuildingStorefrontIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.totalVendors')}</p>
@@ -93,7 +93,7 @@ const VendorAnalytics: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-green-100 rounded-lg">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><BuildingStorefrontIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.approved')}</p>
@@ -117,7 +117,7 @@ const VendorAnalytics: React.FC = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-red-100 rounded-lg">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><BuildingStorefrontIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">{t('vendorAnalytics.rejected')}</p>

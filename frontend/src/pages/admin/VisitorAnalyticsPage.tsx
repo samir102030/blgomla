@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { ChartBarIcon } from "@heroicons/react/24/outline";
 import { useTranslation } from "react-i18next";
 import {
   FiUsers,
@@ -511,7 +512,7 @@ const StatCard: React.FC<{
 
 const EmptyState: React.FC<{ message: string }> = ({ message }) => (
   <div className="flex flex-col items-center justify-center py-8 text-center">
- <div className="text-4xl mb-3 text-gray-300"></div>
+    <div className="text-4xl mb-3 text-gray-300"><ChartBarIcon className="w-9 h-9" aria-hidden="true" /></div>
     <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
   </div>
 );

@@ -1,8 +1,5 @@
 import React, { useState } from "react";
-import {
-  ExclamationTriangleIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useBrandStore } from "../stores/brand.store";
 import { useTranslation } from "react-i18next";
 import { useMoney } from "../lib/money";
@@ -183,7 +180,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
             <div className="mt-4 p-3 bg-yellow-50 dark:bg-amber-500/10 border border-yellow-200 dark:border-amber-500/30 rounded-lg">
               <div className="flex">
                 <div className="flex-shrink-0">
- <span className="text-yellow-400 dark:text-amber-200"></span>
+                  <span className="text-yellow-400 dark:text-amber-200"><ExclamationTriangleIcon className="w-5 h-5" aria-hidden="true" /></span>
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-yellow-800 dark:text-amber-200">
@@ -220,7 +217,7 @@ const DeleteProductModal: React.FC<DeleteProductModalProps> = ({
               </>
             ) : (
               <>
- <span></span>
+                <span><TrashIcon className="w-5 h-5" aria-hidden="true" /></span>
                 {t("modal.deleteProduct.deleteButton")}
               </>
             )}

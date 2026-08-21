@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { GiftIcon, HeartIcon, MagnifyingGlassIcon, ShoppingCartIcon, SparklesIcon, StarIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import PageHero from "../components/PageHero";
@@ -132,7 +133,7 @@ const WishlistPage: React.FC = () => {
             <Link to={`/product/${item._id}`}><h3 className="text-sm font-semibold text-[var(--text)] line-clamp-1 hover:text-[var(--brand-primary)] transition-colors">{item.name}</h3></Link>
             {item.description && <p className="text-xs text-[var(--text-muted)] line-clamp-1 mt-0.5">{item.description}</p>}
             <div className="flex items-center gap-2 mt-1.5">
- {item.rating > 0 && <div className="flex items-center gap-1"><span className="text-amber-400 text-xs"></span><span className="text-xs text-[var(--text-muted)]">{item.rating.toFixed(1)}</span></div>}
+              {item.rating > 0 && <div className="flex items-center gap-1"><span className="text-amber-400 text-xs"><StarIcon className="w-5 h-5" aria-hidden="true" /></span><span className="text-xs text-[var(--text-muted)]">{item.rating.toFixed(1)}</span></div>}
               {item.stock > 0 && item.stock <= 5 && <span className="text-[10px] text-orange-500 font-medium">{t("wishlist.onlyLeft", "Only {{count}} left!", { count: item.stock })}</span>}
             </div>
           </div>
@@ -142,7 +143,7 @@ const WishlistPage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={() => handleAddToCart(item._id!)} disabled={isAddingToCart || outOfStock} className="px-3 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white hover:shadow-lg transition-all disabled:opacity-50">
- {isAddingToCart ? "..." : <span></span>}
+              {isAddingToCart ? "..." : <span><ShoppingCartIcon className="w-5 h-5" aria-hidden="true" /></span>}
             </button>
             <button onClick={() => handleToggleLove(item._id!)} disabled={isRemoving} className="p-2 rounded-xl border border-red-200 dark:border-red-500/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -173,7 +174,7 @@ const WishlistPage: React.FC = () => {
         <div className="p-4">
           <Link to={`/product/${item._id}`}><h3 className="text-sm font-semibold text-[var(--text)] line-clamp-2 leading-snug hover:text-[var(--brand-primary)] transition-colors">{item.name}</h3></Link>
           <div className="flex items-center gap-1.5 mt-2">
- {item.rating > 0 && (<><div className="flex">{[...Array(5)].map((_, i) => <span key={i} className={`text-xs ${i < Math.round(item.rating) ? "text-amber-400" : "text-[var(--border)]"}`}></span>)}</div><span className="text-[10px] text-[var(--text-subtle)]">({item.reviews?.length || 0})</span></>)}
+            {item.rating > 0 && (<><div className="flex">{[...Array(5)].map((_, i) => <span key={i} className={`text-xs ${i < Math.round(item.rating) ? "text-amber-400" : "text-[var(--border)]"}`}><StarIcon className="w-5 h-5" aria-hidden="true" /></span>)}</div><span className="text-[10px] text-[var(--text-subtle)]">({item.reviews?.length || 0})</span></>)}
           </div>
           <div className="flex items-baseline gap-2 mt-2">
             <span className="text-lg font-bold text-[var(--text)]">{getEffectivePrice(item).toLocaleString()} <span className="text-xs font-normal text-[var(--text-muted)]">EGP</span></span>
@@ -222,7 +223,7 @@ const WishlistPage: React.FC = () => {
           {userLoading && lovedProducts.length === 0 ? (
             <div className="text-center py-20">
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--surface-2)] mb-4 animate-pulse">
- <span className="text-3xl"></span>
+                <span className="text-3xl"><HeartIcon className="w-7 h-7" aria-hidden="true" /></span>
               </div>
               <p className="text-[var(--text-muted)]">{t("wishlist.loading", "Loading your wishlist...")}</p>
             </div>
@@ -231,9 +232,9 @@ const WishlistPage: React.FC = () => {
             <div className="text-center py-16 max-w-lg mx-auto">
               <div className="relative inline-block mb-6">
                 <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-rose-100 to-pink-50 dark:from-rose-500/10 dark:to-pink-500/10 flex items-center justify-center mx-auto">
- <span className="text-5xl"></span>
+                  <span className="text-5xl"><GiftIcon className="w-9 h-9" aria-hidden="true" /></span>
                 </div>
- <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[var(--surface-2)] border-2 border-[var(--border)] rounded-full flex items-center justify-center text-sm"></div>
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[var(--surface-2)] border-2 border-[var(--border)] rounded-full flex items-center justify-center text-sm"><SparklesIcon className="w-5 h-5" aria-hidden="true" /></div>
               </div>
               <h2 className="text-2xl font-bold text-[var(--text)] mb-2">{t("wishlist.emptyTitle", "Your Wishlist is Empty")}</h2>
               <p className="text-sm text-[var(--text-muted)] mb-8 leading-relaxed">{t("wishlist.emptyDesc", "Start exploring our products and tap the heart icon on items you love. They'll appear here for easy access.")}</p>
@@ -292,7 +293,7 @@ const WishlistPage: React.FC = () => {
               {/* ===== PRODUCTS ===== */}
               {filteredProducts.length === 0 ? (
                 <div className="text-center py-12">
- <span className="text-4xl"></span>
+                  <span className="text-4xl"><MagnifyingGlassIcon className="w-9 h-9" aria-hidden="true" /></span>
                   <p className="text-[var(--text-muted)] mt-3">{t("wishlist.noResults", "No items match your search.")}</p>
                   <button onClick={() => setSearchQuery("")} className="text-sm text-[var(--brand-primary)] font-semibold mt-2 hover:underline">{t("wishlist.clearSearch", "Clear search")}</button>
                 </div>

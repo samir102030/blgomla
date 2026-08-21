@@ -2,12 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
-import {
-  CheckIcon,
-  XMarkIcon,
-  ClockIcon,
-  MagnifyingGlassIcon,
-} from "@heroicons/react/24/outline";
+import { CheckIcon, ClockIcon, MagnifyingGlassIcon, TagIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface BrandRequest {
   _id: string;
@@ -198,7 +193,7 @@ const RequestsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><TagIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>
@@ -211,7 +206,7 @@ const RequestsPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><TagIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>

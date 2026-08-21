@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StarIcon } from "@heroicons/react/24/outline";
+import { BanknotesIcon, BuildingStorefrontIcon, ChartBarIcon, ClipboardDocumentListIcon, CubeIcon, PlusIcon, ShoppingCartIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useVendorStore } from '../../stores/vendor.store';
 import { useUserStore } from '../../stores/user.store';
 import { useTranslation } from 'react-i18next';
@@ -79,7 +79,7 @@ const VendorDashboard: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-shrink-0">
               <div className="w-7 sm:w-8 h-7 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center">
- <span className="text-blue-600 text-base sm:text-lg"></span>
+                <span className="text-blue-600 text-base sm:text-lg"><CubeIcon className="w-5 h-5" aria-hidden="true" /></span>
               </div>
             </div>
             <div className="min-w-0">
@@ -95,7 +95,7 @@ const VendorDashboard: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-shrink-0">
               <div className="w-7 sm:w-8 h-7 sm:h-8 bg-green-100 rounded-full flex items-center justify-center">
- <span className="text-green-600 text-base sm:text-lg"></span>
+                <span className="text-green-600 text-base sm:text-lg"><ShoppingCartIcon className="w-5 h-5" aria-hidden="true" /></span>
               </div>
             </div>
             <div className="min-w-0">
@@ -111,7 +111,7 @@ const VendorDashboard: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex-shrink-0">
               <div className="w-7 sm:w-8 h-7 sm:h-8 bg-yellow-100 rounded-full flex items-center justify-center">
- <span className="text-yellow-600 text-base sm:text-lg"></span>
+                <span className="text-yellow-600 text-base sm:text-lg"><BanknotesIcon className="w-5 h-5" aria-hidden="true" /></span>
               </div>
             </div>
             <div className="min-w-0">
@@ -146,7 +146,7 @@ const VendorDashboard: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
           <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
             <div className="w-8 sm:w-10 h-8 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
- <span className="text-blue-600 text-sm sm:text-lg"></span>
+              <span className="text-blue-600 text-sm sm:text-lg"><PlusIcon className="w-5 h-5" aria-hidden="true" /></span>
             </div>
             <div className="text-left">
               <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.addProduct')}</p>
@@ -156,7 +156,7 @@ const VendorDashboard: React.FC = () => {
 
           <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
             <div className="w-8 sm:w-10 h-8 sm:h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
- <span className="text-green-600 text-sm sm:text-lg"></span>
+              <span className="text-green-600 text-sm sm:text-lg"><ClipboardDocumentListIcon className="w-5 h-5" aria-hidden="true" /></span>
             </div>
             <div className="text-left">
               <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.viewOrders')}</p>
@@ -166,7 +166,7 @@ const VendorDashboard: React.FC = () => {
 
           <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
             <div className="w-8 sm:w-10 h-8 sm:h-10 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
- <span className="text-yellow-600 text-sm sm:text-lg"></span>
+              <span className="text-yellow-600 text-sm sm:text-lg"><BuildingStorefrontIcon className="w-5 h-5" aria-hidden="true" /></span>
             </div>
             <div className="text-left">
               <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.storeSettings')}</p>
@@ -176,7 +176,7 @@ const VendorDashboard: React.FC = () => {
 
           <button className="flex flex-col sm:flex-row sm:items-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-2 sm:gap-3">
             <div className="w-8 sm:w-10 h-8 sm:h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
- <span className="text-purple-600 text-sm sm:text-lg"></span>
+              <span className="text-purple-600 text-sm sm:text-lg"><ChartBarIcon className="w-5 h-5" aria-hidden="true" /></span>
             </div>
             <div className="text-left">
               <p className="font-medium text-xs sm:text-sm lg:text-base text-gray-900">{t('vendor.analytics')}</p>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { ExclamationTriangleIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { useSearchParams } from "react-router-dom";
 import ProductFilterSidebar from "./ProductFilterSidebar";
 import AdvertisementBanner from "./AdvertisementBanner";
@@ -464,7 +465,7 @@ const ProductsContent: React.FC = () => {
                 ))
               ) : error ? (
                 <div className="col-span-full text-center py-12">
- <p className="text-4xl mb-3"></p>
+                  <p className="text-4xl mb-3"><ExclamationTriangleIcon className="w-9 h-9" aria-hidden="true" /></p>
                   <p className="text-[var(--text-muted)]">{error}</p>
                 </div>
               ) : (
@@ -537,7 +538,7 @@ const ProductsContent: React.FC = () => {
             {/* No Products */}
             {totalProducts === 0 && !loading && (
               <div className="text-center py-16">
- <div className="text-6xl mb-4"></div>
+                <div className="text-6xl mb-4"><MagnifyingGlassIcon className="w-9 h-9" aria-hidden="true" /></div>
                 <h3 className="text-lg font-bold text-[var(--text)] mb-2">
                   {t("No products found")}
                 </h3>

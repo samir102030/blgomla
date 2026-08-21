@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { ComponentType, SVGProps } from "react";
-import { ArrowTrendingUpIcon, BanknotesIcon, BoltIcon, BuildingOffice2Icon, BuildingStorefrontIcon, CameraIcon, ChartBarIcon, CheckCircleIcon, ClipboardDocumentListIcon, CreditCardIcon, CubeIcon, DevicePhoneMobileIcon, DocumentTextIcon, EnvelopeIcon, FlagIcon, LockClosedIcon, PencilSquareIcon, PhoneIcon, ShieldCheckIcon, TagIcon } from "@heroicons/react/24/outline";
+import { ArrowTrendingUpIcon, BanknotesIcon, BoltIcon, BuildingOffice2Icon, BuildingStorefrontIcon, CameraIcon, ChartBarIcon, CheckCircleIcon, ClipboardDocumentListIcon, CreditCardIcon, CubeIcon, DevicePhoneMobileIcon, DocumentTextIcon, EnvelopeIcon, ExclamationTriangleIcon, FlagIcon, LockClosedIcon, PencilSquareIcon, PhoneIcon, ShieldCheckIcon, TagIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useVendorStore } from "../stores/vendor.store";
@@ -711,7 +711,7 @@ const VendorRegistrationPage: React.FC = () => {
             htmlFor="commercial-registration-upload"
             className="cursor-pointer flex flex-col items-center"
           >
- <div className="text-4xl mb-2"></div>
+            <div className="text-4xl mb-2"><DocumentTextIcon className="w-9 h-9" aria-hidden="true" /></div>
             <p className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step1.clickToUpload")}
             </p>
@@ -1038,7 +1038,7 @@ const VendorRegistrationPage: React.FC = () => {
             htmlFor="store-logo-upload"
             className="cursor-pointer flex flex-col items-center"
           >
- <div className="text-4xl mb-2"></div>
+            <div className="text-4xl mb-2"><DocumentTextIcon className="w-9 h-9" aria-hidden="true" /></div>
             <p className="text-sm text-[var(--text-muted)]">
               {t("vendorRegistration.step3.uploadLogoDescription")}
             </p>
@@ -1082,7 +1082,7 @@ const VendorRegistrationPage: React.FC = () => {
               htmlFor="tax-card-upload"
               className="cursor-pointer flex flex-col items-center"
             >
- <div className="text-2xl mb-2"></div>
+              <div className="text-2xl mb-2"><DocumentTextIcon className="w-6 h-6" aria-hidden="true" /></div>
               <p className="text-sm text-[var(--text-muted)]">{t("vendorRegistration.step4.uploadTaxCard", "Upload Tax Card")}</p>
             </label>
             {documents.taxCard && (
@@ -1143,7 +1143,7 @@ const VendorRegistrationPage: React.FC = () => {
             htmlFor="bank-statement-upload"
             className="cursor-pointer flex flex-col items-center"
           >
- <div className="text-2xl mb-2"></div>
+              <div className="text-2xl mb-2"><DocumentTextIcon className="w-6 h-6" aria-hidden="true" /></div>
             <p className="text-sm text-[var(--text-muted)]">{t("vendorRegistration.step4.uploadBankStatement", "Upload Bank Statement")}</p>
           </label>
           {documents.bankStatement && (
@@ -1257,7 +1257,7 @@ const VendorRegistrationPage: React.FC = () => {
 
       <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/25 p-6 rounded-lg mb-6">
         <div className="flex items-center mb-3">
- <div className="text-2xl mr-3"></div>
+          <div className="text-2xl mr-3"><LockClosedIcon className="w-6 h-6" aria-hidden="true" /></div>
           <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100">
             {t("vendorRegistration.step5.accountSection.title")}
           </h3>
@@ -1395,7 +1395,7 @@ const VendorRegistrationPage: React.FC = () => {
 
         <div className="bg-amber-50 dark:bg-amber-500/10 p-4 rounded-lg border border-amber-200 dark:border-amber-500/30">
           <div className="flex items-start">
- <div className="text-amber-600 dark:text-amber-300 mr-2"></div>
+            <div className="text-amber-600 dark:text-amber-300 mr-2"><ExclamationTriangleIcon className="w-5 h-5" aria-hidden="true" /></div>
             <div>
               <h4 className="text-sm font-medium text-amber-800 dark:text-amber-100 mb-1">
                 {t("vendorRegistration.step5.securityNote.title")}

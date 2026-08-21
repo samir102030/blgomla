@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { CheckIcon, EyeIcon, EyeSlashIcon, FunnelIcon, MagnifyingGlassIcon, StarIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ChatBubbleLeftRightIcon, CheckIcon, EyeIcon, EyeSlashIcon, FunnelIcon, MagnifyingGlassIcon, StarIcon, TrashIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { useReviewStore } from "../../stores/review.store";
 import { useUserStore } from "../../stores/user.store";
@@ -345,7 +345,7 @@ const CustomerReviewsPage: React.FC = () => {
                   </p>
                 </div>
                 <div className="bg-[var(--brand-primary)]/10 p-3 rounded-full">
- <span className="text-2xl"></span>
+                  <span className="text-2xl"><ChatBubbleLeftRightIcon className="w-6 h-6" aria-hidden="true" /></span>
                 </div>
               </div>
             </div>
@@ -808,7 +808,7 @@ const CustomerReviewsPage: React.FC = () => {
 
             {reviews.length === 0 && !loading && (
               <div className="text-center py-12">
- <div className="text-gray-400 text-6xl mb-4"></div>
+                <div className="text-gray-400 text-6xl mb-4"><ChatBubbleLeftRightIcon className="w-9 h-9" aria-hidden="true" /></div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   {t("reviews.noReviewsFound")}
                 </h3>

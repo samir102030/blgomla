@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { CubeIcon, LockClosedIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
@@ -119,7 +120,7 @@ const OrderTrackingPage: React.FC = () => {
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!user ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-10 text-center">
- <span className="text-4xl"></span>
+            <span className="text-4xl"><LockClosedIcon className="w-9 h-9" aria-hidden="true" /></span>
             <p className="text-sm text-[var(--text-muted)] mt-3">
               {t("tracking.signInPrompt", "Please sign in to track your order.")}
             </p>
@@ -136,7 +137,7 @@ const OrderTrackingPage: React.FC = () => {
           </div>
         ) : !showThisOrder ? (
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-10 text-center">
- <span className="text-4xl"></span>
+            <span className="text-4xl"><LockClosedIcon className="w-9 h-9" aria-hidden="true" /></span>
             <p className="text-sm text-[var(--text-muted)] mt-3">
               {error ||
                 t(
@@ -175,7 +176,7 @@ const OrderTrackingPage: React.FC = () => {
             {/* Stepper / cancelled banner */}
             {isCancelled ? (
               <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl p-5 flex items-center gap-3">
- <span className="text-2xl"></span>
+                <span className="text-2xl"><XCircleIcon className="w-6 h-6" aria-hidden="true" /></span>
                 <div>
                   <p className="font-semibold text-red-700 dark:text-red-400">
                     {t("tracking.cancelledTitle", "This order was cancelled")}
@@ -324,7 +325,7 @@ const OrderTrackingPage: React.FC = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
- <span className="text-lg text-[var(--text-subtle)]"></span>
+                          <span className="text-lg text-[var(--text-subtle)]"><CubeIcon className="w-5 h-5" aria-hidden="true" /></span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">

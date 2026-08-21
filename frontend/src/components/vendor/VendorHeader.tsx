@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BanknotesIcon, BellIcon, ShoppingCartIcon, StarIcon } from "@heroicons/react/24/outline";
+import { BanknotesIcon, BellIcon, MagnifyingGlassIcon, ShoppingCartIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserStore } from '../../stores/user.store';
 import { useVendorStore } from '../../stores/vendor.store';
 import { useTranslation } from 'react-i18next';
@@ -71,7 +71,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
           <div className="ml-4 flex-1 max-w-lg">
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
- <span className="text-gray-400"></span>
+                <span className="text-gray-400"><MagnifyingGlassIcon className="w-5 h-5" aria-hidden="true" /></span>
               </div>
               <input
                 type="text"
@@ -118,7 +118,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 text-gray-400 hover:text-gray-500 relative"
             >
- <span className="text-xl"></span>
+              <span className="text-xl"><BellIcon className="w-5 h-5" aria-hidden="true" /></span>
               <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
             </button>
 
@@ -154,7 +154,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
 
           {/* Quick Actions */}
           <button className="p-2 text-gray-400 hover:text-gray-500" title={t('vendor.quickAddProduct')}>
- <span className="text-xl"></span>
+              <span className="text-xl"><BellIcon className="w-5 h-5" aria-hidden="true" /></span>
           </button>
 
           {/* Profile Dropdown */}

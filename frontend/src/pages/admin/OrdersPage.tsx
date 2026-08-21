@@ -341,7 +341,7 @@ const OrdersPage: React.FC = () => {
               </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
- <span className="text-2xl"></span>
+              <span className="text-2xl"><ClockIcon className="w-6 h-6" aria-hidden="true" /></span>
             </div>
           </div>
         </div>

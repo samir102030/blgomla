@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowPathIcon, BanknotesIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, ClockIcon, CubeIcon, HeartIcon, ShoppingBagIcon, StarIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, BanknotesIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, ClockIcon, CubeIcon, HeartIcon, InboxIcon, ShoppingBagIcon, StarIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useTranslation } from "react-i18next";
@@ -75,7 +75,7 @@ const AccountDashboard: React.FC = () => {
       {/* ===== ACTIVE ORDERS ALERT ===== */}
       {pendingOrders > 0 && (
         <div className="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 mb-6">
- <span className="text-2xl"></span>
+          <span className="text-2xl"><CubeIcon className="w-6 h-6" aria-hidden="true" /></span>
           <div className="flex-1">
             <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">{t("account.activeOrders", "You have {{count}} active order(s)", { count: pendingOrders })}</p>
             <p className="text-xs text-amber-600 dark:text-amber-400/70">{t("account.activeOrdersDesc", "Check the orders tab for tracking and details.")}</p>
@@ -93,7 +93,7 @@ const AccountDashboard: React.FC = () => {
 
         {(!orders || orders.length === 0) ? (
           <div className="bg-[var(--surface-2)] rounded-2xl p-8 text-center border border-[var(--border)]">
- <span className="text-4xl"></span>
+            <span className="text-4xl"><InboxIcon className="w-9 h-9" aria-hidden="true" /></span>
             <p className="text-sm text-[var(--text-muted)] mt-3">{t("account.noOrders", "No orders yet. Start shopping to see your orders here!")}</p>
             <Link to="/products" className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-[var(--brand-primary)] hover:underline">{t("account.startShopping", "Start Shopping")} →</Link>
           </div>
