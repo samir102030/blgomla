@@ -87,6 +87,34 @@ const AdminsPage: React.FC = () => {
     }
   };
 
+  /**
+   * Suspend or reinstate an account.
+   *
+   * The way a staff member leaves. Deleting the row would take their audit
+   * trail with it and orphan every price they ever set, so the account stays
+   * and stops being able to log in.
+   */
+  const setActive = async (user: User, active: boolean) => {
+    try {
+      await axiosInstance.put(
+        `/users/${active ? "activateUser" : "deactivateUser"}/${user._id}`,
+      );
+      setAdmins((prev) =>
+        prev.map((a) => (a._id === user._id ? { ...a, active } : a)),
+      );
+      toast.success(
+        active
+          ? t("staff.reinstated", "Account reinstated")
+          : t("staff.suspended", "Account suspended"),
+      );
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          t("staff.activeFailed", "Could not change the account"),
+      );
+    }
+  };
+
   const formatExpiry = (date?: string) => {
     if (!date) return "No time set";
     const d = new Date(date);
@@ -265,6 +293,20 @@ const AdminsPage: React.FC = () => {
                           {t("admins.endNow")}
                         </button>
                         </>
+                        )}
+                        {admin.role !== "super_admin" && (
+                          <button
+                            onClick={() => setActive(admin, !admin.active)}
+                            className={
+                              admin.active
+                                ? "px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200"
+                                : "px-3 py-2 rounded-lg bg-green-100 text-green-700 text-sm font-semibold hover:bg-green-200"
+                            }
+                          >
+                            {admin.active
+                              ? t("staff.suspend", "Suspend")
+                              : t("staff.reinstate", "Reinstate")}
+                          </button>
                         )}
                       </div>
                     </td>

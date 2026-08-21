@@ -4110,5 +4110,10 @@
   "staff.create": "Create and choose categories",
   "staff.creating": "Creating...",
   "staff.created": "Account created",
-  "staff.createFailed": "Could not create the account"
+  "staff.createFailed": "Could not create the account",
+  "staff.suspend": "Suspend",
+  "staff.reinstate": "Reinstate",
+  "staff.suspended": "Account suspended",
+  "staff.reinstated": "Account reinstated",
+  "staff.activeFailed": "Could not change the account"
 }

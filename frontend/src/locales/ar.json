@@ -4110,5 +4110,10 @@
   "staff.create": "إنشاء وتحديد الأقسام",
   "staff.creating": "جاري الإنشاء...",
   "staff.created": "تم إنشاء الحساب.",
-  "staff.createFailed": "تعذّر إنشاء الحساب."
+  "staff.createFailed": "تعذّر إنشاء الحساب.",
+  "staff.suspend": "إيقاف",
+  "staff.reinstate": "إعادة تفعيل",
+  "staff.suspended": "تم إيقاف الحساب.",
+  "staff.reinstated": "تم إعادة تفعيل الحساب.",
+  "staff.activeFailed": "تعذّر تغيير حالة الحساب."
 }
