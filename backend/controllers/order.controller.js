@@ -689,6 +689,31 @@ export const createOrder = controllerWrapper(
   }
 );
 
+/**
+ * Narrow a query to orders containing one of this account's products.
+ *
+ * A category manager holds orders.view so they can work their own section,
+ * and without this that would mean every order in the shop — the same reach
+ * an administrator has. Their section is the point: they see an order
+ * because something of theirs is in it.
+ *
+ * Returns the filter unchanged for an unscoped account, which is every
+ * administrator.
+ */
+const narrowToScope = async (user, filter) => {
+  const { scopedCategoryIds } = await import("../utils/categoryScope.js");
+  const allowed = await scopedCategoryIds(user);
+  if (!allowed) return filter;
+
+  // The ids only — the products themselves are not wanted here, and this
+  // runs on an indexed field.
+  const productIds = await Product.find({
+    category: { $in: [...allowed].map((id) => new mongoose.Types.ObjectId(id)) },
+  }).distinct("_id");
+
+  return { ...filter, "orderItems.product": { $in: productIds } };
+};
+
 export const getOrders = controllerWrapper("getOrders", async (req, res) => {
   let query = {};
   let populateOptions = ["user", "orderItems.product", "shippingAddress"];
@@ -699,8 +724,9 @@ export const getOrders = controllerWrapper("getOrders", async (req, res) => {
   // the customer branch below and were served only orders they placed
   // themselves — an empty list, for staff who don't shop here.
   if (await reachesAllStores(req.user)) {
-    // Staff get all orders
-    query = {};
+    // Staff get all orders — or, for somebody put in charge of part of the
+    // catalogue, the orders their part appears in.
+    query = await narrowToScope(req.user, {});
   } else if (req.user.role === "store") {
     // Store/vendor gets orders that contain products from their store(s)
     const vendorStores = await Store.find({ owner: req.user._id }).select(
@@ -868,8 +894,10 @@ export const getOrderById = controllerWrapper(
         .json({ success: false, message: "Order not found" });
 
     // Ownership: customers may only view their own orders; store users only
-    // orders for stores they own; admins/super_admins any order. Without this
-    // any authenticated user could read any order (and its buyer) by id.
+    // orders for stores they own; staff put in charge of part of the
+    // catalogue only orders their part appears in; admins/super_admins any
+    // order. Without this any authenticated user could read any order (and
+    // its buyer) by id.
     const role = req.user.role;
     if (role !== "admin" && role !== "super_admin") {
       if (role === "store") {
@@ -884,7 +912,22 @@ export const getOrderById = controllerWrapper(
       } else {
         const orderUserId =
           order.user?._id?.toString() ?? order.user?.toString();
-        if (orderUserId !== req.user._id.toString())
+        const isBuyer = orderUserId === req.user._id.toString();
+
+        // A section manager reads an order because something of theirs is in
+        // it. Checked against the order in hand rather than by re-querying:
+        // orderItems.product is already populated above.
+        const { scopedCategoryIds } = await import("../utils/categoryScope.js");
+        const allowed = await scopedCategoryIds(req.user);
+        const touchesTheirSection =
+          Boolean(allowed) &&
+          (order.orderItems || []).some((item) => {
+            const category = item.product?.category;
+            if (!category) return false;
+            return allowed.has(String(category._id || category));
+          });
+
+        if (!isBuyer && !touchesTheirSection)
           return res
             .status(403)
             .json({ success: false, message: "Not authorized to view this order" });
