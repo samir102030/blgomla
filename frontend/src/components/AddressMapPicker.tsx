@@ -28,6 +28,8 @@ export interface PickedAddress {
   address: string;
   city: string;
   state: string;
+  /** Often absent in Egypt; the forms treat it as optional. */
+  postcode?: string;
   lat: number;
   lng: number;
 }
@@ -60,7 +62,7 @@ const reverseGeocode = async (
   const address =
     data.display_name ||
     [a.road, a.neighbourhood, a.suburb].filter(Boolean).join(", ");
-  return { address, city, state, lat, lng };
+  return { address, city, state, postcode: a.postcode || undefined, lat, lng };
 };
 
 const LocationMarker: React.FC<{

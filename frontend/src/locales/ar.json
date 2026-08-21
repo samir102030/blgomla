@@ -4130,5 +4130,6 @@
   "login.shareLocation": "شارك موقع التوصيل",
   "login.shareLocationDesc": "بيتحفظ في حسابك، فإتمام الطلب بعد كده بيبقى خطوة واحدة.",
   "login.optional": "اختياري",
-  "login.openMap": "افتح الخريطة"
+  "login.openMap": "افتح الخريطة",
+  "checkout.findOnMap": "حدّد عنوانك على الخريطة"
 }

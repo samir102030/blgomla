@@ -18,7 +18,6 @@ import { getBaseUnitPrice, getBulkPricing } from "../lib/pricing";
 import { resolveShippingFee, type ShippingSettings } from "../lib/shipping";
 import { cldImg } from "../lib/cldImage";
 import FeaturedProducts from "../components/FeaturedProducts";
-import GovernorateSelect from "../components/GovernorateSelect";
 // import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
@@ -123,7 +122,6 @@ const ShoppingCartPage: React.FC = () => {
 
   const [shippingSettings, setShippingSettings] =
     useState<ShippingSettings | null>(null);
-  const [selectedGovernorate, setSelectedGovernorate] = useState("");
 
   const [couponCode, setCouponCode] = useState("");
 
@@ -561,14 +559,11 @@ const ShoppingCartPage: React.FC = () => {
   const subtotal = cartItems.reduce((sum, item) => sum + getItemTotal(item), 0);
   const shippingCost = resolveShippingFee(
     shippingSettings,
-    { state: selectedGovernorate },
+    // No governorate to match on any more; this resolves to the standing
+    // fee, and checkout recomputes it from the delivery address.
+    {},
     subtotal
   );
-  const freeShippingThreshold = Number(
-    shippingSettings?.freeShippingThreshold || 0
-  );
-  const amountToFreeShipping =
-    freeShippingThreshold > 0 ? freeShippingThreshold - subtotal : 0;
 
   // Calculate coupon discount
   const calculateCouponDiscount = () => {
@@ -1144,63 +1139,13 @@ const ShoppingCartPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
             {/* Left Column - Shipping & Coupon */}
             <div className="space-y-4 sm:space-y-6">
-              {/* Estimate Shipping */}
-              {shippingSettings?.enabled !== false && (
-                <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm">
-                  <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
-                    {t("Estimate Shipping")}
-                  </h3>
-                  {/*
-                    Every governorate, not only the ones with a zone saved
-                    against them. The list was the zones, so a shop that had
-                    configured none — this one — offered nothing to choose
-                    and the estimate could never be asked for. Anywhere
-                    without its own rate falls through to the default fee,
-                    which is what resolveShippingFee already did.
-                  */}
-                  <GovernorateSelect
-                    value={selectedGovernorate}
-                    onChange={setSelectedGovernorate}
-                    className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm bg-[var(--surface)] text-[var(--text)]"
-                  />
-                  <div className="mt-3 flex items-center justify-between text-xs sm:text-sm">
-                    <span className="text-[var(--text-muted)]">
-                      {t("Estimated shipping")}
-                    </span>
-                    <span className="font-semibold text-[var(--text)]">
-                      {shippingCost === 0
-                        ? t("Free")
-                        : `${shippingCost.toLocaleString("en-EG", { maximumFractionDigits: 2 })} ${t("EGP")}`}
-                    </span>
-                  </div>
-                  {freeShippingThreshold > 0 && (
-                    <div className="mt-3">
-                      {amountToFreeShipping > 0 ? (
-                        <p className="text-xs text-[var(--text)] mb-1.5">
-                          {t("Add {{amount}} EGP more to get free shipping!", {
-                            amount: amountToFreeShipping.toLocaleString("en-EG", { maximumFractionDigits: 2 }),
-                          })}
-                        </p>
-                      ) : (
-                        <p className="text-xs font-semibold text-green-500 mb-1.5 inline-flex items-center gap-1">
- {t("You unlocked FREE shipping!")}
-                        </p>
-                      )}
-                      <div className="h-2 w-full rounded-full bg-[var(--surface-3)] overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#00A8E8] to-[#0077B6] transition-all duration-500"
-                          style={{
-                            width: `${Math.min(100, (subtotal / freeShippingThreshold) * 100)}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  <p className="mt-2 text-[10px] sm:text-xs text-[var(--text-subtle)]">
-                    {t("Final shipping is confirmed at checkout based on your address.")}
-                  </p>
-                </div>
-              )}
+              {/*
+                The shipping estimator used to sit here. It asked for a
+                governorate to guess a fee that checkout then works out
+                properly from the real address — so it was a question asked
+                twice, and the second answer was the only one that counted.
+                The summary still shows the standing fee.
+              */}
 
               {/* Discount Coupon */}
               <div className="bg-[var(--surface)] p-4 sm:p-6 rounded-lg shadow-sm border border-[var(--border)]">

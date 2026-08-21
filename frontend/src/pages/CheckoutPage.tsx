@@ -77,16 +77,21 @@ const CheckoutPage: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [couponCode, setCouponCode] = useState("");
   const [shippingSettings, setShippingSettings] = useState<ShippingSettings | null>(null);
-  const [showMap, setShowMap] = useState(false);
 
   // Map picker fills the address fields and switches to the "new address" path.
+  /** A dropped pin fills the form under it. */
   const handleMapSelect = (a: PickedAddress) => {
+    // Whatever was picked describes a new address, not the saved one that
+    // happened to be selected.
     setSelectedAddressId("");
     setBillingData((prev) => ({
       ...prev,
       address1: a.address || prev.address1,
       city: a.city || prev.city,
       state: a.state || prev.state,
+      // Egyptian addresses often have no postcode at all, so this only
+      // ever adds one — it never clears what somebody typed.
+      zipCode: a.postcode || prev.zipCode,
     }));
   };
 
@@ -897,28 +902,23 @@ const CheckoutPage: React.FC = () => {
                     />
                   </div>
 
-                  {/* Map / address picker — fills the fields below */}
+                  {/*
+                    On screen, not behind a link. This is how most people
+                    here give an address — street names are inconsistent and
+                    a pin is not — and a map nobody opens is a map nobody
+                    uses. Picking fills the fields below it.
+                  */}
                   <div>
-                    <button
-                      type="button"
-                      onClick={() => setShowMap((s) => !s)}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                    <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
+                      {t("checkout.findOnMap", "Find your address on the map")}
+                    </label>
+                    <Suspense
+                      fallback={
+                        <div className="text-sm text-[var(--text-muted)]">{t("Loading map…")}</div>
+                      }
                     >
- {showMap ? t("Hide map") : t("Pick address on map")}
-                    </button>
-                    {showMap && (
-                      <div className="mt-3">
-                        <Suspense
-                          fallback={
-                            <div className="text-sm text-[var(--text-muted)]">
-                              {t("Loading map…")}
-                            </div>
-                          }
-                        >
-                          <AddressMapPicker onSelect={handleMapSelect} />
-                        </Suspense>
-                      </div>
-                    )}
+                      <AddressMapPicker onSelect={handleMapSelect} />
+                    </Suspense>
                   </div>
 
                   <div>
