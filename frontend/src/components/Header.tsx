@@ -568,15 +568,15 @@ const Header: React.FC = () => {
       <div className="mn-site-width">
         <div className="mn-nav-row justify-between gap-4">
           {/* Logo — Belgomla MarkBag (geometric B with bag handle) + wordmark */}
-          {/* Drawn from the same artwork as the app icon rather than the
-              design package's outlined symbol, so the mark in the header and
-              the one on a home screen are one logo instead of two drawings of
-              the same letter. SVG, because it is rendered at 48px here and
-              37px in the dashboard and a raster mark was soft at both. */}
+          {/* The design package's symbol, hue-shifted from its orange to the
+              site's accent blue rather than redrawn: the shape is the brand.
+              Its accent dots went white in the same pass, since blue dots on
+              a blue trace are no dots at all. brand-symbol-orange.png beside
+              it is the original, kept so the change is one command to undo. */}
           <Link to="/" className="mn-brand" aria-label={t("brand.homeLabel", "Belgomla home")}>
             <img
               className="mn-brand-mark"
-              src="/manus/brand-symbol.svg"
+              src="/manus/brand-symbol.webp"
               alt=""
               width={48}
               height={48}
