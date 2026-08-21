@@ -642,10 +642,15 @@ export const createOrder = controllerWrapper(
       if (res.headersSent) {
         return;
       }
-      res.status(500).json({
+      // A refusal the caller can act on — an unpriced product, a product that
+      // is not the store's — is a 400 and says so plainly. Only a genuine
+      // failure is a 500, so the uptime monitor pages on the second and not
+      // on somebody trying to buy something that is quoted.
+      const status = error.status || 500;
+      res.status(status).json({
         success: false,
-        message: "Failed to create order",
-        error: error.message,
+        message: status === 500 ? "Failed to create order" : error.message,
+        ...(status === 500 ? { error: error.message } : {}),
       });
     } finally {
       session.endSession();
