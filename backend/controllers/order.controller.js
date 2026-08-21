@@ -445,9 +445,30 @@ export const createOrder = controllerWrapper(
       // Step 2c: Compute shipping authoritatively from the address governorate
       // (never trust a client-sent shipping price).
       const shippingSettings = await getShippingSettings();
-      const addressDoc = await Address.findById(shippingAddress)
+      // Scoped to the buyer, and required to exist.
+      //
+      // findById took whatever id it was handed. Two things followed. An id
+      // that was not an address at all still produced an order — `|| {}`
+      // below quietly stood in for it — leaving a delivery nobody could
+      // make against a reference pointing at nothing. And an id belonging to
+      // somebody else was accepted onto your own order, which getOrderById
+      // then populates for you: any signed-in customer could read another's
+      // name, phone and street by putting their address id on an order of
+      // their own.
+      const addressDoc = await Address.findOne({
+        _id: shippingAddress,
+        user: req.user._id,
+      })
         .select("city state")
         .session(session);
+
+      if (!addressDoc) {
+        const err = new Error(
+          "That delivery address could not be found on your account. Pick one of your saved addresses.",
+        );
+        err.status = 400;
+        throw err;
+      }
       // Prefer live carrier rates when configured (Accurate, then Bosta); fall
       // back to the admin zone rates. Honor a free-shipping threshold regardless
       // of source.
@@ -457,15 +478,15 @@ export const createOrder = controllerWrapper(
         itemsPrice >= Number(shippingSettings.freeShippingThreshold);
       let liveFee = null;
       if (!freeByThreshold && isAccurateEnabled()) {
-        liveFee = await getAccurateShippingFee(addressDoc || {}, itemsPrice);
+        liveFee = await getAccurateShippingFee(addressDoc, itemsPrice);
       }
       if (liveFee == null && !freeByThreshold && isBostaEnabled()) {
-        liveFee = await getBostaShippingFee(addressDoc || {});
+        liveFee = await getBostaShippingFee(addressDoc);
       }
       shippingPrice =
         liveFee != null
           ? liveFee
-          : resolveShippingFee(shippingSettings, addressDoc || {}, itemsPrice);
+          : resolveShippingFee(shippingSettings, addressDoc, itemsPrice);
 
       // Calculate final prices. Fitting is added after the discount because a
       // coupon discounts goods, not labour — folding it into itemsPrice would
