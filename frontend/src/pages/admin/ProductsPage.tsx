@@ -15,6 +15,7 @@ import DeleteProductModal from "../../components/DeleteProductModal";
 import FilterModal, { type ProductFilters } from "../../components/FilterModal";
 import BulkProductUpload from "../../components/vendor/BulkProductUpload";
 import { useIsPlatformStaff } from "../../lib/permissions";
+import { useScopedCategories } from "../../lib/categoryScope";
 
 const ProductsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -60,7 +61,6 @@ const ProductsPage: React.FC = () => {
   const brands = useBrandStore((s) => s.brands);
   const fetchBrands = useBrandStore((s) => s.fetchBrands);
 
-  const categories = useCategoryStore((s) => s.categories);
   const fetchCategories = useCategoryStore((s) => s.fetchCategories);
 
   const { user } = useUserStore();
@@ -160,7 +160,10 @@ const ProductsPage: React.FC = () => {
 
   // defensive defaults in case stores aren't hydrated yet
   const safeBrands = brands ?? [];
-  const safeCategories = categories ?? [];
+  // Only the branches this account is responsible for. The filter dropdown
+  // and the add/edit forms all read from here, so a scoped account is neither
+  // offered somebody else's section nor able to file a product into it.
+  const safeCategories = useScopedCategories();
 
   // Helper to display category name whether populated or id (RTL-aware).
   const getCategoryName = (product: any) => {
