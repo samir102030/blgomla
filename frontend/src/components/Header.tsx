@@ -839,80 +839,94 @@ const Header: React.FC = () => {
         </div>
       </nav>
 
-      {/* Mobile drawer — slides in from the right */}
-      <div
-        className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${
-          isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-        aria-hidden={!isMenuOpen}
-      >
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-black/40"
-          onClick={() => setIsMenuOpen(false)}
-        />
-        {/* Panel */}
-        <aside
-          className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] bg-[var(--surface)] shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
-            isMenuOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
-            <span className="text-base font-semibold text-[var(--text)]">
-              {t("Menu", "Menu")}
-            </span>
-            <button
-              onClick={() => setIsMenuOpen(false)}
-              aria-label="Close menu"
-              className="w-9 h-9 rounded-lg hover:bg-[var(--surface-2)] flex items-center justify-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          <nav className="flex-1 overflow-y-auto px-2 py-3">
-            <ul className="flex flex-col gap-1">
-              {navigationItems
-                .filter((item) => item.condition === undefined || item.condition)
-                .map((item) => (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={`block py-3 px-4 text-base font-medium text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors ${item.className || ""}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-            </ul>
-
-            {/* Where the header's toggle went on small screens. */}
-            <div className="mt-3 pt-3 border-t border-[var(--border)] sm:hidden">
-              <div className="flex items-center justify-between px-4 py-1">
-                <span className="text-base font-medium text-[var(--text)]">
-                  {t("Appearance", "Appearance")}
-                </span>
-                <ThemeToggle showLabel={false} />
-              </div>
-            </div>
-
-            <div className="mt-3 pt-3 border-t border-[var(--border)]">
-              <div className="flex items-center gap-1.5 px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
-                <Squares2X2Icon className="w-3.5 h-3.5" />
-                {t("Shop by Category")}
-              </div>
-              {/* Same tree as the desktop bar, expanded in place — the drawer
-                  is where the deeper levels were previously unreachable. */}
-              <CategoryAccordion onNavigate={() => setIsMenuOpen(false)} />
-            </div>
-          </nav>
-        </aside>
-      </div>
     </header>
+      {/*
+        Outside <header> on purpose.
+
+        The header carries backdrop-filter, and a filtered element becomes the
+        containing block for any position:fixed inside it — so `inset-0` here
+        resolved to the header's own box. On a phone that made the drawer 121
+        pixels tall instead of the full screen: the menu opened and showed one
+        item.
+
+        The mn-scope wrapper keeps the box-sizing, font and colour the drawer
+        was inheriting from the header, so only its containing block changes.
+      */}
+      <div className="mn-scope">
+        {/* Mobile drawer — slides in from the right */}
+        <div
+          className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-300 ${
+            isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
+          aria-hidden={!isMenuOpen}
+        >
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          {/* Panel */}
+          <aside
+            className={`absolute top-0 right-0 h-full w-72 max-w-[85vw] bg-[var(--surface)] shadow-2xl flex flex-col transform transition-transform duration-300 ease-out ${
+              isMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border)]">
+              <span className="text-base font-semibold text-[var(--text)]">
+                {t("Menu", "Menu")}
+              </span>
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                aria-label="Close menu"
+                className="w-9 h-9 rounded-lg hover:bg-[var(--surface-2)] flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex-1 overflow-y-auto px-2 py-3">
+              <ul className="flex flex-col gap-1">
+                {navigationItems
+                  .filter((item) => item.condition === undefined || item.condition)
+                  .map((item) => (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        className={`block py-3 px-4 text-base font-medium text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors ${item.className || ""}`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+  
+              {/* Where the header's toggle went on small screens. */}
+              <div className="mt-3 pt-3 border-t border-[var(--border)] sm:hidden">
+                <div className="flex items-center justify-between px-4 py-1">
+                  <span className="text-base font-medium text-[var(--text)]">
+                    {t("Appearance", "Appearance")}
+                  </span>
+                  <ThemeToggle showLabel={false} />
+                </div>
+              </div>
+  
+              <div className="mt-3 pt-3 border-t border-[var(--border)]">
+                <div className="flex items-center gap-1.5 px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
+                  <Squares2X2Icon className="w-3.5 h-3.5" />
+                  {t("Shop by Category")}
+                </div>
+                {/* Same tree as the desktop bar, expanded in place — the drawer
+                    is where the deeper levels were previously unreachable. */}
+                <CategoryAccordion onNavigate={() => setIsMenuOpen(false)} />
+              </div>
+            </nav>
+          </aside>
+        </div>
+      </div>
     </>
   );
 };
