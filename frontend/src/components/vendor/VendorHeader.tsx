@@ -5,6 +5,7 @@ import { useVendorStore } from '../../stores/vendor.store';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../lib/i18n';
 import ThemeToggle from '../ThemeToggle';
+import { switchLanguage } from "../../lib/i18n";
 
 interface VendorHeaderProps {
   onMenuClick: () => void;
@@ -89,7 +90,7 @@ const VendorHeader: React.FC<VendorHeaderProps> = ({ onMenuClick }) => {
               aria-label={t('Language')}
               value={language}
               onChange={(e) => {
-                i18n.changeLanguage(e.target.value);
+                switchLanguage(e.target.value);
                 setLanguage(e.target.value);
               }}
               className="bg-white border border-gray-300 rounded-md px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors"

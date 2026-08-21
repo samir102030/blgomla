@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import Logo from "../components/Logo";
 import CountdownTimer from "../components/CountdownTimer";
 import { useSiteModeStore, type SiteModePublic } from "../stores/siteMode.store";
+import { switchLanguage } from "../lib/i18n";
 
 const SocialIcon: React.FC<{ href: string; label: string; d: string }> = ({
   href,
@@ -88,7 +89,7 @@ const ComingSoonPage: React.FC<Props> = ({ mode }) => {
   };
 
   const toggleLang = () => {
-    i18n.changeLanguage(lang === "en" ? "ar" : "en");
+    switchLanguage(lang === "en" ? "ar" : "en");
   };
 
   const socials = mode?.socialLinks || {};

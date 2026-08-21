@@ -24,6 +24,7 @@ import { AllCategoriesMenu, CategoryAccordion } from "./CategoryNav";
 import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
 import { useCan } from "../lib/permissions";
+import { switchLanguage } from "../lib/i18n";
 
 interface NavigationItem {
   label: string;
@@ -616,7 +617,7 @@ const Header: React.FC = () => {
               type="button"
               onClick={() => {
                 const next = language === "en" ? "ar" : "en";
-                i18n.changeLanguage(next);
+                switchLanguage(next);
                 setLanguage(next);
               }}
               aria-label={t("Language")}

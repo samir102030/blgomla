@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { switchLanguage } from "../lib/i18n";
 
 /**
  * Admin language toggle — compact circular button that matches the rest of
@@ -11,12 +12,11 @@ const AdminLanguageToggle: React.FC = () => {
   const { i18n, t } = useTranslation();
   const isAr = i18n.language === "ar";
 
-  const toggleLanguage = () => {
-    const newLang = isAr ? "en" : "ar";
-    i18n.changeLanguage(newLang);
-    document.documentElement.dir = newLang === "ar" ? "rtl" : "ltr";
-    document.documentElement.lang = newLang;
-  };
+  // Direction and lang are set centrally in App, off the languageChanged
+  // event. Setting them here too used to be harmless duplication; now that
+  // the switch waits for the bundle it would run first, flipping the layout
+  // to RTL a moment before anything on it was in Arabic.
+  const toggleLanguage = () => switchLanguage(isAr ? "en" : "ar");
 
   // Show the language the user will SWITCH TO, so the tap is self-explanatory.
   const targetLabel = isAr ? "EN" : "ع";
