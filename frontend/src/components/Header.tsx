@@ -23,6 +23,7 @@ import { cldImg } from "../lib/cldImage";
 import { AllCategoriesMenu, CategoryAccordion } from "./CategoryNav";
 import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
+import { useCan } from "../lib/permissions";
 
 interface NavigationItem {
   label: string;
@@ -83,6 +84,7 @@ const readRecent = (): string[] => {
 const Header: React.FC = () => {
   const { t } = useTranslation();
   const user = useUserStore((state) => state.user);
+  const can = useCan();
   const logout = useUserStore((state) => state.logout);
   const categories = useCategoryStore((state) => state.categories);
   const fetchCategories = useCategoryStore((state) => state.fetchCategories);
@@ -328,8 +330,17 @@ const Header: React.FC = () => {
 
   const role = user?.role;
   const showBecomeVendor = !role || role === "customer";
+  // Whoever the dashboard would actually let in. Listing the roles by hand
+  // meant a category manager — an account created for the dashboard and
+  // nothing else — signed in, landed on the storefront, and found no way to
+  // reach it short of typing the URL. `dashboard.view` is the same test
+  // RequireDashboardAccess applies at the door; the roles stay beside it for
+  // sessions persisted from before permissions were sent with the login.
   const showAdminDashboard =
-    role === "admin" || role === "store" || role === "super_admin";
+    can("dashboard.view") ||
+    role === "admin" ||
+    role === "store" ||
+    role === "super_admin";
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -675,6 +686,16 @@ const Header: React.FC = () => {
                     >
                       {t("My Account")}
                     </Link>
+                    {showAdminDashboard && (
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setUserMenuOpen(false)}
+                        role="menuitem"
+                        className="block px-3 py-2 text-sm font-semibold text-[var(--brand-accent)] hover:bg-[var(--surface-2)] transition-colors"
+                      >
+                        {t("Admin Dashboard")}
+                      </Link>
+                    )}
                     <Link
                       to="/account/notifications"
                       onClick={() => setUserMenuOpen(false)}
