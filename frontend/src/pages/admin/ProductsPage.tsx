@@ -14,6 +14,7 @@ import EditProductModal from "../../components/EditProductModal";
 import DeleteProductModal from "../../components/DeleteProductModal";
 import FilterModal, { type ProductFilters } from "../../components/FilterModal";
 import BulkProductUpload from "../../components/vendor/BulkProductUpload";
+import { useIsPlatformStaff } from "../../lib/permissions";
 
 const ProductsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -64,8 +65,11 @@ const ProductsPage: React.FC = () => {
 
   const { user } = useUserStore();
   const { vendorStore, fetchVendorStore } = useVendorStore();
-  const isAdminLike =
-    user?.role === "admin" || user?.role === "super_admin";
+  // Not `role === "admin"`. That spelling excluded super_admins once and
+  // excludes every custom role now — including an account created to manage
+  // one section of the catalogue, which then rendered this page having sent
+  // no request at all: an empty table over 5,656 products it could read.
+  const isAdminLike = useIsPlatformStaff();
 
   useEffect(() => {
     fetchBrands();

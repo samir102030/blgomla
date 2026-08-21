@@ -18,12 +18,16 @@ import {
   getExportPages,
 } from "../../lib/exporters";
 import OperationsBacklog from "../../components/admin/OperationsBacklog";
+import { useIsPlatformStaff } from "../../lib/permissions";
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useUserStore();
-  const isAdminLike =
-    user?.role === "admin" || user?.role === "super_admin";
+  // Not `role === "admin"`. That spelling excluded super_admins once and
+  // excludes every custom role now — including an account created to manage
+  // one section of the catalogue, which then rendered this page having sent
+  // no request at all: an empty table over 5,656 products it could read.
+  const isAdminLike = useIsPlatformStaff();
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [selectedPageIds, setSelectedPageIds] = useState<string[]>([]);

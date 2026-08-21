@@ -5,12 +5,16 @@ import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { useReviewStore } from "../../stores/review.store";
 import { useUserStore } from "../../stores/user.store";
 import toast from "react-hot-toast";
+import { useIsPlatformStaff } from "../../lib/permissions";
 
 const CustomerReviewsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useUserStore();
-  const isAdminLike =
-    user?.role === "admin" || user?.role === "super_admin";
+  // Not `role === "admin"`. That spelling excluded super_admins once and
+  // excludes every custom role now — including an account created to manage
+  // one section of the catalogue, which then rendered this page having sent
+  // no request at all: an empty table over 5,656 products it could read.
+  const isAdminLike = useIsPlatformStaff();
   const {
     reviews,
     stats,

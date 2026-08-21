@@ -1,6 +1,6 @@
 import React from "react";
 import { WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../components/admin/AdminLayout";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import OrdersPage from "../pages/admin/OrdersPage";
@@ -47,6 +47,7 @@ import StudentsFacultiesPage from "../pages/admin/students/StudentsFacultiesPage
 import StudentsMembersPage from "../pages/admin/students/StudentsMembersPage";
 import StudentsOfferPage from "../pages/admin/students/StudentsOfferPage";
 import { RequirePermission } from "../components/Can";
+import { useCan } from "../lib/permissions";
 
 const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
   title,
@@ -64,12 +65,26 @@ const PlaceholderPage: React.FC<{ title: string; description: string }> = ({
 const AdminRoutes: React.FC = () => {
   const user = useUserStore((s) => s.user);
   const isVendor = user?.role === "store";
+  const canSeeStats = useCan()("analytics.view");
 
   return (
     <AdminLayout>
       <Routes>
         {/* Main Dashboard */}
-        <Route path="/" element={<AdminDashboard />} />
+        {/*
+          The landing page is a wall of totals — revenue, orders, customers —
+          and every one of them comes from an endpoint that requires
+          analytics.view. An account without it does not get an error, it gets
+          zeros, which reads as "your section is empty" rather than "you are
+          not allowed to see this". Send those accounts to the page they were
+          created for instead.
+        */}
+        <Route
+          path="/"
+          element={
+            canSeeStats ? <AdminDashboard /> : <Navigate to="/dashboard/products" replace />
+          }
+        />
 
         {/* Vendor Management */}
         <Route path="/vendors" element={<VendorManagement />} />
