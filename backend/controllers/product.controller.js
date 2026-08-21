@@ -213,7 +213,16 @@ export const getAllProducts = controllerWrapper(
     const asId = (value) =>
       mongoose.Types.ObjectId.isValid(value) ? new mongoose.Types.ObjectId(String(value)) : value;
 
-    if (filters.categoryId) filter.category = asId(filters.categoryId);
+    // A category means the branch under it, not the products filed on the
+    // category itself. Roots hold almost nothing directly — every product
+    // hangs off a leaf — so an exact match turned "show me Electronics" into
+    // an empty page, which is what the person put in charge of Electronics
+    // saw when they picked their own section. The storefront listing has
+    // expanded the branch all along; this one never did.
+    if (filters.categoryId) {
+      const branch = await categoryFilterValue(filters.categoryId);
+      filter.category = branch?.$in ? { $in: branch.$in.map(asId) } : asId(branch);
+    }
 
     // A scoped account is shown its own part of the catalogue and no more.
     // Applied last so it narrows whatever was asked for rather than being
@@ -226,10 +235,16 @@ export const getAllProducts = controllerWrapper(
 
     const allowedIds = await scopedCategoryIds(req.user);
     if (allowedIds) {
+      // Whatever was asked for, kept only where it overlaps the branch this
+      // account owns. Reading `filter.category` has to cope with both shapes
+      // the line above can leave behind — one id, or the $in of a branch.
       const asked = filter.category
-        ? [String(filter.category)].filter((id) => allowedIds.has(id))
+        ? (filter.category.$in || [filter.category]).map(String)
+        : null;
+      const kept = asked
+        ? asked.filter((id) => allowedIds.has(id))
         : [...allowedIds];
-      filter.category = { $in: asked.map(asId) };
+      filter.category = { $in: kept.map(asId) };
     }
     // Choosing a category inside the branch is the other way in. Without this
     // the category page renders its own products as an empty list.

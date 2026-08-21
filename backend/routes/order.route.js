@@ -42,9 +42,17 @@ const router = express.Router();
 router.post("/", protectRoute, validateCreateOrder, createOrder);
 
 // Get all orders (admin)
+//
+// Gated on orders.view, which the controller then reads a second way: staff
+// who hold it get every order, a vendor gets their own store's, a customer
+// gets the ones they placed. Without the gate the controller's staff test
+// was `dashboard.view` alone, so an account created to price one section of
+// the catalogue was handed every order in the shop — line items, totals, and
+// the buyer's name, email and phone.
 router.get(
   "/",
   protectRoute,
+  requirePermission("orders.view"),
   translateResponse,
   validateGetAllOrders,
   getOrders
