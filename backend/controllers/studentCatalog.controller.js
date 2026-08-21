@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Product from "../models/product.model.js";
 import StudentCategory from "../models/studentCategory.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
+import { resolveProductStore } from "../utils/houseStore.js";
 import {
   buildStudentTree,
   collectStudentCategoryIds,
@@ -297,6 +298,9 @@ export const createStudentProduct = controllerWrapper(
       approvalStatus: "approved",
       isActive: patch.isActive ?? true,
       createdBy: req.user._id,
+      // Published by the shop, so owned by the shop — an order cannot be
+      // raised for a product that belongs to no store.
+      store: await resolveProductStore(req.user),
     });
 
     return ok(res, { product, message: "Product added." }, 201);

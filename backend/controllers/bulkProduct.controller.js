@@ -7,6 +7,7 @@ import { findOrCreateByName } from '../utils/findOrCreateByName.js';
 import { clearStorefrontCaches } from '../utils/storefrontCache.js';
 
 import { buildProductExport } from '../utils/productExport.js';
+import { resolveProductStore } from '../utils/houseStore.js';
 
 const isAdminUser = (role) => role === 'admin' || role === 'super_admin';
 
@@ -287,7 +288,10 @@ export const bulkUploadProducts = async (req, res) => {
           salePercentage: productData.salePercentage || 0,
           saleActive: productData.saleActive || false,
           featured: productData.featured || false,
-          ...(store ? { store: store._id } : {}),
+          // An administrator importing a sheet has no `store` of their own,
+          // and this used to leave the column empty — which is how a whole
+          // catalogue arrived that nobody could buy from.
+          store: store ? store._id : await resolveProductStore(req.user),
           tags: productData.tags || [],
           features: productData.features || [],
           attributes: productData.attributes || [],

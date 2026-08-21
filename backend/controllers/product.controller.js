@@ -15,6 +15,7 @@ import { logEventSafe } from "./event.controller.js";
 import { logAudit, diff } from "../utils/audit.js";
 import { categoryFilterValue } from "../utils/categoryTree.js";
 import mongoose from "mongoose";
+import { resolveProductStore } from "../utils/houseStore.js";
 
 // Tokenized, case-insensitive search filter: every word must appear in the
 // name, tags, or description (order-independent). Beats a single contiguous
@@ -79,6 +80,12 @@ export const createProduct = controllerWrapper(
     }
     const product = new Product(productData);
     product.createdBy = req.user._id;
+
+    // Every order belongs to one store, so every product has to. Left
+    // unset — which is what happened to the entire imported catalogue —
+    // the item is unsellable and checkout can only say it cannot work out
+    // which store the order is for.
+    product.store = await resolveProductStore(req.user, productData.store);
 
     if (req.user.role === "store") {
       product.approvalStatus = "pending";

@@ -1,5 +1,6 @@
 import Product from "../models/product.model.js";
 import Category from "../models/category.model.js";
+import { resolveProductStore } from "../utils/houseStore.js";
 import {
   describeUnreadableSheet,
   exportStudentProductsToExcel,
@@ -431,6 +432,9 @@ export const bulkUploadStudentProducts = async (req, res) => {
             // to police what outside sellers put on the storefront.
             approvalStatus: "approved",
             createdBy: req.user._id,
+            // Published by the shop, so owned by the shop — an order cannot
+            // be raised for a product that belongs to no store.
+            store: await resolveProductStore(req.user),
           });
           if (!dryRun) await doc.save();
           productByName.set(norm(row.name), doc);
