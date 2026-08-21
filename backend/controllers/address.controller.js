@@ -23,6 +23,7 @@ export const createAddress = controllerWrapper(
       title: "New Address Added",
       message: "A new address has been added to your account",
       type: "address",
+      link: "/account?tab=addresses",
     });
 
     res.status(201).json({ success: true, address });

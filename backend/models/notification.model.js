@@ -36,6 +36,20 @@ const notificationSchema = new mongoose.Schema(
       ],
       default: "info",
     },
+    /**
+     * Where this notification is about, as a path in the app.
+     *
+     * Every one of these announced something that exists on a page — an
+     * order, an address — and then left the reader to go and find it. Not
+     * every notification has somewhere to be, so it stays optional.
+     *
+     * A path, never a full URL: it is followed by the client router, and a
+     * stored host would break the day the domain changes.
+     */
+    link: {
+      type: String,
+      trim: true,
+    },
     read: {
       type: Boolean,
       default: false,
@@ -54,7 +68,7 @@ notificationSchema.post("save", function (doc) {
     title: doc.title,
     body: doc.message,
     tag: doc._id.toString(),
-    url: "/notifications",
+    url: doc.link || "/notifications",
   }).catch(() => {});
 });
 

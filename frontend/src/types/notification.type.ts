@@ -11,6 +11,8 @@ export interface Notification {
     | "order"
     | "promotion"
     | "system";
+  /** Where it is about, as an app path. Absent when there is nowhere to go. */
+  link?: string;
   read: boolean;
   deleted: boolean;
   createdAt: string;

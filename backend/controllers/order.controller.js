@@ -26,6 +26,9 @@ import {
 } from "../utils/collectionPricing.js";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
+
+/** What the account pages print: the last eight characters, in capitals. */
+const shortOrderId = (id) => String(id).slice(-8).toUpperCase();
 import {
   earnedPointsFor,
   POINT_VALUE_EGP,
@@ -586,11 +589,16 @@ export const createOrder = controllerWrapper(
 
       // Create notifications
       try {
+        // The short form is what the account pages print and what a
+        // customer would read out on the phone; the full ObjectId was
+        // twenty-four characters of noise in the middle of a sentence.
+        const shortId = shortOrderId(savedOrder._id);
         const customerNotification = await Notification.create({
           user: savedOrder.user,
           title: "Order Placed",
-          message: `Your order #${savedOrder._id} has been placed successfully.`,
+          message: `Your order #${shortId} has been placed successfully.`,
           type: "success",
+          link: `/account?tab=orders&order=${savedOrder._id}`,
         });
         emitNotificationCreated(customerNotification.user, customerNotification);
 
@@ -603,10 +611,12 @@ export const createOrder = controllerWrapper(
           const vendorNotification = await Notification.create({
             user: storeDoc.owner._id,
             title: "New Order Received",
-            message: `You have received a new order #${savedOrder._id} from ${
+            message: `You have received a new order #${shortId} from ${
               customer?.name || "A customer"
             }.`,
             type: "success",
+            // Staff read this one, so it belongs in the dashboard.
+            link: "/dashboard/order",
           });
           emitNotificationCreated(vendorNotification.user, vendorNotification);
         }
@@ -978,8 +988,9 @@ export const updateOrderStatus = controllerWrapper(
       await Notification.create({
         user: order.user,
         title: "Order Status Update",
-        message: `Your order #${order._id} ${message}.`,
+        message: `Your order #${shortOrderId(order._id)} ${message}.`,
         type: status === "cancelled" ? "warning" : "info",
+        link: `/account?tab=orders&order=${order._id}`,
       });
 
       // Send status update email (non-blocking)

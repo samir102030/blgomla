@@ -6,6 +6,7 @@ import { getNotificationIcon } from "../lib/notificationIcons";
 import type { Notification } from "../types/notification.type";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { routeForNotification } from "../lib/notificationRoute";
 
 type NotificationFilter = "all" | "unread" | "read";
 
@@ -19,21 +20,7 @@ const FILTER_MODES: NotificationFilter[] = ["all", "unread", "read"];
 
 // Route a notification to the most relevant page based on its type.
 // The model has no explicit link field, so this is a best-effort mapping.
-function routeForNotification(n: Notification): string | null {
-  switch (n.type) {
-    case "order":
-      return "/account?tab=orders";
-    case "promotion":
-      return "/products";
-    case "system":
-    case "info":
-    case "warning":
-    case "error":
-    case "success":
-    default:
-      return null;
-  }
-}
+
 
 function groupByDate(items: Notification[]) {
   const now = new Date();

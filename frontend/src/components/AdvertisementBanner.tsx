@@ -80,6 +80,16 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
 
   const currentAd = ads[currentIndex];
 
+  /**
+   * Whether this creative goes anywhere.
+   *
+   * Both banners on the live site were saved without a link, and every
+   * placement below still drew a pointer cursor, a hover lift and a "Shop
+   * Now" button. Clicking counted the click and did nothing else, which is
+   * the most convincing kind of broken.
+   */
+  const hasLink = Boolean(currentAd.link);
+
   const handleClick = () => {
     incrementClickCount(currentAd._id);
     if (currentAd.link) {
@@ -224,9 +234,11 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
   if (position === "banner") {
     return (
       <div
-        onClick={handleClick}
+        onClick={hasLink ? handleClick : undefined}
         dir={isRtl ? "rtl" : "ltr"}
-        className={`relative w-full my-6 rounded-2xl overflow-hidden cursor-pointer group bg-gradient-to-r from-[#00A8E8] to-[#0077B6] shadow-lg hover:shadow-xl transition-shadow`}
+        className={`relative w-full my-6 rounded-2xl overflow-hidden group bg-gradient-to-r from-[#00A8E8] to-[#0077B6] shadow-lg transition-shadow ${
+          hasLink ? "cursor-pointer hover:shadow-xl" : ""
+        }`}
       >
         <div
           className={`flex flex-col sm:flex-row items-center justify-between gap-4 px-6 md:px-10 py-6 md:py-7 ${
@@ -243,6 +255,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
               <p className="text-white/85 text-sm md:text-base">{subtitle}</p>
             )}
           </div>
+          {hasLink && (
           <span className="shrink-0 inline-flex items-center gap-2 font-semibold rounded-xl bg-white text-[#0077B6] shadow px-5 py-2.5 text-sm group-hover:scale-105 transition-transform whitespace-nowrap">
             {t("View Deals")}
             <svg
@@ -254,6 +267,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </span>
+          )}
         </div>
       </div>
     );
@@ -282,8 +296,13 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
   // ── Image-based promotional banner (Amazon/Noon style) ──
   return (
     <div
-      onClick={handleClick}
-      className={`relative w-full cursor-pointer overflow-hidden rounded-2xl ${
+      onClick={hasLink ? handleClick : undefined}
+      role={hasLink ? "link" : undefined}
+      tabIndex={hasLink ? 0 : undefined}
+      onKeyDown={hasLink ? (e) => { if (e.key === "Enter") handleClick(); } : undefined}
+      className={`relative w-full overflow-hidden rounded-2xl ${
+        hasLink ? "cursor-pointer" : ""
+      } ${
         isHero ? "my-4" : isStrip ? "my-4" : "my-6"
       } group`}
     >
@@ -324,6 +343,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
             >
               {subtitle}
             </p>
+            {hasLink && (
             <span
               className={`mt-2 inline-flex items-center gap-2 font-semibold rounded-xl bg-gradient-to-r from-[#00A8E8] to-[#0077B6] text-white shadow-lg transition-transform group-hover:scale-105 ${
                 isHero ? "px-6 py-3 text-sm" : "px-5 py-2.5 text-xs md:text-sm"
@@ -346,6 +366,7 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
                 />
               </svg>
             </span>
+            )}
           </div>
         )}
       </div>

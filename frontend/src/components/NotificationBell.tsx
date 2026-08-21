@@ -4,6 +4,8 @@ import { useNotificationStore } from "../stores/notification.store";
 import { useTranslation } from "react-i18next";
 import { getNotificationIcon } from "../lib/notificationIcons";
 import { BellIcon } from "@heroicons/react/24/outline";
+import { routeForNotification } from "../lib/notificationRoute";
+import type { Notification } from "../types/notification.type";
 
 type NotificationFilter = "all" | "unread" | "read";
 
@@ -61,12 +63,19 @@ const NotificationBell: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleCardClick = async (
-    notificationId: string,
-    alreadyRead: boolean,
-  ) => {
-    if (alreadyRead) return;
-    await markAsRead(notificationId);
+  /**
+   * Read it, then go where it points.
+   *
+   * The row has looked clickable all along — it has a pointer cursor and a
+   * hover state — and all it did was mark itself read. An order notice
+   * naming an order left you to go and find that order yourself.
+   */
+  const handleCardClick = async (notification: Notification) => {
+    if (!notification.read) await markAsRead(notification._id);
+    const route = routeForNotification(notification);
+    if (!route) return;
+    setIsOpen(false);
+    navigate(route);
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
@@ -177,9 +186,7 @@ const NotificationBell: React.FC = () => {
                   className={`relative p-4 border-b border-gray-100 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800/60 cursor-pointer ${
                     !notification.read ? "bg-blue-50 dark:bg-slate-800/80" : ""
                   }`}
-                  onClick={() =>
-                    handleCardClick(notification._id, notification.read)
-                  }
+                  onClick={() => handleCardClick(notification)}
                 >
                   <div className="flex items-start space-x-3">
                     <span className="text-lg">
