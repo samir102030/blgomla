@@ -147,9 +147,30 @@ const ProductsContent: React.FC = () => {
   };
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
-  // Divisible by 2, 3 and 4 — the column counts every breakpoint above
-  // mobile uses — so a full page never ends on a ragged row.
-  const pageSize = 24;
+  /**
+   * A page holds whole rows, whatever the screen is.
+   *
+   * A fixed 24 divided by the 2, 3 and 4 columns the smaller breakpoints use,
+   * but not by the 5 a wide screen gets — so the last row came up one short
+   * and left a hole at the end of the grid. Six rows of whatever fits is
+   * always exact, and it keeps the amount of scrolling steady rather than
+   * handing the widest screens the shortest page.
+   *
+   * Mirrors the Tailwind breakpoints on the grid below; the two have to agree.
+   */
+  const columnsFor = (width: number) =>
+    width >= 1536 ? 5 : width >= 1280 ? 4 : width >= 1024 ? 3 : 2;
+
+  const [columns, setColumns] = useState(() =>
+    typeof window === "undefined" ? 4 : columnsFor(window.innerWidth),
+  );
+  useEffect(() => {
+    const onResize = () => setColumns(columnsFor(window.innerWidth));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const pageSize = columns * 6;
 
   const [rows, setRows] = useState<any[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -248,7 +269,7 @@ const ProductsContent: React.FC = () => {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, currentPage]);
+  }, [query, currentPage, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(totalProducts / pageSize));
   useEffect(() => {
@@ -462,7 +483,7 @@ const ProductsContent: React.FC = () => {
                 : "flex flex-col gap-3"
             }>
               {loading ? (
-                Array.from({ length: 12 }).map((_, i) => (
+                Array.from({ length: pageSize }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
                 ))
               ) : error ? (
