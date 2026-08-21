@@ -67,3 +67,15 @@ export default tseslint.config([
   },
 ])
 ```
+
+## The API rewrite
+
+`vercel.json` sends `/api/(.*)` to the API project, written as a regex rather
+than the named `:path*` form. The named form does not match a path that ends in
+a slash, so `GET /api/addresses/` fell through to the single-page catch-all
+below it and answered with `index.html` — a 200, with HTML where the caller
+expected JSON, which reads as `undefined` and crashes on the next line.
+
+The file takes no comments: Vercel validates it against a schema and rejects
+any key it does not recognise, including `comment`. That failure is a red
+deployment, not a warning.

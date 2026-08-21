@@ -1,7 +1,6 @@
 {
   "rewrites": [
     {
-      "comment": "(.*) rather than :path* — the named form does not match a path that ends in a slash, so GET /api/addresses/ fell through to the catch-all below and answered with index.html. Code that expected JSON got a page of HTML and read undefined off it.",
       "source": "/api/(.*)",
       "destination": "https://blgomla-api.vercel.app/api/$1"
     },
