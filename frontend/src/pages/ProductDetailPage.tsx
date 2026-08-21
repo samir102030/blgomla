@@ -21,7 +21,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import type { ProductReview } from "../types/product.type";
-import { getBulkPricing } from "../lib/pricing";
+import { getBulkPricing, isQuoteOnly } from "../lib/pricing";
 import ProductGallery from "../components/ProductGallery";
 import DeliveryEstimate from "../components/DeliveryEstimate";
 import { ProductDetailSkeleton } from "../components/Skeleton";
@@ -276,6 +276,12 @@ const ProductDetailPage: React.FC = () => {
 
   const handleAddToCart = async () => {
     if (!productId) return;
+    // A quoted product has no price to charge, so the cart is the wrong place
+    // for it. The server refuses these too — this only saves the round trip.
+    if (product && isQuoteOnly(product)) {
+      navigate(`/contact?product=${encodeURIComponent(product.name)}`);
+      return;
+    }
     if (isOutOfStock) {
       toast.error(t("Product is currently out of stock."));
       return;
@@ -341,6 +347,14 @@ const ProductDetailPage: React.FC = () => {
     product,
     quantity
   );
+  /**
+   * Priced per order rather than listed.
+   *
+   * The stored price is zero, which is what an unset Number looks like, and
+   * showing it would read as free. These go to the quotation form instead of
+   * the cart — the same path the "Request a quote" action in the header takes.
+   */
+  const quoteOnly = isQuoteOnly(product);
   const stockValue = product.stock ?? 0;
   const hasStockAvailability = stockValue > 0;
   const isOutOfStock = stockValue === 0;
@@ -530,8 +544,14 @@ const ProductDetailPage: React.FC = () => {
               <div className="mb-6">
                 <div className="flex items-center space-x-3 flex-wrap">
                   <span className="text-3xl font-bold text-[var(--text)]">
-                    {(unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })}
-                    <span className="text-base font-medium text-[var(--text-subtle)] ml-1">{t("EGP")}</span>
+                    {quoteOnly ? (
+                      t("Request a quote")
+                    ) : (
+                      <>
+                        {(unitPrice ?? 0).toLocaleString("en-EG", { maximumFractionDigits: 2 })}
+                        <span className="text-base font-medium text-[var(--text-subtle)] ml-1">{t("EGP")}</span>
+                      </>
+                    )}
                   </span>
                   {product.saleActive &&
                     product.salePercentage &&
@@ -731,6 +751,8 @@ const ProductDetailPage: React.FC = () => {
                 >
                   {loading
                     ? t("Adding...")
+                    : quoteOnly
+                    ? t("Request a quote")
                     : isProductInCart()
                     ? t("In Cart")
                     : isOutOfStock
@@ -1079,6 +1101,8 @@ const ProductDetailPage: React.FC = () => {
           >
             {loading
               ? t("Adding...")
+              : quoteOnly
+              ? t("Request a quote")
               : isProductInCart()
               ? t("In Cart")
               : isOutOfStock

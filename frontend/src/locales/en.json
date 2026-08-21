@@ -4083,5 +4083,7 @@
   "Student discount": "Student discount",
   "The shelf": "The shelf",
   "Everything in the section": "Everything in the section",
-  "Studying? The same shelf, cheaper.": "Studying? The same shelf, cheaper."
+  "Studying? The same shelf, cheaper.": "Studying? The same shelf, cheaper.",
+  "Quote request: {{product}}": "Quote request: {{product}}",
+  "I would like a price for: {{product}}": "I would like a price for: {{product}}"
 }

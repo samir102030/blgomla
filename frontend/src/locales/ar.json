@@ -4083,5 +4083,7 @@
   "Student discount": "خصم الطلاب",
   "The shelf": "الرف",
   "Everything in the section": "كل اللي في القسم",
-  "Studying? The same shelf, cheaper.": "طالب؟ نفس الرف بسعر أقل."
+  "Studying? The same shelf, cheaper.": "طالب؟ نفس الرف بسعر أقل.",
+  "Quote request: {{product}}": "طلب عرض سعر: {{product}}",
+  "I would like a price for: {{product}}": "عايز سعر المنتج ده: {{product}}"
 }

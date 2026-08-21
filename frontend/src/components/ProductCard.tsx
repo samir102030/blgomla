@@ -301,16 +301,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 {/* Full-price items read in the normal text colour; a
                     discounted price switches to brand orange so the saving is
                     what catches the eye, not every price on the grid. */}
-                <span
-                  className={`text-lg sm:text-xl font-extrabold tracking-tight tabular-nums ${
-                    originalPrice ? "text-[var(--brand-accent)]" : "text-[var(--text)]"
-                  }`}
-                >
-                  {price.toLocaleString()}
-                </span>
-                <span className="text-[11px] font-semibold text-[var(--text-muted)]">
-                  {currency}
-                </span>
+                {price > 0 ? (
+                  <>
+                    <span
+                      className={`text-lg sm:text-xl font-extrabold tracking-tight tabular-nums ${
+                        originalPrice ? "text-[var(--brand-accent)]" : "text-[var(--text)]"
+                      }`}
+                    >
+                      {price.toLocaleString()}
+                    </span>
+                    <span className="text-[11px] font-semibold text-[var(--text-muted)]">
+                      {currency}
+                    </span>
+                  </>
+                ) : (
+                  /* Priced per order. Showing the stored zero would read as free. */
+                  <span className="text-sm font-bold text-[var(--brand-accent)]">
+                    {t("Request a quote")}
+                  </span>
+                )}
               </div>
               {originalPrice && (
                 <span className="text-xs text-[var(--text-subtle)] line-through tabular-nums">

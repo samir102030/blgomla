@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MapPinIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import PageHero from "./PageHero";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 interface ContactForm {
@@ -13,12 +14,24 @@ interface ContactForm {
 
 const Contact: React.FC = () => {
   const { t } = useTranslation();
+
+  /**
+   * A product priced on request sends the customer here, naming itself in the
+   * query string. Filling the subject and message in for them is the whole
+   * difference between a quote request that says which product it is about and
+   * one that says "hi, how much?"
+   */
+  const [searchParams] = useSearchParams();
+  const askingAbout = searchParams.get("product")?.trim() || "";
+
   const [formData, setFormData] = useState<ContactForm>({
     name: "",
     email: "",
     phone: "",
-    subject: "",
-    message: "",
+    subject: askingAbout ? t("Quote request: {{product}}", { product: askingAbout }) : "",
+    message: askingAbout
+      ? t("I would like a price for: {{product}}", { product: askingAbout })
+      : "",
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);

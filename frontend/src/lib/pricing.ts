@@ -46,3 +46,17 @@ export const getBulkPricing = (product: BulkInput, quantity: number) => {
     rules,
   };
 };
+
+/**
+ * Is this product quoted rather than priced?
+ *
+ * Some of the catalogue is agreed per order — the enterprise storage, the
+ * high-end laptops — and those arrive with a price of zero, because that is
+ * what "not set" looks like in a Number field. Treating zero as a price would
+ * put "0 EGP" on the card and a buy button under it.
+ *
+ * Derived rather than flagged, so a product stops being quote-only the moment
+ * somebody types a price into it, with nothing else to remember.
+ */
+export const isQuoteOnly = (product: PriceInput & { salePrice?: number }) =>
+  !(getBaseUnitPrice(product) > 0);

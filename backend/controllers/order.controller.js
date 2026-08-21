@@ -157,7 +157,27 @@ export const createOrder = controllerWrapper(
           : product.price;
       };
 
+      /**
+       * A product with no price is not free — it is quoted.
+       *
+       * The catalogue carries items whose price is agreed per order, and they
+       * are stored with a price of zero because that is what "not set" looks
+       * like in a Number field. The storefront offers those a quote instead of
+       * a buy button, but nothing stopped a request going straight to this
+       * endpoint, and the arithmetic below would have happily totalled a
+       * fifty-thousand-pound laptop at nothing.
+       */
+      const assertPriced = (product) => {
+        if (getBaseUnitPrice(product) > 0) return;
+        const err = new Error(
+          `"${product.name}" is priced on request. Ask for a quotation instead of ordering it directly.`,
+        );
+        err.status = 400;
+        throw err;
+      };
+
       const getUnitPrice = (product, quantity = 1) => {
+        assertPriced(product);
         const basePrice = getBaseUnitPrice(product);
         const rules = Array.isArray(product.bulkPricing)
           ? product.bulkPricing
