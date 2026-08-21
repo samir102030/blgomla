@@ -4131,5 +4131,6 @@
   "login.shareLocationDesc": "Saves it to your account so checkout is one step.",
   "login.optional": "optional",
   "login.openMap": "Open map",
-  "checkout.findOnMap": "Find your address on the map"
+  "checkout.findOnMap": "Find your address on the map",
+  "Appearance": "Appearance"
 }

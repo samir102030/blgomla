@@ -4131,5 +4131,6 @@
   "login.shareLocationDesc": "بيتحفظ في حسابك، فإتمام الطلب بعد كده بيبقى خطوة واحدة.",
   "login.optional": "اختياري",
   "login.openMap": "افتح الخريطة",
-  "checkout.findOnMap": "حدّد عنوانك على الخريطة"
+  "checkout.findOnMap": "حدّد عنوانك على الخريطة",
+  "Appearance": "المظهر"
 }

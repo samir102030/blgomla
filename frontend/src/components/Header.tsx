@@ -626,11 +626,15 @@ const Header: React.FC = () => {
               title={language === "en" ? "العربية" : "English"}
               className="mn-header-link inline-flex gap-1.5 font-extrabold"
             >
-              <GlobeAltIcon className="w-4 h-4 shrink-0" />
+              {/* The label already says which language; on a phone the globe
+                  beside it costs 22px the menu button needs. */}
+              <GlobeAltIcon className="w-4 h-4 shrink-0 hidden sm:block" />
               <span>{language === "en" ? "EN" : "ع"}</span>
             </button>
 
-            <ThemeToggle showLabel={false} className="ml-0.5" />
+            {/* Kept out of the strip on a phone and offered in the drawer
+                instead — a preference, where everything around it is a task. */}
+            <ThemeToggle showLabel={false} className="ml-0.5 hidden sm:inline-flex" />
 
             <div className="w-px h-6 bg-[var(--line)] mx-1 hidden sm:block" />
 
@@ -878,6 +882,16 @@ const Header: React.FC = () => {
                   </li>
                 ))}
             </ul>
+
+            {/* Where the header's toggle went on small screens. */}
+            <div className="mt-3 pt-3 border-t border-[var(--border)] sm:hidden">
+              <div className="flex items-center justify-between px-4 py-1">
+                <span className="text-base font-medium text-[var(--text)]">
+                  {t("Appearance", "Appearance")}
+                </span>
+                <ThemeToggle showLabel={false} />
+              </div>
+            </div>
 
             <div className="mt-3 pt-3 border-t border-[var(--border)]">
               <div className="flex items-center gap-1.5 px-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--text-subtle)]">
