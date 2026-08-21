@@ -89,6 +89,29 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+
+/* ─────────────────────────────────────────────────
+   How much of the screen the mobile tab bar takes.
+
+   One number, published once, so everything anchored to the bottom agrees
+   with it: the page ends above the bar rather than behind it, and the chat
+   bubble, the compare bar and the product page's sticky buy bar sit on top
+   of it rather than underneath.
+
+   Zero unless the bar is actually showing — the attribute is set by the
+   component (it knows the route) and the breakpoint stays here (CSS knows
+   the width).
+   ───────────────────────────────────────────────── */
+:root { --mobile-nav-h: 0px; }
+
+@media (max-width: 1023.98px) {
+  html[data-mobile-nav="on"] {
+    /* 3.5rem of bar, plus whatever the phone reserves for its home indicator. */
+    --mobile-nav-h: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+body { padding-bottom: var(--mobile-nav-h); }
 /* ── Light Theme Tokens ── */
 :root {
   color-scheme: light;

@@ -4132,5 +4132,11 @@
   "login.optional": "اختياري",
   "login.openMap": "افتح الخريطة",
   "checkout.findOnMap": "حدّد عنوانك على الخريطة",
-  "Appearance": "المظهر"
+  "Appearance": "المظهر",
+  "nav.home": "الرئيسية",
+  "nav.products": "المنتجات",
+  "nav.deals": "العروض",
+  "nav.cart": "السلة",
+  "nav.account": "حسابي",
+  "nav.primary": "التنقل الأساسي"
 }

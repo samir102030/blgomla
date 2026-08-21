@@ -1057,7 +1057,8 @@ const ProductDetailPage: React.FC = () => {
 
       {/* Sticky add-to-cart bar — appears once the main buy box scrolls away */}
       <div
-        className={`fixed bottom-0 inset-x-0 z-40 bg-[var(--surface)] border-t border-[var(--border)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transition-transform duration-300 ${
+        style={{ bottom: "var(--mobile-nav-h)" }}
+        className={`fixed inset-x-0 z-40 bg-[var(--surface)] border-t border-[var(--border)] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] transition-transform duration-300 ${
           showStickyBar ? "translate-y-0" : "translate-y-full"
         }`}
         aria-hidden={!showStickyBar}

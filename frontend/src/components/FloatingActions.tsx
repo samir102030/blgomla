@@ -38,7 +38,8 @@ const FloatingActions: React.FC = () => {
         onClick={scrollTop}
         aria-label={t("Back to top")}
         title={t("Back to top")}
-        className={`fixed bottom-20 right-4 sm:bottom-24 sm:right-6 z-30 inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all ${
+        style={{ bottom: "calc(5rem + var(--mobile-nav-h))" }}
+        className={`fixed right-4 sm:right-6 z-30 inline-flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all ${
           showTop
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-3 pointer-events-none"

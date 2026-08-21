@@ -13,6 +13,7 @@ import { captureError } from "./lib/sentry";
 
 // ── Eagerly loaded (above-the-fold critical path) ──
 import HomePage from "./pages/HomePage";
+import MobileTabBar from "./components/MobileTabBar";
 
 // ── Deferred (off the critical mobile path) ──
 // Chat widget, PWA install prompt, and analytics listener mount after first paint
@@ -239,6 +240,7 @@ function App() {
         </SiteModeGate>
       </Suspense>
       </ErrorBoundary>
+      <MobileTabBar />
       <CompareBar />
       <FloatingActions />
       <Suspense fallback={null}>

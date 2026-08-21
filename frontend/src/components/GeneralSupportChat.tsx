@@ -128,7 +128,8 @@ const GeneralSupportChat: React.FC = () => {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={t("support.title", "Ask Belgomla")}
-        className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+        style={{ bottom: "calc(1rem + var(--mobile-nav-h))" }}
+        className="fixed right-4 z-50 w-14 h-14 rounded-full bg-[var(--brand-primary)] text-white shadow-lg shadow-[var(--brand-primary)]/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
       >
         <ChatBubbleLeftRightIcon className="w-6 h-6" />
       </button>
@@ -136,7 +137,7 @@ const GeneralSupportChat: React.FC = () => {
   }
 
   return (
-    <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:right-4 z-50 sm:w-[22rem] h-[30rem] max-h-[80vh] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div style={{ bottom: "calc(1rem + var(--mobile-nav-h))" }} className="fixed inset-x-4 sm:inset-x-auto sm:right-4 z-50 sm:w-[22rem] h-[30rem] max-h-[80vh] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
       <header className="flex items-center justify-between gap-3 px-4 py-3 bg-[var(--brand-primary)] text-white">
         <div className="min-w-0">
           <h2 className="font-bold text-sm truncate">{t("support.title", "Ask Belgomla")}</h2>

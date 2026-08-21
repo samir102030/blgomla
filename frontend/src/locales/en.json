@@ -4132,5 +4132,11 @@
   "login.optional": "optional",
   "login.openMap": "Open map",
   "checkout.findOnMap": "Find your address on the map",
-  "Appearance": "Appearance"
+  "Appearance": "Appearance",
+  "nav.home": "Home",
+  "nav.products": "Products",
+  "nav.deals": "Deals",
+  "nav.cart": "Cart",
+  "nav.account": "Account",
+  "nav.primary": "Primary"
 }

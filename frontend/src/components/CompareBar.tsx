@@ -13,7 +13,7 @@ const CompareBar: React.FC = () => {
   if (ids.length === 0 || location.pathname === "/compare") return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-md">
+    <div style={{ bottom: "calc(1rem + var(--mobile-nav-h))" }} className="fixed left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-md">
       <div className="flex items-center justify-between gap-3 rounded-2xl bg-[var(--surface)] border border-[var(--border)] shadow-lg px-4 py-3">
         <span className="text-sm font-medium text-[var(--text)]">
           {t("{{count}} selected to compare", { count: ids.length })}
