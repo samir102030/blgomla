@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ArrowPathIcon, CheckCircleIcon, ClockIcon, CubeIcon, InboxIcon, TruckIcon, XCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useOrderStore } from "../stores/order.store";
 import { useReturnStore } from "../stores/return.store";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { cldImg } from "../lib/cldImage";
 
 const AccountOrders: React.FC = () => {
@@ -45,6 +45,27 @@ const AccountOrders: React.FC = () => {
     } catch (error) { console.error("Error fetching order details:", error); }
     finally { setOrderDetailsLoading(false); }
   };
+
+  /**
+   * `?order=<id>` opens that order's details on arrival.
+   *
+   * What makes a row on the dashboard, or a link somebody was sent, able to
+   * land on the order itself rather than on a list to go hunting through.
+   *
+   * Once per id: the modal can be closed, and reopening it under the
+   * customer because the parameter is still in the address bar would make
+   * the close button look broken.
+   */
+  const [searchParams] = useSearchParams();
+  const requestedOrder = searchParams.get("order");
+  const openedFromUrl = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!requestedOrder || openedFromUrl.current === requestedOrder) return;
+    openedFromUrl.current = requestedOrder;
+    handleViewOrderDetails(requestedOrder);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [requestedOrder]);
 
   const handleOpenReturn = (order: any) => { setSelectedReturnOrder(order); setReturnReason(""); setShowReturnModal(true); };
   const handleSubmitReturn = async () => {

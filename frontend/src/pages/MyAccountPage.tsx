@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import type { ComponentType, SVGProps } from "react";
 import { ArrowRightOnRectangleIcon, ArrowUpTrayIcon, BellIcon, BuildingStorefrontIcon, ChartBarIcon, CubeIcon, LockClosedIcon, MapPinIcon, PencilIcon, ShieldCheckIcon, UserIcon } from "@heroicons/react/24/outline";
 import Breadcrumb from "../components/Breadcrumb";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import AccountDashboard from "../components/AccountDashboard";
@@ -26,7 +26,26 @@ const MyAccountPage: React.FC = () => {
   const { t } = useTranslation();
   const logout = useUserStore((state) => state.logout);
   const user = useUserStore((state) => state.user);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  /**
+   * Which panel is open lives in the address bar.
+   *
+   * It was local state, so nothing outside this component could open a tab:
+   * the dashboard's own "check the orders tab" notice had no way to act on
+   * its own advice, and the arrow beside it was a character rather than a
+   * link. It also means the back button steps between tabs and a customer
+   * can bookmark or send the page they are actually looking at.
+   */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "dashboard";
+
+  const setActiveTab = (id: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (id === "dashboard") next.delete("tab");
+    else next.set("tab", id);
+    // A particular order only makes sense on the tab it was opened from.
+    next.delete("order");
+    setSearchParams(next);
+  };
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Orders and addresses from stores

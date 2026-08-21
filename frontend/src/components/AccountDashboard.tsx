@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowPathIcon, BanknotesIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, ClockIcon, CubeIcon, HeartIcon, InboxIcon, ShoppingBagIcon, StarIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon, ArrowRightIcon, BanknotesIcon, ChatBubbleLeftRightIcon, CheckCircleIcon, ClockIcon, CubeIcon, HeartIcon, InboxIcon, ShoppingBagIcon, StarIcon, TruckIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useTranslation } from "react-i18next";
@@ -74,21 +74,22 @@ const AccountDashboard: React.FC = () => {
 
       {/* ===== ACTIVE ORDERS ALERT ===== */}
       {pendingOrders > 0 && (
-        <div className="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 mb-6">
+        // It told you to check the orders tab and then left you to find it.
+        <Link to="/account?tab=orders" className="flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 mb-6 hover:border-amber-400 dark:hover:border-amber-500/40 transition-colors">
           <span className="text-2xl"><CubeIcon className="w-6 h-6" aria-hidden="true" /></span>
           <div className="flex-1">
             <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">{t("account.activeOrders", "You have {{count}} active order(s)", { count: pendingOrders })}</p>
             <p className="text-xs text-amber-600 dark:text-amber-400/70">{t("account.activeOrdersDesc", "Check the orders tab for tracking and details.")}</p>
           </div>
-          <span className="text-xs font-medium text-amber-700 dark:text-amber-300 shrink-0">⟶</span>
-        </div>
+          <ArrowRightIcon className="w-4 h-4 shrink-0 text-amber-700 dark:text-amber-300 rtl:rotate-180" aria-hidden="true" />
+        </Link>
       )}
 
       {/* ===== RECENT ORDERS ===== */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-[var(--text)]">{t("account.recentOrders", "Recent Orders")}</h3>
-          {orders && orders.length > 3 && <span className="text-xs font-medium text-[var(--brand-primary)] cursor-pointer hover:underline">{t("account.viewAll", "View All")} →</span>}
+          {orders && orders.length > 3 && <Link to="/account?tab=orders" className="text-xs font-medium text-[var(--brand-primary)] hover:underline">{t("account.viewAll", "View All")} →</Link>}
         </div>
 
         {(!orders || orders.length === 0) ? (
@@ -100,7 +101,12 @@ const AccountDashboard: React.FC = () => {
         ) : (
           <div className="space-y-3">
             {orders.slice(0, 3).map((order) => (
-              <div key={order._id} className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4 flex items-center gap-4 hover:border-[var(--brand-primary)]/30 transition-all group">
+              // Straight to the order it names, with its details already open.
+              <Link
+                key={order._id}
+                to={`/account?tab=orders&order=${order._id}`}
+                className="bg-[var(--surface-2)]/50 border border-[var(--border)] rounded-xl p-4 flex items-center gap-4 hover:border-[var(--brand-primary)]/30 transition-all group"
+              >
                 {(() => { const Icon = getStatusIcon(order.status); return <Icon className="w-6 h-6 shrink-0" aria-hidden="true" />; })()}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -112,7 +118,7 @@ const AccountDashboard: React.FC = () => {
                 <div className="text-right shrink-0">
                   <p className="text-sm font-bold text-[var(--text)]">{order.totalPrice?.toLocaleString()} <span className="text-[10px] font-normal text-[var(--text-muted)]">EGP</span></p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
