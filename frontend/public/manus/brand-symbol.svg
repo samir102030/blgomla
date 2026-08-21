@@ -1,13 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Belgomla">
-  <!--
-    The same artwork as the app icon in /icon.svg — rounded square, the B with
-    its bag handle — so the mark in the header and the one on a home screen are
-    the same logo rather than two drawings of the same letter.
+  <title>Belgomla</title>
+  <desc>
+    The same artwork as the app icon in /icon.svg, rounded square and the B
+    with its bag handle, so the mark in the header and the one on a phone's
+    home screen are one logo rather than two drawings of the same letter.
 
-    Painted in the site's accent (#00A8E8, the value behind the legacy
-    `--orange` token) with the letter in white: on this blue the near-black of
-    the app icon comes to about 3.9:1, and white to 5:1.
-  -->
+    Painted in the site's accent #00A8E8 with the letter in white. The app
+    icon's near-black letter reaches about 3.9:1 against this blue; white
+    reaches 5:1.
+  </desc>
   <rect width="512" height="512" rx="112" fill="#00A8E8"/>
   <g transform="translate(120,103) scale(1.7)">
     <path d="M54 22 Q54 0 80 0 Q106 0 106 22" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
