@@ -90,6 +90,22 @@ const publicListCache = cacheHeaders(60, 300);
 // PUBLIC: Static routes MUST come before /:productId
 // ═══════════════════════════════════════════════
 router.get("/", publicListCache, translateResponse, validateGetAllProducts, getAllProducts);
+
+// The same listing, for the dashboard.
+//
+// It has to be a separate path rather than optional auth on the public one:
+// that route is cached by URL alone, so a response that varied by who asked
+// would be handed to whoever asked next. This one carries no cache headers
+// and requires a session, which is what lets the handler confine the results
+// to the categories the account is responsible for.
+router.get(
+  "/manage",
+  protectRoute,
+  requirePermission("products.view"),
+  translateResponse,
+  validateGetAllProducts,
+  getAllProducts,
+);
 router.get("/storefront", publicListCache, translateResponse, getStorefrontProducts);
 router.get("/search-suggestions", publicListCache, translateResponse, getSearchSuggestions);
 router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);

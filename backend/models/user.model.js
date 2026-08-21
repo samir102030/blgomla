@@ -117,6 +117,28 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
+    /**
+     * The categories this account is allowed to work in.
+     *
+     * Empty means no restriction, which is what every existing account is and
+     * what an administrator stays. A staff member put in charge of pricing for
+     * one part of the shop gets that category here, and from then on the
+     * catalogue they can see and change is that branch and nothing else.
+     *
+     * A branch, not a single category: naming a parent covers everything under
+     * it, so putting somebody on "Networking" does not mean listing its ten
+     * children by hand and remembering to add the eleventh.
+     *
+     * The permissions themselves stay where they were — this says *where* an
+     * account may act, the role says *what* it may do.
+     */
+    categoryScope: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+      },
+    ],
     deleted: { type: Boolean, default: false },
     active: { type: Boolean, default: false },
     resetPasswordToken: String,

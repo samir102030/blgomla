@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
 import type { User } from "../../types/user.type";
 import { ClockIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import CategoryScopeModal from "../../components/admin/CategoryScopeModal";
 
 const AdminsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -18,6 +19,9 @@ const AdminsPage: React.FC = () => {
     userId?: string;
     name?: string;
   }>({ open: false });
+  /** Which account's categories are being edited, if any. */
+  const [scopeFor, setScopeFor] = useState<User | null>(null);
+
   const [customDuration, setCustomDuration] = useState({
     days: "0",
     hours: "0",
@@ -158,6 +162,9 @@ const AdminsPage: React.FC = () => {
                 {t("admins.colRemaining")}
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+                {t("admins.colCategories", "Categories")}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                 {t("admins.colActions")}
               </th>
             </tr>
@@ -191,6 +198,17 @@ const AdminsPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       {formatRemaining(admin.adminExpiresAt)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      <button
+                        type="button"
+                        onClick={() => setScopeFor(admin)}
+                        className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                      >
+                        {admin.categoryScope?.length
+                          ? t("admins.scopeCount", "{{count}} category", { count: admin.categoryScope.length })
+                          : t("admins.scopeAll", "Whole catalogue")}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex flex-wrap gap-2">
@@ -321,6 +339,19 @@ const AdminsPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      {scopeFor && (
+        <CategoryScopeModal
+          userId={scopeFor._id!}
+          userLabel={scopeFor.name || scopeFor.email || ""}
+          current={(scopeFor.categoryScope || []).map(String)}
+          onClose={() => setScopeFor(null)}
+          onSaved={(next) =>
+            setAdmins((prev) =>
+              prev.map((a) => (a._id === scopeFor._id ? { ...a, categoryScope: next } : a)),
+            )
+          }
+        />
       )}
     </div>
   );

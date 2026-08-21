@@ -37,6 +37,8 @@ export interface User {
   referredBy?: string;
   referralCount?: number;
   role: UserRole;
+  /** Category branches this account is confined to. Empty means the whole catalogue. */
+  categoryScope?: string[];
   /** Resolved permission keys for this user's role (from the backend). */
   permissions?: string[];
   deleted: boolean;

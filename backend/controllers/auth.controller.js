@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import Category from "../models/category.model.js";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/user.model.js";
 import { paginateQuery } from "../utils/pagination.js";
@@ -833,6 +834,60 @@ export const finalDeleteUser = controllerWrapper(
   },
 );
 
+/**
+ * Put an account in charge of part of the catalogue, or all of it.
+ *
+ * An empty list means unrestricted, which is what an administrator is and
+ * what every account was before this existed. Naming a parent category
+ * covers everything beneath it, so a person put on Networking does not have
+ * to be re-granted each new switch category somebody adds next month.
+ *
+ * Deliberately separate from changing a role: the role says what an account
+ * may do, this says where it may do it, and conflating them would mean a new
+ * role for every combination of the two.
+ */
+export const setCategoryScope = controllerWrapper(
+  "setCategoryScope",
+  async (req, res) => {
+    const { userId } = req.params;
+    const { categoryScope } = req.body;
+
+    if (!Array.isArray(categoryScope)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "categoryScope must be an array of category ids" });
+    }
+
+    const guard = await guardSuperAdminMutation(userId, req.user);
+    if (guard.status) return res.status(guard.status).json(guard.body);
+    const user = guard.targetUser;
+
+    const ids = categoryScope.map(String).filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (ids.length !== categoryScope.length) {
+      return res
+        .status(400)
+        .json({ success: false, message: "One of the category ids is not a valid id" });
+    }
+
+    const found = await Category.countDocuments({ _id: { $in: ids } });
+    if (found !== ids.length) {
+      return res
+        .status(400)
+        .json({ success: false, message: "One of the categories does not exist" });
+    }
+
+    const before = (user.categoryScope || []).map(String);
+    user.categoryScope = ids;
+    await user.save();
+
+    logAudit(req, "user.category_scope_changed", "user", user._id, { before, after: ids }, {
+      target: user,
+      severity: "warning",
+    });
+
+    res.json({ success: true, categoryScope: ids });
+  },
+);
 export const changeUserRole = controllerWrapper(
   "changeUserRole",
   async (req, res) => {

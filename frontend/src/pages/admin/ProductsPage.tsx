@@ -63,7 +63,7 @@ const ProductsPage: React.FC = () => {
   const paginated = useProductStore((s) => s.paginated);
   const loading = useProductStore((s) => s.loading);
   const error = useProductStore((s) => s.error);
-  const fetchProducts = useProductStore((s) => s.fetchProducts);
+  const fetchProducts = useProductStore((s) => s.fetchManagedProducts);
 
   const brands = useBrandStore((s) => s.brands);
   const fetchBrands = useBrandStore((s) => s.fetchBrands);

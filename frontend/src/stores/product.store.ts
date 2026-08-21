@@ -30,6 +30,7 @@ interface ProductStore {
   error?: string;
   cart: CartItem[];
   fetchProducts: (params?: Record<string, any>) => Promise<void>;
+  fetchManagedProducts: (params?: Record<string, any>) => Promise<void>;
   fetchProductById: (productId: string) => Promise<void>;
   fetchFeaturedProducts: () => Promise<void>;
   fetchSaleProducts: () => Promise<void>;
@@ -167,6 +168,31 @@ export const useProductStore = create<ProductStore>()(
             "/cart"
           );
           set({ cart: data.cart, loading: false });
+        } catch (error: any) {
+          set({
+            error: error?.response?.data?.message || error.message,
+            loading: false,
+          });
+        }
+      },
+
+      /**
+       * The dashboard listing.
+       *
+       * Separate from fetchProducts because that one serves public pages: the
+       * brands page and the coupon pickers call it without a session, and
+       * /products is cached by URL alone so it cannot vary by who is asking.
+       * This path requires one, which is what lets the server return only the
+       * categories the account is responsible for.
+       */
+      fetchManagedProducts: async (params = {}) => {
+        set({ loading: true, error: undefined });
+        try {
+          const { data } = await axiosInstance.get<PaginatedResult<Product>>(
+            "/products/manage",
+            { params }
+          );
+          set({ products: data.data, paginated: data, loading: false });
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,

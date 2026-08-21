@@ -16,6 +16,7 @@ import {
   activateUser,
   changePassword,
   changeUserRole,
+  setCategoryScope,
   deActivateUser,
   finalDeleteUser,
   forgotPassword,
@@ -122,6 +123,7 @@ router
 
 // tested
 router.put("/changeRole/:userId", protectRoute, requirePermission("users.role"), changeUserRole);
+router.put("/categoryScope/:userId", protectRoute, requirePermission("users.role"), setCategoryScope);
 router.put(
   "/adminTime/:userId",
   protectRoute,

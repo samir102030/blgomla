@@ -1,5 +1,6 @@
 import Product from "../models/product.model.js";
 import { ANY_AUDIENCE, isElectronicsCategory } from "../utils/electronicsVisibility.js";
+import { scopedCategoryIds } from "../utils/categoryScope.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { paginateProducts } from "../utils/productPagination.js";
@@ -206,6 +207,21 @@ export const getAllProducts = controllerWrapper(
     if (filters.audience === "public") filter.audience = { $ne: "electronics" };
     else if (filters.audience === "electronics") filter.audience = "electronics";
     if (filters.categoryId) filter.category = filters.categoryId;
+
+    // A scoped account is shown its own part of the catalogue and no more.
+    // Applied last so it narrows whatever was asked for rather than being
+    // narrowed by it — a category filter naming somebody else's branch ends
+    // up matching nothing, which is the correct answer.
+    // A signed-in caller here is the dashboard — the public listing has no
+    // session — and staff manage every section of the shop, including the one
+    // the storefront keeps out of its own listings.
+    if (req.user) filter.audience = ANY_AUDIENCE;
+
+    const allowedIds = await scopedCategoryIds(req.user);
+    if (allowedIds) {
+      const asked = filter.category ? [String(filter.category)].filter((id) => allowedIds.has(id)) : [...allowedIds];
+      filter.category = { $in: asked };
+    }
     // Choosing a category inside the branch is the other way in. Without this
     // the category page renders its own products as an empty list.
     if (await isElectronicsCategory(filters.categoryId)) filter.audience = ANY_AUDIENCE;

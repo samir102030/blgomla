@@ -108,10 +108,30 @@ export const mixRoute = (roles) => {
 // which populate req.user and (for stores) req.store. Reads :productId or :id.
 export const requireProductAccess = async (req, res, next) => {
   try {
+    const productId = req.params.productId || req.params.id;
+
+    // An account confined to part of the catalogue may only touch products
+    // inside it. Checked before the store rule and independently of it: the
+    // two answer different questions, and a scoped administrator is not a
+    // vendor.
+    const { scopedCategoryIds } = await import("../utils/categoryScope.js");
+    const allowed = await scopedCategoryIds(req.user);
+    if (allowed) {
+      const scopedProduct = await Product.findOne({ _id: productId, audience: { $in: [null, "public", "electronics"] } }).select("category name");
+      if (!scopedProduct) {
+        return res.status(404).json({ success: false, message: "Product not found" });
+      }
+      if (!scopedProduct.category || !allowed.has(String(scopedProduct.category))) {
+        return res.status(403).json({
+          success: false,
+          message: "This product is outside the categories you are responsible for",
+        });
+      }
+    }
+
     // Store users are limited to their own products. Anyone else reaching here
     // already passed a products.* permission check, so they manage all products.
     if (req.user?.role !== "store") return next();
-    const productId = req.params.productId || req.params.id;
     const product = await Product.findById(productId).select("store");
     if (!product) {
       return res
