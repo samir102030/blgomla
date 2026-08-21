@@ -147,7 +147,9 @@ const ProductsContent: React.FC = () => {
   };
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 12;
+  // Divisible by 2, 3 and 4 — the column counts every breakpoint above
+  // mobile uses — so a full page never ends on a ragged row.
+  const pageSize = 24;
 
   const [rows, setRows] = useState<any[]>([]);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -344,10 +346,10 @@ const ProductsContent: React.FC = () => {
           <AdvertisementBanner position="category-strip" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-6">
           {/* Sidebar — appears above products on mobile (filter trigger),
               left-rail on desktop. */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-1 xl:col-span-1">
             <div className="sticky top-24">
               <ProductFilterSidebar
                 filters={{ ...filters, subcategories: [] }}
@@ -363,7 +365,7 @@ const ProductsContent: React.FC = () => {
           </div>
 
           {/* Main Content */}
-          <div className="md:col-span-3">
+          <div className="md:col-span-3 xl:col-span-4">
             {/* Search + Sort + View Mode Bar */}
             <div className="bg-[var(--surface)] rounded-2xl border border-[var(--border)] p-3 sm:p-4 mb-4 sm:mb-6 shadow-sm">
               <div className="flex flex-col gap-3">
@@ -456,11 +458,11 @@ const ProductsContent: React.FC = () => {
             {/* Products Grid */}
             <div className={
               viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-5"
+                ? "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 sm:gap-3 lg:gap-4"
                 : "flex flex-col gap-3"
             }>
               {loading ? (
-                Array.from({ length: 6 }).map((_, i) => (
+                Array.from({ length: 12 }).map((_, i) => (
                   <ProductCardSkeleton key={i} />
                 ))
               ) : error ? (
