@@ -3,12 +3,13 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
 import type { User } from "../../types/user.type";
-import { ClockIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import CategoryScopeModal from "../../components/admin/CategoryScopeModal";
 import NewStaffModal from "../../components/admin/NewStaffModal";
 
 const AdminsPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const ar = i18n.language === "ar";
   const [admins, setAdmins] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [duration, setDuration] = useState<{ days: string; hours: string }>({
@@ -23,6 +24,7 @@ const AdminsPage: React.FC = () => {
   /** Which account's categories are being edited, if any. */
   const [scopeFor, setScopeFor] = useState<User | null>(null);
   const [creating, setCreating] = useState(false);
+  const [categoryNames, setCategoryNames] = useState<Map<string, string>>(new Map());
 
   const [customDuration, setCustomDuration] = useState({
     days: "0",
@@ -51,6 +53,23 @@ const AdminsPage: React.FC = () => {
   useEffect(() => {
     fetchAdmins();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    axiosInstance
+      .get("/categories", { params: { includeHidden: true } })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const rows = data.data || data.categories || [];
+        setCategoryNames(
+          new Map(rows.map((c: any) => [String(c._id), ar && c.nameAr ? c.nameAr : c.name])),
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ar]);
 
   const grantTime = async (
     userId: string,
@@ -113,6 +132,22 @@ const AdminsPage: React.FC = () => {
           t("staff.activeFailed", "Could not change the account"),
       );
     }
+  };
+
+  /**
+   * What to print in the Categories cell.
+   *
+   * The names themselves while they fit — two is what the column holds —
+   * then a count for the rest. An unscoped account reaches everything, which
+   * is a statement about the whole catalogue rather than a list of it.
+   */
+  const scopeLabels = (account: User): string[] => {
+    const ids = (account.categoryScope || []).map(String);
+    if (!ids.length) return [t("admins.scopeAll", "Whole catalogue")];
+
+    const named = ids.map((id) => categoryNames.get(id) || t("admins.scopeUnknown", "a removed category"));
+    if (named.length <= 2) return named;
+    return [...named.slice(0, 2), t("admins.scopeMore", "+{{count}} more", { count: named.length - 2 })];
   };
 
   const formatExpiry = (date?: string) => {
@@ -248,14 +283,28 @@ const AdminsPage: React.FC = () => {
                       {admin.role === "admin" ? formatRemaining(admin.adminExpiresAt) : "—"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
+                      {/*
+                        Named, not counted. "1 category" says an account is
+                        restricted without saying to what, which is the one
+                        thing this column exists to answer — and styled as a
+                        bare pill it read as a badge rather than the way in
+                        to change it.
+                      */}
                       <button
                         type="button"
                         onClick={() => setScopeFor(admin)}
-                        className="rounded-lg border border-gray-300 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                        title={t("admins.editScope", "Change the sections this account is responsible for")}
+                        className="group flex max-w-[16rem] flex-wrap items-center gap-1.5 rounded-lg border border-gray-300 px-2.5 py-1.5 text-start text-xs font-semibold text-gray-700 transition-colors hover:border-[#002B5B] hover:bg-gray-50"
                       >
-                        {admin.categoryScope?.length
-                          ? t("admins.scopeCount", "{{count}} category", { count: admin.categoryScope.length })
-                          : t("admins.scopeAll", "Whole catalogue")}
+                        {scopeLabels(admin).map((label) => (
+                          <span
+                            key={label}
+                            className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-800 group-hover:bg-white"
+                          >
+                            {label}
+                          </span>
+                        ))}
+                        <PencilSquareIcon className="h-3.5 w-3.5 shrink-0 text-gray-400 group-hover:text-[#002B5B]" />
                       </button>
                     </td>
                     <td className="px-4 py-3 text-sm">

@@ -4115,5 +4115,8 @@
   "staff.reinstate": "إعادة تفعيل",
   "staff.suspended": "تم إيقاف الحساب.",
   "staff.reinstated": "تم إعادة تفعيل الحساب.",
-  "staff.activeFailed": "تعذّر تغيير حالة الحساب."
+  "staff.activeFailed": "تعذّر تغيير حالة الحساب.",
+  "admins.editScope": "غيّر الأقسام المسؤول عنها الحساب ده",
+  "admins.scopeMore": "+{{count}} كمان",
+  "admins.scopeUnknown": "قسم متشال"
 }

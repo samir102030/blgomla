@@ -4115,5 +4115,8 @@
   "staff.reinstate": "Reinstate",
   "staff.suspended": "Account suspended",
   "staff.reinstated": "Account reinstated",
-  "staff.activeFailed": "Could not change the account"
+  "staff.activeFailed": "Could not change the account",
+  "admins.editScope": "Change the sections this account is responsible for",
+  "admins.scopeMore": "+{{count}} more",
+  "admins.scopeUnknown": "a removed category"
 }
