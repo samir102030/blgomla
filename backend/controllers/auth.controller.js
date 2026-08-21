@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import Category from "../models/category.model.js";
+import Role from "../models/role.model.js";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/user.model.js";
 import { paginateQuery } from "../utils/pagination.js";
@@ -679,10 +680,25 @@ export const resetPassword = controllerWrapper(
 export const getAllUsers = controllerWrapper(
   "getAllUsers",
   async (req, res) => {
-    const { page, limit, role } = req.query;
-    const query = (role ? User.find({ role }) : User.find({})).select(
-      SENSITIVE_USER_FIELDS
-    );
+    const { page, limit, role, staff } = req.query;
+
+    // `role` takes one role or several separated by commas, and `staff=1`
+    // asks for the back office as a whole. The team page wants the latter:
+    // asking for `admin` by name meant a category manager — a real staff
+    // account, just not an administrator — never appeared in the list that
+    // exists to manage staff, and so could not be given its categories.
+    const roles = String(role || "")
+      .split(",")
+      .map((r) => r.trim().toLowerCase())
+      .filter(Boolean);
+
+    const filter = roles.length
+      ? { role: roles.length === 1 ? roles[0] : { $in: roles } }
+      : staff
+        ? { role: { $nin: ["customer", "store"] } }
+        : {};
+
+    const query = User.find(filter).select(SENSITIVE_USER_FIELDS);
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);
@@ -846,6 +862,117 @@ export const finalDeleteUser = controllerWrapper(
  * may do, this says where it may do it, and conflating them would mean a new
  * role for every combination of the two.
  */
+/**
+ * Create a back-office account outright.
+ *
+ * Staff are not customers who happened to sign up. Without this the only way
+ * to put somebody in charge of a section was to have them register on the
+ * storefront, wait for the verification mail, then find the row and promote
+ * it — three steps across two people, and the account carried a cart and a
+ * referral code it would never use.
+ *
+ * The account is created verified and active: an administrator vouching for
+ * a colleague is the verification, and a staff member who cannot log in
+ * until they click a link in an inbox nobody has set up yet is no account at
+ * all. `categoryScope` may be passed here so the two decisions — who they
+ * are and what they are responsible for — are made in one go.
+ *
+ * Gated on `users.role`, the same permission as changing one, because
+ * creating an account with a role is granting that role. Administrator roles
+ * stay off-limits: PRIVILEGED_ROLES is what stops this endpoint from being a
+ * way to mint a super admin.
+ */
+export const createStaffAccount = controllerWrapper(
+  "createStaffAccount",
+  async (req, res) => {
+    const { name, email, password, role, categoryScope = [] } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "name, email, password and role are all required",
+      });
+    }
+
+    if (String(password).length < 8) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Password must be at least 8 characters" });
+    }
+
+    const wanted = String(role).toLowerCase().trim();
+    if (PRIVILEGED_ROLES.includes(wanted)) {
+      return res
+        .status(400)
+        .json({ success: false, message: `Cannot create an account with the ${role} role` });
+    }
+
+    const roleExists = await Role.exists({ key: wanted });
+    if (!roleExists) {
+      return res.status(400).json({ success: false, message: `No such role: ${role}` });
+    }
+
+    if (await User.findOne({ email: emailMatch(email) })) {
+      return res
+        .status(409)
+        .json({ success: false, message: "An account with that email already exists" });
+    }
+
+    if (!Array.isArray(categoryScope)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "categoryScope must be an array of category ids" });
+    }
+    const ids = categoryScope.map(String).filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (ids.length !== categoryScope.length) {
+      return res
+        .status(400)
+        .json({ success: false, message: "One of the category ids is not a valid id" });
+    }
+    if (ids.length && (await Category.countDocuments({ _id: { $in: ids } })) !== ids.length) {
+      return res
+        .status(400)
+        .json({ success: false, message: "One of the categories does not exist" });
+    }
+
+    // The pre-save hook hashes the password; it never reaches the database
+    // as written, and never comes back out — SENSITIVE_USER_FIELDS drops it
+    // from every read, and the response below is built by hand.
+    const user = new User({
+      name,
+      email,
+      password,
+      role: wanted,
+      categoryScope: ids,
+      isVerified: true,
+      active: true,
+      lastLogin: new Date(),
+    });
+    await user.save();
+
+    logAudit(
+      req,
+      "user.staff_created",
+      "user",
+      user._id,
+      { email: user.email, role: wanted, categoryScope: ids },
+      { target: user, severity: "warning", category: "account" },
+    );
+
+    res.status(201).json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        active: user.active,
+        categoryScope: ids,
+      },
+    });
+  },
+);
+
 export const setCategoryScope = controllerWrapper(
   "setCategoryScope",
   async (req, res) => {

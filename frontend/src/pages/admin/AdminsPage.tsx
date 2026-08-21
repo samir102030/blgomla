@@ -3,8 +3,9 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
 import type { User } from "../../types/user.type";
-import { ClockIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import CategoryScopeModal from "../../components/admin/CategoryScopeModal";
+import NewStaffModal from "../../components/admin/NewStaffModal";
 
 const AdminsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -21,6 +22,7 @@ const AdminsPage: React.FC = () => {
   }>({ open: false });
   /** Which account's categories are being edited, if any. */
   const [scopeFor, setScopeFor] = useState<User | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const [customDuration, setCustomDuration] = useState({
     days: "0",
@@ -31,8 +33,11 @@ const AdminsPage: React.FC = () => {
   const fetchAdmins = async () => {
     setLoading(true);
     try {
+      // The back office as a whole, not `role: "admin"`. A category manager
+      // is staff — asking for administrators by name kept them off the only
+      // page that can hand them their categories.
       const { data } = await axiosInstance.get("/users", {
-        params: { role: "admin" },
+        params: { staff: 1, limit: 200 },
       });
       setAdmins(data.data || []);
     } catch (error) {
@@ -142,6 +147,13 @@ const AdminsPage: React.FC = () => {
           >
             {t("admins.grantCustomDuration")}
           </button>
+          <button
+            onClick={() => setCreating(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#002B5B] text-white text-sm font-semibold hover:bg-[#001a3d]"
+          >
+            <PlusIcon className="w-4 h-4" />
+            {t("staff.newTitle", "New staff account")}
+          </button>
         </div>
       </div>
 
@@ -154,6 +166,9 @@ const AdminsPage: React.FC = () => {
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                 {t("admins.colEmail")}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
+                {t("admins.colRole", "Role")}
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                 {t("admins.colExpiresAt")}
@@ -172,14 +187,14 @@ const AdminsPage: React.FC = () => {
           <tbody className="divide-y divide-gray-200">
             {loading && (
               <tr>
-                <td colSpan={4} className="py-6 text-center text-gray-500">
+                <td colSpan={7} className="py-6 text-center text-gray-500">
                   {t("admins.loading")}
                 </td>
               </tr>
             )}
             {!loading && admins.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-6 text-center text-gray-500">
+                <td colSpan={7} className="py-6 text-center text-gray-500">
                   {t("admins.noAdmins")}
                 </td>
               </tr>
@@ -193,11 +208,16 @@ const AdminsPage: React.FC = () => {
                   <td className="px-4 py-3 text-sm text-gray-700">
                     {admin.email}
                   </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {formatExpiry(admin.adminExpiresAt)}
+                    <td className="px-4 py-3 text-sm">
+                      <span className="inline-block rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                        {t(`roles.${admin.role}`, String(admin.role).replace(/_/g, " "))}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
-                      {formatRemaining(admin.adminExpiresAt)}
+                      {admin.role === "admin" ? formatExpiry(admin.adminExpiresAt) : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {admin.role === "admin" ? formatRemaining(admin.adminExpiresAt) : "—"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
                       <button
@@ -212,6 +232,8 @@ const AdminsPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex flex-wrap gap-2">
+                        {admin.role === "admin" && (
+                        <>
                         <button
                           onClick={() =>
                             grantTime(
@@ -242,6 +264,8 @@ const AdminsPage: React.FC = () => {
                         >
                           {t("admins.endNow")}
                         </button>
+                        </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -339,6 +363,18 @@ const AdminsPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      {creating && (
+        <NewStaffModal
+          onClose={() => setCreating(false)}
+          onCreated={(user) => {
+            setCreating(false);
+            setAdmins((prev) => [user, ...prev]);
+            // Straight on to the half that matters: an account with no
+            // categories can see nothing, so never leave it at that.
+            setScopeFor(user);
+          }}
+        />
       )}
       {scopeFor && (
         <CategoryScopeModal

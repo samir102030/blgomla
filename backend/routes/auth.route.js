@@ -17,6 +17,7 @@ import {
   changePassword,
   changeUserRole,
   setCategoryScope,
+  createStaffAccount,
   deActivateUser,
   finalDeleteUser,
   forgotPassword,
@@ -124,6 +125,9 @@ router
 // tested
 router.put("/changeRole/:userId", protectRoute, requirePermission("users.role"), changeUserRole);
 router.put("/categoryScope/:userId", protectRoute, requirePermission("users.role"), setCategoryScope);
+// Creating an account with a role is granting that role, so it is gated on
+// the same permission rather than the weaker users.edit.
+router.post("/staff", protectRoute, requirePermission("users.role"), createStaffAccount);
 router.put(
   "/adminTime/:userId",
   protectRoute,

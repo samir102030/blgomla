@@ -80,7 +80,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { name: t("admin.allVendors"), href: "/dashboard/vendors", perm: "vendors.view" },
         { name: t("admin.requests"), href: "/dashboard/requests", perm: "vendors.approve" },
         { name: t("admin.productApprovals"), href: "/dashboard/approvals", perm: "products.approve" },
-        { name: t("admin.admins"), href: "/dashboard/admins", perm: "roles.manage" },
+        { name: t("admin.admins"), href: "/dashboard/admins", perm: "users.role" },
       ],
     },
 
