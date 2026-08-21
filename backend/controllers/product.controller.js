@@ -206,7 +206,14 @@ export const getAllProducts = controllerWrapper(
     // round — a search inside one section stays inside it.
     if (filters.audience === "public") filter.audience = { $ne: "electronics" };
     else if (filters.audience === "electronics") filter.audience = "electronics";
-    if (filters.categoryId) filter.category = filters.categoryId;
+    // Ids arrive as strings and this listing runs through an aggregation,
+    // which does not cast them the way a schema-backed find() does. Left as
+    // strings they match nothing at all — quietly, with a 200 and an empty
+    // page — which is what ?categoryId= had been doing to every caller.
+    const asId = (value) =>
+      mongoose.Types.ObjectId.isValid(value) ? new mongoose.Types.ObjectId(String(value)) : value;
+
+    if (filters.categoryId) filter.category = asId(filters.categoryId);
 
     // A scoped account is shown its own part of the catalogue and no more.
     // Applied last so it narrows whatever was asked for rather than being
@@ -219,14 +226,16 @@ export const getAllProducts = controllerWrapper(
 
     const allowedIds = await scopedCategoryIds(req.user);
     if (allowedIds) {
-      const asked = filter.category ? [String(filter.category)].filter((id) => allowedIds.has(id)) : [...allowedIds];
-      filter.category = { $in: asked };
+      const asked = filter.category
+        ? [String(filter.category)].filter((id) => allowedIds.has(id))
+        : [...allowedIds];
+      filter.category = { $in: asked.map(asId) };
     }
     // Choosing a category inside the branch is the other way in. Without this
     // the category page renders its own products as an empty list.
     if (await isElectronicsCategory(filters.categoryId)) filter.audience = ANY_AUDIENCE;
-    if (filters.brandId) filter.brand = filters.brandId;
-    if (filters.storeId) filter.store = filters.storeId;
+    if (filters.brandId) filter.brand = asId(filters.brandId);
+    if (filters.storeId) filter.store = asId(filters.storeId);
     // Booleans arrive as the strings "true"/"false" via query params; coerce
     // so Mongo matches the actual Boolean field type.
     const toBool = (v) => (v === true || v === "true");
