@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { BoltIcon, HeartIcon, TruckIcon, TagIcon, LockClosedIcon, ShieldCheckIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
@@ -8,6 +8,10 @@ import { useTranslation } from "react-i18next";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { GoogleLogin } from "@react-oauth/google";
 import "../styles/auth-blade.css";
+import type { PickedAddress } from "../components/AddressMapPicker";
+
+// Leaflet only loads if somebody opens the map.
+const AddressMapPicker = lazy(() => import("../components/AddressMapPicker"));
 
 type AuthMode = "login" | "register";
 
@@ -103,6 +107,16 @@ const LoginRegisterPage: React.FC = () => {
         };
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [registerData, setRegisterData] = useState({ name: "", email: "", phoneNumber: "", password: "", confirmPassword: "" });
+  /**
+   * Where to deliver, offered at registration and entirely optional.
+   *
+   * Saved by the signup endpoint rather than from here: signup issues no
+   * session, so there is no way to write an address from the browser until
+   * the emailed code has been verified, and whatever was picked would be
+   * lost in between.
+   */
+  const [pickedLocation, setPickedLocation] = useState<PickedAddress | null>(null);
+  const [showSignupMap, setShowSignupMap] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState<string | null>(null);
@@ -209,7 +223,16 @@ const LoginRegisterPage: React.FC = () => {
         phoneNumber: normalizedPhone,
         password: registerData.password,
         ...(referralCode ? { referralCode } : {}),
-      });
+        ...(pickedLocation
+          ? {
+              deliveryAddress: {
+                address: pickedLocation.address,
+                city: pickedLocation.city,
+                state: pickedLocation.state,
+              },
+            }
+          : {}),
+      } as any);
       if (user) {
         // Backend no longer issues a session cookie at signup — user must
         // verify the emailed code. Send them straight to the verify page
@@ -464,6 +487,44 @@ const LoginRegisterPage: React.FC = () => {
                         {registerSuccess}
                       </div>
                     )}
+
+                    {/*
+                      Optional, and said so: a delivery address is genuinely
+                      useful to have before the first order, but a signup form
+                      that appears to demand somebody's home is a signup form
+                      people leave.
+                    */}
+                    <div className="rounded-xl border border-[var(--border)] p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-[var(--text)]">
+                            {t("login.shareLocation", "Share your delivery location")}
+                            <span className="ms-1.5 text-[10px] font-medium text-[var(--text-subtle)]">
+                              {t("login.optional", "optional")}
+                            </span>
+                          </p>
+                          <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                            {pickedLocation
+                              ? `${pickedLocation.city}${pickedLocation.state ? ", " + pickedLocation.state : ""}`
+                              : t("login.shareLocationDesc", "Saves it to your account so checkout is one step.")}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupMap((v) => !v)}
+                          className="shrink-0 text-xs font-semibold text-[var(--brand-primary)] hover:underline"
+                        >
+                          {showSignupMap ? t("account.hideMap", "Hide map") : t("login.openMap", "Open map")}
+                        </button>
+                      </div>
+                      {showSignupMap && (
+                        <div className="mt-3">
+                          <Suspense fallback={<div className="text-sm text-[var(--text-muted)]">{t("Loading map…")}</div>}>
+                            <AddressMapPicker onSelect={setPickedLocation} />
+                          </Suspense>
+                        </div>
+                      )}
+                    </div>
 
                     <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] hover:shadow-lg hover:shadow-[var(--brand-primary)]/20 transition-all disabled:opacity-60 flex items-center justify-center gap-2">
                       {loading ? <><span className="animate-spin">⟳</span> {t("login.registering", "Creating account...")}</> : t("login.registerBtn", "Create Account")}

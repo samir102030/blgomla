@@ -14,6 +14,7 @@ import {
 } from "../middleware/token.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import Store from "../models/store.model.js";
+import Address from "../models/address.model.js";
 import Product from "../models/product.model.js";
 import mongoose from "mongoose";
 import Notification from "../models/notification.model.js";
@@ -70,7 +71,7 @@ const guardSuperAdminMutation = async (targetUserId, actor) => {
   return { targetUser };
 };
 export const signup = controllerWrapper("signup", async (req, res) => {
-  const { email, password, name, phoneNumber, role, storeDescription, referralCode } =
+  const { email, password, name, phoneNumber, role, storeDescription, referralCode, deliveryAddress } =
     req.body;
 
   if (await User.findOne({ email: emailMatch(email) }))
@@ -114,6 +115,32 @@ export const signup = controllerWrapper("signup", async (req, res) => {
   // Created after the user so a failed save (duplicate email, validation)
   // doesn't leave an orphan store behind. Declared out here because the
   // response below reports it back to the vendor.
+  // A location shared during registration becomes the account's first
+  // address, saved here rather than by the browser afterwards: signup
+  // deliberately issues no session — the emailed code has to be verified
+  // first — so anything picked on the form would be lost between the two
+  // steps unless it travels with the registration itself.
+  //
+  // Never fatal. Somebody who shared their location and got "registration
+  // failed" would have no idea the two were connected, and the account is
+  // already saved by this point.
+  if (deliveryAddress?.address && deliveryAddress?.city) {
+    try {
+      await Address.create({
+        user: user._id,
+        name: user.name,
+        phone: user.phoneNumber,
+        address: String(deliveryAddress.address).slice(0, 300),
+        city: String(deliveryAddress.city).slice(0, 120),
+        state: deliveryAddress.state ? String(deliveryAddress.state).slice(0, 120) : undefined,
+        type: "Shipping",
+        isDefault: true,
+      });
+    } catch (err) {
+      console.error("Could not save the address shared at signup:", err.message);
+    }
+  }
+
   let store;
   if (role === "store") {
     store = new Store({

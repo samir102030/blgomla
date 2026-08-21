@@ -4126,5 +4126,9 @@
   "Finding your location took too long. Try again, or tap the map.": "Finding your location took too long. Try again, or tap the map.",
   "Your location could not be determined. Tap the map instead.": "Your location could not be determined. Tap the map instead.",
   "account.pickOnMap": "Pick the location on a map",
-  "account.hideMap": "Hide map"
+  "account.hideMap": "Hide map",
+  "login.shareLocation": "Share your delivery location",
+  "login.shareLocationDesc": "Saves it to your account so checkout is one step.",
+  "login.optional": "optional",
+  "login.openMap": "Open map"
 }

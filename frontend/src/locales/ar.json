@@ -4126,5 +4126,9 @@
   "Finding your location took too long. Try again, or tap the map.": "تحديد موقعك خد وقت طويل. جرّب تاني، أو دوس على الخريطة.",
   "Your location could not be determined. Tap the map instead.": "متعرفش نحدد موقعك. دوس على الخريطة بدل كده.",
   "account.pickOnMap": "حدّد الموقع على الخريطة",
-  "account.hideMap": "إخفاء الخريطة"
+  "account.hideMap": "إخفاء الخريطة",
+  "login.shareLocation": "شارك موقع التوصيل",
+  "login.shareLocationDesc": "بيتحفظ في حسابك، فإتمام الطلب بعد كده بيبقى خطوة واحدة.",
+  "login.optional": "اختياري",
+  "login.openMap": "افتح الخريطة"
 }
