@@ -3,6 +3,7 @@ import { MapPinIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAddressStore } from "../stores/address.store";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
+import GovernorateSelect from "./GovernorateSelect";
 
 const initialAddressState = { name: "", phone: "", address: "", city: "", state: "", zipCode: "", country: "", isDefault: false, type: "Shipping" };
 
@@ -131,7 +132,7 @@ const AccountAddresses: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t("account.stateRegion", "State / Region")}</label>
-                  <input type="text" name="state" value={addressForm.state} onChange={handleAddressChange} className={inputClass} />
+                  <GovernorateSelect value={addressForm.state} onChange={(state) => setAddressForm((prev: any) => ({ ...prev, state }))} className={inputClass} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

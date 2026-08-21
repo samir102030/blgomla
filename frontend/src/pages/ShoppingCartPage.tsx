@@ -18,6 +18,7 @@ import { getBaseUnitPrice, getBulkPricing } from "../lib/pricing";
 import { resolveShippingFee, type ShippingSettings } from "../lib/shipping";
 import { cldImg } from "../lib/cldImage";
 import FeaturedProducts from "../components/FeaturedProducts";
+import GovernorateSelect from "../components/GovernorateSelect";
 // import LoadingComp from "../components/LoadingComp";
 
 interface CartItemWithProduct {
@@ -1149,18 +1150,19 @@ const ShoppingCartPage: React.FC = () => {
                   <h3 className="text-base sm:text-lg font-semibold text-[var(--text)] mb-3 sm:mb-4">
                     {t("Estimate Shipping")}
                   </h3>
-                  <select
+                  {/*
+                    Every governorate, not only the ones with a zone saved
+                    against them. The list was the zones, so a shop that had
+                    configured none — this one — offered nothing to choose
+                    and the estimate could never be asked for. Anywhere
+                    without its own rate falls through to the default fee,
+                    which is what resolveShippingFee already did.
+                  */}
+                  <GovernorateSelect
                     value={selectedGovernorate}
-                    onChange={(e) => setSelectedGovernorate(e.target.value)}
-                    className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm"
-                  >
-                    <option value="">{t("Select your governorate")}</option>
-                    {(shippingSettings?.zones || []).map((zone) => (
-                      <option key={zone.governorate} value={zone.governorate}>
-                        {zone.governorate}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedGovernorate}
+                    className="w-full px-3 py-2 border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent text-xs sm:text-sm bg-[var(--surface)] text-[var(--text)]"
+                  />
                   <div className="mt-3 flex items-center justify-between text-xs sm:text-sm">
                     <span className="text-[var(--text-muted)]">
                       {t("Estimated shipping")}

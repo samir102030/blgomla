@@ -10,6 +10,7 @@ import {
   SHIPMENT_TYPE_CODES,
   PRICE_TYPE_CODES,
 } from "../../lib/accurate";
+import { GovernorateDatalist } from "../../components/GovernorateSelect";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]";
@@ -138,6 +139,7 @@ const AccurateSettingsPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl">
+      <GovernorateDatalist id="accurate-governorates" />
       <h1 className="text-2xl font-bold text-[var(--text)] mb-1">
  {t("Accurate shipping")}
       </h1>
@@ -397,6 +399,7 @@ const AccurateSettingsPage: React.FC = () => {
               <div key={i} className="flex gap-2 items-center">
                 <input
                   type="text"
+                  list="accurate-governorates"
                   value={m.governorate}
                   onChange={(e) => updateMapping(i, { governorate: e.target.value })}
                   placeholder={t("e.g. Cairo")}

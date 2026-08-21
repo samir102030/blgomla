@@ -17,6 +17,7 @@ import type { Collection } from "../types/collection.type";
 import { useTranslation } from "react-i18next";
 import { getBulkPricing } from "../lib/pricing";
 import type { PickedAddress } from "../components/AddressMapPicker";
+import GovernorateSelect from "../components/GovernorateSelect";
 
 const AddressMapPicker = lazy(() => import("../components/AddressMapPicker"));
 
@@ -986,17 +987,15 @@ const CheckoutPage: React.FC = () => {
                       <label className="block text-xs sm:text-sm font-medium text-[var(--text-muted)] mb-1 sm:mb-2">
                         {t("State*")}
                       </label>
-                      <input
-                        type="text"
-                        placeholder={t("State")}
+                      {/*
+                        Typed by hand, this never reliably matched a zone:
+                        the fee shown in the cart and the fee charged here
+                        agreed only when the spelling happened to.
+                      */}
+                      <GovernorateSelect
                         value={billingData.state}
-                        onChange={(e) =>
-                          setBillingData({
-                            ...billingData,
-                            state: e.target.value,
-                          })
-                        }
-                        className="w-full px-2 sm:px-3 py-2 text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={(state) => setBillingData({ ...billingData, state })}
+                        className="w-full px-2 sm:px-3 py-2 text-sm border border-[var(--border)] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-[var(--surface)] text-[var(--text)]"
                         required
                       />
                     </div>

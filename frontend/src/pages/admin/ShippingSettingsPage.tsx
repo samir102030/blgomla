@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../../lib/axios";
 import type { ShippingSettings, ShippingZone } from "../../lib/shipping";
+import { GovernorateDatalist } from "../../components/GovernorateSelect";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]";
@@ -61,6 +62,7 @@ const ShippingSettingsPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 max-w-2xl">
+      <GovernorateDatalist id="shipping-governorates" />
       <h1 className="text-2xl font-bold text-[var(--text)] mb-1">
  {t("admin.shipping", "Shipping")}
       </h1>
@@ -136,6 +138,7 @@ const ShippingSettingsPage: React.FC = () => {
               <div key={i} className="flex gap-2 items-center">
                 <input
                   type="text"
+                  list="shipping-governorates"
                   value={z.governorate}
                   onChange={(e) => updateZone(i, { governorate: e.target.value })}
                   placeholder={t("Governorate (e.g. Cairo)")}
