@@ -646,7 +646,7 @@ const HomePage: React.FC = () => {
                             </div>
                             <button
                               onClick={() => setPendingBundle(collection)}
-                              className={`text-xs font-semibold text-white px-3 py-1.5 rounded-lg bg-gradient-to-r ${theme.gradient} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
+                              className={`text-xs font-semibold text-white px-3 py-2.5 sm:py-1.5 rounded-lg bg-gradient-to-r ${theme.gradient} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}
                             >
  {t("Add")}
                             </button>

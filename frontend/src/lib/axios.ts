@@ -87,6 +87,19 @@ const NO_REFRESH_PATHS = [
 const shouldAttemptRefresh = (error: any) => {
   if (error.response?.status !== 401) return false;
   if (error.response?.data?.code === "TOTP_REQUIRED") return false;
+
+  /*
+    Nobody is signed in, so there is no session to refresh and nothing has
+    expired. A signed-out visitor draws a 401 from anything protected the page
+    happens to touch — the profile call, the unread-notification count, the
+    cart — and the branch below answers a failed refresh by logging out and
+    hard-redirecting to /login. That threw shoppers off public pages: opening
+    a product while signed out landed on the login form.
+
+    A 401 only means "your session ended" if there was a session.
+  */
+  if (!useUserStore.getState().user) return false;
+
   const url: string = error.config?.url || "";
   return !NO_REFRESH_PATHS.some((path) => url.startsWith(path));
 };

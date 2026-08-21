@@ -489,6 +489,10 @@ html[dir="ltr"] .mn-icon-btn em { left: auto; right: -4px; }
 .mn-carousel-controls { margin-top: 26px; display: flex; gap: 13px; flex-wrap: wrap; }
 .mn-carousel-controls button { display: flex; flex-direction: column; gap: 8px; padding: 0; border: 0; background: transparent; color: #8494ab; font-family: "IBM Plex Mono", "IBM Plex Sans Arabic", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .05em; cursor: pointer; transition: color 220ms var(--ease); }
 .mn-carousel-controls button i { display: block; width: 34px; height: 2px; border-radius: 999px; background: rgba(174,194,224,.26); transition: width 260ms var(--ease), background 260ms var(--ease); }
+/* The number and its 2px rule come to 22x27 — a fingertip is 44. This
+   extends what can be tapped without moving what can be seen. */
+.mn-carousel-controls button { position: relative; }
+.mn-carousel-controls button::after { content: ""; position: absolute; inset: -11px -6px; }
 .mn-carousel-controls button:hover { color: #dbe5f4; }
 .mn-carousel-controls button.mn-active { color: #ffffff; }
 .mn-carousel-controls button.mn-active i { width: 52px; background: var(--orange); }
