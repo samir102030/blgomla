@@ -343,6 +343,8 @@
 .mn-light html, html.mn-light { background:var(--ink); }
 .mn-light body { color:#152235; background:var(--ink); }
 .mn-light .mn-app-shell { background:radial-gradient(850px 500px at 88% -15%, rgba(var(--accent-rgb), .10), transparent 64%), var(--ink); }
+.mn-catbar { background:rgba(9,13,20,.55); }
+.mn-light .mn-catbar { background:rgba(246,248,252,.92); }
 .mn-light .mn-site-header { background:rgba(255,255,255,.91); box-shadow:0 5px 20px rgba(24,45,73,.06); }
 .mn-light .mn-brand-text,.mn-light .mn-nav-links,.mn-light .mn-header-action,.mn-light .mn-icon-btn { color:#17263b; }
 .mn-light .mn-nav-links a:hover,.mn-light .mn-nav-links a.mn-active { color:#c94a00; }

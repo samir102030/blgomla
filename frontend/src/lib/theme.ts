@@ -13,19 +13,25 @@ const THEME_STORAGE_KEY = "theme";
  * on is kept.
  */
 const THEME_VERSION_KEY = "theme:version";
-const THEME_VERSION = "2-smart-solutions";
+const THEME_VERSION = "3-light-default";
 
 /**
- * The storefront opens dark.
+ * The storefront opens light.
  *
- * The Smart Solutions surfaces — the home journey, the header, the footer —
- * are painted on their own charcoal ground and do not follow the toggle. When
- * the rest of the page defaulted to the operating system's preference, a
- * visitor on a light desktop got a dark top half and a white bottom half of
- * the same page. Dark is the identity; light stays one click away for anyone
- * who wants it, and an explicit choice is always honoured over this default.
+ * It used to open dark, because the surfaces that carry the identity — the
+ * hero, the footer — are painted on their own charcoal ground, and a page
+ * that was dark at the top and white at the bottom looked broken. Those
+ * surfaces are deliberate and stay dark either way; what was actually
+ * missing was a light ground for the category bar, which kept a hardcoded
+ * dark strip under text that had already switched to near-black.
+ *
+ * With that fixed the light page holds together, and it is the right
+ * default for a catalogue: 11,797 products read better on white, and every
+ * product photograph in the shop was shot on one.
+ *
+ * Dark stays one click away, and an explicit choice always beats this.
  */
-const DEFAULT_THEME: Theme = "dark";
+const DEFAULT_THEME: Theme = "light";
 
 const isTheme = (value: string | null): value is Theme =>
   value === "light" || value === "dark";

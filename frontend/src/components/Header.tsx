@@ -796,7 +796,12 @@ const Header: React.FC = () => {
       </div>
 
       {/* Desktop Navigation */}
-      <nav className="hidden lg:block border-t border-[var(--line)] bg-[rgba(9,13,20,0.55)]">
+      {/*
+        The bar's own class rather than a colour written inline: the text in it
+        already switched with the theme while the ground under it did not, so
+        in light mode this was near-black type on a dark strip.
+      */}
+      <nav className="mn-catbar hidden lg:block border-t border-[var(--line)]">
         <div className="mn-site-width">
           <ul className="mn-nav-links flex-wrap">
             {/* The catalogue opens from one control at the head of the row.

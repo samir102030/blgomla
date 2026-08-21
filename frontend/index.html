@@ -1,5 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<!--
+  `mn-light` here, not only from applyInitialTheme(): the stylesheet is
+  dark-by-default and the class is what switches it, so a document that starts
+  bare paints one dark frame before the bundle runs. Matching the default in
+  the markup removes that flash; a visitor who chose dark still gets it the
+  moment applyInitialTheme() takes the class back off.
+-->
+<html lang="en" class="mn-light" style="color-scheme: light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
