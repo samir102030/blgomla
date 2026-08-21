@@ -654,7 +654,14 @@ const Header: React.FC = () => {
             )}
 
             {!user && (
-              <Link to="/login" className="mn-header-link inline-flex">
+              /*
+                Hidden on the narrowest phones, where it is the sign-in door
+                standing next to the account icon — which is also the sign-in
+                door, since /account asks a signed-out visitor to log in. At
+                320px those 44px are the difference between the menu button
+                sitting inside the page and hanging off its edge.
+              */
+              <Link to="/login" className="mn-header-link hidden sm:inline-flex">
                 <ArrowRightOnRectangleIcon className="w-5 h-5 shrink-0" />
                 <span className="hidden lg:block">{t("Login")}</span>
               </Link>
