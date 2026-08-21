@@ -158,14 +158,21 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
 
   // Arriving with a category already chosen — from the menu, or a shared link
-  // — opens the branch it sits in, so the sidebar shows where the page is
-  // rather than a collapsed list with a tick hidden somewhere inside it.
+  // — opens the branch it sits in *and* the category itself, so the sidebar
+  // shows both where the page is and what it can be narrowed to.
+  //
+  // Only the ancestors were opened before. For a category partway down a
+  // tree that still revealed its siblings, but a root has no ancestors:
+  // choosing Electronics from the menu opened nothing at all, so its 141
+  // sections sat collapsed behind one chevron and the page looked like 5,656
+  // products in no order whatsoever.
   useEffect(() => {
     if (!filters.categories.length || !categories?.length) return;
     const byId = new Map((categories || []).map((c) => [c._id, c]));
     setOpenCategories((prev) => {
       const next = new Set(prev);
       for (const selected of filters.categories) {
+        next.add(selected);
         let parentId = byId.get(selected) ? parentIdOf(byId.get(selected)!) : null;
         let guard = 0;
         while (parentId && guard++ < 10) {
