@@ -4118,5 +4118,13 @@
   "staff.activeFailed": "تعذّر تغيير حالة الحساب.",
   "admins.editScope": "غيّر الأقسام المسؤول عنها الحساب ده",
   "admins.scopeMore": "+{{count}} كمان",
-  "admins.scopeUnknown": "قسم متشال"
+  "admins.scopeUnknown": "قسم متشال",
+  "Use my current location": "استخدم موقعي الحالي",
+  "Finding you…": "بندوّر على موقعك...",
+  "This browser cannot share your location. Tap the map instead.": "المتصفح ده مش بيقدر يشارك موقعك. دوس على الخريطة بدل كده.",
+  "Location permission was refused. Allow it in your browser, or tap the map.": "إذن الموقع مترفض. فعّله من إعدادات المتصفح، أو دوس على الخريطة.",
+  "Finding your location took too long. Try again, or tap the map.": "تحديد موقعك خد وقت طويل. جرّب تاني، أو دوس على الخريطة.",
+  "Your location could not be determined. Tap the map instead.": "متعرفش نحدد موقعك. دوس على الخريطة بدل كده.",
+  "account.pickOnMap": "حدّد الموقع على الخريطة",
+  "account.hideMap": "إخفاء الخريطة"
 }

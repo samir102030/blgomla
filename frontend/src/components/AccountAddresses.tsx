@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import { MapPinIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAddressStore } from "../stores/address.store";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import GovernorateSelect from "./GovernorateSelect";
+import type { PickedAddress } from "./AddressMapPicker";
+
+// Leaflet and its stylesheet are a sizeable chunk; only fetched when somebody
+// actually opens the map.
+const AddressMapPicker = lazy(() => import("./AddressMapPicker"));
 
 const initialAddressState = { name: "", phone: "", address: "", city: "", state: "", zipCode: "", country: "", isDefault: false, type: "Shipping" };
 
@@ -12,6 +17,7 @@ const AccountAddresses: React.FC = () => {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<any | null>(null);
   const [addressForm, setAddressForm] = useState<any>(initialAddressState);
+  const [showMap, setShowMap] = useState(false);
   const [addressLoading, setAddressLoading] = useState(false);
 
   const deleteAddress = useAddressStore((state) => state.deleteAddress);
@@ -120,6 +126,37 @@ const AccountAddresses: React.FC = () => {
                   <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t("account.phone", "Phone")}</label>
                   <input type="text" name="phone" value={addressForm.phone} onChange={handleAddressChange} className={inputClass} />
                 </div>
+              </div>
+              {/*
+                The map is how most people actually give an address here: street
+                names are inconsistent and a pin is not. Checkout has had this
+                all along, but an address saved from the account page — the one
+                that gets reused for every future order — could only be typed.
+              */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowMap((v) => !v)}
+                  className="text-sm font-medium text-[var(--brand-primary)] hover:underline"
+                >
+                  {showMap ? t("account.hideMap", "Hide map") : t("account.pickOnMap", "Pick the location on a map")}
+                </button>
+                {showMap && (
+                  <div className="mt-3">
+                    <Suspense fallback={<div className="text-sm text-[var(--text-muted)]">{t("Loading map…")}</div>}>
+                      <AddressMapPicker
+                        onSelect={(picked: PickedAddress) =>
+                          setAddressForm((prev: any) => ({
+                            ...prev,
+                            address: picked.address || prev.address,
+                            city: picked.city || prev.city,
+                            state: picked.state || prev.state,
+                          }))
+                        }
+                      />
+                    </Suspense>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t("account.streetAddress", "Street Address")}</label>

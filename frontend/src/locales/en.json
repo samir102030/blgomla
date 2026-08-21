@@ -4118,5 +4118,13 @@
   "staff.activeFailed": "Could not change the account",
   "admins.editScope": "Change the sections this account is responsible for",
   "admins.scopeMore": "+{{count}} more",
-  "admins.scopeUnknown": "a removed category"
+  "admins.scopeUnknown": "a removed category",
+  "Use my current location": "Use my current location",
+  "Finding you…": "Finding you…",
+  "This browser cannot share your location. Tap the map instead.": "This browser cannot share your location. Tap the map instead.",
+  "Location permission was refused. Allow it in your browser, or tap the map.": "Location permission was refused. Allow it in your browser, or tap the map.",
+  "Finding your location took too long. Try again, or tap the map.": "Finding your location took too long. Try again, or tap the map.",
+  "Your location could not be determined. Tap the map instead.": "Your location could not be determined. Tap the map instead.",
+  "account.pickOnMap": "Pick the location on a map",
+  "account.hideMap": "Hide map"
 }

@@ -97,19 +97,88 @@ export const groupedGovernorates = (): Array<{
 };
 
 /**
+ * What a geocoder calls each governorate.
+ *
+ * Measured, not guessed: every entry below is what Nominatim actually
+ * returned for a point inside that governorate. Three of them are the
+ * English translation of the Arabic name rather than the name anybody uses —
+ * Gharbia comes back as "Western", Sharqia as "Eastern", Beheira as "Lake"
+ * — which no amount of string normalising would ever resolve.
+ *
+ * Keys are already normalised by `normalise` below.
+ */
+const ALIASES: Record<string, string> = {
+  jiza: "Giza",
+  gizah: "Giza",
+  qalyubiya: "Qalyubia",
+  eastern: "Sharqia",
+  sharkia: "Sharqia",
+  daqahliyya: "Dakahlia",
+  lake: "Beheira",
+  buhayrah: "Beheira",
+  western: "Gharbia",
+  minufiyya: "Monufia",
+  menoufia: "Monufia",
+  ismailiya: "Ismailia",
+  "bani sweif": "Beni Suef",
+  minya: "Minya",
+  suhaj: "Sohag",
+  matruh: "Matrouh",
+  qahirah: "Cairo",
+  "new cairo": "Cairo",
+  "6th of october": "Giza",
+  "kafr ash shaykh": "Kafr El Sheikh",
+  "bur said": "Port Said",
+  suways: "Suez",
+  dumyat: "Damietta",
+  fayyum: "Faiyum",
+  uqsur: "Luxor",
+};
+
+/**
+ * One spelling to compare against.
+ *
+ * Arabic first: the geocoder's Arabic names match this list exactly bar the
+ * letters people write either way — Beni Suef comes back as "بنى سويف" where
+ * the list says "بني سويف". Then English, with the articles a transliteration
+ * bolts on (Al, El, Ad, Aj) and the word "Governorate" taken off.
+ */
+const normalise = (value: string): string =>
+  String(value)
+    .trim()
+    .replace(/[ً-ْـ]/g, "")
+    .replace(/[أإآ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .toLowerCase()
+    .replace(/governorate|muhafazat/g, " ")
+    // Only as whole words: without the boundaries this would eat the "al"
+    // inside "Qalyubia" and the "as" inside "Aswan".
+    .replace(/\b(al|el|ad|as|aj|ash|at|az)\b/g, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/**
  * Resolve loosely-typed input to a canonical value.
  *
- * Addresses saved before this list existed hold whatever was typed — "cairo",
- * "القاهرة", "6th of October" — and dropping them into a `<select>` would show
- * an empty box and silently rewrite the address on the next save. Anything
- * that cannot be resolved is handed back unchanged, for the caller to keep as
- * an extra option.
+ * Two callers, both of which hand over something nobody typed into a list.
+ * The map picker reverse-geocodes a dropped pin, and addresses saved before
+ * this list existed hold whatever was typed — "cairo", "القاهرة", "6th of
+ * October". Dropping either into a `<select>` unresolved shows an empty box
+ * and silently rewrites the address on the next save.
+ *
+ * Anything still unrecognised comes back null, for the caller to keep as it
+ * is rather than replace with a guess.
  */
 export const matchGovernorate = (input?: string | null): string | null => {
-  const needle = String(input ?? "").trim().toLowerCase();
+  const needle = normalise(String(input ?? ""));
   if (!needle) return null;
-  const hit = GOVERNORATES.find(
-    (g) => g.value.toLowerCase() === needle || g.ar === String(input).trim(),
+
+  const exact = GOVERNORATES.find(
+    (g) => normalise(g.value) === needle || normalise(g.ar) === needle,
   );
-  return hit ? hit.value : null;
+  if (exact) return exact.value;
+
+  return ALIASES[needle] ?? null;
 };

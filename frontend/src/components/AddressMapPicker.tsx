@@ -12,6 +12,9 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-hot-toast";
+import { MapPinIcon } from "@heroicons/react/24/outline";
+import { matchGovernorate } from "../lib/governorates";
 
 // Default Leaflet marker assets break under bundlers — point them at the
 // imported URLs so the pin renders.
@@ -48,7 +51,12 @@ const reverseGeocode = async (
   const a = data.address || {};
   const city =
     a.city || a.town || a.village || a.suburb || a.county || "";
-  const state = a.state || a.governorate || a.region || "";
+  // The geocoder answers with its own name for a governorate — "Aj Jiza",
+  // "Western", "بنى سويف" — and the address form stores one canonical
+  // spelling that the shipping zones are matched against. Unrecognised
+  // names are passed through rather than blanked, so nothing is lost.
+  const rawState = a.state || a.governorate || a.region || "";
+  const state = matchGovernorate(rawState) ?? rawState;
   const address =
     data.display_name ||
     [a.road, a.neighbourhood, a.suburb].filter(Boolean).join(", ");
@@ -110,6 +118,41 @@ const AddressMapPicker: React.FC<Props> = ({ onSelect }) => {
     }
   };
 
+  /**
+   * Drop the pin where the customer actually is.
+   *
+   * The browser asks permission the first time and remembers the answer, so a
+   * refusal has to be said out loud — otherwise the button looks broken. Every
+   * failure here is recoverable: the map is still there to tap.
+   */
+  const [locating, setLocating] = useState(false);
+  const useMyLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error(t("This browser cannot share your location. Tap the map instead."));
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        await applyPoint(coords.latitude, coords.longitude);
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        toast.error(
+          err.code === err.PERMISSION_DENIED
+            ? t("Location permission was refused. Allow it in your browser, or tap the map.")
+            : err.code === err.TIMEOUT
+              ? t("Finding your location took too long. Try again, or tap the map.")
+              : t("Your location could not be determined. Tap the map instead."),
+        );
+      },
+      // A phone's first GPS fix is not instant, and a stale fix from an hour
+      // ago is worse than none when the point decides where a parcel goes.
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
+    );
+  };
+
   const handleSearch = async () => {
     const q = query.trim();
     if (!q) return;
@@ -155,6 +198,15 @@ const AddressMapPicker: React.FC<Props> = ({ onSelect }) => {
           {busy ? t("Searching…") : t("Search")}
         </button>
       </div>
+      <button
+        type="button"
+        onClick={useMyLocation}
+        disabled={locating || busy}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-[var(--brand-primary)] px-4 py-2.5 text-sm font-semibold text-[var(--brand-primary)] transition-colors hover:bg-[var(--brand-primary)] hover:text-white disabled:opacity-50"
+      >
+        <MapPinIcon className="h-4 w-4" />
+        {locating ? t("Finding you…") : t("Use my current location")}
+      </button>
       <p className="text-xs text-[var(--text-muted)]">
         {t("Tap the map or drag the pin to set your exact delivery location.")}
       </p>
