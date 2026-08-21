@@ -568,13 +568,15 @@ const Header: React.FC = () => {
       <div className="mn-site-width">
         <div className="mn-nav-row justify-between gap-4">
           {/* Logo — Belgomla MarkBag (geometric B with bag handle) + wordmark */}
-          {/* The design package ships a brand symbol; it replaces the drawn
-              logo here, with the discipline named under the wordmark exactly
-              as the preview had it. */}
+          {/* Drawn from the same artwork as the app icon rather than the
+              design package's outlined symbol, so the mark in the header and
+              the one on a home screen are one logo instead of two drawings of
+              the same letter. SVG, because it is rendered at 48px here and
+              37px in the dashboard and a raster mark was soft at both. */}
           <Link to="/" className="mn-brand" aria-label={t("brand.homeLabel", "Belgomla home")}>
             <img
               className="mn-brand-mark"
-              src="/manus/brand-symbol.webp"
+              src="/manus/brand-symbol.svg"
               alt=""
               width={48}
               height={48}
