@@ -332,16 +332,24 @@ const CheckoutPage: React.FC = () => {
       return;
     }
 
-    // Validate all products belong to the same store
+    // Validate all products belong to the same store.
+    //
+    // Down to an id first. A product arrives with its store populated —
+    // `{ _id }`, a fresh object per cart line because each line is fetched
+    // separately — and a Set of objects dedupes by reference, so two items
+    // from the same store counted as two stores and the order was refused
+    // for mixing them. The id also has to be what reaches the API: the
+    // server compares `String(product.store) !== String(store)`, and an
+    // object stringifies to "[object Object]", which matches nothing.
+    const storeIdOf = (value: any): string | undefined =>
+      !value ? undefined : typeof value === "string" ? value : value._id;
+
     const stores = cartItems
-      .map((item) => {
-        if (item.type === "collection") {
-          return typeof item.collectionDetails?.store === "string"
-            ? item.collectionDetails?.store
-            : item.collectionDetails?.store?._id;
-        }
-        return item.productDetails?.store;
-      })
+      .map((item) =>
+        storeIdOf(
+          item.type === "collection" ? item.collectionDetails?.store : item.productDetails?.store,
+        ),
+      )
       .filter(Boolean);
     const uniqueStores = [...new Set(stores)];
     if (uniqueStores.length > 1) {
