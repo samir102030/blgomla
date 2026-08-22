@@ -86,6 +86,10 @@ const walk = (value) => {
       "cart",
       "orders",
       "data",
+      // getCategoryTree answers with { success, tree } rather than { data },
+      // so the whole department tree walked straight past this list and came
+      // back in English however the request was made.
+      "tree",
       "saleProducts",
       "newestProducts",
       "featured",

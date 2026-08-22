@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { axiosInstance } from "../lib/axios";
+import { keepIfSameLang, uiLang } from "../lib/langCache";
 import type { Brand } from "../types/brand.type";
 
 interface BrandStore {
@@ -144,6 +145,14 @@ export const useBrandStore = create<BrandStore>()(
     {
       name: "brand-store",
       skipHydration: true,
+      // Brand names carry an Arabic sibling too, so the saved copy is in one
+      // language just as the category one is — same stamp, same reason.
+      version: 1,
+      partialize: (state) => ({ lang: uiLang(), brands: state.brands }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...keepIfSameLang(persisted, { brands: [] }),
+      }),
     }
   )
 );

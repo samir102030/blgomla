@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { axiosInstance } from "../lib/axios";
+import { keepIfSameLang, uiLang } from "../lib/langCache";
 import type {
   Category,
   CategoryTree,
@@ -361,9 +362,18 @@ export const useCategoryStore = create<CategoryStore>()(
     }),
     {
       name: "category-store",
+      // Bumped when the language stamp below was added: without it, every
+      // browser already holding a v0 copy would keep rendering it, and the
+      // stamp would only start protecting people who had never visited.
+      version: 1,
       partialize: (state) => ({
+        lang: uiLang(),
         categories: state.categories,
         categoryTree: state.categoryTree,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...keepIfSameLang(persisted, { categories: [], categoryTree: [] }),
       }),
     }
   )
