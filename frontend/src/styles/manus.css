@@ -749,3 +749,15 @@ html[dir="rtl"] .mn-solution-carousel h1 { line-height: 1.3; max-width: 22ch; }
   /* The arrows sat mid-panel; on a strip they collide with the buttons. */
   .mn-carousel-arrows { display: none; }
 }
+
+/* utilities beat components */
+/*
+  This file loads after Tailwind's utilities, and its component rules set
+  `display` with a single class — the same weight as `.hidden`. On a tie the
+  later rule wins, so `hidden` on an .mn-icon-btn did nothing and the element
+  stayed on screen. Two classes puts the utility back in front, without
+  reaching for !important.
+*/
+.hidden.mn-icon-btn,
+.hidden.mn-header-link,
+.hidden.mn-header-action { display: none; }

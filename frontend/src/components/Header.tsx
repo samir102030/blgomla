@@ -758,9 +758,10 @@ const Header: React.FC = () => {
                 )}
               </div>
             ) : (
+              /* Account is along the bottom on a phone. */
               <Link
                 to="/account"
-                className="mn-icon-btn"
+                className="mn-icon-btn hidden lg:inline-flex"
               >
                 <UserCircleIcon className="w-5 h-5" />
               </Link>
