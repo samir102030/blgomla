@@ -566,7 +566,7 @@ const Header: React.FC = () => {
     >
       {/* Main header */}
       <div className="mn-site-width">
-        <div className="mn-nav-row justify-between gap-2 sm:gap-4">
+        <div className="mn-nav-row justify-between gap-2 sm:gap-4 relative">
           {/*
             Menu on the left, brand in the middle, a short strip on the
             right — the shape of every shop a phone has already taught its
@@ -601,7 +601,7 @@ const Header: React.FC = () => {
               Its accent dots went white in the same pass, since blue dots on
               a blue trace are no dots at all. brand-symbol-orange.png beside
               it is the original, kept so the change is one command to undo. */}
-          <Link to="/" className="mn-brand mx-auto lg:mx-0" aria-label={t("brand.homeLabel", "Belgomla home")}>
+          <Link to="/" className="mn-brand absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0" aria-label={t("brand.homeLabel", "Belgomla home")}>
             <img
               className="mn-brand-mark"
               src="/manus/brand-symbol.webp"
@@ -609,7 +609,7 @@ const Header: React.FC = () => {
               width={48}
               height={48}
             />
-            <span className={`mn-brand-text hidden sm:block ${i18n.language === "ar" ? "" : "lowercase"}`}>
+            <span className={`mn-brand-text ${i18n.language === "ar" ? "" : "lowercase"}`}>
               {t("brand.wordmark", "belgomla")}
               <small>Smart Solutions</small>
             </span>
