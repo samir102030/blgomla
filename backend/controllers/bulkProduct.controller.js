@@ -195,6 +195,10 @@ export const bulkUploadProducts = async (req, res) => {
     // Validate and process each product
     const results = {
       successful: [],
+      // Rows that matched a product already on the shelf. Kept apart from the
+      // created ones because "6,141 updated" and "6,141 created" are the
+      // difference between a corrected catalogue and a duplicated one.
+      updated: [],
       failed: [],
       // Rows that went in without a price. They are successes, listed
       // separately so they are easy to find and price afterwards.
@@ -272,6 +276,22 @@ export const bulkUploadProducts = async (req, res) => {
       }
 
       try {
+        /*
+          Is this row a product we already have?
+
+          SKU first: it is uniquely indexed, it is what a supplier's sheet is
+          keyed on, and a name can be edited without meaning to point at
+          something else. Falling back to the name covers the rows that have
+          never been given one. Deleted rows are included on purpose — a sheet
+          naming a product should revive it rather than fail on the unique
+          index of a record nobody can see.
+        */
+        const existing = productData.sku
+          ? await Product.findOne({ sku: productData.sku })
+          : await Product.findOne({
+              name: new RegExp(`^${String(productData.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+            });
+
         // Prepare product object
         const newProduct = {
           name: productData.name,
@@ -339,10 +359,14 @@ export const bulkUploadProducts = async (req, res) => {
         }
 
         if (dryRun) {
-          results.successful.push({
+          // The preview has to say which of the two it is. A sheet that reads
+          // "6,141 valid rows" tells nobody whether they are about to correct
+          // the catalogue or double it.
+          (existing ? results.updated : results.successful).push({
             row: productData.rowNumber,
             name: productData.name,
-            productId: null,
+            productId: existing ? existing._id : null,
+            matchedBy: existing ? (productData.sku ? 'SKU' : 'name') : undefined,
             willCreateCategory,
             willCreateBrand
           });
@@ -357,6 +381,39 @@ export const bulkUploadProducts = async (req, res) => {
             stock: productData.stock || 0,
             willCreateCategory,
             willCreateBrand
+          });
+        } else if (existing) {
+          /*
+            A row naming a product that already exists updates it.
+
+            This importer only ever created. The export beside it promises a
+            sheet you can download, edit and upload back — and doing exactly
+            that against a 6,141-row catalogue would have produced 6,141
+            duplicates and no error, because every row looked new to it. The
+            first sign would have been every product on the storefront twice.
+
+            Only the fields the sheet carries are written. `isActive`, the
+            store, the approval and anything else an operator set by hand are
+            not in the sheet and are not touched by it — a re-upload adds an
+            Arabic name, it does not undo somebody's decisions.
+          */
+          const untouched = new Set([
+            'store', 'isActive', 'approvalStatus', 'approvedBy', 'approvedAt', 'createdBy', 'deleted',
+          ]);
+          for (const [key, value] of Object.entries(newProduct)) {
+            if (untouched.has(key)) continue;
+            if (value === undefined) continue;
+            existing[key] = value;
+          }
+          // A sheet naming a product brings it back rather than leaving a row
+          // that says it is here and a record that says it is gone.
+          if (existing.deleted) existing.deleted = false;
+          await existing.save();
+
+          results.updated.push({
+            row: productData.rowNumber,
+            name: productData.name,
+            productId: existing._id
           });
         } else {
           // Create product
@@ -409,11 +466,11 @@ export const bulkUploadProducts = async (req, res) => {
       success: true,
       dryRun,
       message: dryRun
-        ? `Preview generated. ${results.successful.length} valid rows, ${results.failed.length} issues.` +
+        ? `Preview generated. ${results.successful.length} to create, ${results.updated.length} to update, ${results.failed.length} issues.` +
           (results.needsPrice.length
             ? ` ${results.needsPrice.length} will import without a price.`
             : '')
-        : `Bulk upload completed. ${results.successful.length} products created, ${results.failed.length} failed.` +
+        : `Bulk upload completed. ${results.successful.length} products created, ${results.updated.length} updated, ${results.failed.length} failed.` +
           (createdNote ? ` Also added ${createdNote}.` : '') +
           (results.needsPrice.length
             ? ` ${results.needsPrice.length} imported without a price and are out of stock until priced.`

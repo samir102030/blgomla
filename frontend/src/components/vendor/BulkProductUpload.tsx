@@ -10,6 +10,8 @@ import { useCategoryStore } from '../../stores/category.store';
 
 interface UploadResult {
   successful: Array<{ row: number; name: string; productId: string | null; willCreateCategory?: boolean }>;
+  /** Rows that matched a product already on the shelf and were written over it. */
+  updated?: Array<{ row: number; name: string; productId: string | null; matchedBy?: "SKU" | "name" }>;
   failed: Array<{ row: number; name: string; errors: string[] }>;
   // Rows that imported without a usable price — they are in, at price 0 and
   // out of stock, waiting to be priced. Optional so a response from an older
@@ -321,19 +323,21 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
       setIsPreview(false);
       setPreviewRows([]);
 
+      const landed =
+        response.data.results.successful.length + (response.data.results.updated?.length || 0);
       if (response.data.results.failed.length === 0) {
-        toast.success(t('vendor.bulk.uploadSuccess', { count: response.data.results.successful.length }));
+        toast.success(t('vendor.bulk.uploadSuccess', { count: landed }));
       } else {
         toast(
           t('vendor.bulk.uploadPartialSuccess', {
-            success: response.data.results.successful.length,
+            success: landed,
             failed: response.data.results.failed.length,
           }),
           { icon: <ExclamationTriangleIcon className="w-5 h-5 text-amber-500" aria-hidden="true" /> }
         );
       }
 
-      if (response.data.results.successful.length > 0) {
+      if (landed > 0) {
         onUploadComplete?.();
       }
 
@@ -625,6 +629,15 @@ const BulkProductUpload: React.FC<BulkProductUploadProps> = ({ onUploadComplete 
               <p className="text-sm text-green-600 dark:text-emerald-300">{t('vendor.bulk.successful')}</p>
               <p className="text-2xl font-bold text-green-700 dark:text-emerald-200">{uploadResult.successful.length}</p>
             </div>
+            {/* Created and updated are counted apart because the difference is
+                the whole question: the same sheet either corrects the catalogue
+                or doubles it, and only this number says which happened. */}
+            {!!uploadResult.updated?.length && (
+              <div className="bg-blue-50 dark:bg-blue-500/10 p-4 rounded-lg border border-blue-200 dark:border-blue-500/30">
+                <p className="text-sm text-blue-600 dark:text-blue-300">{t('vendor.bulk.updated', 'Updated')}</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-200">{uploadResult.updated.length}</p>
+              </div>
+            )}
             <div className="bg-red-50 dark:bg-red-500/10 p-4 rounded-lg border border-red-200 dark:border-red-500/30">
               <p className="text-sm text-red-600 dark:text-red-300">{t('vendor.bulk.failed')}</p>
               <p className="text-2xl font-bold text-red-700 dark:text-red-200">{uploadResult.failed.length}</p>
