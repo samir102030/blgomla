@@ -211,6 +211,13 @@ export const getAllProducts = controllerWrapper(
     // the two are one list of twelve thousand rows that nobody can work in.
     // Set last, so it beats the search clause above rather than the other way
     // round — a search inside one section stays inside it.
+    //
+    // `audienceAsked` carries that intent past the two clauses further down
+    // that also write `audience`. Both used to overwrite this one because they
+    // run later, which put the electronics catalogue back into the general
+    // list every time — the exact thing this block exists to prevent.
+    const audienceAsked =
+      filters.audience === "public" || filters.audience === "electronics";
     if (filters.audience === "public") filter.audience = { $ne: "electronics" };
     else if (filters.audience === "electronics") filter.audience = "electronics";
     // Ids arrive as strings and this listing runs through an aggregation,
@@ -238,7 +245,11 @@ export const getAllProducts = controllerWrapper(
     // A signed-in caller here is the dashboard — the public listing has no
     // session — and staff manage every section of the shop, including the one
     // the storefront keeps out of its own listings.
-    if (req.user) filter.audience = ANY_AUDIENCE;
+    //
+    // Only where the caller did not name a side, though. `/manage` always has
+    // a session, so an unconditional assignment here silently cancelled every
+    // `?audience=` the dashboard sent.
+    if (req.user && !audienceAsked) filter.audience = ANY_AUDIENCE;
 
     const allowedIds = await scopedCategoryIds(req.user);
     if (allowedIds) {
@@ -254,8 +265,12 @@ export const getAllProducts = controllerWrapper(
       filter.category = { $in: kept.map(asId) };
     }
     // Choosing a category inside the branch is the other way in. Without this
-    // the category page renders its own products as an empty list.
-    if (await isElectronicsCategory(filters.categoryId)) filter.audience = ANY_AUDIENCE;
+    // the category page renders its own products as an empty list. Same
+    // exception as above: it opens the section for a caller that said nothing
+    // about audience, and stands aside for one that did.
+    if (!audienceAsked && (await isElectronicsCategory(filters.categoryId))) {
+      filter.audience = ANY_AUDIENCE;
+    }
     if (filters.brandId) filter.brand = asId(filters.brandId);
     if (filters.storeId) filter.store = asId(filters.storeId);
     // Booleans arrive as the strings "true"/"false" via query params; coerce
