@@ -4288,5 +4288,7 @@
   "Track your order": "تتبع أوردرك",
   "Follow your order from confirmation to delivery.": "تابع أوردرك من التأكيد لحد التسليم.",
   "Please sign in to add items to your cart.": "سجّل دخولك الأول عشان تضيف منتجات للسلة.",
-  "wishlist.someAddedToCart": "اتضاف {{added}} للسلة، و{{failed}} مقدرناش نضيفهم."
+  "wishlist.someAddedToCart": "اتضاف {{added}} للسلة، و{{failed}} مقدرناش نضيفهم.",
+  "Sign in required": "محتاج تسجيل دخول",
+  "Sign in to your Belgomla account to open this page.": "سجّل دخولك على حسابك في بالجملة عشان تفتح الصفحة دي."
 }

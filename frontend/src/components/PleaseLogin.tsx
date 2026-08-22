@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "./Header";
 import Footer from "./Footer";
+import SEO from "./SEO";
 
 const PleaseLogin: React.FC = () => {
   const { t } = useTranslation();
@@ -11,6 +12,15 @@ const PleaseLogin: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col">
+      {/*
+        This wall replaces the whole page when a visitor is signed out, so the
+        title it carries has to be its own. Tagging the cart and the wishlist
+        left them right only once somebody was signed in — signed out they
+        returned this instead, which had no title and fell back to the site
+        default. It stands in for four pages, so the title describes the wall
+        rather than any one of them.
+      */}
+      <SEO title={t("Sign in required")} description={t("Sign in to your Belgomla account to open this page.")} noindex />
       <Header />
       <main className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="w-full max-w-md bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-sm p-8 sm:p-10 text-center">

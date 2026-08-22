@@ -4288,5 +4288,7 @@
   "Track your order": "Track your order",
   "Follow your order from confirmation to delivery.": "Follow your order from confirmation to delivery.",
   "Please sign in to add items to your cart.": "Please sign in to add items to your cart.",
-  "wishlist.someAddedToCart": "{{added}} added to cart, {{failed}} could not be added."
+  "wishlist.someAddedToCart": "{{added}} added to cart, {{failed}} could not be added.",
+  "Sign in required": "Sign in required",
+  "Sign in to your Belgomla account to open this page.": "Sign in to your Belgomla account to open this page."
 }
