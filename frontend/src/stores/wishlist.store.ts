@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { axiosInstance } from '../lib/axios';
+import { keepIfSameLang, uiLang } from '../lib/langCache';
 import type { Wishlist, WishlistItem, WishlistStats } from '../types/wishlist.type';
 import type { Product } from '../types/product.type';
 
@@ -220,8 +221,17 @@ export const useWishlistStore = create<WishlistStore>()(
     }),
     {
       name: 'wishlist-store',
+      // Saved items carry product names, which the API translates on the way
+      // out — so the saved copy is in one language, same as the category and
+      // brand ones. See lib/langCache.
+      version: 1,
       partialize: (state) => ({
+        lang: uiLang(),
         wishlistItems: state.wishlistItems,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...keepIfSameLang(persisted, { wishlistItems: [] }),
       }),
     }
   )
