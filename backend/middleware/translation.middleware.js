@@ -100,6 +100,23 @@ const walk = (value) => {
   }
 };
 
+/**
+ * Which version of the body this request will be answered with.
+ *
+ * Anything that caches one of these responses has to key on the same answer
+ * this middleware acts on, or the two disagree and a cache hands one language's
+ * body to the other. Three signals decide it — the Accept-Language header, a
+ * `lang` query, an `x-language` header — plus the raw escape hatch, and a
+ * cache that looked at only the first of them was the bug this exists to stop.
+ */
+export const responseLocale = (req) => {
+  if (wantsRaw(req)) return "raw";
+  return isArabic(req) ? "ar" : "en";
+};
+
+/** The request headers a response's language depends on. */
+export const LOCALE_VARY_HEADERS = "Accept-Language, X-Language, X-I18n-Raw";
+
 export const translateResponse = (req, res, next) => {
   if (wantsRaw(req) || !isArabic(req)) return next();
 

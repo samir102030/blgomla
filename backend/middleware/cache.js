@@ -9,6 +9,8 @@
  * No external dep — Node's built-in Map ordering gives us O(1) LRU eviction
  * by deleting + re-inserting on hit.
  */
+import { responseLocale, LOCALE_VARY_HEADERS } from "./translation.middleware.js";
+
 const stores = new Map(); // namespace -> { ttl, max, entries: Map<key, {body, headers, expiresAt}> }
 
 function getStore(namespace, ttlMs, max) {
@@ -39,12 +41,18 @@ export const cache = ({ namespace, ttl = 60_000, max = 200, cacheControl } = {})
     // user-specific fields (e.g. wishlist counts) in the future.
     if (req.user) return next();
 
-    // Include Accept-Language in the cache key: translateResponse swaps
-    // name→nameAr for AR requests, so AR and EN must have distinct cache
-    // entries. Otherwise the first request wins and subsequent requests in
-    // the other language receive the wrong language until TTL expires.
-    const lang = (req.headers["accept-language"] || "").toLowerCase().startsWith("ar") ? "ar" : "en";
-    const key = `${lang}:${req.originalUrl}`;
+    // Key on the language, because translateResponse swaps name→nameAr for AR
+    // requests and the two languages must not share an entry.
+    //
+    // Asked of translation.middleware rather than worked out here from
+    // Accept-Language. That header is only one of the three signals it acts on
+    // — `?lang=`, `x-language` and the `raw` escape hatch are the others — and
+    // a key that reads fewer signals than the translator does is a key two
+    // different bodies can share. One request with `x-language: ar` was enough
+    // to fill the English entry with Arabic.
+    const key = `${responseLocale(req)}:${req.originalUrl}`;
+    // Same reason, one layer out: without this the CDN keys on the URL alone.
+    res.vary(LOCALE_VARY_HEADERS);
     const now = Date.now();
     const hit = store.entries.get(key);
 
