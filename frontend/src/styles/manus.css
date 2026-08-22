@@ -763,12 +763,12 @@ html[dir="rtl"] .mn-solution-carousel h1 { line-height: 1.3; max-width: 22ch; }
 .hidden.mn-header-action { display: none; }
 
 /*
-  The narrowest phones. With the brand pinned to the middle of the row, the
-  wordmark at 19px reached the icons beside it — 138px of name in the 131px
-  between the menu button and the strip. Three points smaller clears it and
-  still reads.
+  The narrowest phones. With the brand pinned to the middle of the row there
+  are 167px between the menu button and the icon strip, and the name needs
+  more than that — shrinking it to 16px still left it two pixels into the
+  icons. Below 360 the mark carries the brand on its own, which is what it is
+  for; the name returns the moment there is room for it.
 */
 @media (max-width: 360px) {
-  .mn-brand-text { font-size: 16px; }
-  .mn-brand-text small { font-size: 8px; margin-top: 5px; }
+  .mn-brand-text { display: none; }
 }
