@@ -5,29 +5,43 @@ import { controllerWrapper } from "../utils/wrappers.js";
 export const createAdvertisement = controllerWrapper(
   "createAdvertisement",
   async (req, res) => {
-    const {
-      title,
-      description,
-      image,
-      link,
-      position,
-      isActive,
-      startDate,
-      endDate,
-      sortOrder,
-    } = req.body;
+    /*
+      An allowlist rather than a hand-copied subset.
 
-    const advertisement = new Advertisement({
-      title,
-      description,
-      image,
-      link,
-      position,
-      isActive,
-      startDate,
-      endDate,
-      sortOrder,
-    });
+      The old one named nine of the model's fields, so an Arabic title, a
+      subtitle or either colour sent on create was dropped without a word
+      while the same field sent on update went through — update passes
+      req.body straight to findByIdAndUpdate. A field that only sticks the
+      second time you save is the worst shape a bug can take.
+
+      Listed here rather than spreading req.body so that clickCount, viewCount
+      and deleted stay ours to set.
+    */
+    const EDITABLE = [
+      "title",
+      "titleAr",
+      "subtitle",
+      "subtitleAr",
+      "description",
+      "descriptionAr",
+      "backgroundColor",
+      "textColor",
+      "image",
+      "link",
+      "textInImage",
+      "position",
+      "isActive",
+      "startDate",
+      "endDate",
+      "sortOrder",
+    ];
+
+    const fields = {};
+    for (const key of EDITABLE) {
+      if (req.body[key] !== undefined) fields[key] = req.body[key];
+    }
+
+    const advertisement = new Advertisement(fields);
 
     await advertisement.save();
     res.status(201).json({ success: true, advertisement });

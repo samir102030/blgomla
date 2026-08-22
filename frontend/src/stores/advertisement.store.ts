@@ -11,6 +11,8 @@ export interface Advertisement {
   descriptionAr?: string;
   image: string;
   link?: string;
+  /** The artwork already has the headline on it — don't draw ours over it. */
+  textInImage?: boolean;
   position:
     | "hero"
     | "banner"

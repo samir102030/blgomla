@@ -17,6 +17,7 @@ interface AdvertisementFormData {
   description: string;
   image: string;
   link: string;
+  textInImage: boolean;
   position: AdvertisementPosition;
   isActive: boolean;
   startDate: string;
@@ -29,6 +30,7 @@ const getInitialFormState = (): AdvertisementFormData => ({
   description: "",
   image: "",
   link: "",
+  textInImage: false,
   position: "banner",
   isActive: true,
   startDate: new Date().toISOString().split("T")[0],
@@ -56,6 +58,7 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
         description: advertisement.description || "",
         image: advertisement.image || "",
         link: advertisement.link || "",
+        textInImage: advertisement.textInImage ?? false,
         position,
         isActive: advertisement.isActive ?? true,
         startDate: advertisement.startDate
@@ -186,6 +189,26 @@ const AdvertisementModal: React.FC<AdvertisementModalProps> = ({
                 className="mt-2 h-32 object-cover rounded-lg"
                loading="lazy" decoding="async"/>
             )}
+            {/* Sits under the image because it is a statement about that
+                image, not a display setting. Without it the site drew its own
+                headline over a creative that already had one, and the banner
+                said everything twice. */}
+            <label className="mt-3 flex items-start gap-2">
+              <input
+                type="checkbox"
+                checked={formData.textInImage}
+                onChange={(e) =>
+                  setFormData({ ...formData, textInImage: e.target.checked })
+                }
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#002B5B] focus:ring-[#002B5B]"
+              />
+              <span className="text-sm text-gray-700">
+                The text is already written on this image
+                <span className="block text-xs text-gray-500">
+                  Tick this and the site will not draw the title over it.
+                </span>
+              </span>
+            </label>
           </div>
 
           {/* Link */}

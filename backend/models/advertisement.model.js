@@ -48,6 +48,20 @@ const advertisementSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    /**
+     * The artwork already has the headline written on it.
+     *
+     * The overlay used to be inferred — drawn whenever a subtitle happened to
+     * be filled in — which put the site's own headline on top of a creative
+     * that was designed with its own, so the Summer Tech Sale banner said
+     * everything twice. Whether a picture carries its own text is a fact about
+     * the picture, and nothing about the record can work it out; only the
+     * person who uploaded it knows, so this asks them.
+     */
+    textInImage: {
+      type: Boolean,
+      default: false,
+    },
     position: {
       type: String,
       enum: [

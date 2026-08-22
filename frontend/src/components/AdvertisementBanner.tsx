@@ -286,10 +286,15 @@ const AdvertisementBanner: React.FC<AdvertisementBannerProps> = ({
         ? "aspect-[16/4] md:aspect-[16/3]"
         : "aspect-[16/5] md:aspect-[16/4]";
 
-  // Only overlay marketing copy when the admin filled in a subtitle/description.
-  // This lets pre-designed creatives (text baked into the image) render clean,
-  // while plain images still get a headline + CTA.
-  const showOverlay = Boolean(subtitle);
+  // Whether to write the headline over the picture.
+  //
+  // This used to be inferred from "did the admin fill in a subtitle", which
+  // guessed wrong exactly where it mattered: a creative designed with its own
+  // headline got the site's headline drawn on top of it, and the banner said
+  // the same thing twice. `textInImage` is the admin saying the artwork
+  // already carries its words — the one fact about the picture that no field
+  // on the record can reveal.
+  const showOverlay = Boolean(subtitle) && !currentAd.textInImage;
   const imgW = isHero ? 1600 : isSidebar ? 640 : 1280;
   const srcW = isHero ? 800 : isSidebar ? 320 : 640;
 
