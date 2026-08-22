@@ -64,7 +64,7 @@ async function seed() {
   // with EMAIL_NOT_VERIFIED. Phone numbers are stored E.164, which is what the
   // schema validator requires.
   const [admin, storeOwner, customer] = await User.create([
-    { name: "Admin Belgomla", email: "admin@belgomla.com", password: seedPassword("admin"), phoneNumber: "+201009353639", role: "super_admin", active: true, isVerified: true },
+    { name: "Admin Belgomla", email: "admin@belgomla.com", password: seedPassword("admin"), phoneNumber: "+201125210210", role: "super_admin", active: true, isVerified: true },
     { name: "Ahmed Hassan", email: "store@belgomla.com", password: seedPassword("store"), phoneNumber: "+201112223344", role: "store", active: true, isVerified: true },
     { name: "Mohamed Ali", email: "customer@belgomla.com", password: seedPassword("customer"), phoneNumber: "+201223344556", role: "customer", active: true, isVerified: true },
   ]);

@@ -73,9 +73,9 @@ const Contact: React.FC = () => {
     {
       icon: PhoneIcon,
       title: t("Call Us"),
-      lines: ["+20 100 935 3639", t("Sun - Thu: 9AM - 6PM")],
+      lines: ["+20 112 521 0210", t("Sun - Thu: 9AM - 6PM")],
       accent: "from-emerald-500 to-teal-600",
-      href: "tel:+201009353639",
+      href: "tel:+201125210210",
     },
     {
       icon: EnvelopeIcon,
@@ -87,9 +87,9 @@ const Contact: React.FC = () => {
     {
       icon: ChatBubbleLeftRightIcon,
       title: t("WhatsApp"),
-      lines: ["+20 100 935 3639", t("Quick response guaranteed")],
+      lines: ["+20 112 521 0210", t("Quick response guaranteed")],
       accent: "from-green-500 to-emerald-600",
-      href: "https://wa.me/201009353639",
+      href: "https://wa.me/201125210210",
     },
   ];
 
@@ -148,7 +148,7 @@ const Contact: React.FC = () => {
                   key={j}
                   // A phone number or an address written in Latin script inside
                   // an RTL paragraph gets reordered by the bidi algorithm:
-                  // "+20 100 935 3639" was reading "3639 935 100 20+". Marking
+                  // "+20 112 521 0210" was reading "0210 521 112 20+". Marking
                   // the run as LTR keeps it in dialling order.
                   dir={/^[+\d(]|@/.test(line.trim()) ? "ltr" : undefined}
                   className={`text-sm ${j === 0 ? "text-[var(--text)] font-medium" : "text-[var(--text-muted)]"} ${
@@ -396,7 +396,7 @@ const Contact: React.FC = () => {
             {t("Chat with us directly on WhatsApp for the fastest response")}
           </p>
           <a
-            href="https://wa.me/201009353639"
+            href="https://wa.me/201125210210"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2.5 bg-white text-[var(--brand-primary)] px-6 py-3 rounded-xl font-semibold text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"

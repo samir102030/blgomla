@@ -3,7 +3,7 @@ import { answer } from "../utils/supportBrain.js";
 import { getOrCreateGeneralConversation } from "../utils/supportConversation.js";
 
 /** E.164 without the "+", the way wa.me wants it. */
-const WHATSAPP_NUMBER = (process.env.SUPPORT_WHATSAPP || "201009353639").replace(/\D/g, "");
+const WHATSAPP_NUMBER = (process.env.SUPPORT_WHATSAPP || "201125210210").replace(/\D/g, "");
 
 /** wa.me refuses very long links, and nobody reads a wall of text anyway. */
 const TRANSCRIPT_LIMIT = 1200;
