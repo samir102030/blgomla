@@ -120,6 +120,18 @@ export const useProductStore = create<ProductStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          /*
+            Re-thrown, because the callers award a success toast on the strength
+            of this returning.
+
+            Swallowing it here meant a signed-out visitor pressing Add to Cart
+            was told "Product added to cart successfully!" while the request
+            came back 401 and nothing went anywhere. They then opened the cart
+            and met a login wall over an empty basket. Every caller already
+            wraps this in try/catch and shows a failure message; they were just
+            never given the chance to.
+          */
+          throw error;
         }
       },
 

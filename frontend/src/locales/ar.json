@@ -4286,5 +4286,7 @@
   "My account": "حسابي",
   "Your orders, addresses, returns and settings.": "أوردراتك وعناوينك ومرتجعاتك وإعداداتك.",
   "Track your order": "تتبع أوردرك",
-  "Follow your order from confirmation to delivery.": "تابع أوردرك من التأكيد لحد التسليم."
+  "Follow your order from confirmation to delivery.": "تابع أوردرك من التأكيد لحد التسليم.",
+  "Please sign in to add items to your cart.": "سجّل دخولك الأول عشان تضيف منتجات للسلة.",
+  "wishlist.someAddedToCart": "اتضاف {{added}} للسلة، و{{failed}} مقدرناش نضيفهم."
 }

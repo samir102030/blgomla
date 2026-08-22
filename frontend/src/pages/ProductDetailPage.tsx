@@ -286,6 +286,15 @@ const ProductDetailPage: React.FC = () => {
       toast.error(t("Product is currently out of stock."));
       return;
     }
+    // The cart lives on the account, so there is nowhere to put this until
+    // there is one. Said before the attempt rather than after a 401, and it
+    // comes back here afterwards instead of dropping the visitor on the home
+    // page having forgotten what they were buying.
+    if (!user) {
+      toast.error(t("Please sign in to add items to your cart."));
+      navigate("/login", { state: { from: `/product/${productId}` } });
+      return;
+    }
 
     try {
       await addToCart(productId, quantity, wantsInstallation);

@@ -60,12 +60,27 @@ const WishlistPage: React.FC = () => {
   };
 
   const handleAddAllToCart = async () => {
+    // One failure used to end the loop with an unhandled rejection and no
+    // message at all. Each item is now reported on its own, and the closing
+    // toast says what actually went in rather than claiming all of it did.
+    let added = 0;
+    let failed = 0;
     for (const product of filteredProducts) {
-      if (product._id && product.stock > 0) {
+      if (!product._id || product.stock <= 0) continue;
+      try {
         await addToCart(product._id, 1);
+        added += 1;
+      } catch {
+        failed += 1;
       }
     }
-    toast.success(t("wishlist.allAddedToCart", "All available items added to cart!"));
+    if (added && !failed) {
+      toast.success(t("wishlist.allAddedToCart", "All available items added to cart!"));
+    } else if (added) {
+      toast.success(t("wishlist.someAddedToCart", "{{added}} added to cart, {{failed}} could not be added.", { added, failed }));
+    } else if (failed) {
+      toast.error(t("wishlist.addToCartError", "Failed to add to cart"));
+    }
   };
 
   const handleClearAll = async () => {
