@@ -4,6 +4,7 @@ import { ArrowRightOnRectangleIcon, ArrowUpTrayIcon, BellIcon, BuildingStorefron
 import Breadcrumb from "../components/Breadcrumb";
 import { Link, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
+import SEO from "../components/SEO";
 import Footer from "../components/Footer";
 import AccountDashboard from "../components/AccountDashboard";
 import AccountOrders from "../components/AccountOrders";
@@ -88,6 +89,7 @@ const MyAccountPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO title={t("My account")} description={t("Your orders, addresses, returns and settings.")} noindex />
       <Header />
 
       {/* ===== PROFILE HERO ===== */}

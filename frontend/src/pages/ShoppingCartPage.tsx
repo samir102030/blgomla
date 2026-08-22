@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import SEO from "../components/SEO";
 import Footer from "../components/Footer";
 import PageHero from "../components/PageHero";
 import DeliveryEstimate from "../components/DeliveryEstimate";
@@ -604,6 +605,7 @@ const ShoppingCartPage: React.FC = () => {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-[var(--surface-2)]">
+        <SEO title={t("Shopping cart")} description={t("Review the items in your cart before checkout.")} noindex />
         <Header />
         <section className="max-w-3xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-8 text-center">
           <div
@@ -685,6 +687,7 @@ const ShoppingCartPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO title={t("Shopping cart")} description={t("Review the items in your cart before checkout.")} noindex />
       <Header />
 
       {/* The old header was its own purple-to-navy gradient, which belonged to

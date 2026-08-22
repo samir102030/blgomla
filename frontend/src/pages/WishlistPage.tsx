@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { GiftIcon, HeartIcon, MagnifyingGlassIcon, ShoppingCartIcon, SparklesIcon, StarIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import SEO from "../components/SEO";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
@@ -189,6 +190,7 @@ const WishlistPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO title={t("Wishlist")} description={t("The products you saved to come back to.")} noindex />
       <Header />
 
       {/* Hero */}

@@ -5,6 +5,7 @@ import { useNotificationStore } from "../stores/notification.store";
 import { getNotificationIcon } from "../lib/notificationIcons";
 import type { Notification } from "../types/notification.type";
 import Header from "../components/Header";
+import SEO from "../components/SEO";
 import Footer from "../components/Footer";
 import { routeForNotification } from "../lib/notificationRoute";
 
@@ -102,6 +103,7 @@ const NotificationsPage: React.FC = () => {
 
   return (
     <div className="bg-[var(--surface-2)] min-h-screen flex flex-col">
+      <SEO title={t("Notifications")} description={t("Updates on your orders, questions and alerts.")} noindex />
       <Header />
       <div className="mx-auto w-full max-w-5xl flex-1 space-y-6 p-4 sm:p-6">
         <header className="space-y-4">

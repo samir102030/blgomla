@@ -4274,5 +4274,17 @@
   "The section is empty and ready for the sheets.": "The section is empty and ready for the sheets.",
   "Now upload the departments sheet first, then the products sheet.": "Now upload the departments sheet first, then the products sheet.",
   "Could not read the section": "Could not read the section",
-  "The section was not emptied": "The section was not emptied"
+  "The section was not emptied": "The section was not emptied",
+  "Shopping cart": "Shopping cart",
+  "Review the items in your cart before checkout.": "Review the items in your cart before checkout.",
+  "The products you saved to come back to.": "The products you saved to come back to.",
+  "Compare products": "Compare products",
+  "Put products side by side on specs and price.": "Put products side by side on specs and price.",
+  "Sign in": "Sign in",
+  "Sign in to your Belgomla account, or create one.": "Sign in to your Belgomla account, or create one.",
+  "Updates on your orders, questions and alerts.": "Updates on your orders, questions and alerts.",
+  "My account": "My account",
+  "Your orders, addresses, returns and settings.": "Your orders, addresses, returns and settings.",
+  "Track your order": "Track your order",
+  "Follow your order from confirmation to delivery.": "Follow your order from confirmation to delivery."
 }

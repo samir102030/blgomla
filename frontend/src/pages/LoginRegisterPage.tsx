@@ -2,6 +2,7 @@ import React, { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { BoltIcon, HeartIcon, TruckIcon, TagIcon, LockClosedIcon, ShieldCheckIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../components/Header";
+import SEO from "../components/SEO";
 import Footer from "../components/Footer";
 import { useUserStore } from "../stores/user.store";
 import { useTranslation } from "react-i18next";
@@ -283,6 +284,7 @@ const LoginRegisterPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO title={t("Sign in")} description={t("Sign in to your Belgomla account, or create one.")} noindex />
       <Header />
 
       <main className="py-8 lg:py-14">

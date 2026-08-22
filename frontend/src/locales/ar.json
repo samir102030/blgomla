@@ -4274,5 +4274,17 @@
   "The section is empty and ready for the sheets.": "القسم فاضي وجاهز للشيتات.",
   "Now upload the departments sheet first, then the products sheet.": "دلوقتي ارفع شيت الأقسام الأول، وبعدين شيت المنتجات.",
   "Could not read the section": "مقدرناش نقرا القسم",
-  "The section was not emptied": "القسم اتفضّاش"
+  "The section was not emptied": "القسم اتفضّاش",
+  "Shopping cart": "سلة التسوق",
+  "Review the items in your cart before checkout.": "راجع منتجاتك قبل إتمام الشراء.",
+  "The products you saved to come back to.": "المنتجات اللي حفظتها ترجعلها بعدين.",
+  "Compare products": "مقارنة المنتجات",
+  "Put products side by side on specs and price.": "حط المنتجات جنب بعض في المواصفات والسعر.",
+  "Sign in": "تسجيل الدخول",
+  "Sign in to your Belgomla account, or create one.": "سجّل دخولك على حسابك في بالجملة، أو اعمل حساب جديد.",
+  "Updates on your orders, questions and alerts.": "تحديثات أوردراتك وأسئلتك وتنبيهاتك.",
+  "My account": "حسابي",
+  "Your orders, addresses, returns and settings.": "أوردراتك وعناوينك ومرتجعاتك وإعداداتك.",
+  "Track your order": "تتبع أوردرك",
+  "Follow your order from confirmation to delivery.": "تابع أوردرك من التأكيد لحد التسليم."
 }

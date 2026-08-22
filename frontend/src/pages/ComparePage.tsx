@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import SEO from "../components/SEO";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
 import { axiosInstance } from "../lib/axios";
@@ -85,6 +86,7 @@ const ComparePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg)]">
+      <SEO title={t("Compare products")} description={t("Put products side by side on specs and price.")} noindex />
       <Header />
       <PageHero
         eyebrow={t("Side by side")}

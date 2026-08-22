@@ -3,6 +3,7 @@ import { CubeIcon, LockClosedIcon, XCircleIcon } from "@heroicons/react/24/outli
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header";
+import SEO from "../components/SEO";
 import Footer from "../components/Footer";
 import OrderTimeline from "../components/OrderTimeline";
 import { useOrderStore } from "../stores/order.store";
@@ -116,6 +117,7 @@ const OrderTrackingPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg)]">
+      <SEO title={t("Track your order")} description={t("Follow your order from confirmation to delivery.")} noindex />
       <Header />
       <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!user ? (

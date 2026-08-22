@@ -86,8 +86,17 @@ const Footer: React.FC = () => {
             <p className="text-sm text-white/60 leading-relaxed max-w-sm">
               {t("Your trusted partner for IT equipment, cameras, and networking solutions. Wholesale and retail.")}
             </p>
+            {/*
+              Only the accounts that exist.
+
+              Facebook, X and LinkedIn were sitting here on href="#", so three
+              of the four icons were buttons that took a visitor nowhere — the
+              most convincing kind of broken, because the row looks complete.
+              Filtering on the href keeps the slots in the list above ready for
+              a real URL and shows nothing until there is one.
+            */}
             <div className="flex gap-2.5 mt-6">
-              {SOCIALS.map((social) => (
+              {SOCIALS.filter((social) => social.href.startsWith("http")).map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
