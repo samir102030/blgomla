@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { useStudentStore } from "../../../stores/student.store";
 import { Card, PageHead, btnGhost } from "./shared";
+import ElectronicsPurgeCard from "../../../components/admin/ElectronicsPurgeCard";
 
 /**
  * Where the module opens: the state of the programme in one screen, and a
@@ -177,6 +178,10 @@ const StudentsOverviewPage: React.FC = () => {
           </a>
         </div>
       </Card>
+
+      {/* Last on the page on purpose: it is the one control here that cannot be
+          undone, and it belongs after everything somebody came to read. */}
+      <ElectronicsPurgeCard />
     </div>
   );
 };

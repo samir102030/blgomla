@@ -35,6 +35,7 @@ import {
   downloadStudentProductTemplate,
   exportStudentProducts,
 } from "../controllers/studentBulk.controller.js";
+import { purgeElectronicsCatalogue } from "../controllers/electronicsPurge.controller.js";
 import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
 import {
   studentMailIpLimiter,
@@ -151,6 +152,15 @@ router.post(
   requirePermission("students.configure"),
   uploadSheet.single("file"),
   bulkUploadStudentProducts,
+);
+
+/* Emptying the branch before reloading it. Registered beside the uploads it
+   pairs with, and before "/:id" for the same reason they are. */
+router.post(
+  "/admin/catalog/purge",
+  protectRoute,
+  requirePermission("students.configure"),
+  purgeElectronicsCatalogue,
 );
 
 router
