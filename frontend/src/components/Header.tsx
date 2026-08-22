@@ -566,14 +566,42 @@ const Header: React.FC = () => {
     >
       {/* Main header */}
       <div className="mn-site-width">
-        <div className="mn-nav-row justify-between gap-4">
+        <div className="mn-nav-row justify-between gap-2 sm:gap-4">
+          {/*
+            Menu on the left, brand in the middle, a short strip on the
+            right — the shape of every shop a phone has already taught its
+            owner. It also un-crowds the row: the cart and the account moved
+            to the bar along the bottom, so the header does not need them.
+          */}
+          <button
+            className="lg:hidden order-first flex flex-col justify-center items-center w-10 h-10 rounded-[11px] border border-[var(--line)] hover:border-[var(--orange)] transition-colors shrink-0"
+            onClick={toggleMenu}
+            aria-label={t("Toggle menu")}
+            aria-expanded={isMenuOpen}
+          >
+            <span
+              className={`w-5 h-0.5 bg-current transition-all duration-300 ${
+                isMenuOpen ? "rotate-45 translate-y-1" : ""
+              }`}
+            />
+            <span
+              className={`w-5 h-0.5 bg-current transition-all duration-300 mt-1 ${
+                isMenuOpen ? "opacity-0" : ""
+              }`}
+            />
+            <span
+              className={`w-5 h-0.5 bg-current transition-all duration-300 mt-1 ${
+                isMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
+              }`}
+            />
+          </button>
           {/* Logo — Belgomla MarkBag (geometric B with bag handle) + wordmark */}
           {/* The design package's symbol, hue-shifted from its orange to the
               site's accent blue rather than redrawn: the shape is the brand.
               Its accent dots went white in the same pass, since blue dots on
               a blue trace are no dots at all. brand-symbol-orange.png beside
               it is the original, kept so the change is one command to undo. */}
-          <Link to="/" className="mn-brand" aria-label={t("brand.homeLabel", "Belgomla home")}>
+          <Link to="/" className="mn-brand mx-auto lg:mx-0" aria-label={t("brand.homeLabel", "Belgomla home")}>
             <img
               className="mn-brand-mark"
               src="/manus/brand-symbol.webp"
@@ -744,9 +772,10 @@ const Header: React.FC = () => {
             >
               <HeartIcon className="w-5 h-5" />
             </Link>
+            {/* Along the bottom on a phone; here from lg up. */}
             <Link
               to="/cart"
-              className="mn-icon-btn"
+              className="mn-icon-btn hidden lg:inline-flex"
             >
               <ShoppingCartIcon className="w-5 h-5" />
               {/* `.mn-icon-btn em` is the design package's own count badge. */}
@@ -760,28 +789,6 @@ const Header: React.FC = () => {
               </em>
             </Link>
 
-            {/* Mobile menu toggle */}
-            <button
-              className="lg:hidden flex flex-col justify-center items-center w-9 h-9 rounded-[11px] border border-[var(--line)] hover:border-[var(--orange)] transition-colors ml-1"
-              onClick={toggleMenu}
-              aria-label="Toggle menu"
-            >
-              <span
-                className={`w-5 h-0.5 bg-white transition-all duration-300 ${
-                  isMenuOpen ? "rotate-45 translate-y-1" : ""
-                }`}
-              />
-              <span
-                className={`w-5 h-0.5 bg-white transition-all duration-300 mt-1 ${
-                  isMenuOpen ? "opacity-0" : ""
-                }`}
-              />
-              <span
-                className={`w-5 h-0.5 bg-white transition-all duration-300 mt-1 ${
-                  isMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
-                }`}
-              />
-            </button>
           </div>
         </div>
 
