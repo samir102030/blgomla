@@ -439,9 +439,37 @@
 html[dir="ltr"] .mn-hero::before {
   background: linear-gradient(270deg, rgba(7,11,18,.06) 18%, rgba(7,11,18,.6) 53%, rgba(7,11,18,.98) 100%);
 }
-html[dir="ltr"] .mn-hero-image { background-position: right center; }
+/*
+  In English the banner photographs were being hidden by their own scrim.
+
+  Every one of them is composed the same way: the equipment on the left of the
+  frame, empty dark room on the right. That suits Arabic exactly — the headline
+  sits on the right, the scrim darkens the right, and the cameras or the mixer
+  or the fire panel stay in the clear on the left.
+
+  Flipping the layout for English moved the headline to the left and the scrim
+  with it, straight over the half of the picture that has the subject in it.
+  The visible half was then the empty room, at 94% black under the text, so the
+  hero read as a dark rectangle: the photo was loading, and being covered up.
+
+  Mirroring the image puts the subject on the side the scrim leaves alone,
+  which is what the composition was built for. The gradient goes back to the
+  same 90deg the Arabic side uses, because the flip on the parent is what turns
+  it around — declaring 270deg here as well would flip it twice and put the
+  dark back over the subject.
+*/
+html[dir="ltr"] .mn-hero-image {
+  /*
+    The flip only. `background-position` is deliberately not set here: the
+    carousel frames its slides at `center 38%` further down, and naming a
+    position in this rule out-specifies that one — which would leave English
+    framed at the vertical midpoint and Arabic at 38%, the two languages
+    quietly cropping the same photograph differently.
+  */
+  transform: scaleX(-1);
+}
 html[dir="ltr"] .mn-hero-image::after {
-  background: linear-gradient(270deg, transparent 0%, rgba(9,13,20,.12) 37%, rgba(9,13,20,.94) 69%);
+  background: linear-gradient(90deg, transparent 0%, rgba(9,13,20,.12) 37%, rgba(9,13,20,.94) 69%);
 }
 html[dir="ltr"] .mn-search svg { right: auto; left: 14px; }
 html[dir="ltr"] .mn-search input { padding: 0 14px 0 42px; }
