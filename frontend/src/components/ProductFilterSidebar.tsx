@@ -5,9 +5,15 @@ import type { Brand } from "../types/brand.type";
 import { useTranslation } from "react-i18next";
 import { getCategoryIcon } from "../lib/categoryIcon";
 
-/** Parent id whether the field arrives populated or as a raw id. */
-const parentIdOf = (c: Category): string | null => {
-  const parent = c.parentCategory;
+/**
+ * Parent id whether the field arrives populated or as a raw id.
+ *
+ * Takes an optional category so a walk up the tree can hand it the result of a
+ * map lookup that may miss — a category whose parent is filtered out of the
+ * list ends the walk rather than throwing.
+ */
+const parentIdOf = (c: Category | undefined): string | null => {
+  const parent = c?.parentCategory;
   if (!parent) return null;
   return typeof parent === "string" ? parent : parent._id || null;
 };
@@ -71,11 +77,54 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
     }));
   };
 
+  /**
+   * Every ancestor of a category, nearest first.
+   *
+   * Read off `parentCategory`, which arrives either as an id or as a populated
+   * object depending on the endpoint — `parentIdOf` already copes with both.
+   * The visited set means bad data (a category that is its own ancestor) slows
+   * this down rather than hanging the page.
+   */
+  const ancestorsOf = useMemo(() => {
+    const byId = new Map((categories || []).map((c) => [c._id, c]));
+    return (id: string): string[] => {
+      const out: string[] = [];
+      const seen = new Set<string>([id]);
+      let cursor = parentIdOf(byId.get(id));
+      while (cursor && !seen.has(cursor)) {
+        out.push(cursor);
+        seen.add(cursor);
+        cursor = parentIdOf(byId.get(cursor));
+      }
+      return out;
+    };
+  }, [categories]);
+
+  /**
+   * Ticking a category clears anything it is related to by ancestry.
+   *
+   * The selections are pooled, so keeping both a category and its parent means
+   * the parent wins — it already contains the child. Arriving through
+   * Electronics and then ticking Bridge Rectifiers under it left both ticked
+   * and the page unchanged: same 5,656 products, same first row, as if the
+   * click had missed. Whichever category was ticked last is the one the
+   * visitor is asking for, so its relatives step aside — a broader one because
+   * it swallows this, a narrower one because this now covers it.
+   *
+   * Siblings are untouched. Ticking two of them means both, which is what a
+   * pooled filter is for.
+   */
   const handleCategoryChange = (categoryId: string, checked: boolean) => {
-    const newCategories = checked
-      ? [...filters.categories, categoryId]
-      : filters.categories.filter((id) => id !== categoryId);
-    onFilterChange?.({ categories: newCategories });
+    if (!checked) {
+      onFilterChange?.({ categories: filters.categories.filter((id) => id !== categoryId) });
+      return;
+    }
+
+    const ancestors = new Set(ancestorsOf(categoryId));
+    const kept = filters.categories.filter(
+      (id) => id !== categoryId && !ancestors.has(id) && !ancestorsOf(id).includes(categoryId)
+    );
+    onFilterChange?.({ categories: [...kept, categoryId] });
   };
 
   const handleBrandChange = (brandId: string, checked: boolean) => {

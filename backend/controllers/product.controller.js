@@ -13,7 +13,7 @@ import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import { logEventSafe } from "./event.controller.js";
 import { logAudit, diff } from "../utils/audit.js";
-import { categoryFilterValue } from "../utils/categoryTree.js";
+import { categoryFilterValue, collectCategoryIds } from "../utils/categoryTree.js";
 import mongoose from "mongoose";
 import { resolveProductStore } from "../utils/houseStore.js";
 
@@ -492,15 +492,39 @@ export const getStorefrontProducts = controllerWrapper(
         .map((x) => x.trim())
         .filter(Boolean);
 
-    const categoryIds = list(category);
+    const categoryIds = [...new Set(list(category))];
     if (categoryIds.length) {
-      // Each selection is expanded to its own subtree first — picking a branch
-      // has to mean everything under it — and the results are pooled.
-      const expanded = await Promise.all(categoryIds.map((id) => categoryFilterValue(id)));
-      const pool = expanded.flatMap((value) =>
-        value && value.$in ? value.$in : [String(value)],
-      );
-      query.category = pool.length === 1 ? pool[0] : { $in: [...new Set(pool)] };
+      // Each selection is expanded to its own subtree — picking a branch has
+      // to mean everything under it — and the subtrees are pooled.
+      const subtrees = await Promise.all(categoryIds.map((id) => collectCategoryIds(id)));
+
+      /*
+        A selection that contains another selection is dropped first.
+
+        Pooling alone is a union, which is right for two siblings — tick
+        Buzzers and Bridge Rectifiers and you want both — and wrong the moment
+        one selection sits inside another. Arriving on the catalogue through
+        Electronics leaves Electronics ticked, so ticking Bridge Rectifiers
+        below it produced Electronics ∪ Bridge Rectifiers, which is Electronics:
+        5,656 products, the same page, the same first row. The narrower click
+        looked like it had done nothing, because as a union it had.
+
+        Ticking further down means narrowing. The broader selection is what
+        the visitor is moving away from, so it is the one that goes.
+      */
+      const keptIndexes = categoryIds
+        .map((_, index) => index)
+        .filter((index) => {
+          const subtree = new Set(subtrees[index].map(String));
+          return !categoryIds.some(
+            (other, otherIndex) => otherIndex !== index && subtree.has(String(other)),
+          );
+        });
+
+      const pool = [...new Set(keptIndexes.flatMap((index) => subtrees[index].map(String)))];
+      // One id stays a plain equality match, so the existing index is used
+      // exactly as it was before any of this.
+      query.category = pool.length === 1 ? pool[0] : { $in: pool };
 
       const inBranch = await Promise.all(categoryIds.map((id) => isElectronicsCategory(id)));
       if (inBranch.some(Boolean)) query.audience = ANY_AUDIENCE;
