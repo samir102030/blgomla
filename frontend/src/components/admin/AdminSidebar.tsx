@@ -96,6 +96,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { name: t("admin.collections"), href: "/dashboard/collections", perm: "collections.view" },
         { name: t("admin.coupons"), href: "/dashboard/coupons", perm: "coupons.view" },
         { name: t("admin.advertisements"), href: "/dashboard/advertisements", perm: "advertisements.manage" },
+        { name: t("admin.banner", "Banner & installations"), href: "/dashboard/banner", perm: "advertisements.manage" },
         { name: t("admin.mosaic", "Card Mosaic"), href: "/dashboard/mosaic", perm: "mosaic.manage" },
         { name: t("admin.layout", "Page layout"), href: "/dashboard/layout", perm: "layout.manage" },
       ],

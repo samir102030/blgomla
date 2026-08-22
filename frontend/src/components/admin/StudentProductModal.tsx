@@ -316,7 +316,7 @@ const StudentProductModal: React.FC<Props> = ({ isOpen, onClose, product, catego
               disabled={saving || uploading || !form.name.trim() || !(Number(form.price) > 0)}
               className="bg-[#FFD600] text-[#333333] px-4 py-2 rounded-lg hover:bg-[#e6c100] font-medium disabled:opacity-50"
             >
-              {saving ? t("Saving…") : t("Save")}
+              {saving ? t("Saving…") : t("action.save", "Save")}
             </button>
           </div>
         </form>

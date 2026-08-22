@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useCategoryStore } from "../../stores/category.store";
+import { useHeroSlideStore } from "../../stores/heroSlide.store";
 import { categoryHref } from "../../lib/categoryLink";
-import { Arrow, AudioLines, Camera, Chevron, Fingerprint, Flame, Network, Phone } from "./icons";
+import { Arrow, Chevron, slideIcon } from "./icons";
 
 /**
  * The Manus hero, ported from v3 of the design package as the six-slide
@@ -13,106 +14,110 @@ import { Arrow, AudioLines, Camera, Chevron, Fingerprint, Flame, Network, Phone 
  * Each slide is one service the shop actually sells, and its second action
  * opens that service's own catalogue page: the visitor who stops on the
  * intercom slide and clicks through gets intercom products, not the whole
- * storefront. Categories are named here and resolved to live ids at render —
- * see `lib/categoryLink` for why the id, and not the slug, is what the
- * products page needs in the URL.
+ * storefront.
+ *
+ * The slides come from the database now — Dashboard → Banner writes them — and
+ * the six below are what renders when it has none to give: a first deploy, an
+ * emptied list, an API that is down. The banner is the most visible thing on
+ * the site and a blank one is worse than a slightly stale one, so the fallback
+ * stays in the bundle rather than being deleted once the table is filled.
+ *
+ * Fallback slides name their category and resolve it to a live id at render —
+ * see `lib/categoryLink` for why the id, and not the slug, is what the products
+ * page needs in the URL. Slides written in the dashboard arrive with the link
+ * already built, because the link picker there resolves it at the moment it is
+ * chosen.
  *
  * The panel is deliberately shallow. A banner that fills the fold tells a
  * visitor the page ends there, so this one carries only what earns its height:
- * the service, the claim, the two ways in, and the picker. The description,
- * the trust pills and the brand strip were all cut for that reason — their
- * copy and the `text`/`brands` fields are kept in the table below so any of
- * them can come back without re-deriving the content.
+ * the service, the claim, the ways in, and the picker.
  */
 
-type Slide = {
+type FallbackSlide = {
   id: string;
   image: string;
-  icon: React.FC<{ size?: number }>;
+  icon: string;
   eyebrow: string;
   title: string;
   accent: string;
-  text: string;
   action: string;
   /** Slug, English name and Arabic name of the catalogue category to open. */
   category: readonly string[];
-  brands: readonly string[];
 };
 
-const SLIDES: readonly Slide[] = [
+const FALLBACK_SLIDES: readonly FallbackSlide[] = [
   {
     id: "surveillance",
     image: "/manus/banner-surveillance.webp",
-    icon: Camera,
+    icon: "camera",
     eyebrow: "Integrated smart solutions",
     title: "We secure your facility.",
     accent: "And we connect your business.",
-    text: "Surveillance cameras, professional networks, data and smart control solutions designed for your needs — from planning through to operation.",
     action: "Explore solutions",
     category: ["surveillance-security", "surveillance", "Surveillance & Security", "أنظمة المراقبة والأمن"],
-    brands: ["Hikvision", "UNV", "Tiandy", "HiLook", "EZVIZ"],
   },
   {
     id: "fire",
     image: "/manus/banner-fire.webp",
-    icon: Flame,
+    icon: "flame",
     eyebrow: "Fire alarm & suppression",
     title: "A faster response.",
     accent: "And higher safety.",
-    text: "Early warning, detection points and safety equipment planned around the nature of the site and its evacuation routes.",
     action: "Explore fire safety",
     category: ["alarm-systems", "Alarm Systems", "أنظمة الإنذار"],
-    brands: [],
   },
   {
     id: "audio",
     image: "/manus/banner-audio.webp",
-    icon: AudioLines,
+    icon: "audio",
     eyebrow: "Audio & sound systems",
     title: "Clear sound.",
     accent: "In every space.",
-    text: "Speakers, amplifiers and orderly paging for clear audio across offices, halls and retail floors.",
     action: "Explore audio solutions",
     category: ["tvs-audio", "tv-audio", "TVs & Audio", "التلفزيونات والصوتيات"],
-    brands: ["Logitech", "RØDE", "Anker", "Hikvision", "Yealink", "Avaya"],
   },
   {
     id: "network",
     image: "/manus/banner-network.webp",
-    icon: Network,
+    icon: "network",
     eyebrow: "Networks & infrastructure",
     title: "A network that holds steady.",
     accent: "Behind everything you run.",
-    text: "Design, cabling and management for an orderly business network — stable, and ready to scale with your site.",
     action: "Explore networking",
     category: ["networking", "Networking", "الشبكات"],
-    brands: ["TP-Link", "D-Link", "Cisco", "Ruijie Reyee", "NETGEAR", "Aruba"],
   },
   {
     id: "attendance",
     image: "/manus/banner-attendance.webp",
-    icon: Fingerprint,
+    icon: "fingerprint",
     eyebrow: "Attendance & access control",
     title: "Orderly entry.",
     accent: "And clearer records.",
-    text: "Fingerprint terminals and access control that let you follow attendance and manage entry from a single point of operation.",
     action: "Explore attendance systems",
     category: ["time-attendance-fingerprint", "time-attendance", "Time Attendance & Fingerprint", "أجهزة الحضور والبصمة"],
-    brands: ["ZKTeco", "Hikvision", "Advision", "Convoy"],
   },
   {
     id: "intercom",
     image: "/manus/banner-intercom.webp",
-    icon: Phone,
+    icon: "phone",
     eyebrow: "Intercom & PBX",
     title: "Secure communication.",
     accent: "From the entrance to the back office.",
-    text: "Video intercom, IP phones and practical PBX systems that link reception, offices and entry points.",
     action: "Explore communication solutions",
     category: ["video-intercom", "Video Intercom", "إنتركم فيديو"],
-    brands: ["Panasonic", "Hikvision", "Grandstream", "Yealink", "Intelbras", "Yeastar"],
   },
 ];
+
+/** What the carousel actually renders, whichever source it came from. */
+type ViewSlide = {
+  key: string;
+  image: string;
+  icon: string;
+  eyebrow: string;
+  title: string;
+  accent: string;
+  buttons: { label: string; href: string; style: "primary" | "ghost" }[];
+};
 
 /** The fade the package settles on: content out, swap, content back in. */
 const FADE_MS = 150;
@@ -121,7 +126,11 @@ const SLIDE_MS = 6000;
 const ManusHero: React.FC = () => {
   const { t, i18n } = useTranslation();
   const isRtl = i18n.dir() === "rtl";
+  const isArabic = (i18n.language || "en").toLowerCase().startsWith("ar");
   const categories = useCategoryStore((state) => state.categories);
+  const cmsSlides = useHeroSlideStore((state) => state.slides);
+  const slidesLoaded = useHeroSlideStore((state) => state.loaded);
+  const fetchActiveSlides = useHeroSlideStore((state) => state.fetchActiveSlides);
 
   const [index, setIndex] = useState(0);
   const [fading, setFading] = useState(false);
@@ -133,6 +142,10 @@ const ManusHero: React.FC = () => {
   const [handedOver, setHandedOver] = useState(false);
   const fadeTimer = useRef<number | undefined>(undefined);
 
+  useEffect(() => {
+    if (!slidesLoaded) fetchActiveSlides();
+  }, [slidesLoaded, fetchActiveSlides]);
+
   // Motion is a preference, not a decoration: with reduced motion asked for,
   // slides still change on demand but nothing advances on its own.
   const [reducedMotion] = useState(
@@ -141,12 +154,68 @@ const ManusHero: React.FC = () => {
       !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
   );
 
-  const slide = SLIDES[index];
-  const SlideIcon = slide.icon;
-  const href = useMemo(() => categoryHref(categories, slide.category), [categories, slide.category]);
+  const slides: ViewSlide[] = useMemo(() => {
+    // An empty list from a loaded API is a deliberate "no slides", but it is
+    // still not a reason to render a blank band where the banner should be.
+    if (cmsSlides.length) {
+      // `|| english` on every Arabic field rather than a blank: a slide half
+      // translated should show the half that exists, not a gap.
+      const pick = (ar: string | undefined, en: string | undefined) =>
+        (isArabic && ar?.trim() ? ar : en) || "";
+
+      return cmsSlides.map((slide) => ({
+        key: slide._id,
+        image: slide.image,
+        icon: slide.icon || "sparkles",
+        eyebrow: pick(slide.eyebrowAr, slide.eyebrow),
+        title: pick(slide.titleAr, slide.title),
+        accent: pick(slide.accentAr, slide.accent),
+        buttons: (slide.buttons || [])
+          .filter((button) => button.href && (button.label || button.labelAr))
+          .map((button) => ({
+            label: pick(button.labelAr, button.label),
+            href: button.href,
+            style: button.style === "primary" ? ("primary" as const) : ("ghost" as const),
+          })),
+      }));
+    }
+
+    return FALLBACK_SLIDES.map((slide) => ({
+      key: slide.id,
+      image: slide.image,
+      icon: slide.icon,
+      eyebrow: t(slide.eyebrow),
+      title: t(slide.title),
+      accent: t(slide.accent),
+      buttons: [
+        {
+          label: t("Request a free consultation"),
+          href: "/contact",
+          style: "primary" as const,
+        },
+        {
+          label: t(slide.action),
+          href: categoryHref(categories, slide.category),
+          style: "ghost" as const,
+        },
+      ],
+    }));
+  }, [cmsSlides, categories, isArabic, t]);
+
+  // The list can shrink under the visitor — the API answering after the
+  // fallback has already rendered, or an admin switching a slide off in
+  // another tab — and an index left pointing past the end reads as a blank
+  // hero rather than as a shorter carousel.
+  const safeIndex = index < slides.length ? index : 0;
+  useEffect(() => {
+    if (index >= slides.length) setIndex(0);
+  }, [index, slides.length]);
+
+  const slide = slides[safeIndex];
+  const SlideIcon = slideIcon(slide?.icon);
 
   const activate = (next: number) => {
-    if (next === index) return;
+    if (next === safeIndex) return;
     if (reducedMotion) {
       setIndex(next);
       return;
@@ -165,8 +234,8 @@ const ManusHero: React.FC = () => {
     activate(next);
   };
 
-  const showPrevious = () => takeOver((index - 1 + SLIDES.length) % SLIDES.length);
-  const showNext = () => takeOver((index + 1) % SLIDES.length);
+  const showPrevious = () => takeOver((safeIndex - 1 + slides.length) % slides.length);
+  const showNext = () => takeOver((safeIndex + 1) % slides.length);
 
   useEffect(() => () => window.clearTimeout(fadeTimer.current), []);
 
@@ -174,11 +243,13 @@ const ManusHero: React.FC = () => {
   // wait restarts from whichever slide is showing, and the automatic move goes
   // through `activate`, so it carries the same fade the manual ones do.
   useEffect(() => {
-    if (paused || handedOver || reducedMotion || SLIDES.length < 2) return;
-    const timer = window.setTimeout(() => activate((index + 1) % SLIDES.length), SLIDE_MS);
+    if (paused || handedOver || reducedMotion || slides.length < 2) return;
+    const timer = window.setTimeout(() => activate((safeIndex + 1) % slides.length), SLIDE_MS);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, paused, handedOver, reducedMotion]);
+  }, [safeIndex, paused, handedOver, reducedMotion, slides.length]);
+
+  if (!slide) return null;
 
   return (
     <section
@@ -192,10 +263,10 @@ const ManusHero: React.FC = () => {
       onFocus={() => setPaused(true)}
       onBlur={() => setPaused(false)}
     >
-      {SLIDES.map((item, position) => (
+      {slides.map((item, position) => (
         <div
-          key={item.id}
-          className={`mn-hero-image mn-carousel-image ${position === index ? "mn-active" : ""}`}
+          key={item.key}
+          className={`mn-hero-image mn-carousel-image ${position === safeIndex ? "mn-active" : ""}`}
           style={{ backgroundImage: `url(${item.image})` }}
         />
       ))}
@@ -208,74 +279,90 @@ const ManusHero: React.FC = () => {
       <div className="mn-hero-grid" aria-hidden="true" />
       <div className="mn-hero-marks" aria-hidden="true" />
       <div className="mn-hero-index" aria-hidden="true">
-        <b>{String(index + 1).padStart(2, "0")}</b>
-        <i>/ {String(SLIDES.length).padStart(2, "0")}</i>
+        <b>{String(safeIndex + 1).padStart(2, "0")}</b>
+        <i>/ {String(slides.length).padStart(2, "0")}</i>
       </div>
 
-      <div className="mn-carousel-arrows">
-        <button
-          type="button"
-          className="mn-carousel-arrow"
-          aria-label={t("Previous slide")}
-          onClick={showPrevious}
-        >
-          <Chevron size={20} direction={isRtl ? "right" : "left"} />
-        </button>
-        <button
-          type="button"
-          className="mn-carousel-arrow"
-          aria-label={t("Next slide")}
-          onClick={showNext}
-        >
-          <Chevron size={20} direction={isRtl ? "left" : "right"} />
-        </button>
-      </div>
+      {slides.length > 1 && (
+        <div className="mn-carousel-arrows">
+          <button
+            type="button"
+            className="mn-carousel-arrow"
+            aria-label={t("Previous slide")}
+            onClick={showPrevious}
+          >
+            <Chevron size={20} direction={isRtl ? "right" : "left"} />
+          </button>
+          <button
+            type="button"
+            className="mn-carousel-arrow"
+            aria-label={t("Next slide")}
+            onClick={showNext}
+          >
+            <Chevron size={20} direction={isRtl ? "left" : "right"} />
+          </button>
+        </div>
+      )}
 
       {/* No live region here: the panel changes on its own every few seconds
           and holds the carousel's own links and picker, so announcing it would
           interrupt the reader mid-sentence with a block they did not ask for. */}
       <div className={`mn-hero-content ${fading ? "mn-hero-fade" : ""}`}>
-        <div className="mn-eyebrow">
-          <SlideIcon size={15} /> {t(slide.eyebrow)}
-        </div>
+        {slide.eyebrow && (
+          <div className="mn-eyebrow">
+            <SlideIcon size={15} /> {slide.eyebrow}
+          </div>
+        )}
 
         <h1>
-          {t(slide.title)}
-          <br />
-          <span className="mn-accent">{t(slide.accent)}</span>
+          {slide.title}
+          {slide.accent && (
+            <>
+              <br />
+              <span className="mn-accent">{slide.accent}</span>
+            </>
+          )}
         </h1>
 
         <div className="mn-action-row">
-          <Link to="/contact" className="mn-btn mn-btn-primary">
-            {t("Request a free consultation")} <Arrow rtl={isRtl} />
-          </Link>
-          <Link to={href} className="mn-btn mn-btn-ghost">
-            {t(slide.action)}
-          </Link>
-        </div>
-
-        {/* Keys pair the slide id with the element: the package's own note is
-            that a key repeated across a map is what broke its navigation. */}
-        <div className="mn-carousel-controls">
-          {SLIDES.map((item, position) => (
-            <button
-              type="button"
-              key={`${item.id}-dot`}
-              // The number is the only text on the button, so it has to lead
-              // the accessible name too — otherwise saying "click 02" matches
-              // nothing for someone driving the page by voice.
-              aria-label={`${String(position + 1).padStart(2, "0")} — ${t(item.eyebrow)}`}
-              aria-current={position === index}
-              className={position === index ? "mn-active" : ""}
-              onClick={() => takeOver(position)}
+          {slide.buttons.map((button, position) => (
+            <Link
+              // Buttons carry no id of their own, and two on one slide can
+              // legitimately share a label; the position is what distinguishes
+              // them, so it is what keys them.
+              key={`${slide.key}-btn-${position}`}
+              to={button.href}
+              className={`mn-btn ${button.style === "primary" ? "mn-btn-primary" : "mn-btn-ghost"}`}
             >
-              <span>{String(position + 1).padStart(2, "0")}</span>
-              <i />
-            </button>
+              {button.label}
+              {button.style === "primary" && <Arrow rtl={isRtl} />}
+            </Link>
           ))}
         </div>
-      </div>
 
+        {slides.length > 1 && (
+          /* Keys pair the slide id with the element: the package's own note is
+             that a key repeated across a map is what broke its navigation. */
+          <div className="mn-carousel-controls">
+            {slides.map((item, position) => (
+              <button
+                type="button"
+                key={`${item.key}-dot`}
+                // The number is the only text on the button, so it has to lead
+                // the accessible name too — otherwise saying "click 02" matches
+                // nothing for someone driving the page by voice.
+                aria-label={`${String(position + 1).padStart(2, "0")} — ${item.eyebrow || item.title}`}
+                aria-current={position === safeIndex}
+                className={position === safeIndex ? "mn-active" : ""}
+                onClick={() => takeOver(position)}
+              >
+                <span>{String(position + 1).padStart(2, "0")}</span>
+                <i />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 };

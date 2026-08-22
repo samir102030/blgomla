@@ -19,6 +19,7 @@ import VendorCollectionsPage from "../pages/vendor/VendorCollectionsPage";
 import AdminCollectionsPage from "../pages/admin/AdminCollectionsPage";
 import AdvertisementsPage from "../pages/admin/AdvertisementsPage";
 import MosaicPage from "../pages/admin/MosaicPage";
+import BannerPage from "../pages/admin/BannerPage";
 import LayoutPage from "../pages/admin/LayoutPage";
 import ProductApprovalsPage from "../pages/admin/ProductApprovalsPage";
 import PaymentManagementPage from "../pages/admin/PaymentManagementPage";
@@ -255,6 +256,16 @@ const AdminRoutes: React.FC = () => {
 
         {/* Content Management */}
         <Route path="/advertisements" element={<AdvertisementsPage />} />
+        {/* Same permission as the ads: the banner is the same job, and a new
+            key would be absent from every role document already saved. */}
+        <Route
+          path="/banner"
+          element={
+            <RequirePermission perm="advertisements.manage">
+              <BannerPage />
+            </RequirePermission>
+          }
+        />
         <Route path="/mosaic" element={<MosaicPage />} />
         <Route
           path="/layout"

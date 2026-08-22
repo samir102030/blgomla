@@ -353,6 +353,7 @@ const Header: React.FC = () => {
     { label: t("All Products"), path: "/products" },
     { label: t("Deals"), path: "/deals", className: "!text-[var(--brand-accent)] font-semibold" },
     { label: t("Collections"), path: "/collections" },
+    { label: t("Installations"), path: "/installations" },
     // Out of the desktop bar and kept in the drawer. The brands page is
     // reachable from the strip of brand cards on the home page and from the
     // footer, so the row does not have to spend one of its few slots saying so

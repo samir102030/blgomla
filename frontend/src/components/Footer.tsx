@@ -36,6 +36,7 @@ const Footer: React.FC = () => {
     shop: [
       { label: t("All Products"), path: "/products" },
       { label: t("Collections"), path: "/collections" },
+      { label: t("Installations"), path: "/installations" },
       { label: t("Become a Vendor"), path: "/vendor-registration" },
     ],
     support: [

@@ -198,3 +198,43 @@ export const Phone: React.FC<IconProps> = ({ size = 20, className }) => (
     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
   </svg>
 );
+
+/**
+ * The glyphs by name, so a hero slide stored in the database can ask for one.
+ *
+ * A slide names its icon as a string because it is a document, not code. The
+ * keys are what get written into Mongo, so they are the one thing here that
+ * must not be renamed: a slide holding a key that no longer resolves would
+ * lose its icon, which is why `slideIcon` falls back rather than returning
+ * undefined and letting the hero try to render nothing as a component.
+ */
+export const SLIDE_ICONS: Record<string, React.FC<IconProps>> = {
+  sparkles: Sparkles,
+  shield: ShieldCheck,
+  camera: Camera,
+  video: Video,
+  flame: Flame,
+  audio: AudioLines,
+  headphones: Headphones,
+  network: Network,
+  wifi: Wifi,
+  phone: Phone,
+  fingerprint: Fingerprint,
+  wrench: Wrench,
+  cpu: Cpu,
+  database: Database,
+  monitor: MonitorCog,
+  clipboard: ClipboardList,
+  grid: Grid,
+  building: Building,
+  store: Store,
+  house: House,
+  warehouse: Warehouse,
+  cart: Cart,
+};
+
+/** Every key an admin can pick from, in the order the picker shows them. */
+export const SLIDE_ICON_KEYS = Object.keys(SLIDE_ICONS);
+
+export const slideIcon = (key?: string): React.FC<IconProps> =>
+  (key && SLIDE_ICONS[key]) || SLIDE_ICONS.sparkles;

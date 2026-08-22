@@ -102,6 +102,7 @@ const OrderTrackingPage = lazy(() => import("./pages/OrderTrackingPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const MyAccountPage = lazy(() => import("./pages/MyAccountPage"));
 const CollectionsPage = lazy(() => import("./pages/CollectionsPage"));
+const InstallationsPage = lazy(() => import("./pages/InstallationsPage"));
 const CollectionDetailPage = lazy(() => import("./pages/CollectionDetailPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const NotificationPreferencesPage = lazy(
@@ -198,6 +199,11 @@ function App() {
           />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/collections" element={<CollectionsPage />} />
+          {/* The fitting side of the shop. `/installation` resolves too — it is
+              the singular a person types, and a banner button that 404s is
+              worse than a redirect nobody notices. */}
+          <Route path="/installations" element={<InstallationsPage />} />
+          <Route path="/installation" element={<Navigate to="/installations" replace />} />
           <Route
             path="/collections/:collectionId"
             element={<CollectionDetailPage />}
