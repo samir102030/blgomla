@@ -413,6 +413,24 @@ export const bulkUploadStudentProducts = async (req, res) => {
           ...(row.departmentName ? { category: categoryId } : {}),
           ...(row.sku ? { sku: row.sku } : {}),
           ...(row.images.length ? { images: row.images } : {}),
+
+          /*
+            The columns the shop's own product export carries and this
+            section's narrower template does not.
+
+            Each is spread only when the sheet actually had the column, for the
+            same reason the department is: this block is applied over an
+            existing product on update, so writing a field the sheet never
+            mentioned would blank whatever was there.
+          */
+          ...(row.minOrderQty ? { minOrderQty: row.minOrderQty } : {}),
+          ...(row.salePercentage
+            ? { salePercentage: row.salePercentage, saleActive: row.saleActive }
+            : {}),
+          ...(row.features?.length ? { features: row.features } : {}),
+          ...(row.attributes?.length ? { attributes: row.attributes } : {}),
+          ...(row.bulkPricing?.length ? { bulkPricing: row.bulkPricing } : {}),
+          ...(row.installation ? { installation: row.installation } : {}),
         };
 
         const found = productByName.get(norm(row.name));

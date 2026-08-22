@@ -100,7 +100,59 @@ const PRODUCT_ALIASES = {
   sku: ["sku", "productcode", "code", "كودالمنتج", "الكود"],
   tags: ["tags", "keywords", "الوسوم", "الكلمات"],
   featured: ["featured", "مميز"],
+  /*
+    The rest of the shop's own product export.
+
+    The file somebody brings to this page is usually a catalogue export rather
+    than this section's narrower template — same products, every column the
+    main sheet carries. Reading only the twelve this template defines meant
+    importing them stripped: no attributes, no features, no fitting block, and
+    no images at all, because that sheet spells them "Image URL 1" through
+    "Image URL 4" and nothing here matched a numbered column.
+  */
+  minOrderQty: ["minorderqty", "minimumorderquantity", "minorder", "أقلكمية", "اقلكمية"],
+  salePercentage: ["salepercentage", "discount", "نسبةالخصم", "الخصم"],
+  saleActive: ["saleactive", "onsale", "خصمنشط"],
+  features: ["features", "المميزات", "الخصائص"],
+  attributes: ["attributes", "specs", "specifications", "المواصفات"],
+  installationOffered: ["installationoffered", "التركيبمتاح"],
+  installationPrice: ["installationprice", "سعرالتركيب"],
+  installationNote: ["installationnote", "ملاحظةالتركيب"],
+  installationNoteAr: ["installationnotearabic", "installationnotear", "ملاحظةالتركيببالعربي"],
+  bulkPricing: ["bulkpricing", "أسعارالجملة", "اسعارالجمله"],
 };
+
+/**
+ * Image columns, however the sheet writes them.
+ *
+ * One column holding a list, or four numbered ones — the shop's export writes
+ * the second shape and this template the first, and a file has to import whole
+ * either way.
+ */
+const readImages = (row, index) => {
+  const listed = splitList(readCell(row, CATEGORY_ALIASES.image, index));
+  const numbered = [];
+  for (let n = 1; n <= 8; n += 1) {
+    const column = index.get(`imageurl${n}`) ?? index.get(`image${n}`);
+    const url = text(column !== undefined ? row[column] : undefined);
+    if (url) numbered.push(url);
+  }
+  return [...new Set([...listed, ...numbered])].map((url) => ({ url }));
+};
+
+/** "name:value | name:value" — split on the first colon so "16:9" survives. */
+const readPairs = (value) =>
+  String(value ?? "")
+    .split("|")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const at = part.indexOf(":");
+      return at > 0
+        ? { name: part.slice(0, at).trim(), value: part.slice(at + 1).trim() }
+        : null;
+    })
+    .filter(Boolean);
 
 /**
  * The sheet the rows are actually on.
@@ -352,9 +404,11 @@ export const generateStudentProductTemplate = () => {
   return write(workbook);
 };
 
-const splitList = (value) =>
+// Comma by default — tags are written that way. Features come pipe-separated
+// on the shop's export, because a feature line may itself contain a comma.
+const splitList = (value, separator = ",") =>
   text(value)
-    .split(",")
+    .split(separator)
     .map((part) => part.trim())
     .filter(Boolean);
 
@@ -379,10 +433,37 @@ export const parseStudentProductExcel = (fileBuffer) => {
         sku: text(readCell(row, PRODUCT_ALIASES.sku, cols)),
         description: text(readCell(row, CATEGORY_ALIASES.description, cols)),
         descriptionAr: text(readCell(row, CATEGORY_ALIASES.descriptionAr, cols)),
-        images: splitList(readCell(row, CATEGORY_ALIASES.image, cols)).map((url) => ({ url })),
+        images: readImages(row, cols),
         tags: splitList(readCell(row, PRODUCT_ALIASES.tags, cols)),
         featured: parseBool(readCell(row, PRODUCT_ALIASES.featured, cols), false),
         active: parseBool(readCell(row, CATEGORY_ALIASES.active, cols)),
+
+        // Present only when the sheet carries them, so a file written to this
+        // template never blanks a field it simply has no column for.
+        minOrderQty:
+          Number.parseInt(readCell(row, PRODUCT_ALIASES.minOrderQty, cols), 10) || undefined,
+        salePercentage:
+          Number.parseFloat(readCell(row, PRODUCT_ALIASES.salePercentage, cols)) || undefined,
+        saleActive: parseBool(readCell(row, PRODUCT_ALIASES.saleActive, cols), false),
+        features: splitList(readCell(row, PRODUCT_ALIASES.features, cols), "|"),
+        attributes: readPairs(readCell(row, PRODUCT_ALIASES.attributes, cols)),
+        bulkPricing: String(readCell(row, PRODUCT_ALIASES.bulkPricing, cols) ?? "")
+          .split("|")
+          .map((part) => part.trim())
+          .filter(Boolean)
+          .map((part) => {
+            const [minQty, unitPrice] = part.split(":").map((s) => s.trim());
+            return { minQty: Number.parseInt(minQty, 10), unitPrice: Number.parseFloat(unitPrice) };
+          })
+          .filter((b) => b.minQty && Number.isFinite(b.unitPrice)),
+        installation: parseBool(readCell(row, PRODUCT_ALIASES.installationOffered, cols), false)
+          ? {
+              offered: true,
+              price: Number.parseFloat(readCell(row, PRODUCT_ALIASES.installationPrice, cols)) || 0,
+              note: text(readCell(row, PRODUCT_ALIASES.installationNote, cols)),
+              noteAr: text(readCell(row, PRODUCT_ALIASES.installationNoteAr, cols)),
+            }
+          : undefined,
       };
     }),
   };
