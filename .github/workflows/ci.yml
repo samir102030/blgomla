@@ -61,3 +61,13 @@ jobs:
           for f in $(find . \( -name "*.js" -o -name "*.mjs" \) -not -path "./node_modules/*"); do
             node --check "$f"
           done
+
+      # The bulk export writes 25 column headings and the bulk importer reads
+      # them back by those exact strings, from a different file. Renaming a
+      # Product field breaks nothing a compiler can see: the export keeps
+      # writing its column, the importer keeps looking for one that is no
+      # longer there, and the upload succeeds with the field blank. The
+      # symptom is somebody's Arabic names quietly gone after a bulk edit.
+      # No database and no server — the two files check each other.
+      - name: Bulk export/import contract
+        run: node scripts/verifyTemplate.mjs
