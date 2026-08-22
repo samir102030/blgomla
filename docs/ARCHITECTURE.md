@@ -30,8 +30,8 @@
 └──────┬──────────┬──────────┬──────────┬──────────┬───────────────┘
        │          │          │          │          │
        ▼          ▼          ▼          ▼          ▼
-   MongoDB    Cloudinary  Resend    Paymob /    cron-job.org
-   Atlas      (images)   (email)   Stripe /     (every N min →
+   MongoDB    Cloudinary  Brevo     Paymob /    Vercel Cron
+   Atlas      (images)   (email)   Stripe /     (daily, hits
    eu-west-3            (transac)  Tabby /      protected cron
                                    Tamara       endpoints)
                                    (payments)
@@ -113,14 +113,14 @@ blgomla/
 | Payments          | Paymob (cards + valU), Stripe, Tabby, Tamara|
 | Shipping          | Accurate (live), Bosta (live), zone rates   |
 |                   | (fallback)                                  |
-| Email             | Resend (transactional + cart recovery)      |
+| Email             | Brevo, with Resend as the fallback          |
 | SMS               | Twilio / Vonage (gated, optional)           |
 | Push              | web-push (VAPID)                            |
 | Real-time         | socket.io (notifications, chat)             |
 | File storage      | Cloudinary (uploads via signed presets)     |
 | Caching           | in-memory LRU per namespace + CDN headers   |
 | Audit             | AuditLog collection (70+ callsites)         |
-| Cron              | cron-job.org hits /api/cron/* with secret   |
+| Cron              | Vercel Cron, daily, /api/cron/* with secret |
 | Monitoring        | Sentry (gated)                              |
 
 ### 4.1 Request lifecycle
@@ -240,15 +240,33 @@ Fri+Sat (Egypt weekend) when computing the date range.
 
 ## 10. Cron jobs
 
-External scheduler (`cron-job.org`) calls these every N minutes with
-`Authorization: Bearer <CRON_SECRET>`:
+Vercel Cron calls these, on the schedules declared in `backend/vercel.json`,
+with `Authorization: Bearer <CRON_SECRET>`:
 
-| Endpoint | Cadence | Purpose |
-| -------- | ------- | ------- |
-| `/api/cron/cart-recovery`   | 30 min | abandoned-cart emails (3-stage) |
-| `/api/cron/post-purchase`   | daily  | review-request emails (3 days post-delivery) |
-| `/api/cron/stock-alerts`    | hourly | back-in-stock + price-drop |
-| `/api/cron/sale-scheduler`  | 5 min  | flip products' saleActive based on saleStartsAt/EndsAt |
+| Endpoint | Runs (UTC) | Purpose |
+| -------- | ---------- | ------- |
+| `/api/cron/sale-scheduler`    | 21:00 | flip products' saleActive based on saleStartsAt/EndsAt |
+| `/api/cron/student-programme` | 03:30 | student-programme upkeep |
+| `/api/cron/stock-alerts`      | 06:00 | back-in-stock + price-drop |
+| `/api/cron/post-purchase`     | 09:00 | review-request emails (3 days post-delivery) |
+| `/api/cron/cart-recovery`     | 11:00 | abandoned-cart emails (3-stage) |
+
+**Once a day each, and that is a plan limit, not a preference.** Vercel's Hobby
+plan allows one run per cron per day, which is why the schedules are single
+times rather than intervals.
+
+The cost is latency, not lost work. The handlers ask absolute questions —
+`saleStartsAt <= now`, "every renewal window that has elapsed", cart stages
+matched highest-first — rather than "what changed in the last five minutes", so
+a sale that should have started at noon starts at the 21:00 run rather than
+never, and a cart that crossed two recovery stages between runs still gets one
+email rather than two. Anything wanting tighter timing than a day needs a paid
+plan or an outside scheduler pointed at the same endpoints; the `CRON_SECRET`
+check does not care which caller it is.
+
+The cadences this section used to list — cart recovery every 30 minutes, sale
+scheduler every 5 — described an external scheduler (`cron-job.org`) that is
+not what runs. `backend/vercel.json` is the source of truth.
 
 ## 11. Deployment
 

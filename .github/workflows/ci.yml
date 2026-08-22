@@ -48,8 +48,16 @@ jobs:
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      # Two holes this used to have, both in the same find:
+      #
+      # `-name "*.js"` skipped every .mjs file, and the maintenance scripts are
+      # written as .mjs — so the ones that talk directly to the production
+      # database were the least checked code in the repo.
+      #
+      # `-not -path "./scripts/*"` skipped the rest of them, including seed.js,
+      # which drops collections. A syntax error there is found by running it.
       - name: Node module syntax check
         run: |
-          for f in $(find . -name "*.js" -not -path "./node_modules/*" -not -path "./scripts/*"); do
+          for f in $(find . \( -name "*.js" -o -name "*.mjs" \) -not -path "./node_modules/*"); do
             node --check "$f"
           done
