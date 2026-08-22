@@ -601,7 +601,15 @@ const Header: React.FC = () => {
               Its accent dots went white in the same pass, since blue dots on
               a blue trace are no dots at all. brand-symbol-orange.png beside
               it is the original, kept so the change is one command to undo. */}
-          <Link to="/" className="mn-brand absolute left-1/2 -translate-x-1/2 lg:static lg:translate-x-0" aria-label={t("brand.homeLabel", "Belgomla home")}>
+          {/*
+            Centred in what is left between the menu button and the icons,
+            not against the middle of the screen. The screen does not know
+            how many icons are on the right — signed in there are three, and
+            a brand centred against the glass walked into the first of them.
+            min-w-0 lets the name give way rather than push them off the edge.
+          */}
+          <div className="flex-1 min-w-0 flex justify-center lg:flex-none lg:justify-start">
+          <Link to="/" className="mn-brand" aria-label={t("brand.homeLabel", "Belgomla home")}>
             <img
               className="mn-brand-mark"
               src="/manus/brand-symbol.webp"
@@ -614,6 +622,7 @@ const Header: React.FC = () => {
               <small>Smart Solutions</small>
             </span>
           </Link>
+          </div>
 
           {/* Search bar - desktop */}
           <div
