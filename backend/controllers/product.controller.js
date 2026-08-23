@@ -1755,6 +1755,35 @@ export const addProductToCart = controllerWrapper(
       });
     }
 
+    /*
+      A product priced on request cannot go in a basket.
+
+      Zero is how "ask us" is stored — there is no null in a Number field — and
+      createOrder refuses any line priced at zero, correctly, because the
+      arithmetic would otherwise total a fifty-thousand-pound laptop at nothing.
+      But nothing refused it here, so one could be added and sit there, and then
+      the whole checkout failed on it: not that one line, the entire order. The
+      customer could buy nothing at all until they worked out which item was to
+      blame and removed it.
+
+      The wishlist is where they came from. It draws its own cards rather than
+      reusing ProductCard, so it has an Add to Cart button where the rest of the
+      shop offers a quote, and its "add everything" loop skips only items out of
+      stock.
+
+      Refused at the one door every one of those goes through, rather than at
+      each of them.
+    */
+    if (!(product.price > 0)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "This product is priced on request. Ask for a quotation instead of adding it to the basket.",
+        priceOnRequest: true,
+        productId: String(product._id),
+      });
+    }
+
     // Find user and validate
     const user = await User.findById(userId);
     if (!user) {

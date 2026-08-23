@@ -67,6 +67,10 @@ const WishlistPage: React.FC = () => {
     let failed = 0;
     for (const product of filteredProducts) {
       if (!product._id || product.stock <= 0) continue;
+      // Priced on request: there is nothing to put a price on, and the server
+      // refuses it. Skipped rather than counted as a failure — the customer did
+      // not ask for this one specifically, and it is not a fault.
+      if (!(getBaseUnitPrice(product) > 0)) continue;
       try {
         await addToCart(product._id, 1);
         added += 1;
@@ -154,13 +158,35 @@ const WishlistPage: React.FC = () => {
             </div>
           </div>
           <div className="text-right shrink-0">
-            <div className="text-base font-bold text-[var(--text)]">{getEffectivePrice(item).toLocaleString()} EGP</div>
-            {discount > 0 && <div className="text-xs text-[var(--text-subtle)] line-through">{item.price.toLocaleString()} EGP</div>}
+            {/* Zero is how "ask us" is stored, and printing it reads as free. */}
+            {getEffectivePrice(item) > 0 ? (
+              <>
+                <div className="text-base font-bold text-[var(--text)]">{getEffectivePrice(item).toLocaleString()} EGP</div>
+                {discount > 0 && <div className="text-xs text-[var(--text-subtle)] line-through">{item.price.toLocaleString()} EGP</div>}
+              </>
+            ) : (
+              <div className="text-sm font-bold text-[var(--brand-accent)]">{t("Request a quote")}</div>
+            )}
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button onClick={() => handleAddToCart(item._id!)} disabled={isAddingToCart || outOfStock} className="px-3 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white hover:shadow-lg transition-all disabled:opacity-50">
-              {isAddingToCart ? "..." : <span><ShoppingCartIcon className="w-5 h-5" aria-hidden="true" /></span>}
-            </button>
+            {/* A product priced on request has no basket price. Adding one used
+                to succeed here and then fail the whole checkout — not that line,
+                the entire order — because createOrder refuses any line priced at
+                zero. This page draws its own cards instead of reusing
+                ProductCard, which is the only reason it ever offered the
+                button. */}
+            {getEffectivePrice(item) > 0 ? (
+              <button onClick={() => handleAddToCart(item._id!)} disabled={isAddingToCart || outOfStock} className="px-3 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] text-white hover:shadow-lg transition-all disabled:opacity-50">
+                {isAddingToCart ? "..." : <span><ShoppingCartIcon className="w-5 h-5" aria-hidden="true" /></span>}
+              </button>
+            ) : (
+              <Link
+                to={`/contact?product=${encodeURIComponent(item.name)}`}
+                className="px-3 py-2 rounded-xl text-xs font-semibold border border-[var(--brand-accent)] text-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/5 transition-all whitespace-nowrap"
+              >
+                {t("Request a quote")}
+              </Link>
+            )}
             <button onClick={() => handleToggleLove(item._id!)} disabled={isRemoving} className="p-2 rounded-xl border border-red-200 dark:border-red-500/30 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
