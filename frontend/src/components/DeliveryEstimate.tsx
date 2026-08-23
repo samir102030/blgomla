@@ -123,10 +123,19 @@ const DeliveryEstimate: React.FC<DeliveryEstimateProps> = ({
       ? fmt(earliest)
       : `${fmt(earliest)} – ${fmt(latest)}`;
 
+  /*
+    "Free delivery" only when delivery is free for everybody.
+
+    This asked whether the default fee was zero and stopped there, so under the
+    intended setup — a default of 0 with per-governorate rates behind it — the
+    product page promised free delivery to every governorate, including the
+    priced ones. The zone table has to be part of the question.
+  */
+  const anyZoneCharges = (settings.zones || []).some((z) => Number(z.fee) > 0);
   const free =
     settings.freeShippingThreshold > 0
       ? ""
-      : settings.defaultFee === 0
+      : settings.defaultFee === 0 && !anyZoneCharges
         ? t("Free delivery")
         : "";
 

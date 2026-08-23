@@ -589,6 +589,17 @@ const ShoppingCartPage: React.FC = () => {
     if (!config?.offered) return sum;
     return sum + (Number(config.price) || 0) * item.quantity;
   }, 0);
+  /*
+    Whether this figure is knowable here at all.
+
+    Per-governorate rates are matched against the delivery address, and the cart
+    has none — checkout is where one is chosen. With zones configured the cart's
+    number is the standing fee and checkout's is the zone's, and the customer
+    watches the total change between two screens for no reason they can see.
+    Zero zones means one rate for everybody, which the cart can state.
+  */
+  const shippingUnknown = (shippingSettings?.zones?.length ?? 0) > 0;
+
   const grandTotal = subtotal + shippingCost + installationTotal - couponDiscount;
 
   // if (loading)
@@ -1213,7 +1224,17 @@ const ShoppingCartPage: React.FC = () => {
                 <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-[var(--text-muted)]">{t("Shipping Cost")}</span>
                   <span className="font-medium text-[var(--text)]">
-                    {(shippingCost).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
+                    {/*
+                      With per-governorate rates configured, the cart cannot
+                      know this figure: it has no delivery address, so
+                      resolveShippingFee falls back to the standing fee while
+                      checkout charges the zone's. Printing a number that then
+                      changes on the next screen is worse than saying it is not
+                      known yet, so it says so.
+                    */}
+                    {shippingUnknown
+                      ? t("Calculated at checkout")
+                      : `${shippingCost.toLocaleString("en-EG", { maximumFractionDigits: 2 })} ${t("EGP")}`}
                   </span>
                 </div>
                 {installationTotal > 0 && (

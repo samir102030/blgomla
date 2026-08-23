@@ -169,7 +169,12 @@ const AccountAddresses: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">{t("account.stateRegion", "State / Region")}</label>
-                  <GovernorateSelect value={addressForm.state} onChange={(state) => setAddressForm((prev: any) => ({ ...prev, state }))} className={inputClass} />
+                  {/* Required here as it is at checkout. The governorate is
+                      what per-governorate shipping is matched on, and the
+                      schema leaves it optional — so an address saved from this
+                      page without one resolves to the standing fee, silently,
+                      whatever the customer's actual governorate costs. */}
+                  <GovernorateSelect value={addressForm.state} onChange={(state) => setAddressForm((prev: any) => ({ ...prev, state }))} className={inputClass} required />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">

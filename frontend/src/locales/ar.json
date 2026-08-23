@@ -4303,5 +4303,6 @@
   "Orders over {{amount}} ship free.": "الطلبات فوق {{amount}} شحنها مجاني.",
   "Delivery is free anywhere in Egypt.": "التوصيل مجاني في كل مصر.",
   "Delivery takes {{min}}–{{max}} business days.": "التوصيل بياخد من {{min}} لـ {{max}} أيام عمل.",
-  "Delivery": "التوصيل"
+  "Delivery": "التوصيل",
+  "Calculated at checkout": "بيتحسب عند الدفع"
 }

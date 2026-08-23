@@ -3,12 +3,23 @@
 export interface ShippingZone {
   governorate: string;
   fee: number;
+  /*
+    A zone may override the shop-wide delivery window. Declared here because
+    they exist on the API and this type was the reason they were being thrown
+    away: the admin page mapped each zone to {governorate, fee} on save, the
+    server rewrote the two absent fields to null, and a per-zone window set by
+    anything else vanished on the next save with nothing to show for it.
+  */
+  deliveryDaysMin?: number | null;
+  deliveryDaysMax?: number | null;
 }
 
 export interface ShippingSettings {
   enabled: boolean;
   defaultFee: number;
   freeShippingThreshold: number;
+  deliveryDaysMin?: number;
+  deliveryDaysMax?: number;
   zones: ShippingZone[];
 }
 

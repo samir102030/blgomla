@@ -46,9 +46,22 @@ const ShippingSettingsPage: React.FC = () => {
           enabled: settings.enabled,
           defaultFee: Number(settings.defaultFee) || 0,
           freeShippingThreshold: Number(settings.freeShippingThreshold) || 0,
+          /*
+            The whole zone, not the two fields this page happens to edit.
+
+            The server replaces the zones array wholesale — correct for an
+            array — and rewrites any field a zone arrives without to null. This
+            sent {governorate, fee}, so every save silently erased the per-zone
+            delivery windows, which this page does not show and therefore could
+            not warn about. Carried through untouched instead.
+          */
           zones: settings.zones
             .filter((z) => z.governorate.trim())
-            .map((z) => ({ governorate: z.governorate.trim(), fee: Number(z.fee) || 0 })),
+            .map((z) => ({
+              ...z,
+              governorate: z.governorate.trim(),
+              fee: Number(z.fee) || 0,
+            })),
         }
       );
       setSettings(res.data.settings);

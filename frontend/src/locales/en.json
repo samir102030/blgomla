@@ -4296,5 +4296,6 @@
   "Orders over {{amount}} ship free.": "Orders over {{amount}} ship free.",
   "Delivery is free anywhere in Egypt.": "Delivery is free anywhere in Egypt.",
   "Delivery takes {{min}}–{{max}} business days.": "Delivery takes {{min}}–{{max}} business days.",
-  "Delivery": "Delivery"
+  "Delivery": "Delivery",
+  "Calculated at checkout": "Calculated at checkout"
 }
