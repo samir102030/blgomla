@@ -64,12 +64,28 @@ const isOurs = (url) => /res\.cloudinary\.com/.test(String(url || ""));
 const isRemote = (url) => /^https?:\/\//.test(String(url || ""));
 
 /**
- * Every image still hosted somewhere else, newest products first.
+ * Two scopes, because the images are not evenly spread and the free storage
+ * allowance is finite.
+ *
+ * 3,695 products carry four pictures each — 14,780 of the 25,660, more than half
+ * the work for under a third of the catalogue. The first picture is the one the
+ * shop actually shows: listings, search results, the cart, the home rails, every
+ * card on every page. The rest appear only inside a product page somebody has
+ * opened.
+ *
+ * So "primary" is a real answer rather than a half-measure: 11,793 images, 46%
+ * of the total, covering nearly everything a shopper sees. It is the safe thing
+ * to run first when nobody yet knows what the allowance will take.
+ */
+const SCOPES = new Set(["all", "primary"]);
+
+/**
+ * Every image still hosted somewhere else, with the counts for both scopes.
  *
  * Read in full rather than paged: the whole list is around 25,000 short strings,
  * and knowing the true remaining count is most of what the progress bar is for.
  */
-const outstanding = async () => {
+const survey = async () => {
   const products = await Product.find({
     audience: ANY_AUDIENCE,
     deleted: { $ne: true },
@@ -79,15 +95,17 @@ const outstanding = async () => {
     .lean();
 
   const work = [];
-  let mine = 0;
   const byHost = {};
+  let migratedAll = 0;
+  let migratedPrimary = 0;
 
   for (const product of products) {
     product.images.forEach((image, index) => {
       const url = image?.url;
       if (!url) return;
       if (isOurs(url)) {
-        mine += 1;
+        migratedAll += 1;
+        if (index === 0) migratedPrimary += 1;
         return;
       }
       if (!isRemote(url)) return;
@@ -102,22 +120,37 @@ const outstanding = async () => {
     });
   }
 
-  return { work, mine, byHost };
+  const primaryWork = work.filter((item) => item.index === 0);
+  return {
+    work,
+    primaryWork,
+    byHost,
+    scopes: {
+      all: {
+        remaining: work.length,
+        migrated: migratedAll,
+        total: work.length + migratedAll,
+      },
+      primary: {
+        remaining: primaryWork.length,
+        migrated: migratedPrimary,
+        total: primaryWork.length + migratedPrimary,
+      },
+    },
+  };
 };
 
 /** What is left to do, and whether this server could do it. Reads only. */
 export const getImageMigrationStatus = controllerWrapper(
   "getImageMigrationStatus",
   async (req, res) => {
-    const { work, mine, byHost } = await outstanding();
+    const { byHost, scopes } = await survey();
     res.status(200).json({
       success: true,
       // A boolean, never the values. Whoever reads this screen does not need
       // the keys and the screen is no place to put them.
       configured: configured(),
-      remaining: work.length,
-      migrated: mine,
-      total: work.length + mine,
+      scopes,
       byHost,
     });
   }
@@ -140,14 +173,22 @@ export const runImageMigrationBatch = controllerWrapper(
       });
     }
 
+    const scope = SCOPES.has(req.body?.scope) ? req.body.scope : "all";
     const asked = Number(req.body?.limit) || DEFAULT_BATCH;
     const limit = Math.min(Math.max(asked, 1), MAX_BATCH);
 
-    const { work, mine } = await outstanding();
-    if (!work.length) {
-      return res
-        .status(200)
-        .json({ success: true, moved: 0, failed: 0, remaining: 0, migrated: mine, failures: [] });
+    const survey_ = await survey();
+    const queueSource = scope === "primary" ? survey_.primaryWork : survey_.work;
+    if (!queueSource.length) {
+      return res.status(200).json({
+        success: true,
+        scope,
+        attempted: 0,
+        moved: 0,
+        failed: 0,
+        scopes: survey_.scopes,
+        failures: [],
+      });
     }
 
     cloudinary.config({
@@ -157,8 +198,9 @@ export const runImageMigrationBatch = controllerWrapper(
       secure: true,
     });
 
-    const batch = work.slice(0, limit);
+    const batch = queueSource.slice(0, limit);
     let moved = 0;
+    let movedPrimary = 0;
     const failures = [];
 
     const moveOne = async (item) => {
@@ -176,6 +218,7 @@ export const runImageMigrationBatch = controllerWrapper(
           { $set: { [`images.${item.index}.url`]: result.secure_url } }
         );
         moved += 1;
+        if (item.index === 0) movedPrimary += 1;
       } catch (error) {
         failures.push({
           url: item.url,
@@ -199,19 +242,36 @@ export const runImageMigrationBatch = controllerWrapper(
     const attempted = batch.length - queue.length;
 
     await logAudit(req, "product.images.migrate", "product", null, {
+      scope,
       attempted,
       moved,
       failed: failures.length,
-      remainingAfter: work.length - moved,
+      remainingAfter: survey_.scopes[scope].remaining - moved,
     });
+
+    // Counted forward from the survey rather than surveyed again: a second full
+    // read of the catalogue per batch would double the cost of every round for
+    // numbers we already know exactly.
+    const scopes = {
+      all: {
+        remaining: survey_.scopes.all.remaining - moved,
+        migrated: survey_.scopes.all.migrated + moved,
+        total: survey_.scopes.all.total,
+      },
+      primary: {
+        remaining: survey_.scopes.primary.remaining - movedPrimary,
+        migrated: survey_.scopes.primary.migrated + movedPrimary,
+        total: survey_.scopes.primary.total,
+      },
+    };
 
     res.status(200).json({
       success: true,
+      scope,
       attempted,
       moved,
       failed: failures.length,
-      remaining: work.length - moved,
-      migrated: mine + moved,
+      scopes,
       // Enough to diagnose, not enough to fill a screen.
       failures: failures.slice(0, 5),
     });
