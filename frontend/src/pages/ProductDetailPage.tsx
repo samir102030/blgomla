@@ -776,9 +776,17 @@ const ProductDetailPage: React.FC = () => {
                       : "border border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--surface-2)]"
                     } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
+                  {/*
+                    Both keys carried a leading space, and nothing in either
+                    locale file matched, so this button read "Add to Wishlist"
+                    in English on every Arabic product page. The translations
+                    had been there the whole time under the key this once
+                    used — the label began with a heart emoji — and when the
+                    heart came out, a space was left where it had been.
+                  */}
                   {isProductLoved()
- ? t(" Remove from Wishlist")
- : t(" Add to Wishlist")}
+ ? t("Remove from Wishlist")
+ : t("Add to Wishlist")}
                 </button>
               </div>
 
