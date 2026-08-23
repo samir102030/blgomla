@@ -24,6 +24,27 @@ import {
 const router = express.Router();
 
 /**
+ * The filter that turns a webhook into a claim: this order, if it is not
+ * already paid.
+ *
+ * All four gateways below did `findByIdAndUpdate(orderId, { isPaid: true,
+ * paidAt: new Date(), … })` and then, if a document came back, sent the
+ * customer their order-confirmation email. Nothing asked whether the order
+ * was already paid.
+ *
+ * Gateways retry a webhook they did not get a clean answer to — that is what
+ * makes them reliable — so every retry ran the whole block again: `paidAt`
+ * moved to the hour of the retry, another "paid" entry appeared in the
+ * timeline the customer reads on the tracking page, and another confirmation
+ * email went out. Three retries, three emails, for one payment.
+ *
+ * With this filter only the first call matches, so only the first writes
+ * anything or sends anything. A later retry claims nothing, skips the email,
+ * and still answers 200 — which is what stops the gateway retrying again.
+ */
+const unpaid = (orderId) => ({ _id: orderId, isPaid: { $ne: true } });
+
+/**
  * GET /api/payments/methods
  *
  * Which methods the shop takes, and which of them this server can complete
@@ -146,8 +167,10 @@ router.post(
         const orderId = paymentIntent.metadata?.orderId;
 
         if (orderId) {
-          const order = await Order.findByIdAndUpdate(
-            orderId,
+          // Claim it once — see the note above. A retry finds nothing and
+          // sends nothing.
+          const order = await Order.findOneAndUpdate(
+            unpaid(orderId),
             {
               isPaid: true,
               paidAt: new Date(),
@@ -215,8 +238,10 @@ router.post(
       const merchantOrderId = obj?.order?.merchant_order_id;
 
       if (merchantOrderId) {
-        const order = await Order.findByIdAndUpdate(
-          merchantOrderId,
+        // Claim it once — see the note above. A retry finds nothing and
+        // sends nothing.
+        const order = await Order.findOneAndUpdate(
+          unpaid(merchantOrderId),
           {
             isPaid: true,
             paidAt: new Date(),
@@ -287,8 +312,10 @@ router.post(
     const paid = status === "AUTHORIZED" || status === "CLOSED";
 
     if (orderId && paid) {
-      const order = await Order.findByIdAndUpdate(
-        orderId,
+      // Claim it once — see the note above. A retry finds nothing and
+      // sends nothing.
+      const order = await Order.findOneAndUpdate(
+        unpaid(orderId),
         {
           isPaid: true,
           paidAt: new Date(),
@@ -346,8 +373,10 @@ router.post(
       status === "approved";
 
     if (orderId && paid) {
-      const order = await Order.findByIdAndUpdate(
-        orderId,
+      // Claim it once — see the note above. A retry finds nothing and
+      // sends nothing.
+      const order = await Order.findOneAndUpdate(
+        unpaid(orderId),
         {
           isPaid: true,
           paidAt: new Date(),

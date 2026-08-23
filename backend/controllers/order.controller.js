@@ -1278,12 +1278,25 @@ export const updateOrderStatus = controllerWrapper(
 export const markOrderPaid = controllerWrapper(
   "markOrderPaid",
   async (req, res) => {
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
+    /*
+      The hour the customer paid, recorded once.
+
+      This wrote `paidAt: new Date()` on every call, so marking an order paid
+      twice moved the payment's own timestamp to whenever the second call
+      happened. A gateway that retries its webhook — which is what gateways do
+      when they do not get a clean answer — was enough, and the books then said
+      the money arrived at the moment of the retry.
+
+      The conditional filter is the whole guard: an order that is already paid
+      does not match, so nothing is written and `paidAt` keeps the hour it
+      earned. Same shape as reconcileDelivery, for the same reason.
+    */
+    const claimed = await Order.findOneAndUpdate(
+      { _id: req.params.id, isPaid: { $ne: true } },
       {
         isPaid: true,
         paidAt: new Date(),
-        paymentResult: req.body.paymentResult,
+        ...(req.body.paymentResult ? { paymentResult: req.body.paymentResult } : {}),
         $push: {
           statusTimeline: {
             status: "paid",
@@ -1294,6 +1307,10 @@ export const markOrderPaid = controllerWrapper(
       },
       { new: true }
     );
+
+    // Not matched means either already paid or gone — the two are told apart
+    // by looking, so a second webhook gets a 200 and its order, not a 404.
+    const order = claimed || (await Order.findById(req.params.id));
     if (!order)
       return res
         .status(404)
