@@ -196,6 +196,24 @@ export const createCollection = controllerWrapper(
   }
 );
 
+/**
+ * A bundle is only offered while every product in it still exists.
+ *
+ * `populate` resolves a reference whose document has gone to `null`, and
+ * nothing downstream expected that. The listing rendered one row per item with
+ * no name and no price under a live "Add Bundle" button, and the add itself
+ * read `product.stock` off the null and answered 500. Four bundles were
+ * sitting on the storefront in exactly that state, priced 11,500 to 135,000.
+ *
+ * Partly resolved counts as broken. The price is for the set, so a bundle
+ * missing one of its three members is not a cheaper bundle — it is the wrong
+ * price for a different thing.
+ */
+const isSellable = (collection) =>
+  Array.isArray(collection?.items) &&
+  collection.items.length > 0 &&
+  collection.items.every((item) => item?.product);
+
 export const getCollections = controllerWrapper(
   "getCollections",
   async (req, res) => {
@@ -209,7 +227,12 @@ export const getCollections = controllerWrapper(
       .populate("brands", "name nameAr logo")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({ success: true, collections });
+    // Anything that cannot be assembled is not offered anywhere it could be
+    // clicked — the storefront listing, and the link picker that builds banner
+    // buttons out of this same call.
+    res
+      .status(200)
+      .json({ success: true, collections: collections.filter(isSellable) });
   }
 );
 
@@ -219,7 +242,10 @@ export const getCollectionById = controllerWrapper(
     const collection = await Collection.findById(req.params.id)
       .populate("items.product")
       .populate("brands", "name nameAr logo");
-    if (!collection) {
+    // A bundle that no longer exists and a bundle that can no longer be put
+    // together get the same answer: a direct link to one has to stop here
+    // rather than render a page of blank rows with a price on it.
+    if (!collection || !isSellable(collection)) {
       return res
         .status(404)
         .json({ success: false, message: "Collection not found" });
@@ -369,6 +395,14 @@ export const addCollectionToCart = controllerWrapper(
       return res.status(404).json({
         success: false,
         message: "User not found",
+      });
+    }
+
+    if (!isSellable(collection)) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This bundle is no longer available — one of the products in it has been removed.",
       });
     }
 
