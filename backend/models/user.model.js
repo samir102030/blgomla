@@ -179,6 +179,39 @@ const userSchema = new mongoose.Schema(
   { timestamps: true, suppressReservedKeysWarning: true },
 );
 
+/**
+ * A user document can never serialise its own secrets.
+ *
+ * `GET /api/stores/:id` is public and populated the whole owner document, so
+ * an unauthenticated request returned the shop owner's bcrypt hash along with
+ * their email, role, loyalty points, cart and Google id. The store id needed
+ * to ask came from `GET /api/stores`, which is public too.
+ *
+ * The immediate fix is to populate fewer fields, and that is done. This is the
+ * one that matters more: there are a dozen bare `.populate("owner")` and
+ * `.populate("user")` calls in the controllers, any of which becomes the same
+ * leak the day its response is exposed, and nothing about writing one warns
+ * you. Stripping the secrets on the way out means the next one is a privacy
+ * mistake rather than a credential disclosure.
+ *
+ * `comparePassword` is unaffected: it reads the field off the in-memory
+ * document, and only serialisation is touched.
+ *
+ * Not a substitute for `select: false`, which would be better still but has
+ * to be introduced alongside `+password` on every query that logs somebody
+ * in — and getting that wrong locks the owner out of their own shop.
+ *
+ * `.lean()` skips this, as it skips every schema feature, so a lean query
+ * that populates a user still has to name its fields.
+ */
+const STRIP = ["password", "resetPasswordToken", "verificationToken", "totpSecret"];
+const withoutSecrets = (_doc, ret) => {
+  for (const field of STRIP) delete ret[field];
+  return ret;
+};
+userSchema.set("toJSON", { transform: withoutSecrets });
+userSchema.set("toObject", { transform: withoutSecrets });
+
 // Pre-save hook to lowercase email and hash password before saving to database
 userSchema.pre("save", async function (next) {
   if (this.isModified("email")) {

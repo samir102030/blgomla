@@ -775,7 +775,11 @@ export const getStoreById = controllerWrapper(
   "getStoreById",
   async (req, res) => {
     const { id } = req.params;
-    const store = await Store.findById(id).populate("owner");
+    // Public, unauthenticated. A bare populate returned the owner's whole user
+    // document — password hash, email, role, loyalty points, cart, Google id —
+    // to anybody who asked, with the id available from the public store list.
+    // A shop page needs the owner's name and nothing else.
+    const store = await Store.findById(id).populate("owner", "name");
     if (!store) return res.status(404).json({ message: "Store not found" });
     res.status(200).json(store);
   }
