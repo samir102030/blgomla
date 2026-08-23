@@ -252,8 +252,21 @@ export const createAccurateShipment = async ({ order, address, customer }) => {
   if (!phone) throw new Error("Recipient phone/mobile is required by Accurate");
   if (!address?.address) throw new Error("Recipient address is required by Accurate");
 
-  // COD orders are collected on delivery; prepaid orders carry no collection.
-  const isCOD = order.paymentMethod === "cod" && !order.isPaid;
+  /*
+    COD orders are collected on delivery; prepaid orders carry no collection.
+
+    "Prepaid" has to mean paid *before* the parcel goes out. `!order.isPaid`
+    used to be a safe reading of that, because nothing ever set isPaid on a cash
+    order. Settling COD at the delivery moment changed it: a delivered cash
+    order is now isPaid, so walking its status back to "shipped" — which the
+    dashboard permits, there being no transition guard — would have produced a
+    waybill marked PAID at price 0 and a courier who collects nothing.
+
+    Paid and not yet delivered is the only combination that means the money is
+    already in. Everything else on a cash order is still to collect.
+  */
+  const prepaid = order.isPaid && !order.isDelivered;
+  const isCOD = order.paymentMethod === "cod" && !prepaid;
   const piecesCount =
     order.orderItems?.reduce((n, i) => n + (Number(i.quantity) || 0), 0) || 1;
 

@@ -1138,7 +1138,16 @@ export const updateOrderStatus = controllerWrapper(
 
     // Auto-create an Accurate waybill the first time an order is marked shipped.
     // Fail-safe: a carrier error is logged but never blocks the status update.
-    if (status === "shipped" && isAccurateEnabled() && !order.trackingNumber) {
+    // Not for an order that has already been delivered. Statuses can be moved
+    // in any direction — there is no transition graph — and a parcel that has
+    // arrived does not need a waybill; asking the courier for one is how a
+    // delivered cash order ends up shipped again with nothing to collect.
+    if (
+      status === "shipped" &&
+      !order.isDelivered &&
+      isAccurateEnabled() &&
+      !order.trackingNumber
+    ) {
       try {
         const populated = await Order.findById(order._id)
           .populate("shippingAddress")
