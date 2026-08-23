@@ -68,6 +68,46 @@ interface Failure {
 
 const BATCH = 30;
 
+/**
+ * Nothing here trusts the shape it is handed.
+ *
+ * The run endpoint used to answer with a host list built separately from the
+ * status endpoint's, one field short. Merging it dropped a number the page then
+ * tried to print, and a missing count took the whole dashboard down to a stack
+ * trace — for a maintenance screen, on a response that was otherwise fine.
+ * Both ends are fixed now; this is the half that keeps a future mismatch to a
+ * wrong number instead of a white page.
+ */
+const num = (value: unknown) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+
+const emptyCounts: ScopeCounts = { remaining: 0, migrated: 0, total: 0 };
+
+const readCounts = (raw: any): ScopeCounts =>
+  raw
+    ? { remaining: num(raw.remaining), migrated: num(raw.migrated), total: num(raw.total) }
+    : emptyCounts;
+
+const readStatus = (raw: any): Status => {
+  const hosts: HostInfo[] = Array.isArray(raw?.hosts)
+    ? raw.hosts.map((h: any) => ({
+        host: String(h?.host || "—"),
+        count: num(h?.count),
+        reachable: !!h?.reachable,
+        status: num(h?.status),
+      }))
+    : [];
+  return {
+    configured: !!raw?.configured,
+    scopes: { primary: readCounts(raw?.scopes?.primary), all: readCounts(raw?.scopes?.all) },
+    hosts,
+    // Derived from the hosts when the server does not send its own totals, so
+    // the two can never disagree on this screen.
+    reachable: num(raw?.reachable) || hosts.filter((h) => h.reachable).reduce((n, h) => n + h.count, 0),
+    unreachable:
+      num(raw?.unreachable) || hosts.filter((h) => !h.reachable).reduce((n, h) => n + h.count, 0),
+  };
+};
+
 const ImageMigrationCard: React.FC = () => {
   const { i18n } = useTranslation();
   const ar = i18n.language === "ar";
@@ -84,7 +124,7 @@ const ImageMigrationCard: React.FC = () => {
     setLoading(true);
     try {
       const { data } = await axiosInstance.get("/upload/migration/status");
-      setStatus(data);
+      setStatus(readStatus(data));
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message ||
@@ -128,7 +168,16 @@ const ImageMigrationCard: React.FC = () => {
         setMovedThisRun(moved);
         if (data.scopes || data.hosts) {
           setStatus((s) =>
-            s ? { ...s, scopes: data.scopes ?? s.scopes, hosts: data.hosts ?? s.hosts } : s
+            s
+              ? readStatus({
+                  ...s,
+                  configured: s.configured,
+                  scopes: data.scopes ?? s.scopes,
+                  hosts: data.hosts ?? s.hosts,
+                  reachable: undefined,
+                  unreachable: undefined,
+                })
+              : s
           );
         }
         if (data.failures?.length) setFailures(data.failures);
@@ -163,7 +212,7 @@ const ImageMigrationCard: React.FC = () => {
   }
   if (!status) return null;
 
-  const counts = status.scopes[scope];
+  const counts = status.scopes[scope] ?? emptyCounts;
   const pct = counts.total ? Math.round((counts.migrated / counts.total) * 100) : 0;
   const nothingReachable = !status.reachable;
 

@@ -242,8 +242,15 @@ export const runImageMigrationBatch = controllerWrapper(
     const limit = Math.min(Math.max(asked, 1), MAX_BATCH);
 
     const state = await survey();
+    // Same shape as the status endpoint's, count included. Leaving it out
+    // here meant the page merged this list over its own and then tried to
+    // print a number that was no longer there.
     const probed = await Promise.all(
-      state.hosts.map(async (entry) => ({ host: entry.host, ...(await probeHost(entry)) }))
+      state.hosts.map(async (entry) => ({
+        host: entry.host,
+        count: entry.count,
+        ...(await probeHost(entry)),
+      }))
     );
     const reachableHosts = new Set(probed.filter((h) => h.reachable).map((h) => h.host));
 
