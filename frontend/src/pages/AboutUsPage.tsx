@@ -78,7 +78,7 @@ const AboutUsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[var(--surface)]">
       <SEO
-        title="About Us"
+        title={t("About Us", "About Us")}
         description="Learn about Belgomla — Egypt's marketplace for IT, networking, and technology. Our story, mission, and the team behind the platform."
       />
       <Header />

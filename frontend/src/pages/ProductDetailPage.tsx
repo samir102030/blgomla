@@ -1047,7 +1047,7 @@ const ProductDetailPage: React.FC = () => {
       {productId && (
         <ProductRail
  icon=""
-          title="Frequently bought together"
+          title={t("Frequently bought together", "Frequently bought together")}
           fetchUrl={`/products/${productId}/frequently-bought-together`}
           excludeId={productId}
         />
@@ -1056,7 +1056,7 @@ const ProductDetailPage: React.FC = () => {
       {productId && (
         <ProductRail
  icon=""
-          title="You may also like"
+          title={t("You may also like", "You may also like")}
           fetchUrl={`/products/${productId}/related`}
           excludeId={productId}
         />

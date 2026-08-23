@@ -4291,5 +4291,7 @@
   "wishlist.someAddedToCart": "اتضاف {{added}} للسلة، و{{failed}} مقدرناش نضيفهم.",
   "Sign in required": "محتاج تسجيل دخول",
   "Sign in to your Belgomla account to open this page.": "سجّل دخولك على حسابك في بالجملة عشان تفتح الصفحة دي.",
-  "vendor.bulk.updated": "تم تحديثها"
+  "vendor.bulk.updated": "تم تحديثها",
+  "Frequently bought together": "يُشترى معًا كثيرًا",
+  "You may also like": "قد يعجبك أيضًا"
 }

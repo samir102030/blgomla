@@ -436,8 +436,8 @@ const HomePage: React.FC = () => {
             <Suspense fallback={null}>
               <ProductRail
  icon=""
-                title="Bestsellers"
-                subtitle="Most-ordered products this season"
+                title={t("Bestsellers", "Bestsellers")}
+                subtitle={t("Most-ordered products this season", "Most-ordered products this season")}
                 products={bestSellers}
               />
             </Suspense>
@@ -453,8 +453,8 @@ const HomePage: React.FC = () => {
             <Suspense fallback={null}>
               <ProductRail
                 icon={Ico.sparkles}
-                title="Top Rated"
-                subtitle="Highest-rated by our customers"
+                title={t("Top Rated", "Top Rated")}
+                subtitle={t("Highest-rated by our customers", "Highest-rated by our customers")}
                 products={topRated}
               />
             </Suspense>
