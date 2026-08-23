@@ -118,10 +118,10 @@ const hostOf = (url) => {
   reported and the walk carries on. A page missed is some products not fetched
   this time; a page thrown is every product not fetched this time.
 */
-const fetchPage = async (page) => {
+const fetchPage = async (page, query = "") => {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      const response = await fetch(`${API}/products?limit=${PAGE_SIZE}&page=${page}`, {
+      const response = await fetch(`${API}/products?limit=${PAGE_SIZE}&page=${page}${query}`, {
         signal: AbortSignal.timeout(45000),
       });
       if (!response.ok) throw new Error(`answered ${response.status}`);
@@ -137,17 +137,57 @@ const fetchPage = async (page) => {
   return null;
 };
 
+/*
+  Both halves of the catalogue.
+
+  The electronics section is a normal part of the shop filed under its own
+  audience, and the default listing hides it — deliberately, so it stays out of
+  the menus until it is published. Which means walking /products alone reaches
+  6,141 of 11,797 products and silently misses the rest.
+
+  Asking for the audience explicitly is how the section is meant to be
+  reachable, and it is public: ?audience=electronics answers 5,656 without a
+  login, same as the general half.
+
+  Their pictures come from different places and fail at different times —
+  egyptlaptop.com for the general half, free-electronic.com for electronics,
+  and the second was refusing connections outright for part of one afternoon.
+  All the more reason for one pass to cover both: whichever is up gets fetched,
+  and a re-run picks up whatever was not.
+*/
+const AUDIENCES = [
+  { label: "general", query: "" },
+  { label: "electronics", query: "&audience=electronics" },
+];
+
 const listEverything = async () => {
   const wanted = [];
   const seen = new Set();
   const lost = [];
+
+  for (const audience of AUDIENCES) {
+    const before = wanted.length;
+    await listOne(audience, wanted, seen, lost);
+    console.log(`  ${audience.label.padEnd(12)} ${wanted.length - before} images to move`);
+  }
+
+  if (lost.length) {
+    console.log(
+      `  ${lost.length} page(s) never came: ${lost.join(", ")}.` +
+        ` Re-run later and they will be picked up — everything already on disk is kept.`
+    );
+  }
+  return wanted;
+};
+
+const listOne = async ({ label, query }, wanted, seen, lost) => {
   let page = 1;
   let pages = 1;
 
   do {
-    const body = await fetchPage(page);
+    const body = await fetchPage(page, query);
     if (!body) {
-      lost.push(page);
+      lost.push(`${label}:${page}`);
       page += 1;
       continue;
     }
@@ -167,18 +207,13 @@ const listEverything = async () => {
       });
     }
 
-    process.stdout.write(`\r  listing… page ${page}/${pages}, ${wanted.length} images`);
+    process.stdout.write(
+      `\r  listing ${label}… page ${page}/${pages}, ${wanted.length} images`
+    );
     page += 1;
   } while (page <= pages);
 
-  process.stdout.write("\n");
-  if (lost.length) {
-    console.log(
-      `  ${lost.length} page(s) never came: ${lost.join(", ")}.` +
-        ` Re-run later and they will be picked up — everything already on disk is kept.`
-    );
-  }
-  return wanted;
+  process.stdout.write("\r[2K");
 };
 
 /* ── the download ───────────────────────────────────────────────────── */
