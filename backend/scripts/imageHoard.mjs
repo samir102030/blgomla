@@ -264,7 +264,30 @@ const main = async () => {
   }
 
   const todo = wanted.filter((item) => !already.has(`${item.productId}:${item.index}`));
-  console.log(`\n${todo.length} to fetch (${already.size} already here)\n`);
+
+  /*
+    Fetch each address once, not once per product that names it.
+
+    Products in this catalogue share photographs — the same picture stands for
+    a router and for the bundle it ships in — and the manifest is keyed by
+    product and slot, so the same URL appears under several keys. Downloading
+    per key meant asking egyptlaptop.com for the identical file two and three
+    times: measured mid-run, 8,297 rows had produced only 5,194 distinct files,
+    so about a third of the traffic was re-fetching bytes already on the disk.
+
+    Grouped by address instead. One download, then a manifest row for every
+    product and slot that pointed at it.
+  */
+  const byUrl = new Map();
+  for (const item of todo) {
+    if (!byUrl.has(item.url)) byUrl.set(item.url, []);
+    byUrl.get(item.url).push(item);
+  }
+
+  console.log(
+    `\n${todo.length} to fetch across ${byUrl.size} distinct addresses` +
+      ` (${already.size} already here)\n`
+  );
 
   const rows = [...already.values()];
   let done = 0;
@@ -274,37 +297,42 @@ const main = async () => {
   const started = Date.now();
   const problems = [];
 
-  const queue = [...todo];
+  const queue = [...byUrl.entries()];
   await Promise.all(
     Array.from({ length: CONCURRENCY }, async () => {
       while (queue.length) {
-        const item = queue.shift();
-        if (!item) return;
-        if (healthOf(hostOf(item.url)).dead) {
-          skipped += 1;
+        const entry = queue.shift();
+        if (!entry) return;
+        const [url, items] = entry;
+
+        if (healthOf(hostOf(url)).dead) {
+          skipped += items.length;
           continue;
         }
         try {
-          const image = await download(item.url);
-          const file = nameFor(item.url, image.type);
+          const image = await download(url);
+          const file = nameFor(url, image.type);
           fs.writeFileSync(path.join(OUT, file), image.buffer);
-          rows.push({
-            productId: item.productId,
-            index: item.index,
-            url: item.url,
-            file,
-            type: image.type,
-            bytes: image.buffer.length,
-          });
+          // One file, a row for each product and slot that named it.
+          for (const item of items) {
+            rows.push({
+              productId: item.productId,
+              index: item.index,
+              url,
+              file,
+              type: image.type,
+              bytes: image.buffer.length,
+            });
+          }
           bytes += image.buffer.length;
-          done += 1;
+          done += items.length;
         } catch (error) {
-          failed += 1;
-          if (problems.length < 10) problems.push(`${error.message}  ${item.url}`);
+          failed += items.length;
+          if (problems.length < 10) problems.push(`${error.message}  ${url}`);
         }
 
         const seen = done + failed + skipped;
-        if (seen % 50 === 0) {
+        if (seen % 50 < items.length) {
           const mins = (Date.now() - started) / 60000;
           const rate = mins > 0 ? Math.round(done / mins) : 0;
           const left = rate > 0 ? Math.round((todo.length - seen) / rate) : 0;
