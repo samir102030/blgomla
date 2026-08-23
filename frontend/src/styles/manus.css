@@ -85,7 +85,21 @@
    the language button set its globe above the "ع", and Login put its icon on
    top of the word in a box only 38px tall. Every control in the bar that
    carries an icon and a word was doing this. */
-.mn-icon-btn { width:38px; height:38px; border-radius:11px; display:inline-flex; align-items:center; justify-content:center; gap:7px; white-space:nowrap; position:relative; }
+.mn-icon-btn { width:38px; height:38px; border-radius:11px; align-items:center; justify-content:center; gap:7px; white-space:nowrap; position:relative; }
+/* `display` alone, at no weight at all.
+
+   This sheet loads after Tailwind, so a plain `.mn-icon-btn { display }`
+   outranks `.hidden` by source order — which is the bug this file already
+   met once and answered with `.hidden.mn-icon-btn { display:none }`. Two
+   classes did beat `hidden` back into place, and also beat `lg:inline-flex`,
+   `sm:flex` and every other responsive display utility, which are one class
+   each. So `hidden lg:inline-flex` on the cart and the account icon meant
+   hidden at every width, on a desktop as much as a phone.
+
+   `:where()` scores zero, so the whole ladder works the way it reads:
+   `hidden` hides, and the breakpoint utility takes it back. Same answer the
+   sheet already reached for .mn-header-link, which sets no display at all. */
+:where(.mn-icon-btn) { display:inline-flex; }
 .mn-header-action:hover,.mn-icon-btn:hover { transform:translateY(-2px); border-color:var(--orange); background:rgba(var(--accent-rgb), .08); }
 .mn-icon-btn em { position:absolute; left:-4px; top:-5px; width:17px; height:17px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-family:"IBM Plex Mono"; font-size:9px; background:var(--orange); color:white; }
 
@@ -780,15 +794,22 @@ html[dir="rtl"] .mn-solution-carousel h1 { line-height: 1.3; max-width: 22ch; }
 
 /* utilities beat components */
 /*
-  This file loads after Tailwind's utilities, and its component rules set
-  `display` with a single class — the same weight as `.hidden`. On a tie the
-  later rule wins, so `hidden` on an .mn-icon-btn did nothing and the element
-  stayed on screen. Two classes puts the utility back in front, without
-  reaching for !important.
+  Nothing needed here any more, and it is worth saying why rather than
+  leaving the next person to rediscover it.
+
+  This file loads after Tailwind's utilities, so a component rule that sets
+  `display` with one class outranks `.hidden` on a tie. The answer used to be
+  `.hidden.mn-icon-btn { display:none }` — two classes, utility back in front,
+  no !important. It worked for `hidden` and broke everything else: a
+  responsive utility is also one class, so `lg:inline-flex` could never win
+  the element back at its breakpoint, and the cart and account icons were
+  hidden on desktop as well as on phones.
+
+  The rules that used to need it now declare `display` through `:where()`,
+  which scores zero and loses to every utility in the right order. If a new
+  component here needs a `display`, put that one declaration in `:where()`
+  too rather than adding a two-class override.
 */
-.hidden.mn-icon-btn,
-.hidden.mn-header-link,
-.hidden.mn-header-action { display: none; }
 
 /*
   The narrowest phones. With the brand pinned to the middle of the row there
