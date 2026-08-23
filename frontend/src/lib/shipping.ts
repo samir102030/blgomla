@@ -27,14 +27,45 @@ export const resolveShippingFee = (
   const threshold = Number(settings.freeShippingThreshold) || 0;
   if (threshold > 0 && Number(subtotal) >= threshold) return 0;
 
-  const hay = [address.state, address.city]
-    .filter(Boolean)
-    .map((s) => String(s).trim().toLowerCase());
-
-  const zone = (settings.zones || []).find((z) => {
-    const g = String(z.governorate || "").trim().toLowerCase();
-    return g && hay.some((h) => h === g || h.includes(g) || g.includes(h));
-  });
+  const zone = matchZone(settings.zones, address);
 
   return Math.max(0, Number(zone ? zone.fee : settings.defaultFee) || 0);
+};
+
+const norm = (s: unknown) => String(s ?? "").trim().toLowerCase();
+
+/**
+ * Which configured zone an address falls in. Mirrors backend utils/shipping.js
+ * exactly — the two have to agree, or the cart quotes one number and checkout
+ * charges another.
+ *
+ * The old test was `h === g || h.includes(g) || g.includes(h)` over the state
+ * and the city at once, resolved by whichever row came first in the operator's
+ * table. The city could beat the state, and containment ran both ways — so a
+ * zone named "New Cairo" matched an address whose state is plainly "Cairo".
+ *
+ * Precedence is explicit now: exact state, exact city, state containing a zone
+ * name, city containing one; longest zone name first within the containment
+ * passes, so "New Cairo" beats "Cairo" for an address that names both.
+ */
+export const matchZone = <T extends { governorate?: string }>(
+  rows: T[] | null | undefined,
+  address: AddressLike = {}
+): T | null => {
+  const candidates = (rows || []).filter((row) => norm(row?.governorate));
+  if (!candidates.length) return null;
+
+  const state = norm(address.state);
+  const city = norm(address.city);
+
+  const exact = (value: string) =>
+    value ? candidates.find((row) => norm(row.governorate) === value) : undefined;
+
+  const byLength = [...candidates].sort(
+    (a, b) => norm(b.governorate).length - norm(a.governorate).length
+  );
+  const contains = (value: string) =>
+    value ? byLength.find((row) => value.includes(norm(row.governorate))) : undefined;
+
+  return exact(state) || exact(city) || contains(state) || contains(city) || null;
 };

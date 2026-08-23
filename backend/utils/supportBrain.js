@@ -268,6 +268,22 @@ const answerShipping = async ({ lang }) => {
     )
   );
 
+  /*
+    The kill switch first, because everything below it is a price.
+
+    `shippingFacts` reports `enabled`, and nothing here read it. With "Charge
+    shipping" turned off, resolveShippingFee returns 0 and checkout charges
+    nothing — while this went on quoting the configured default, or reading out
+    the per-governorate table row by row. A customer told "Shipping is 75 EGP"
+    who is then charged nothing is the harmless direction; the same bug quotes a
+    stale table the day the switch is flipped for a promotion, and the shop is
+    held to a number it is not charging.
+  */
+  if (!s.enabled) {
+    parts.push(say(lang, "والشحن مجاني على كل الطلبات.", "Delivery is free on every order."));
+    return { text: parts.join(" "), data: { shipping: s } };
+  }
+
   if (s.zones.length) {
     const sample = s.zones.slice(0, 4).map((z) => `${z.governorate}: ${egp(z.fee, lang)}`);
     parts.push(

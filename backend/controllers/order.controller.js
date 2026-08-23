@@ -482,15 +482,31 @@ export const createOrder = controllerWrapper(
       // Prefer live carrier rates when configured (Accurate, then Bosta); fall
       // back to the admin zone rates. Honor a free-shipping threshold regardless
       // of source.
+      /*
+        "Charge shipping" off means off, including for the carriers.
+
+        `enabled !== false` was folded into freeByThreshold, which reads as a
+        kill switch and is the opposite of one: with shipping disabled the
+        threshold clause went false, so control fell through to the carrier
+        lookups below, and `liveFee != null` then beat resolveShippingFee — the
+        one place that honours `enabled` by returning 0. Turning shipping off
+        therefore charged the courier's own quote, which is the number the
+        switch exists to stop charging.
+
+        Nobody has met this yet because no carrier is configured. It would have
+        arrived with the first one.
+      */
+      const shippingOff = shippingSettings?.enabled === false;
       const freeByThreshold =
-        shippingSettings?.enabled !== false &&
+        !shippingOff &&
         Number(shippingSettings?.freeShippingThreshold) > 0 &&
         itemsPrice >= Number(shippingSettings.freeShippingThreshold);
+      const skipCarriers = shippingOff || freeByThreshold;
       let liveFee = null;
-      if (!freeByThreshold && isAccurateEnabled()) {
+      if (!skipCarriers && isAccurateEnabled()) {
         liveFee = await getAccurateShippingFee(addressDoc, itemsPrice);
       }
-      if (liveFee == null && !freeByThreshold && isBostaEnabled()) {
+      if (liveFee == null && !skipCarriers && isBostaEnabled()) {
         liveFee = await getBostaShippingFee(addressDoc);
       }
       shippingPrice =

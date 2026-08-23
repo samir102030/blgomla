@@ -12,6 +12,7 @@
 // certificate, point NODE_EXTRA_CA_CERTS at the carrier's CA bundle — do NOT
 // disable TLS verification.
 import { getAccurateSettings } from "../models/accurateSettings.model.js";
+import { matchZone } from "./shipping.js";
 
 const ENDPOINT =
   process.env.ACCURATE_API_URL ||
@@ -187,16 +188,15 @@ const authed = async (query, variables) => {
 };
 
 // ── Zone resolution ─────────────────────────────────────────────────────────
-const norm = (s) => String(s || "").trim().toLowerCase();
 
 // Map a free-text address to Accurate zone/subzone IDs using the configured
 // mappings. Matches on governorate against the address state, then city.
 export const resolveAccurateZone = (settings, address = {}) => {
-  const hay = [address.state, address.city].filter(Boolean).map(norm);
-  const m = (settings?.mappings || []).find((x) => {
-    const g = norm(x.governorate);
-    return g && hay.some((h) => h === g || h.includes(g) || g.includes(h));
-  });
+  // The same matcher the fee table uses. This held its own byte-identical copy
+  // of the old bidirectional-substring test, so correcting that one alone would
+  // have left the carrier deciding zones by different rules from the ones the
+  // customer was quoted.
+  const m = matchZone(settings?.mappings, address);
   return m ? { zoneId: m.zoneId, subzoneId: m.subzoneId } : null;
 };
 
