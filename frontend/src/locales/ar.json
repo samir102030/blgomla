@@ -4306,5 +4306,7 @@
   "Delivery is free anywhere in Egypt.": "التوصيل مجاني في كل مصر.",
   "Delivery takes {{min}}–{{max}} business days.": "التوصيل بياخد من {{min}} لـ {{max}} أيام عمل.",
   "Delivery": "التوصيل",
-  "Calculated at checkout": "بيتحسب عند الدفع"
+  "Calculated at checkout": "بيتحسب عند الدفع",
+  "Recently Viewed": "شُوهد مؤخرًا",
+  "Pick up where you left off": "كمّل من حيث ما وقفت"
 }

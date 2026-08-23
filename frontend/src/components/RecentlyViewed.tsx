@@ -41,9 +41,19 @@ const RecentlyViewed: React.FC<RecentlyViewedProps> = ({ excludeId }) => {
   if (!loaded || products.length === 0) return null;
 
   return (
+    /*
+      ProductRail runs t() over `title` and `subtitle` itself, so these are the
+      keys, passed raw — wrapping them here would translate twice.
+
+      The heading was the string "Recently Viewed" and no key existed for it,
+      so it rendered in English among ten Arabic headings on an Arabic-first
+      shop. It survived this long because the rail only appears for a visitor
+      who has already looked at a product: it is invisible on a first load.
+    */
     <ProductRail
  icon=""
       title="Recently Viewed"
+      subtitle="Pick up where you left off"
       products={products}
       excludeId={excludeId}
     />

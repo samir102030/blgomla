@@ -4299,5 +4299,7 @@
   "Delivery is free anywhere in Egypt.": "Delivery is free anywhere in Egypt.",
   "Delivery takes {{min}}–{{max}} business days.": "Delivery takes {{min}}–{{max}} business days.",
   "Delivery": "Delivery",
-  "Calculated at checkout": "Calculated at checkout"
+  "Calculated at checkout": "Calculated at checkout",
+  "Recently Viewed": "Recently Viewed",
+  "Pick up where you left off": "Pick up where you left off"
 }
