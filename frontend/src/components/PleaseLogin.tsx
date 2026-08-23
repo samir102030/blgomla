@@ -9,6 +9,13 @@ const PleaseLogin: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const redirectTo = `/login?redirect=${encodeURIComponent(location.pathname)}`;
+  /*
+    "Create Account" pointed at /register, and there is no such route — the
+    catch-all caught it and a signed-out visitor who opened the cart and
+    tried to sign up got a 404. Registration has always lived on the same
+    card as sign-in; `mode=register` is what turns it to that side.
+  */
+  const registerTo = `${redirectTo}&mode=register`;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col">
@@ -57,7 +64,7 @@ const PleaseLogin: React.FC = () => {
               {t("Login", "Login")}
             </Link>
             <Link
-              to="/register"
+              to={registerTo}
               className="inline-flex items-center justify-center bg-[var(--surface)] border border-[var(--border)] hover:bg-[var(--bg)] text-[var(--text)] font-medium px-6 py-3 rounded-lg transition-colors"
             >
               {t("Create Account", "Create Account")}

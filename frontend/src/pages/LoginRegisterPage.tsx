@@ -133,6 +133,22 @@ const LoginRegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get("ref") || undefined;
+
+  /*
+    Which side of the card to open on.
+
+    Everything that says "create an account" arrives here, and arriving on
+    the sign-in pane means the visitor has to find the tab before they can do
+    the thing they just asked to do. An invitation carrying a referral code is
+    the same case: nobody follows one of those to sign in.
+  */
+  useEffect(() => {
+    if (searchParams.get("mode") === "register" || referralCode) {
+      setMode("register");
+    }
+    // Only on arrival: after that the tabs are the visitor's to choose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const login = useUserStore((s) => s.login);
   const signup = useUserStore((s) => s.signup);
   const googleSignIn = useUserStore((s) => s.googleSignIn);

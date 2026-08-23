@@ -87,6 +87,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 
 // ── Lazy-loaded pages (code-split into separate chunks) ──
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 const BrandsPage = lazy(() => import("./pages/BrandsPage"));
 const ProductsPage = lazy(() => import("./pages/ProductsPage"));
 const DealsPage = lazy(() => import("./pages/DealsPage"));
@@ -242,6 +243,16 @@ function App() {
               </RequireDashboardAccess>
             }
           />
+
+          {/*
+            Anything that matched nothing above.
+
+            There was no catch-all, so <Routes> rendered null and a wrong
+            address produced a white page — no header, no footer, no words and
+            no way back. The sign-in wall's own "Create Account" button led to
+            one of those. Ranking puts "*" last whatever its position here.
+          */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </SiteModeGate>
       </Suspense>
