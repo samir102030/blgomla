@@ -23,7 +23,46 @@ import { resolveProductStore } from "../utils/houseStore.js";
 // `$and` array, or null when there's nothing to search.
 // NOTE: true typo tolerance (e.g. "hikvison" → "hikvision") needs MongoDB
 // Atlas Search with a fuzzy index — a documented follow-up; not active here.
-const buildSearchFilter = (search) => {
+/**
+ * The department names, in both languages, kept to hand.
+ *
+ * 330 rows of two short strings. Read once and held for a few minutes, because
+ * it is consulted on every search and it changes when somebody adds a
+ * department, not between two keystrokes.
+ */
+const CATEGORY_VOCAB_TTL_MS = 5 * 60 * 1000;
+let categoryVocab = { at: 0, rows: null };
+
+const departmentNames = async () => {
+  const now = Date.now();
+  if (categoryVocab.rows && now - categoryVocab.at < CATEGORY_VOCAB_TTL_MS) {
+    return categoryVocab.rows;
+  }
+  const rows = await Category.find({ deleted: { $ne: true } })
+    .select("_id name nameAr")
+    .lean();
+  categoryVocab = { at: now, rows };
+  return rows;
+};
+
+/**
+ * What a search should match.
+ *
+ * Every word has to appear somewhere — that is why they are separate clauses,
+ * ANDed by the caller — and within a word, anywhere will do.
+ *
+ * The department names are searched as well as the product's own fields, and a
+ * word that names a department pulls in everything filed under it. Without
+ * that, Arabic search barely worked. The 6,141 products in the general
+ * catalogue have no Arabic name yet, so on the live shop "لابتوب" matched
+ * nothing at all while "laptop" matched 2,029; "راوتر", "هارد" and "معالج" all
+ * returned zero, and "كاميرا" returned 2 against 1,407 for "camera". The
+ * departments have carried both languages the whole time.
+ *
+ * Not a synonym list anybody has to maintain: it is the shop's own vocabulary,
+ * so it is right by construction and stays right when a department is renamed.
+ */
+const buildSearchFilter = async (search) => {
   const tokens = String(search || "")
     .trim()
     .split(/\s+/)
@@ -31,8 +70,14 @@ const buildSearchFilter = (search) => {
     .slice(0, 6);
   if (tokens.length === 0) return null;
   const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  const departments = await departmentNames();
+
   return tokens.map((tok) => {
     const rx = new RegExp(esc(tok), "i");
+    const named = departments
+      .filter((c) => rx.test(c.name || "") || rx.test(c.nameAr || ""))
+      .map((c) => c._id);
     return {
       $or: [
         { name: { $regex: rx } },
@@ -40,6 +85,7 @@ const buildSearchFilter = (search) => {
         { description: { $regex: rx } },
         { descriptionAr: { $regex: rx } },
         { tags: { $in: [rx] } },
+        ...(named.length ? [{ category: { $in: named } }] : []),
       ],
     };
   });
@@ -199,7 +245,7 @@ export const getAllProducts = controllerWrapper(
   async (req, res) => {
     const { page = 1, limit = 20, search, ...filters } = req.query;
     const filter = {};
-    const searchAnd = buildSearchFilter(search);
+    const searchAnd = await buildSearchFilter(search);
     if (searchAnd) filter.$and = searchAnd;
     // Searching by name reaches the unpublished section; browsing does not.
     if (searchAnd) filter.audience = ANY_AUDIENCE;
@@ -477,7 +523,7 @@ export const getStorefrontProducts = controllerWrapper(
       approvalStatus: "approved",
     };
 
-    const searchAnd = buildSearchFilter(search);
+    const searchAnd = await buildSearchFilter(search);
     if (searchAnd) query.$and = searchAnd;
     if (searchAnd) query.audience = ANY_AUDIENCE;
     // A category selected from the menu may be a branch rather than a leaf, and
