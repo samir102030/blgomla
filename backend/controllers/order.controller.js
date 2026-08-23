@@ -25,7 +25,11 @@ import {
   installationFee,
   lineUnitPrice,
 } from "../utils/collectionPricing.js";
-import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "../utils/email.js";
+import {
+  sendOrderConfirmationEmail,
+  sendOrderStatusEmail,
+  sendNewOrderEmail,
+} from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
 
 /** What the account pages print: the last eight characters, in capitals. */
@@ -663,6 +667,26 @@ export const createOrder = controllerWrapper(
             );
           }
         }
+
+        /*
+          And tell the shop, which nothing did.
+
+          A Notification document is created for the store's owner above and it
+          shows in the dashboard bell — that was the whole of it. Nothing left
+          the site, so the shop found out it had an order whenever somebody next
+          opened the dashboard and looked. On a shop whose only working payment
+          method is cash on delivery, the order has to be packed and sent before
+          anyone is paid at all.
+
+          Best-effort and unawaited, in the same block and for the same reason
+          as the customer's own confirmation: the order is committed and the
+          response is already sent, so nothing here may throw into it.
+        */
+        sendNewOrderEmail(
+          savedOrder,
+          customer,
+          (orderItems?.length || 0) + (collectionItems?.length || 0)
+        ).catch((err) => console.error("Failed to tell the shop about the order:", err));
       } catch (notifyError) {
         console.error("Post-order notification failed:", notifyError);
       }

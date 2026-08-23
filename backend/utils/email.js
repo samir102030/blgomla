@@ -823,6 +823,65 @@ export const sendContactEnquiryEmail = async (enquiry) => {
   });
 };
 
+/**
+ * Tell the shop an order has come in.
+ *
+ * A Notification document was already created for the store's owner, and it
+ * shows in the dashboard bell. That is the whole of it: nothing leaves the
+ * site. So the shop learns it has an order when somebody happens to open the
+ * dashboard and look — on a shop whose only working payment method is cash on
+ * delivery, where the order has to be packed and dispatched before anybody is
+ * paid at all.
+ *
+ * Goes to the same inbox as the contact form, by the same rule: CONTACT_INBOX,
+ * falling back to the address inside FROM_EMAIL, so it lands somewhere real
+ * without one more setting having to be filled in first. `replyTo` is the
+ * customer, so a question about the order is one press of reply.
+ *
+ * Written in English: this is read by the shop, not by the customer.
+ */
+export const sendNewOrderEmail = async (order, customer, itemCount) => {
+  const inbox =
+    process.env.CONTACT_INBOX || (FROM_EMAIL.match(/<([^>]+)>/)?.[1] ?? FROM_EMAIL);
+
+  const short = String(order._id).slice(-8).toUpperCase();
+  const money = (n) => `EGP ${Number(n || 0).toLocaleString("en-EG")}`;
+  const esc = (v) =>
+    String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const rows = [
+    ["Order", `#${short}`],
+    ["Total", money(order.totalPrice)],
+    ["Payment", order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod],
+    ["Items", itemCount],
+    ["Customer", customer?.name],
+    ["Email", customer?.email],
+    ["Phone", customer?.phoneNumber],
+  ].filter(([, value]) => value !== undefined && value !== null && value !== "");
+
+  const body = `
+    <h1 class="h1 text" style="margin:0 0 12px;font-size:22px;font-weight:800;color:${T.navy};">New order #${short}</h1>
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 18px;">
+      ${rows
+        .map(
+          ([label, value]) =>
+            `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;font-size:13px;white-space:nowrap;">${label}</td>` +
+            `<td style="padding:4px 0;font-size:14px;font-weight:600;">${esc(value)}</td></tr>`
+        )
+        .join("")}
+    </table>
+    ${ctaButton(`${CLIENT_URL}/dashboard/order`, "Open it in the dashboard")}
+  `;
+
+  return sendEmail({
+    to: inbox,
+    subject: `New order #${short} — ${money(order.totalPrice)}`,
+    html: renderEmailLayout({ lang: "en", previewText: `${customer?.name || "A customer"} — ${money(order.totalPrice)}`, body }),
+    text: rows.map(([label, value]) => `${label}: ${value}`).join("\n"),
+    replyTo: customer?.email,
+  });
+};
+
 export const sendStockAlertEmail = async (email, product, type, lang = "en") => {
   const l = pickLang(lang);
   const url = `${CLIENT_URL}/product/${product._id}`;
