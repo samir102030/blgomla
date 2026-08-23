@@ -135,7 +135,7 @@ const StudentsCategoriesPage: React.FC = () => {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#333333]">{t("Departments")}</h1>
           <p className="text-[#9E9E9E]">
-            {t("The student section's own departments. Products are filed under them.")}
+            {t("The electronics section's own departments. Products are filed under them.")}
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">

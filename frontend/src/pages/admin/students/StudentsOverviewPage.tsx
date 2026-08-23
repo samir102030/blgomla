@@ -46,42 +46,42 @@ const StudentsOverviewPage: React.FC = () => {
   const blockers = [
     !catalogTotal && {
       text: t("The section has nothing to sell yet."),
-      to: "/dashboard/students/products",
+      to: "/dashboard/electronics/products",
       action: t("Add a product"),
     },
     !activeDomains && {
       text: t("No faculty domains are accepting applications — nobody can join."),
-      to: "/dashboard/students/faculties",
+      to: "/dashboard/electronics/faculties",
       action: t("Add a faculty"),
     },
     !open && {
       text: t("The programme is closed, so the page shows a notice instead of the form."),
-      to: "/dashboard/students/offer",
+      to: "/dashboard/electronics/offer",
       action: t("Open the programme"),
     },
   ].filter(Boolean) as Array<{ text: string; to: string; action: string }>;
 
   const figures: Array<[string, number | string | undefined, string?]> = [
-    [t("Pending"), stats?.pending, "/dashboard/students/members"],
-    [t("Verified"), stats?.verified, "/dashboard/students/members"],
-    [t("Suspended"), stats?.suspended, "/dashboard/students/members"],
-    [t("Expired"), stats?.expired, "/dashboard/students/members"],
+    [t("Pending"), stats?.pending, "/dashboard/electronics/members"],
+    [t("Verified"), stats?.verified, "/dashboard/electronics/members"],
+    [t("Suspended"), stats?.suspended, "/dashboard/electronics/members"],
+    [t("Expired"), stats?.expired, "/dashboard/electronics/members"],
     [t("Codes issued"), stats?.codesIssued],
     [t("Redemptions"), stats?.redemptions],
   ];
 
   const shelf: Array<[string, number | string, string]> = [
-    [t("Products"), catalogTotal, "/dashboard/students/products"],
-    [t("Departments"), departments, "/dashboard/students/categories"],
-    [t("Accepting faculties"), activeDomains, "/dashboard/students/faculties"],
+    [t("Products"), catalogTotal, "/dashboard/electronics/products"],
+    [t("Departments"), departments, "/dashboard/electronics/categories"],
+    [t("Accepting faculties"), activeDomains, "/dashboard/electronics/faculties"],
   ];
 
   return (
     <div className="space-y-6">
       <PageHead
-        title={t("Student programme")}
+        title={t("Electronics section")}
         description={t(
-          "A shop inside the shop: its own departments, its own products, open to students who prove enrolment with a faculty email.",
+          "A shop inside the shop: its own departments, its own products, and a student discount that is good here and nowhere else.",
         )}
       >
         <span
@@ -174,7 +174,7 @@ const StudentsOverviewPage: React.FC = () => {
             {open ? t("Close the programme") : t("Open the programme")}
           </button>
           <a href="/electronics" target="_blank" rel="noreferrer" className={btnGhost}>
-            {t("View the student page")}
+            {t("View the section on the storefront")}
           </a>
         </div>
       </Card>

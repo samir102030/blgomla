@@ -167,8 +167,8 @@ const StudentsOfferPage: React.FC = () => {
         </div>
 
         <p className="text-sm text-gray-500">
-          {t("The code pays for everything in the student section, and for nothing on the main shop.")}{" "}
-          <Link to="/dashboard/students/products" className="text-[var(--brand-primary)] hover:underline">
+          {t("The code pays for everything in the electronics section, and for nothing on the main shop.")}{" "}
+          <Link to="/dashboard/electronics/products" className="text-[var(--brand-primary)] hover:underline">
             {t("See what is in it")}
           </Link>
         </p>
