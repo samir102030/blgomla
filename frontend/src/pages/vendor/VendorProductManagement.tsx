@@ -272,7 +272,11 @@ const VendorProductManagement: React.FC = () => {
             )}
             <div className="aspect-w-16 aspect-h-9">
               <img
-                src={product.images[0]?.url || "/placeholder-product.jpg"}
+                // /placeholder-product.jpg is not a file in public/ and never
+                // was — the only other name for this in the codebase. It fell
+                // through to the SPA's index.html, so a vendor's product with
+                // no picture showed a broken image in their own table.
+                src={product.images[0]?.url || "/placeholder.png"}
                 alt={product.name}
                 className="w-full h-48 object-cover"
                loading="lazy" decoding="async"/>

@@ -31,8 +31,29 @@ const FeaturedProducts: React.FC = () => {
     };
   }, []);
 
-  // Don't render if no featured products
-  if (!loading && (!products || products.length === 0)) return null;
+  /*
+    Nothing at all until there is something to show.
+
+    This was `!loading && products.length === 0`, so while the fetch was in
+    flight it drew the whole section — heading, subtitle, rule, four shimmering
+    skeleton cards — and then removed it when the answer came back empty. No
+    product in this catalogue is marked featured, so that is what happened on
+    every home page load, for every visitor: a section titled "المنتجات
+    المميزة" appeared, took up a screenful, and disappeared, shoving everything
+    below it back up the page.
+
+    Until the fetch answers, this section does not exist — the same thing every
+    other optional section on this page does with <Suspense fallback={null}>.
+
+    That leaves the loading skeleton below with no state to render in: an empty
+    list is the only thing `loading` can be true alongside, and an empty list
+    now returns here. It is kept rather than deleted because it is what this
+    section should show if the rail ever gains a second fetch (a language
+    switch, a refresh) with products already on screen — but it renders
+    nothing today, and reserving a screenful for something that may not exist
+    is the bug this is fixing.
+  */
+  if (!products || products.length === 0) return null;
 
   return (
     <section className="relative section-y bg-[var(--surface-2)] border-y border-[var(--border)] mesh-brand">
