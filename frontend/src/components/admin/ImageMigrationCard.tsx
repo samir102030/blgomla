@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
   ArrowPathIcon,
+  CheckCircleIcon,
   CloudArrowUpIcon,
   ExclamationTriangleIcon,
+  NoSymbolIcon,
   StopIcon,
 } from "@heroicons/react/24/outline";
 import { axiosInstance } from "../../lib/axios";
@@ -17,23 +19,23 @@ import { axiosInstance } from "../../lib/axios";
  * hotlinking, or closes — and on that day the shop has no pictures and no way
  * to get them back.
  *
- * The work is one image at a time and there are around 25,000 of them, so the
- * server does a few per request and this page keeps asking. That is what the
- * loop below is: not a progress animation over a single long call, but a real
- * count that goes down. Closing the tab stops it and loses nothing; the next
- * run picks up whatever is still pointing somewhere else.
+ * The screen is built around the thing that turned out to matter: the two
+ * hosts do not behave the same. One is plain nginx and lets the server fetch
+ * from it. The other is behind Cloudflare, which serves an ordinary home
+ * connection and refuses a data centre, so the server cannot fetch a single
+ * one of its images no matter how it asks. Hiding that behind one progress bar
+ * produced a screen of red errors that said nothing about which half of the
+ * catalogue was fine, so both halves are named here, with the reason.
  *
- * Two scopes, because the images are not evenly spread. A third of the products
- * carry four pictures each and account for more than half the total, while the
- * first picture of each product is the one the shop actually shows — listings,
- * search, cart, home rails. Moving only those is 46% of the work for nearly
- * everything a shopper sees, which is the right thing to run first while nobody
- * yet knows what the storage allowance will take.
+ * The work is one image at a time and there are around 25,000, so the server
+ * does a few per request and this page keeps asking. The loop is a real count
+ * going down, not an animation over a single long call. Closing the tab stops
+ * it and loses nothing.
  *
  * The stop button uses a ref rather than state on purpose. The loop is a plain
  * async function and would close over the state value it started with, so a
- * click during a request in flight would be read after the next one had already
- * been sent.
+ * click during a request in flight would be read after the next one had
+ * already been sent.
  */
 
 type Scope = "primary" | "all";
@@ -44,10 +46,19 @@ interface ScopeCounts {
   total: number;
 }
 
+interface HostInfo {
+  host: string;
+  count: number;
+  reachable: boolean;
+  status?: number;
+}
+
 interface Status {
   configured: boolean;
   scopes: Record<Scope, ScopeCounts>;
-  byHost: Record<string, number>;
+  hosts: HostInfo[];
+  reachable: number;
+  unreachable: number;
 }
 
 interface Failure {
@@ -104,9 +115,8 @@ const ImageMigrationCard: React.FC = () => {
 
     let moved = 0;
     try {
-      // No fixed number of rounds: it ends when the server says nothing is
-      // left in this scope, when a round moves nothing (so repeating it would
-      // only loop on the same images), or when the operator stops it.
+      // It ends when the server says there is no reachable work left in this
+      // scope, when a round moves nothing, or when the operator stops it.
       for (;;) {
         if (stop.current) break;
         const { data } = await axiosInstance.post("/upload/migration/run", {
@@ -116,10 +126,14 @@ const ImageMigrationCard: React.FC = () => {
 
         moved += data.moved || 0;
         setMovedThisRun(moved);
-        if (data.scopes) setStatus((s) => (s ? { ...s, scopes: data.scopes } : s));
+        if (data.scopes || data.hosts) {
+          setStatus((s) =>
+            s ? { ...s, scopes: data.scopes ?? s.scopes, hosts: data.hosts ?? s.hosts } : s
+          );
+        }
         if (data.failures?.length) setFailures(data.failures);
 
-        if (!data.scopes?.[scope]?.remaining) break;
+        if (data.exhausted) break;
         if (!data.moved) {
           toast.error(
             ar
@@ -151,7 +165,7 @@ const ImageMigrationCard: React.FC = () => {
 
   const counts = status.scopes[scope];
   const pct = counts.total ? Math.round((counts.migrated / counts.total) * 100) : 0;
-  const done = counts.remaining === 0;
+  const nothingReachable = !status.reachable;
 
   const tab = (value: Scope, label: string, hint: string) => (
     <button
@@ -182,8 +196,8 @@ const ImageMigrationCard: React.FC = () => {
           </h2>
           <p className="text-sm text-gray-600 mt-1 leading-relaxed">
             {ar
-              ? "دلوقتي كل صورة في المتجر هي لينك لسيرفر حد تاني. شغّالة النهارده، وهتفضل شغالة لحد ما السيرفر ده يغيّر مجلداته أو يقفل — ووقتها المتجر يفضل من غير صور. الزرار ده بينقلها لحسابنا، شوية شوية."
-              : "Every picture on the shop is a link to somebody else's server. They work today, and they work until that server moves its folders or closes — and then the shop has no pictures. This moves them onto our own account, a few at a time."}
+              ? "دلوقتي كل صورة في المتجر هي لينك لسيرفر حد تاني. شغّالة النهارده، وهتفضل شغالة لحد ما السيرفر ده يغيّر مجلداته أو يقفل — ووقتها المتجر يفضل من غير صور."
+              : "Every picture on the shop is a link to somebody else's server. They work today, and they work until that server moves its folders or closes — and then the shop has no pictures."}
           </p>
         </div>
       </div>
@@ -198,6 +212,63 @@ const ImageMigrationCard: React.FC = () => {
             {ar
               ? "السيرفر لسه مش متظبط لتخزين الصور. لازم CLOUDINARY_CLOUD_NAME و CLOUDINARY_API_KEY و CLOUDINARY_API_SECRET يتحطوا في إعدادات السيرفر، وبعدها Redeploy."
               : "This server is not set up for image storage yet. CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET have to be added to the server settings, then redeployed."}
+          </p>
+        </div>
+      )}
+
+      {/* Which source the pictures sit on, and whether this server is allowed
+          to read from it. The distinction is the whole reason this screen is
+          not a single progress bar. */}
+      {status.hosts?.length > 0 && (
+        <ul className="mt-5 space-y-2">
+          {status.hosts.map((h) => (
+            <li
+              key={h.host}
+              className={`flex items-start gap-2.5 rounded-xl border p-3 ${
+                h.reachable ? "border-gray-200" : "border-amber-200 bg-amber-50/50"
+              }`}
+            >
+              {h.reachable ? (
+                <CheckCircleIcon className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" aria-hidden="true" />
+              ) : (
+                <NoSymbolIcon className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden="true" />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-xs text-gray-700 truncate">{h.host}</span>
+                  <span className="text-sm font-semibold text-gray-900 tabular-nums shrink-0">
+                    {h.count.toLocaleString()}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                  {h.reachable
+                    ? ar
+                      ? "السيرفر بيوصلها — الزرار تحت بينقلها"
+                      : "The server can read these — the button below moves them"
+                    : ar
+                      ? `بترفض السيرفر (${h.status || "مفيش رد"}). دي بتتحجب على أساس إن الطلب جاي من داتا سنتر، فمفيش إعداد هيعدّيها — لازم تتسحب من جهاز على نت عادي.`
+                      : `Refuses the server (${h.status || "no answer"}). Blocked for coming from a data centre, so no setting gets past it — these have to be fetched from an ordinary connection.`}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {status.unreachable > 0 && (
+        <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+          <p className="text-sm text-gray-700 leading-relaxed">
+            {ar
+              ? `${status.unreachable.toLocaleString()} صورة محتاجة تتسحب من جهاز عادي. من مجلد المشروع:`
+              : `${status.unreachable.toLocaleString()} images have to be fetched from an ordinary machine. From the project folder:`}
+          </p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-gray-900 p-3 text-xs text-gray-100">
+            <code>cd backend &amp;&amp; node scripts/imageCourier.mjs</code>
+          </pre>
+          <p className="mt-2 text-xs text-gray-500 leading-relaxed">
+            {ar
+              ? "هيسألك على إيميل وباسورد الأدمن بتوعك. مش بياخد مفاتيح Cloudinary ولا الداتابيز — دول فاضلين على السيرفر."
+              : "It asks for your admin email and password. It never touches the Cloudinary keys or the database — those stay on the server."}
           </p>
         </div>
       )}
@@ -248,19 +319,6 @@ const ImageMigrationCard: React.FC = () => {
         </p>
       </div>
 
-      {Object.keys(status.byHost).length > 0 && (
-        <ul className="mt-4 space-y-1">
-          {Object.entries(status.byHost)
-            .sort((a, b) => b[1] - a[1])
-            .map(([host, n]) => (
-              <li key={host} className="flex items-center justify-between text-sm">
-                <span className="text-gray-500 font-mono text-xs truncate">{host}</span>
-                <span className="text-gray-700 tabular-nums">{n.toLocaleString()}</span>
-              </li>
-            ))}
-        </ul>
-      )}
-
       {failures.length > 0 && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
           <p className="text-sm font-medium text-red-900 mb-1">
@@ -292,11 +350,17 @@ const ImageMigrationCard: React.FC = () => {
           <button
             type="button"
             onClick={run}
-            disabled={!status.configured || done}
+            disabled={!status.configured || nothingReachable}
             className="inline-flex items-center gap-2 rounded-xl bg-[var(--brand-primary,#00A8E8)] px-4 py-2.5 text-sm font-semibold text-white hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CloudArrowUpIcon className="w-4 h-4" aria-hidden="true" />
-            {done ? (ar ? "كله اتنقل" : "All moved") : ar ? "ابدأ النقل" : "Start moving"}
+            {nothingReachable
+              ? ar
+                ? "مفيش حاجة السيرفر يقدر يوصلها"
+                : "Nothing here the server can reach"
+              : ar
+                ? `ابدأ النقل (${status.reachable.toLocaleString()})`
+                : `Start moving (${status.reachable.toLocaleString()})`}
           </button>
         )}
         <button

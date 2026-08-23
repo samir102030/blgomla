@@ -5,32 +5,45 @@ import { logAudit } from "../utils/audit.js";
 import { ANY_AUDIENCE } from "../utils/electronicsVisibility.js";
 
 /**
- * Move the shop's product photographs onto its own Cloudinary account, from the
- * dashboard, a few at a time.
+ * Move the shop's product photographs onto its own Cloudinary account.
  *
- * Every picture on the storefront is a link to somebody else's server —
- * egyptlaptop.com for the general catalogue, free-electronic.com for the
- * electronics section. They load today. They load until one of those sites
- * reorganises its folders, blocks hotlinking, or closes, and on that day this
- * shop loses its pictures with nothing to be done about it from here.
+ * Every picture on the storefront is a link to somebody else's server. They
+ * load today. They load until one of those sites reorganises its folders,
+ * blocks hotlinking, or closes, and on that day this shop loses its pictures
+ * with nothing to be done about it from here.
  *
- * There is already a script that does this (scripts/migrateImagesToCloudinary.mjs),
- * and it is the better tool when somebody is at a terminal. It is the wrong tool
- * for the person who owns the shop: it wants a checkout of the repository and a
- * copy of the production database credentials sitting in a file on a laptop, to
- * perform an operation the server is already configured for. This endpoint runs
- * the same work where the credentials already live.
+ * ## Why this is not simply "hand Cloudinary the URL"
  *
- * Deliberately batched rather than run-to-completion. A serverless function has
- * a wall-clock limit and 25,000 uploads is not going to fit inside it, so the
- * unit of work here is a few dozen images and the caller comes back for more.
- * That also makes it safe to close the tab: the next call picks up whatever is
- * still pointing at somebody else's server.
+ * That was the first implementation and it moved zero of 25,660 images. The
+ * general catalogue sits behind Cloudflare, which serves an ordinary home
+ * connection without so much as a User-Agent but answers 403 to anything
+ * coming from a data centre. Measured three ways: this shop's own machine got
+ * 200 from plain curl, Cloudinary's fetcher got 403, and an unrelated image
+ * proxy running in a data centre got 403 as well. It is the network the request
+ * comes from that is refused, not how the request is dressed — so no header,
+ * no retry and no amount of patience on the server will fix it.
+ *
+ * The electronics section is on a different host entirely, plain nginx with
+ * nothing in front of it, and answers a data centre perfectly well.
+ *
+ * So the hosts are not interchangeable and the code stops pretending they are.
+ * Each one is probed, the batch runs only against the hosts this server can
+ * actually reach, and the rest are handed to `scripts/imageCourier.mjs`, which
+ * runs on an ordinary connection, downloads there, and posts the bytes back to
+ * `/migration/push`. That keeps every credential on the server and borrows only
+ * the one thing the server does not have, which is an address Cloudflare likes.
+ *
+ * ## Two other things worth knowing
  *
  * `ANY_AUDIENCE` is not decoration. The product schema hides the electronics
  * section from any query that does not mention `audience`, so a plain
- * `Product.find` here would have quietly skipped 5,769 of the 25,660 images and
- * reported itself finished.
+ * `Product.find` here would quietly skip 5,769 of the 25,660 images and then
+ * report itself finished.
+ *
+ * The images are not evenly spread: 3,695 products carry four each and account
+ * for 14,780 of the total, while the first picture of a product is the one the
+ * shop actually shows — listings, search, cart, home rails. Hence the "primary"
+ * scope, which is 46% of the work for nearly everything a shopper sees.
  */
 
 const FOLDER = "belgomla/products";
@@ -46,12 +59,15 @@ const MAX_BATCH = 30;
   upload are paid for and stored, but the caller is told nothing, so it cannot
   say what is left. Returning early is always recoverable — the next call sees
   the same list minus whatever moved.
-
-  Deliberately well under the platform's own limit rather than tuned to it. The
-  limit differs by plan and can change under us; the batch does not need to be
-  the largest one that fits.
 */
 const DEADLINE_MS = 7000;
+
+/** What a browser sends. Free, and it costs nothing to look ordinary. */
+const BROWSER_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+  Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+};
 
 const configured = () =>
   Boolean(
@@ -60,27 +76,31 @@ const configured = () =>
       process.env.CLOUDINARY_API_SECRET
   );
 
+const useCloudinary = () => {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+  return cloudinary;
+};
+
 const isOurs = (url) => /res\.cloudinary\.com/.test(String(url || ""));
 const isRemote = (url) => /^https?:\/\//.test(String(url || ""));
+const hostOf = (url) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "(unreadable)";
+  }
+};
 
-/**
- * Two scopes, because the images are not evenly spread and the free storage
- * allowance is finite.
- *
- * 3,695 products carry four pictures each — 14,780 of the 25,660, more than half
- * the work for under a third of the catalogue. The first picture is the one the
- * shop actually shows: listings, search results, the cart, the home rails, every
- * card on every page. The rest appear only inside a product page somebody has
- * opened.
- *
- * So "primary" is a real answer rather than a half-measure: 11,793 images, 46%
- * of the total, covering nearly everything a shopper sees. It is the safe thing
- * to run first when nobody yet knows what the allowance will take.
- */
 const SCOPES = new Set(["all", "primary"]);
 
 /**
- * Every image still hosted somewhere else, with the counts for both scopes.
+ * Every image still hosted somewhere else, with the counts for both scopes and
+ * one sample address per host for the reachability probe.
  *
  * Read in full rather than paged: the whole list is around 25,000 short strings,
  * and knowing the true remaining count is most of what the progress bar is for.
@@ -95,7 +115,7 @@ const survey = async () => {
     .lean();
 
   const work = [];
-  const byHost = {};
+  const byHost = new Map();
   let migratedAll = 0;
   let migratedPrimary = 0;
 
@@ -109,14 +129,11 @@ const survey = async () => {
         return;
       }
       if (!isRemote(url)) return;
-      let host = "(unreadable)";
-      try {
-        host = new URL(url).host;
-      } catch {
-        /* keep the placeholder */
-      }
-      byHost[host] = (byHost[host] || 0) + 1;
-      work.push({ productId: product._id, index, url });
+      const host = hostOf(url);
+      const seen = byHost.get(host);
+      if (seen) seen.count += 1;
+      else byHost.set(host, { host, count: 1, sample: url });
+      work.push({ productId: String(product._id), index, url, host });
     });
   }
 
@@ -124,7 +141,7 @@ const survey = async () => {
   return {
     work,
     primaryWork,
-    byHost,
+    hosts: [...byHost.values()].sort((a, b) => b.count - a.count),
     scopes: {
       all: {
         remaining: work.length,
@@ -140,27 +157,74 @@ const survey = async () => {
   };
 };
 
-/** What is left to do, and whether this server could do it. Reads only. */
+/**
+ * Can this server fetch from that host at all?
+ *
+ * One byte is enough to find out, and asking for one byte rather than a whole
+ * photograph keeps the probe cheap enough to run on every status call. A host
+ * that ignores the Range header sends the file instead, which is still a fine
+ * answer to the only question being asked.
+ *
+ * Cached, because the answer is a property of somebody else's firewall and does
+ * not change between two page loads.
+ */
+const PROBE_TTL_MS = 5 * 60 * 1000;
+const probes = new Map();
+
+const probeHost = async ({ host, sample }) => {
+  const cached = probes.get(host);
+  if (cached && Date.now() - cached.at < PROBE_TTL_MS) return cached.result;
+
+  let result;
+  try {
+    const response = await fetch(sample, {
+      headers: { ...BROWSER_HEADERS, Range: "bytes=0-0" },
+      signal: AbortSignal.timeout(6000),
+      redirect: "follow",
+    });
+    result = { reachable: response.ok, status: response.status };
+  } catch (error) {
+    result = { reachable: false, status: 0, error: error?.message || String(error) };
+  }
+
+  probes.set(host, { at: Date.now(), result });
+  return result;
+};
+
+/** What is left to do, which hosts this server can reach, and whether it has
+ *  credentials at all. Reads only. */
 export const getImageMigrationStatus = controllerWrapper(
   "getImageMigrationStatus",
   async (req, res) => {
-    const { byHost, scopes } = await survey();
+    const { hosts, scopes } = await survey();
+    const probed = await Promise.all(
+      hosts.map(async (entry) => ({
+        host: entry.host,
+        count: entry.count,
+        ...(await probeHost(entry)),
+      }))
+    );
+
     res.status(200).json({
       success: true,
       // A boolean, never the values. Whoever reads this screen does not need
       // the keys and the screen is no place to put them.
       configured: configured(),
       scopes,
-      byHost,
+      hosts: probed,
+      reachable: probed.filter((h) => h.reachable).reduce((sum, h) => sum + h.count, 0),
+      unreachable: probed.filter((h) => !h.reachable).reduce((sum, h) => sum + h.count, 0),
     });
   }
 );
 
 /**
- * Move one batch.
+ * Move one batch, from the hosts this server can actually reach.
  *
- * Cloudinary fetches the remote address itself, so no image travels through
- * this server: each one is handed over by URL and comes back as a URL we own.
+ * The unreachable ones are not attempted at all. Trying them produced a batch
+ * of 30 failures, a run that stopped on its first round because nothing moved,
+ * and a screen of red that said nothing about which half of the catalogue was
+ * fine.
  */
 export const runImageMigrationBatch = controllerWrapper(
   "runImageMigrationBatch",
@@ -177,35 +241,39 @@ export const runImageMigrationBatch = controllerWrapper(
     const asked = Number(req.body?.limit) || DEFAULT_BATCH;
     const limit = Math.min(Math.max(asked, 1), MAX_BATCH);
 
-    const survey_ = await survey();
-    const queueSource = scope === "primary" ? survey_.primaryWork : survey_.work;
-    if (!queueSource.length) {
+    const state = await survey();
+    const probed = await Promise.all(
+      state.hosts.map(async (entry) => ({ host: entry.host, ...(await probeHost(entry)) }))
+    );
+    const reachableHosts = new Set(probed.filter((h) => h.reachable).map((h) => h.host));
+
+    const pool = (scope === "primary" ? state.primaryWork : state.work).filter((item) =>
+      reachableHosts.has(item.host)
+    );
+
+    if (!pool.length) {
       return res.status(200).json({
         success: true,
         scope,
         attempted: 0,
         moved: 0,
         failed: 0,
-        scopes: survey_.scopes,
+        scopes: state.scopes,
+        hosts: probed,
+        exhausted: true,
         failures: [],
       });
     }
 
-    cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY,
-      api_secret: process.env.CLOUDINARY_API_SECRET,
-      secure: true,
-    });
-
-    const batch = queueSource.slice(0, limit);
+    const api = useCloudinary();
+    const batch = pool.slice(0, limit);
     let moved = 0;
     let movedPrimary = 0;
     const failures = [];
 
     const moveOne = async (item) => {
       try {
-        const result = await cloudinary.uploader.upload(item.url, {
+        const result = await api.uploader.upload(item.url, {
           folder: FOLDER,
           // Same input, same asset. Re-running after an interruption costs
           // nothing and never leaves a second copy behind.
@@ -246,34 +314,125 @@ export const runImageMigrationBatch = controllerWrapper(
       attempted,
       moved,
       failed: failures.length,
-      remainingAfter: survey_.scopes[scope].remaining - moved,
     });
 
     // Counted forward from the survey rather than surveyed again: a second full
     // read of the catalogue per batch would double the cost of every round for
-    // numbers we already know exactly.
-    const scopes = {
-      all: {
-        remaining: survey_.scopes.all.remaining - moved,
-        migrated: survey_.scopes.all.migrated + moved,
-        total: survey_.scopes.all.total,
-      },
-      primary: {
-        remaining: survey_.scopes.primary.remaining - movedPrimary,
-        migrated: survey_.scopes.primary.migrated + movedPrimary,
-        total: survey_.scopes.primary.total,
-      },
-    };
-
+    // numbers already known exactly.
     res.status(200).json({
       success: true,
       scope,
       attempted,
       moved,
       failed: failures.length,
-      scopes,
+      hosts: probed,
+      // Whether this scope has any reachable work left, which is what tells the
+      // caller to stop looping — separate from "the scope is finished", because
+      // a scope can be out of reachable work and still have thousands waiting
+      // on the courier.
+      exhausted: pool.length - moved <= 0,
+      scopes: {
+        all: {
+          remaining: state.scopes.all.remaining - moved,
+          migrated: state.scopes.all.migrated + moved,
+          total: state.scopes.all.total,
+        },
+        primary: {
+          remaining: state.scopes.primary.remaining - movedPrimary,
+          migrated: state.scopes.primary.migrated + movedPrimary,
+          total: state.scopes.primary.total,
+        },
+      },
       // Enough to diagnose, not enough to fill a screen.
       failures: failures.slice(0, 5),
     });
+  }
+);
+
+/* ── The courier's two endpoints ───────────────────────────────────────
+   For hosts this server cannot reach. `scripts/imageCourier.mjs` asks what is
+   outstanding, downloads it from an ordinary connection, and hands the bytes
+   back. Nothing about the Cloudinary account or the database leaves the server.
+*/
+
+/** The next images to fetch, for a courier running somewhere with better luck. */
+export const getImageMigrationPending = controllerWrapper(
+  "getImageMigrationPending",
+  async (req, res) => {
+    const scope = SCOPES.has(req.query?.scope) ? req.query.scope : "all";
+    const limit = Math.min(Math.max(Number(req.query?.limit) || 50, 1), 200);
+    const host = req.query?.host ? String(req.query.host) : null;
+
+    const state = await survey();
+    let pool = scope === "primary" ? state.primaryWork : state.work;
+    if (host) pool = pool.filter((item) => item.host === host);
+
+    res.status(200).json({
+      success: true,
+      scope,
+      host,
+      remaining: pool.length,
+      items: pool.slice(0, limit).map(({ productId, index, url }) => ({ productId, index, url })),
+    });
+  }
+);
+
+/**
+ * Take one image's bytes and file them where the URL used to point.
+ *
+ * The product and position are checked against what is actually stored before
+ * anything is uploaded. Without that, this is an endpoint that lets any admin
+ * session replace any product photograph with any file, which is a much larger
+ * thing than the job it exists for.
+ */
+export const pushImageMigration = controllerWrapper(
+  "pushImageMigration",
+  async (req, res) => {
+    if (!configured()) {
+      return res
+        .status(409)
+        .json({ success: false, message: "Image storage is not set up on this server." });
+    }
+    if (!req.file?.buffer?.length) {
+      return res.status(400).json({ success: false, message: "No image was sent." });
+    }
+
+    const productId = String(req.body?.productId || "");
+    const index = Number(req.body?.index);
+    if (!productId || !Number.isInteger(index) || index < 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "productId and index are both required." });
+    }
+
+    const product = await Product.findOne({ _id: productId, audience: ANY_AUDIENCE })
+      .select("images")
+      .lean();
+    const current = product?.images?.[index]?.url;
+    if (!current) {
+      return res.status(404).json({ success: false, message: "No image at that position." });
+    }
+    if (isOurs(current)) {
+      // Already done — a courier resuming over an overlapping range, not an error.
+      return res.status(200).json({ success: true, skipped: true, url: current });
+    }
+
+    const api = useCloudinary();
+    const url = await new Promise((resolve, reject) => {
+      const stream = api.uploader.upload_stream(
+        {
+          folder: FOLDER,
+          public_id: `${productId}-${index}`,
+          overwrite: false,
+          resource_type: "image",
+        },
+        (error, result) => (error ? reject(error) : resolve(result.secure_url))
+      );
+      stream.end(req.file.buffer);
+    });
+
+    await Product.updateOne({ _id: productId }, { $set: { [`images.${index}.url`]: url } });
+
+    res.status(200).json({ success: true, url });
   }
 );

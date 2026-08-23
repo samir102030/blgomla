@@ -5,6 +5,8 @@ import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
 import {
   getImageMigrationStatus,
   runImageMigrationBatch,
+  getImageMigrationPending,
+  pushImageMigration,
 } from "../controllers/imageMigration.controller.js";
 
 const router = express.Router();
@@ -72,6 +74,23 @@ router.get("/test", (req, res) => {
 */
 router.get("/migration/status", protectRoute, adminRoute, getImageMigrationStatus);
 router.post("/migration/run", protectRoute, adminRoute, runImageMigrationBatch);
+
+/*
+  The two the courier uses, for hosts this server cannot reach.
+
+  The general catalogue sits behind Cloudflare, which serves an ordinary home
+  connection and refuses a data centre — so the server asks a machine on a
+  normal connection to do the fetching and hand back the bytes. Nothing about
+  the image account or the database leaves here.
+*/
+router.get("/migration/pending", protectRoute, adminRoute, getImageMigrationPending);
+router.post(
+  "/migration/push",
+  protectRoute,
+  adminRoute,
+  upload.single("image"),
+  pushImageMigration
+);
 
 // Authenticated users only. Every caller in the app is already logged in —
 // customers uploading a profile picture, vendors uploading store/product
