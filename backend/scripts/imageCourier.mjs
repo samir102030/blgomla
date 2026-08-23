@@ -131,6 +131,32 @@ const json = async (path, init = {}) => {
 
 /* ── the work ───────────────────────────────────────────────────────── */
 
+/**
+ * What the file is, for a source that does not say.
+ *
+ * The type has to travel with the bytes. The server accepts image/* and
+ * nothing else, and a Blob created without one is announced as
+ * application/octet-stream — which is how the first run managed to download
+ * every image successfully and have every single one refused on arrival.
+ */
+const TYPES = {
+  webp: "image/webp",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  avif: "image/avif",
+  bmp: "image/bmp",
+  svg: "image/svg+xml",
+};
+
+const typeOf = (url, headerValue) => {
+  const declared = String(headerValue || "").split(";")[0].trim().toLowerCase();
+  if (declared.startsWith("image/")) return declared;
+  const extension = (url.split("?")[0].split(".").pop() || "").toLowerCase();
+  return TYPES[extension] || "image/jpeg";
+};
+
 const fetchImage = async (url) => {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
@@ -142,7 +168,7 @@ const fetchImage = async (url) => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const buffer = Buffer.from(await response.arrayBuffer());
       if (!buffer.length) throw new Error("empty body");
-      return buffer;
+      return { buffer, type: typeOf(url, response.headers.get("content-type")) };
     } catch (error) {
       if (attempt === 3) throw error;
       await new Promise((r) => setTimeout(r, attempt * 800));
@@ -150,13 +176,13 @@ const fetchImage = async (url) => {
   }
 };
 
-const deliver = async (item, buffer) => {
+const deliver = async (item, image) => {
   const form = new FormData();
   form.append("productId", item.productId);
   form.append("index", String(item.index));
   form.append(
     "image",
-    new Blob([buffer]),
+    new Blob([image.buffer], { type: image.type }),
     (item.url.split("/").pop() || "image").split("?")[0] || "image.jpg"
   );
 
@@ -206,8 +232,8 @@ const main = async () => {
           const item = queue.shift();
           if (!item) return;
           try {
-            const buffer = await fetchImage(item.url);
-            await deliver(item, buffer);
+            const image = await fetchImage(item.url);
+            await deliver(item, image);
             moved += 1;
           } catch (error) {
             failed += 1;
