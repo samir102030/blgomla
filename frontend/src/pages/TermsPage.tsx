@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useShippingCopy } from "../lib/useShippingCopy";
 import Header from "../components/Header";
 import PageHero from "../components/PageHero";
 import Footer from "../components/Footer";
@@ -22,6 +23,7 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({
 
 const TermsPage: React.FC = () => {
   const { t } = useTranslation();
+  const shipping = useShippingCopy();
   const lastUpdated = "2026-05-13";
 
   return (
@@ -91,11 +93,26 @@ const TermsPage: React.FC = () => {
           </Section>
 
           <Section title={t("terms.s5Title", "5. Shipping & Delivery")}>
+            {/*
+              Composed from the live shipping settings rather than written out.
+
+              This clause named 5,000 EGP and a 2–5 day window as literals, and
+              a wrong figure inside the Terms of Service is contractual rather
+              than merely promotional — the shop would be held to a number no
+              part of it charges. The free-shipping sentence disappears entirely
+              when there is no free shipping to promise.
+            */}
             <p>
-              {t(
-                "terms.s5Body",
-                "Standard delivery across Egypt takes 2–5 business days. Free shipping applies to orders over 5,000 EGP. Risk of loss transfers to you on delivery to the address you provided.",
-              )}
+              {[
+                shipping.deliveryLine,
+                shipping.freeShippingLine,
+                t(
+                  "terms.s5Risk",
+                  "Risk of loss transfers to you on delivery to the address you provided.",
+                ),
+              ]
+                .filter(Boolean)
+                .join(" ")}
             </p>
           </Section>
 

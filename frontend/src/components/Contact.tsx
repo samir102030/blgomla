@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios";
+import { useShippingCopy } from "../lib/useShippingCopy";
 
 interface ContactForm {
   name: string;
@@ -16,6 +17,7 @@ interface ContactForm {
 
 const Contact: React.FC = () => {
   const { t } = useTranslation();
+  const shipping = useShippingCopy();
 
   /**
    * A product priced on request sends the customer here, naming itself in the
@@ -133,7 +135,11 @@ const Contact: React.FC = () => {
     },
     {
       q: t("Do you ship across Egypt?"),
-      a: t("Yes, we provide free shipping on all orders over 5,000 EGP. Standard delivery takes 2-5 business days depending on location."),
+      // Read from what the shop actually charges. This answer used to name
+      // 5,000 EGP as a literal, wired to nothing — true today only because
+      // everything ships free, and false the first time a fee is entered
+      // without a threshold beside it.
+      a: [shipping.deliveryLine, shipping.freeShippingLine].filter(Boolean).join(" "),
     },
   ];
 

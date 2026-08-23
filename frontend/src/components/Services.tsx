@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { useShippingCopy } from "../lib/useShippingCopy";
 import {
   TruckIcon,
   CheckBadgeIcon,
@@ -16,13 +17,23 @@ interface Service {
 
 const Services: React.FC = () => {
   const { t } = useTranslation();
+  const shipping = useShippingCopy();
 
   const services: Service[] = [
     {
       id: 1,
       Icon: TruckIcon,
-      title: t("Free Delivery"),
-      description: t("Free shipping on all orders over 5,000 EGP across Egypt"),
+      /*
+        The card can only call itself "Free Delivery" while delivery is free.
+
+        Both lines were literals naming 5,000 EGP, wired to nothing. This is the
+        highest-traffic instance of the claim — it sits on the home page — and
+        the title is itself an unconditional promise. With a fee configured and
+        no threshold, it becomes a delivery-window card and stops promising
+        anything it cannot keep.
+      */
+      title: shipping.hasFreeShipping ? t("Free Delivery") : t("Delivery"),
+      description: shipping.freeShippingLine || shipping.deliveryLine,
     },
     {
       id: 2,

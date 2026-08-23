@@ -2428,7 +2428,8 @@
     "s12Title": "12. التواصل",
     "s12Body": "هل لديك استفسارات حول هذه الشروط؟ تواصل معنا على",
     "orVia": "أو عبر صفحة",
-    "page": ""
+    "page": "",
+    "s5Risk": "وتنتقل مسؤولية الفقد إليك عند تسليم الطلب إلى العنوان الذي قدّمته."
   },
   "privacy": {
     "title": "سياسة الخصوصية",
@@ -4298,5 +4299,9 @@
   "A shop inside the shop: its own departments, its own products, and a student discount that is good here and nowhere else.": "متجر جوه المتجر: أقسامه الخاصة ومنتجاته الخاصة، وخصم طلاب سارٍ هنا وبس.",
   "View the section on the storefront": "شوف القسم في المتجر",
   "The electronics section's own departments. Products are filed under them.": "أقسام قسم الإلكترونيات نفسه. المنتجات بتتسجّل تحتها.",
-  "The code pays for everything in the electronics section, and for nothing on the main shop.": "الكود بيشتغل على كل حاجة في قسم الإلكترونيات، وعلى ولا حاجة في المتجر الرئيسي."
+  "The code pays for everything in the electronics section, and for nothing on the main shop.": "الكود بيشتغل على كل حاجة في قسم الإلكترونيات، وعلى ولا حاجة في المتجر الرئيسي.",
+  "Orders over {{amount}} ship free.": "الطلبات فوق {{amount}} شحنها مجاني.",
+  "Delivery is free anywhere in Egypt.": "التوصيل مجاني في كل مصر.",
+  "Delivery takes {{min}}–{{max}} business days.": "التوصيل بياخد من {{min}} لـ {{max}} أيام عمل.",
+  "Delivery": "التوصيل"
 }

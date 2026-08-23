@@ -2428,7 +2428,8 @@
     "s12Title": "12. Contact",
     "s12Body": "Questions about these terms? Reach us at",
     "orVia": "or via the",
-    "page": "page"
+    "page": "page",
+    "s5Risk": "Risk of loss transfers to you on delivery to the address you provided."
   },
   "privacy": {
     "title": "Privacy Policy",
@@ -4291,5 +4292,9 @@
   "wishlist.someAddedToCart": "{{added}} added to cart, {{failed}} could not be added.",
   "Sign in required": "Sign in required",
   "Sign in to your Belgomla account to open this page.": "Sign in to your Belgomla account to open this page.",
-  "vendor.bulk.updated": "Updated"
+  "vendor.bulk.updated": "Updated",
+  "Orders over {{amount}} ship free.": "Orders over {{amount}} ship free.",
+  "Delivery is free anywhere in Egypt.": "Delivery is free anywhere in Egypt.",
+  "Delivery takes {{min}}–{{max}} business days.": "Delivery takes {{min}}–{{max}} business days.",
+  "Delivery": "Delivery"
 }
