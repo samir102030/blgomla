@@ -1,3 +1,33 @@
+/*
+  ⚠ Nothing on this shop implements this. Do not build against it.
+
+  These two interfaces describe a settings model that was never built. The
+  store that consumes them — stores/settings.store.ts — calls /settings/app,
+  /settings/user and eight more; the API mounts no /settings route at all, and
+  no component calls the store. Kept because it is a reasonable sketch of where
+  a consolidated settings page could go, but it is a sketch, and it reads like
+  documentation of something real.
+
+  It is actively misleading in two places:
+
+    · `shippingSettings` below is freeShipping / flatRate / localPickup. The
+      real one, at GET+PUT /api/shipping, is { enabled, defaultFee,
+      freeShippingThreshold, deliveryDaysMin, deliveryDaysMax, zones[] } and is
+      typed in lib/shipping.ts. Anyone reading this file for the shipping shape
+      gets the wrong one.
+
+    · `paymentSettings` declares stripe.secretKey and paypal.clientSecret as
+      fields the browser holds. Gateway secrets live in the API's environment
+      and never leave it; GET /api/payments/methods reports only whether each
+      gateway is configured and which setting names are missing.
+
+  Where the real settings are:
+
+    shipping    GET/PUT /api/shipping          lib/shipping.ts
+    payments    GET     /api/payments/methods  (booleans and names only)
+    layout      GET/PUT /api/layout            pageLayout.route.js
+    visibility  GET/PUT /api/storefront-visibility
+*/
 export interface AppSettings {
   _id: string;
   siteName: string;

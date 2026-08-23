@@ -1,3 +1,15 @@
+/*
+  ⚠ Not wired to anything. Every request in here 404s.
+
+  This store calls /settings/app, /settings/app/reset, /settings/user and
+  seven more. The API mounts no /settings route — see routes/system.route.js,
+  which mounts forty of them and not this — so every action sets `error` and
+  returns false. No component calls any of them either; the only reference is
+  the barrel re-export in stores/index.ts.
+
+  Kept rather than removed, but read types/settings.type.ts before using it:
+  the shape it stores contradicts the shipping settings that actually exist.
+*/
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { axiosInstance } from '../lib/axios';
