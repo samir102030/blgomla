@@ -91,27 +91,30 @@ export async function paginateProducts({
     anything: the storefront's deeper pages, the admin list, an export, a
     crawler.
 
-    Three changes, each doing part of the work:
+    The fix is only to stop wrapping it. $match followed immediately by $sort
+    is the one shape whose sort an index can serve, and the sort keys are all
+    indexed already — createdAt, price, soldCount, rating, name. An index-backed
+    sort holds nothing at all: the documents come out in order, and $skip walks
+    past them without building anything. There is no ceiling left to hit.
 
-      · No $facet, so no 100 MB ceiling. The count runs as its own query
-        alongside — Promise.all, so the round trip costs what it did before.
-      · $project before $sort rather than after. The sort was holding whole
-        product documents, reviews and competitor prices and all, to order them
-        by a single scalar; now it holds what the list actually returns.
-      · allowDiskUse, which outside a $facet is honoured, so a sort too big for
-        memory becomes slow rather than fatal.
+    Which is also why the stage order below matters, and why the first attempt
+    at this only half-worked. Moving $project ahead of $sort makes the documents
+    smaller, which sounds like the obvious thing to do — but a $sort that is not
+    directly after $match cannot use an index, so it traded a cheap index scan
+    for a smaller blocking sort. The ceiling moved from ~4,660 to ~5,000 rather
+    than going away. The projection belongs after $limit, where it costs one
+    page of documents instead of all of them.
 
-    An index on the sort key would remove the sort's memory cost entirely, and
-    is the right next step for `createdAt`, `price`, `soldCount` and `rating`.
-    This does not need one to be correct.
+    The count is its own query now that $facet is gone, running alongside under
+    Promise.all, so the round trip costs what it did before.
   */
   const [data, total] = await Promise.all([
     Product.aggregate([
       { $match: scoped },
-      { $project: LIST_PROJECTION },
       { $sort: sort },
       { $skip: skip },
       { $limit: limit },
+      { $project: LIST_PROJECTION },
       ...lookupStages(),
     ]).allowDiskUse(true),
     Product.countDocuments(scoped),
