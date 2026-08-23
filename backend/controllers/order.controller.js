@@ -962,6 +962,91 @@ export const getMyOrders = controllerWrapper(
   }
 );
 
+/**
+ * Give back what an order was holding.
+ *
+ * Placing the order took stock off the products, incremented their
+ * soldCount, spent one use of a limited coupon, and deducted the loyalty
+ * points the customer chose to redeem. Cancelling returned none of it. So
+ * every cancellation quietly destroyed inventory that was never shipped,
+ * inflated the numbers behind the best-seller rails, burned a use of a
+ * coupon that may only have had a few, and confiscated the customer's
+ * points — on a catalogue whose stock is already a placeholder, a run of
+ * cancellations walks products toward a false out-of-stock.
+ *
+ * Claimed with a conditional update rather than checked and then written.
+ * Two people cancelling the same order at the same moment would otherwise
+ * both pass the check and both roll back, which invents stock. The claim is
+ * the same operation as the test, so exactly one of them wins.
+ *
+ * Stock is the one thing not returned for an order that was delivered: the
+ * goods are with the customer, and putting them back on the shelf because
+ * the order was later marked cancelled would be counting them twice. That is
+ * a return, and returns restock on their own terms. The coupon and the points
+ * come back either way — the sale is not happening.
+ */
+const releaseOrderHolds = async (orderId, req) => {
+  const order = await Order.findOneAndUpdate(
+    { _id: orderId, holdsReleased: { $ne: true } },
+    { $set: { holdsReleased: true, holdsReleasedAt: new Date() } },
+    { new: true }
+  );
+  if (!order) return null; // already released, or gone
+
+  const wasDelivered = order.isDelivered === true;
+  const restored = { stock: 0, points: 0, coupon: null, deliveredSoNoStock: wasDelivered };
+
+  if (!wasDelivered) {
+    // The same pooling the order used, so a product listed twice in one
+    // order gets both quantities back in one update rather than one.
+    const perProduct = new Map();
+    for (const item of order.orderItems || []) {
+      if (!item?.product) continue;
+      const key = String(item.product);
+      perProduct.set(key, (perProduct.get(key) || 0) + (item.quantity || 0));
+    }
+    for (const [productId, quantity] of perProduct) {
+      if (!quantity) continue;
+      await Product.findByIdAndUpdate(productId, {
+        $inc: { stock: quantity, soldCount: -quantity },
+      });
+      // soldCount is a running total that predates this rollback, so an old
+      // order can drive it below zero. Clamped rather than left negative,
+      // which would read as a product that has been un-sold.
+      await Product.updateOne(
+        { _id: productId, soldCount: { $lt: 0 } },
+        { $set: { soldCount: 0 } }
+      );
+      restored.stock += quantity;
+    }
+  }
+
+  if (order.couponCode) {
+    const coupon = await Coupon.findOneAndUpdate(
+      { code: order.couponCode },
+      { $inc: { usageCount: -1 } },
+      { new: true }
+    );
+    if (coupon) {
+      if (coupon.usageCount < 0) {
+        await Coupon.updateOne({ _id: coupon._id }, { $set: { usageCount: 0 } });
+      }
+      restored.coupon = order.couponCode;
+    }
+  }
+
+  if (order.pointsRedeemed > 0 && order.user) {
+    await User.updateOne(
+      { _id: order.user },
+      { $inc: { loyaltyPoints: order.pointsRedeemed } }
+    );
+    restored.points = order.pointsRedeemed;
+  }
+
+  if (req) await logAudit(req, "order.holds_released", "order", String(order._id), restored);
+  return restored;
+};
+
 export const updateOrderStatus = controllerWrapper(
   "updateOrderStatus",
   async (req, res) => {
@@ -984,6 +1069,13 @@ export const updateOrderStatus = controllerWrapper(
     // Award loyalty points the first time an order reaches "delivered".
     if (status === "delivered") {
       await awardPointsForDelivery(order._id);
+    }
+
+    // This dropdown is how a cancellation actually happens — nothing in the
+    // frontend calls the cancel route at all — so this is where the stock,
+    // the coupon and the points have to come back.
+    if (status === "cancelled") {
+      await releaseOrderHolds(order._id, req);
     }
 
     // Auto-create an Accurate waybill the first time an order is marked shipped.
@@ -1137,8 +1229,11 @@ export const cancelOrder = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+
+    const restored = await releaseOrderHolds(order._id, req);
+
     logAudit(req, "order.cancelled", "order", order._id, { reason: req.body?.reason });
-    res.status(200).json({ success: true, order });
+    res.status(200).json({ success: true, order, restored });
   }
 );
 
@@ -1200,9 +1295,15 @@ export const deleteOrder = controllerWrapper(
       });
     }
 
+    // Before the row goes, not after: once it is deleted there is nothing
+    // left to read the quantities, the coupon code or the points off. A
+    // pending order still holds all three; a cancelled one has released them
+    // already and the claim inside makes the second call a no-op.
+    const restored = await releaseOrderHolds(order._id, req);
+
     // Delete the order
     await Order.findByIdAndDelete(req.params.id);
-    logAudit(req, "order.deleted", "order", order._id);
+    logAudit(req, "order.deleted", "order", order._id, { restored });
 
     res
       .status(200)

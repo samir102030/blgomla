@@ -126,6 +126,19 @@ const orderSchema = new mongoose.Schema(
     // ── Status Timeline for order tracking ──
     statusTimeline: [statusTimelineSchema],
     cancelled: { type: Boolean, default: false },
+
+    /*
+      Whether what this order was holding has been given back.
+
+      Placing an order takes three things out of the shop's world: stock off
+      the products, one use off a limited coupon, and loyalty points out of
+      the customer's balance. Cancelling has to put all three back exactly
+      once — twice would invent inventory and hand out points nobody paid
+      for, and the cancel path is reachable from three places (the customer's
+      cancel, the dashboard's status dropdown, and delete).
+    */
+    holdsReleased: { type: Boolean, default: false },
+    holdsReleasedAt: { type: Date, default: null },
     notes: { type: String },
     // ── Tracking info ──
     trackingNumber: { type: String },
