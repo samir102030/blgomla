@@ -212,8 +212,15 @@ const survey = async () => {
  * Cached, because the answer is a property of somebody else's firewall and does
  * not change between two page loads.
  */
-const PROBE_TTL_MS = 5 * 60 * 1000;
+// Short, because the answer is a property of somebody else's server and that
+// is exactly the kind of fact that goes stale badly: a host that was up five
+// minutes ago and is down now reads as "the server can reach these" on a
+// screen with a button that then moves nothing.
+const PROBE_TTL_MS = 60 * 1000;
 const probes = new Map();
+
+/** Forget what we think we know about a host, so the next look is a fresh one. */
+const forgetProbe = (host) => (host ? probes.delete(host) : probes.clear());
 
 const probeHost = async ({ host, sample }) => {
   const cached = probes.get(host);
@@ -361,6 +368,17 @@ export const runImageMigrationBatch = controllerWrapper(
       })
     );
     const attempted = batch.length - queue.length;
+
+    /*
+      A batch where nothing moved is evidence about the host, not just about
+      these twelve pictures — and better evidence than a probe taken up to a
+      minute ago, because it is a dozen real attempts rather than one byte.
+
+      free-electronic.com went from answering in under a second to not
+      answering at all, and the cached probe kept the button enabled and the
+      row reading "the server can reach these" while every batch failed.
+    */
+    if (!moved && failures.length) forgetProbe();
 
     await logAudit(req, "product.images.migrate", "product", null, {
       scope,
