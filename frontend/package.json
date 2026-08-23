@@ -10,6 +10,7 @@
     "build": "node scripts/generate-sitemap.mjs && vite build --config vite.config.ts",
     "build:typecheck": "tsc -b && node scripts/generate-sitemap.mjs && vite build --config vite.config.ts",
     "lint": "eslint .",
+    "typecheck": "tsc -b --noEmit",
     "preview": "vite preview --config vite.config.ts",
     "icons": "node scripts/generate-icons.mjs"
   },
