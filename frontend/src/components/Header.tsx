@@ -20,6 +20,7 @@ import { useBrandStore } from "../stores/brand.store";
 import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
+import { getBaseUnitPrice } from "../lib/pricing";
 import { AllCategoriesMenu, CategoryAccordion } from "./CategoryNav";
 import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
@@ -45,7 +46,11 @@ interface SuggestProduct {
   name: string;
   slug?: string;
   price: number;
+  /* Never actually sent — it is a virtual on the model and `.select()` cannot
+     fetch one. Declared because getBaseUnitPrice reads it first. */
   salePrice?: number;
+  /* The stored field the whole shop computes the sale price from. */
+  salePercentage?: number;
   saleActive?: boolean;
   image?: string | null;
 }
@@ -449,7 +454,27 @@ const Header: React.FC = () => {
               <>
                 {sectionLabel(t("Products"), MagnifyingGlassIcon)}
                 {products.map((p, i) => {
-                  const onSale = p.saleActive && p.salePrice != null;
+                  /*
+                    The price this product actually sells at.
+
+                    This was `p.saleActive && p.salePrice != null`, and
+                    `salePrice` is a virtual on the model that no endpoint has
+                    ever returned — verified against the live API, where it is
+                    undefined on every product. So the condition was always
+                    false and the dropdown always printed the list price, while
+                    the product page, which uses the helper below, printed the
+                    discounted one. Two different prices for the same product,
+                    one click apart, on a catalogue where 860 products are
+                    discounted.
+
+                    getBaseUnitPrice is what the other twelve surfaces use, and
+                    it falls back from salePrice to salePercentage — which is
+                    the field the API does send.
+                  */
+                  // saleActive is optional on a suggestion and required by the
+                  // helper; absent means not on sale, which is what false says.
+                  const effective = getBaseUnitPrice({ ...p, saleActive: !!p.saleActive });
+                  const onSale = p.saleActive && effective < p.price;
                   return (
                     <button
                       key={p._id}
@@ -471,7 +496,7 @@ const Header: React.FC = () => {
                         </h4>
                         <div className="flex items-center mt-0.5 gap-2">
                           <span className="text-sm font-semibold text-[var(--brand-primary)]">
-                            {(onSale ? p.salePrice! : p.price).toLocaleString()} EGP
+                            {Math.round(effective).toLocaleString()} EGP
                           </span>
                           {onSale && (
                             <span className="text-xs text-[var(--text-subtle)] line-through">

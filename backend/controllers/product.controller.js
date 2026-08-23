@@ -390,7 +390,15 @@ export const getSearchSuggestions = controllerWrapper(
 
     const [products, brands, categories] = await Promise.all([
       Product.find(productFilter)
-        .select("name nameAr slug price salePrice saleActive images")
+        /*
+          `salePrice` is a virtual, and `.select()` cannot fetch one — asking
+          for it here has never sent anything. So a suggestion arrived with
+          saleActive true and no way to work out the sale price, and the
+          dropdown printed the list price while the product page printed the
+          discounted one. `salePercentage` is the stored field the rest of the
+          shop computes from.
+        */
+        .select("name nameAr slug price salePercentage saleActive images")
         .sort({ soldCount: -1, rating: -1 })
         .limit(6)
         .lean(),
