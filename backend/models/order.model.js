@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ORDER_STATUSES, TIMELINE_STATUSES } from "../config/orderStatuses.js";
 
 const orderItemSchema = new mongoose.Schema(
   {
@@ -28,7 +29,7 @@ const statusTimelineSchema = new mongoose.Schema(
   {
     status: {
       type: String,
-      enum: ["pending", "paid", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled", "refunded"],
+      enum: TIMELINE_STATUSES,
       required: true,
     },
     note: { type: String },
@@ -120,7 +121,7 @@ const orderSchema = new mongoose.Schema(
     deliveredAt: { type: Date },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "processing", "shipped", "out_for_delivery", "delivered", "cancelled"],
+      enum: ORDER_STATUSES,
       default: "pending",
     },
     // ── Status Timeline for order tracking ──

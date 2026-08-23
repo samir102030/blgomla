@@ -38,10 +38,14 @@ const OrderFiltersModal: React.FC<OrderFiltersModalProps> = ({
 
   if (!isOpen) return null;
 
+  // All seven, in lifecycle order — filtering could not reach "confirmed" or
+  // "out_for_delivery" either.
   const statusOptions = [
     { value: "pending", label: t("modal.editOrder.status.pending") },
+    { value: "confirmed", label: t("modal.editOrder.status.confirmed") },
     { value: "processing", label: t("modal.editOrder.status.processing") },
     { value: "shipped", label: t("modal.editOrder.status.shipped") },
+    { value: "out_for_delivery", label: t("modal.editOrder.status.out_for_delivery") },
     { value: "delivered", label: t("modal.editOrder.status.delivered") },
     { value: "cancelled", label: t("modal.editOrder.status.cancelled") },
   ];

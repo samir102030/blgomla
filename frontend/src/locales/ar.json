@@ -933,8 +933,10 @@
       "cancelledDesc": "تم إلغاء الطلب",
       "status": {
         "pending": "قيد الانتظار",
+        "confirmed": "تم التأكيد",
         "processing": "قيد المعالجة",
         "shipped": "تم الشحن",
+        "out_for_delivery": "خارج للتوصيل",
         "delivered": "تم التسليم",
         "cancelled": "ملغي"
       },

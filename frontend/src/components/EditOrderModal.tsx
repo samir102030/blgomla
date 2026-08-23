@@ -51,11 +51,27 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
 
   if (!isOpen || !order) return null;
 
+  /*
+    The whole lifecycle, in the order it happens.
+
+    This offered five of the seven, and the two it left out — "confirmed" and
+    "out_for_delivery" — are steps two and five of the progress bar the
+    customer watches on the tracking page. Both are already translated into
+    Arabic and English there, on the vendor dashboard's badges, and in the
+    support bot's replies. Only this list and the request validator behind it
+    stopped at five, so no order ever reached either step and the bar jumped
+    over both for every order the shop has taken.
+  */
   const statusOptions = [
     {
       value: "pending",
       label: t("modal.editOrder.status.pending"),
       color: "bg-yellow-100 text-yellow-800",
+    },
+    {
+      value: "confirmed",
+      label: t("modal.editOrder.status.confirmed"),
+      color: "bg-sky-100 text-sky-800",
     },
     {
       value: "processing",
@@ -66,6 +82,11 @@ const EditOrderModal: React.FC<EditOrderModalProps> = ({
       value: "shipped",
       label: t("modal.editOrder.status.shipped"),
       color: "bg-purple-100 text-purple-800",
+    },
+    {
+      value: "out_for_delivery",
+      label: t("modal.editOrder.status.out_for_delivery"),
+      color: "bg-orange-100 text-orange-800",
     },
     {
       value: "delivered",

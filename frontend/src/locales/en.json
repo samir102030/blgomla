@@ -933,8 +933,10 @@
       "cancelledDesc": "Order has been cancelled",
       "status": {
         "pending": "Pending",
+        "confirmed": "Confirmed",
         "processing": "Processing",
         "shipped": "Shipped",
+        "out_for_delivery": "Out for delivery",
         "delivered": "Delivered",
         "cancelled": "Cancelled"
       },

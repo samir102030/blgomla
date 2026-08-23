@@ -1,6 +1,7 @@
 import { body, param, query, validationResult } from "express-validator";
 import mongoose from "mongoose";
 import { PAYMENT_METHODS, isPaymentMethod } from "../config/paymentMethods.js";
+import { ORDER_STATUSES } from "../config/orderStatuses.js";
 
 // Helper function to wrap validations with error handling
 const validate = (validations) => {
@@ -134,8 +135,17 @@ export const validateUpdateOrderStatus = validate([
     .trim()
     .notEmpty()
     .withMessage("Status is required")
-    .isIn(["pending", "processing", "shipped", "delivered", "cancelled"])
-    .withMessage("Invalid order status"),
+    /*
+      Every state the order model allows, not the five this listed.
+
+      The two it left out, `confirmed` and `out_for_delivery`, are steps two
+      and five of the progress bar the customer watches on the tracking page.
+      Rejecting them here is why no order ever reached either one: the bar
+      jumped from "Order Placed" straight to "Processing", and from "Shipped"
+      straight to "Delivered", for every order this shop has taken.
+    */
+    .isIn(ORDER_STATUSES)
+    .withMessage(`Invalid order status. Expected one of: ${ORDER_STATUSES.join(", ")}`),
 ]);
 
 export const validateMarkOrderPaid = validate([
@@ -165,10 +175,12 @@ export const validateGetAllOrders = validate([
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("Invalid user ID format"),
 
+  // Same list as the body above, for the same reason: filtering the admin
+  // orders list by a status this rejected answered 400 rather than a page.
   query("status")
     .optional()
-    .isIn(["pending", "processing", "shipped", "delivered", "cancelled"])
-    .withMessage("Invalid order status"),
+    .isIn(ORDER_STATUSES)
+    .withMessage(`Invalid order status. Expected one of: ${ORDER_STATUSES.join(", ")}`),
 
   query("limit")
     .optional()

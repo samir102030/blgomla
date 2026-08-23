@@ -1,3 +1,5 @@
+import type { OrderStatus } from "../lib/orderStatus";
+
 export interface OrderItem {
   product: string; // product id
   collection?: string; // collection id (if part of bundle)
@@ -26,7 +28,9 @@ export interface Order {
   paidAt?: string;
   isDelivered: boolean;
   deliveredAt?: string;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
+  // All seven the API can return. This listed five, so `confirmed` and
+  // `out_for_delivery` were off-type and every reader had to cast around them.
+  status: OrderStatus;
   cancelled: boolean;
   notes?: string;
   createdAt?: string;

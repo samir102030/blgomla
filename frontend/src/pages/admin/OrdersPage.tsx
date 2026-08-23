@@ -9,6 +9,7 @@ import EditOrderModal from "../../components/EditOrderModal";
 import DeleteOrderModal from "../../components/DeleteOrderModal";
 import OrderFiltersModal from "../../components/OrderFiltersModal";
 import { useMoney } from "../../lib/money";
+import { ORDER_STATUSES } from "../../lib/orderStatus";
 
 interface Order {
   _id: string;
@@ -383,12 +384,23 @@ const OrdersPage: React.FC = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
+              {/*
+                The statuses an order can actually hold, translated.
+
+                This was six hardcoded English options on an Arabic-first
+                dashboard, and the list was wrong twice over. "Completed" is
+                not a status anywhere in this shop — the filter compares
+                `order.status === statusFilter`, so choosing it emptied the
+                table every time — while "Delivered", the status an operator
+                most wants to filter by, had no option at all. "Confirmed" and
+                "Out for delivery" were missing too.
+              */}
               <option value="all">{t("order.allStatuses")}</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              {ORDER_STATUSES.map((value) => (
+                <option key={value} value={value}>
+                  {t(`modal.editOrder.status.${value}`)}
+                </option>
+              ))}
             </select>
             <button
               onClick={handleOpenFilters}

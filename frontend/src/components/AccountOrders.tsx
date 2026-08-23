@@ -78,8 +78,10 @@ const AccountOrders: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "delivered": return "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400";
+      case "confirmed": return "text-sky-600 bg-sky-50 dark:bg-sky-500/10 dark:text-sky-400";
       case "processing": return "text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400";
       case "shipped": return "text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400";
+      case "out_for_delivery": return "text-orange-600 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-400";
       case "cancelled": return "text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400";
       default: return "text-[var(--text-muted)] bg-[var(--surface-2)]";
     }
@@ -88,8 +90,10 @@ const AccountOrders: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "delivered": return CheckCircleIcon;
+      case "confirmed": return CheckCircleIcon;
       case "processing": return ArrowPathIcon;
       case "shipped": return TruckIcon;
+      case "out_for_delivery": return TruckIcon;
       case "cancelled": return XCircleIcon;
       default: return ClockIcon;
     }

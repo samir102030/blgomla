@@ -1087,6 +1087,73 @@ const releaseOrderHolds = async (orderId, req) => {
   return restored;
 };
 
+/**
+ * Keep `isDelivered`/`deliveredAt` — and, for cash on delivery, `isPaid`/
+ * `paidAt` — saying the same thing as `status`.
+ *
+ * An order's delivery is written down twice: once as a status, once as a pair
+ * of flags. Everything that counts money reads the flags — payouts filter on
+ * `isDelivered && isPaid`, a store's revenue on `isPaid`, the review-request
+ * cron on `isDelivered` — while everything a person looks at reads the status.
+ *
+ * For a long time only the status was ever written. Endpoints existed that set
+ * the flags — PUT /orders/:id/pay and /:id/deliver — and store actions calling
+ * them, but no component anywhere called the store actions, so payouts computed
+ * zero, store revenue read zero, and no review request could be sent.
+ *
+ * Arriving at delivered was fixed. Leaving it was not, and the
+ * status can be moved in any direction: the dashboard offers a plain list of
+ * radio buttons with no notion of forwards. So an order marked delivered by
+ * mistake and put back to "processing" kept `isDelivered: true` for good. It
+ * read as in-the-warehouse to the customer, as earned to the vendor's payout,
+ * as revenue to the store's figures, and as returnable to the returns
+ * endpoint — which admits an order on `isDelivered` alone — and three days
+ * later the cron emailed the customer to review something they never got.
+ *
+ * Both directions now. What is deliberately *not* undone:
+ *
+ *   - Loyalty points. `awardPointsForDelivery` is guarded by `pointsAwarded`,
+ *     and by the time anyone notices the mistake the customer may have spent
+ *     them. Taking back a balance somebody has already used is worse than
+ *     leaving a few points given early.
+ *   - A payment the gateway confirmed. `isPaid` is only cleared when this
+ *     controller is the one that set it: cash on delivery, with no
+ *     `paymentResult.id` from a gateway and no manual mark-as-paid behind it.
+ *     An online order stays paid, because it is.
+ *
+ * Call this *after* `releaseOrderHolds` on a cancellation — that function
+ * reads `isDelivered` to decide whether stock goes back on the shelf, and
+ * goods that reached the customer must not.
+ */
+const reconcileDelivery = async (order) => {
+  const arrived = order.status === "delivered";
+  if (arrived === (order.isDelivered === true)) return null;
+
+  if (arrived) {
+    const settle = { isDelivered: true, deliveredAt: new Date() };
+    // Cash on delivery is settled here because this is the moment the money
+    // changes hands and there is no gateway to say so.
+    if (order.paymentMethod === "cod" && !order.isPaid) {
+      settle.isPaid = true;
+      settle.paidAt = new Date();
+    }
+    await Order.updateOne({ _id: order._id }, { $set: settle });
+    Object.assign(order, settle);
+    return settle;
+  }
+
+  const unwind = { isDelivered: false, deliveredAt: null };
+  const collectedOnDelivery =
+    order.paymentMethod === "cod" && order.isPaid && !order.paymentResult?.id;
+  if (collectedOnDelivery) {
+    unwind.isPaid = false;
+    unwind.paidAt = null;
+  }
+  await Order.updateOne({ _id: order._id }, { $set: unwind });
+  Object.assign(order, unwind);
+  return unwind;
+};
+
 export const updateOrderStatus = controllerWrapper(
   "updateOrderStatus",
   async (req, res) => {
@@ -1111,46 +1178,21 @@ export const updateOrderStatus = controllerWrapper(
       await awardPointsForDelivery(order._id);
     }
 
-    /*
-      Delivering an order has to write the delivery down.
-
-      This set `status` and nothing else, and `isDelivered`/`deliveredAt` are
-      what everything downstream actually reads. There are endpoints that do
-      write them — PUT /orders/:id/pay and /:id/deliver — and store actions
-      calling those endpoints, but no component anywhere calls the store
-      actions. So the flags were never set by anybody, and three things read
-      them and found nothing, permanently:
-
-        payout.controller filters vendor earnings on isDelivered && isPaid, so
-        every payout computed zero;
-        store.controller's revenue figures filter on isPaid, so a store's sales
-        read zero;
-        the post-purchase cron looks for orders delivered three days ago, so no
-        review request could ever be sent.
-
-      Cash on delivery is also settled here, because that is the moment the
-      money changes hands and there is no gateway to say so. Only for COD, and
-      only if it is not already paid: an online order is marked paid by its
-      webhook when the gateway confirms, and stamping paidAt again at delivery
-      would overwrite the hour the customer actually paid. An online order that
-      was never confirmed stays unpaid, which is the truth about it.
-    */
-    if (status === "delivered" && !order.isDelivered) {
-      const settle = { isDelivered: true, deliveredAt: new Date() };
-      if (order.paymentMethod === "cod" && !order.isPaid) {
-        settle.isPaid = true;
-        settle.paidAt = new Date();
-      }
-      await Order.updateOne({ _id: order._id }, { $set: settle });
-      Object.assign(order, settle);
-    }
-
     // This dropdown is how a cancellation actually happens — nothing in the
     // frontend calls the cancel route at all — so this is where the stock,
     // the coupon and the points have to come back.
+    //
+    // Before reconcileDelivery, not after: this reads `isDelivered` to decide
+    // whether stock goes back on the shelf, and an order that reached the
+    // customer must not put its goods back. Clearing the flag first would
+    // restock every delivered order somebody later cancelled.
     if (status === "cancelled") {
       await releaseOrderHolds(order._id, req);
     }
+
+    // Both directions — arriving at delivered, and leaving it. See the
+    // function for what is deliberately not undone.
+    await reconcileDelivery(order);
 
     // Auto-create an Accurate waybill the first time an order is marked shipped.
     // Fail-safe: a carrier error is logged but never blocks the status update.
@@ -1263,11 +1305,25 @@ export const markOrderPaid = controllerWrapper(
 export const markOrderDelivered = controllerWrapper(
   "markOrderDelivered",
   async (req, res) => {
+    /*
+      The status and the timeline entry only. The flags are left to
+      reconcileDelivery below.
+
+      This wrote `isDelivered: true, deliveredAt: new Date()` itself, which is
+      not the same act twice: calling it again on an order already delivered
+      moved `deliveredAt` forward to now. The review-request cron looks for
+      orders delivered three days ago and the returns window counts from that
+      date, so a second click — a retried request, a double-submit, a courier
+      webhook replayed — quietly pushed both out by however long had passed.
+
+      Kept in step with updateOrderStatus on purpose. Nothing calls this
+      endpoint today — the dashboard moves the status through the dropdown
+      instead — and two doors to the same act that disagree about what the act
+      means is how the next person wires this one up and gets different books.
+    */
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {
-        isDelivered: true,
-        deliveredAt: new Date(),
         status: "delivered",
         $push: {
           statusTimeline: {
@@ -1285,24 +1341,7 @@ export const markOrderDelivered = controllerWrapper(
         .json({ success: false, message: "Order not found" });
 
     await awardPointsForDelivery(order._id);
-
-    /*
-      Cash on delivery is settled here for the same reason it is settled in
-      updateOrderStatus: this is the moment the money changes hands, and no
-      gateway exists to say so.
-
-      Kept in step with that one on purpose. Nothing calls this endpoint today —
-      the dashboard changes the status through the dropdown instead — and two
-      doors to the same act that disagree about what the act means is how the
-      next person wires this one up and quietly gets different books.
-    */
-    if (order.paymentMethod === "cod" && !order.isPaid) {
-      await Order.updateOne(
-        { _id: order._id },
-        { $set: { isPaid: true, paidAt: new Date() } }
-      );
-      order.isPaid = true;
-    }
+    await reconcileDelivery(order);
 
     res.status(200).json({ success: true, order });
   }
@@ -1332,6 +1371,10 @@ export const cancelOrder = controllerWrapper(
         .json({ success: false, message: "Order not found" });
 
     const restored = await releaseOrderHolds(order._id, req);
+    // After releaseOrderHolds, which reads `isDelivered` to decide whether the
+    // stock goes back. A cancelled order is not a delivered one, and leaving
+    // the flag set kept it in the vendor's payout and the store's revenue.
+    await reconcileDelivery(order);
 
     logAudit(req, "order.cancelled", "order", order._id, { reason: req.body?.reason });
     res.status(200).json({ success: true, order, restored });

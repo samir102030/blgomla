@@ -9,6 +9,7 @@ import OrderTimeline from "../components/OrderTimeline";
 import { useOrderStore } from "../stores/order.store";
 import { useUserStore } from "../stores/user.store";
 import { cldImg } from "../lib/cldImage";
+import { ORDER_FLOW } from "../lib/orderStatus";
 
 interface TrackedAddress {
   name?: string;
@@ -56,15 +57,17 @@ interface TrackedOrder {
   }>;
 }
 
-// Forward fulfilment flow shown in the stepper (cancelled is handled separately).
-const STEPS = [
-  "pending",
-  "confirmed",
-  "processing",
-  "shipped",
-  "out_for_delivery",
-  "delivered",
-] as const;
+/*
+  Forward fulfilment flow shown in the stepper (cancelled is handled
+  separately).
+
+  The same list the admin's dropdown and the API's validator use, rather than a
+  fourth copy. This bar drew six steps while the validator accepted five of
+  them, so two of the steps a customer watched for — "Confirmed" and "Out for
+  Delivery" — were unreachable: nobody could set them, and the bar skipped both
+  on every order the shop has taken. One list is what stops that recurring.
+*/
+const STEPS = ORDER_FLOW;
 
 const STEP_ICON: Record<string, string> = {
  pending: "",

@@ -5,6 +5,7 @@ import { useOrderStore } from "../stores/order.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import ReferralCard from "./ReferralCard";
+import { isOpenStatus } from "../lib/orderStatus";
 
 const AccountDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -13,13 +14,19 @@ const AccountDashboard: React.FC = () => {
 
   const totalSpent = orders?.reduce((sum, order) => sum + (order?.totalPrice || 0), 0) || 0;
   const deliveredOrders = orders?.filter(o => o.status?.toLowerCase() === "delivered").length || 0;
-  const pendingOrders = orders?.filter(o => ["processing", "shipped", "pending"].includes(o.status?.toLowerCase())).length || 0;
+  // Every order still on its way. The list here was pending/processing/shipped,
+  // which left "confirmed" and "out_for_delivery" counted as neither delivered
+  // nor in progress — so a customer whose order was with the courier saw it
+  // vanish from both figures and the two stopped adding up to their orders.
+  const pendingOrders = orders?.filter(o => isOpenStatus(o.status?.toLowerCase())).length || 0;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "delivered": return "text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400";
+      case "confirmed": return "text-sky-600 bg-sky-50 dark:bg-sky-500/10 dark:text-sky-400";
       case "processing": return "text-amber-600 bg-amber-50 dark:bg-amber-500/10 dark:text-amber-400";
       case "shipped": return "text-blue-600 bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400";
+      case "out_for_delivery": return "text-orange-600 bg-orange-50 dark:bg-orange-500/10 dark:text-orange-400";
       case "cancelled": return "text-red-600 bg-red-50 dark:bg-red-500/10 dark:text-red-400";
       default: return "text-[var(--text-muted)] bg-[var(--surface-2)]";
     }
@@ -28,8 +35,10 @@ const AccountDashboard: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case "delivered": return CheckCircleIcon;
+      case "confirmed": return CheckCircleIcon;
       case "processing": return ArrowPathIcon;
       case "shipped": return TruckIcon;
+      case "out_for_delivery": return TruckIcon;
       case "cancelled": return XCircleIcon;
       default: return ClockIcon;
     }
