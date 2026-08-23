@@ -31,7 +31,10 @@
  * Safe to stop and re-run. The list it asks for is "images not yet on our
  * Cloudinary", so a second run simply sees a shorter one.
  */
+import fs from "fs";
+import path from "path";
 import { createInterface } from "readline";
+import { fileURLToPath } from "url";
 import { stdin, stdout, argv, env, exit } from "process";
 
 const flag = (name, fallback = null) => {
@@ -39,11 +42,29 @@ const flag = (name, fallback = null) => {
   return at >= 0 && argv[at + 1] ? argv[at + 1] : fallback;
 };
 
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+
 const API = (flag("api", env.BELGOMLA_API || "https://blgomla-api.vercel.app/api")).replace(/\/$/, "");
 const HOST = flag("host");
 const SCOPE = flag("scope", "all");
 const BATCH = Number(flag("batch", "40"));
 const CONCURRENCY = Number(flag("concurrency", "4"));
+
+/*
+  --from-cache: send what imageHoard.mjs already downloaded.
+
+  Moving a picture is two jobs. Fetching the bytes off the shop that hosts them
+  is slow, connection-bound, and refused to anything running in a data centre —
+  hours of work that only an ordinary internet connection can do. Handing them
+  to our API to file on Cloudinary is fast, and is the only half that needs a
+  login.
+
+  Splitting them means the long half runs unattended, with nothing secret in
+  the room, and the half that wants a password is minutes of reading files off
+  a local disk. It also means a failed upload never costs a second download.
+*/
+const FROM_CACHE = argv.includes("--from-cache");
+const CACHE = path.resolve(flag("cache", path.join(HERE, "..", "..", "..", "blgomla-images")));
 
 /** What a browser sends. The point of this script is to look like one. */
 const BROWSER_HEADERS = {
@@ -157,8 +178,53 @@ const typeOf = (url, headerValue) => {
   return TYPES[extension] || "image/jpeg";
 };
 
+/*
+  Stop asking a server that has stopped answering.
+
+  The catalogue's pictures are spread over more than one host, and they do not
+  fail together: on the afternoon this was written egyptlaptop.com answered in
+  0.8s while free-electronic.com did not answer at all — no bytes, no status
+  code, twenty seconds of nothing, per image, and about a thousand images.
+
+  Every one of those costs three attempts and two backoffs before it is
+  admitted, roughly a minute each. Four at a time, that is most of a working
+  day spent waiting on one machine that is switched off — interleaved with the
+  host that *is* answering, so the run looks like it is progressing the whole
+  time.
+
+  The existing guard does not catch it: `!moved && failed >= items.length`
+  gives up only if nothing at all has moved in the entire run, and the healthy
+  host keeps `moved` climbing. So a dead host is never noticed.
+
+  A host is written off after DEAD_AFTER consecutive failures with nothing ever
+  fetched from it. After that its images are skipped at no cost and reported as
+  skipped, not failed — they were never tried, and next week the machine may be
+  back on and a re-run will pick them up.
+*/
+const DEAD_AFTER = 12;
+const health = new Map();
+
+const hostOf = (url) => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "(unparseable)";
+  }
+};
+
+const healthOf = (host) => {
+  if (!health.has(host)) health.set(host, { ok: 0, fail: 0, streak: 0, dead: false });
+  return health.get(host);
+};
+
 const fetchImage = async (url) => {
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  const state = healthOf(hostOf(url));
+  // One attempt while a host is on its last warning. Three retries are for a
+  // server having a bad minute; a server that has refused eleven in a row is
+  // not having a bad minute.
+  const attempts = state.streak >= DEAD_AFTER / 2 ? 1 : 3;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       const response = await fetch(url, {
         headers: BROWSER_HEADERS,
@@ -168,9 +234,22 @@ const fetchImage = async (url) => {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const buffer = Buffer.from(await response.arrayBuffer());
       if (!buffer.length) throw new Error("empty body");
+      state.ok += 1;
+      state.streak = 0;
       return { buffer, type: typeOf(url, response.headers.get("content-type")) };
     } catch (error) {
-      if (attempt === 3) throw error;
+      if (attempt === attempts) {
+        state.fail += 1;
+        state.streak += 1;
+        if (!state.dead && state.ok === 0 && state.streak >= DEAD_AFTER) {
+          state.dead = true;
+          console.log(
+            `\n  giving up on ${hostOf(url)} — ${state.streak} in a row, none ever fetched.` +
+              `\n  Its images are skipped from here. Re-run when it is back up.\n`
+          );
+        }
+        throw error;
+      }
       await new Promise((r) => setTimeout(r, attempt * 800));
     }
   }
@@ -191,8 +270,87 @@ const deliver = async (item, image) => {
   return json("/upload/migration/push", { method: "POST", body: form });
 };
 
+/**
+ * Push everything imageHoard.mjs left on disk, and nothing else.
+ *
+ * The manifest is the list — it already says which product and which slot each
+ * file belongs to — so this asks the API for nothing but the uploads. An entry
+ * whose file has since been deleted is reported rather than guessed at.
+ */
+const runFromCache = async () => {
+  const manifestPath = path.join(CACHE, "manifest.json");
+  if (!fs.existsSync(manifestPath)) {
+    console.error(
+      `No manifest at ${manifestPath}.\n` +
+        `Run the downloader first — it needs no login:\n` +
+        `  node scripts/imageHoard.mjs\n`
+    );
+    exit(1);
+  }
+
+  const rows = JSON.parse(fs.readFileSync(manifestPath, "utf8")).images || [];
+  console.log(`cache   : ${CACHE}`);
+  console.log(`manifest: ${rows.length} images\n`);
+
+  let moved = 0;
+  let failed = 0;
+  let missing = 0;
+  const problems = [];
+  const started = Date.now();
+
+  const queue = [...rows];
+  await Promise.all(
+    Array.from({ length: CONCURRENCY }, async () => {
+      while (queue.length) {
+        const row = queue.shift();
+        if (!row) return;
+        const file = path.join(CACHE, row.file || "");
+        if (!row.file || !fs.existsSync(file)) {
+          missing += 1;
+          continue;
+        }
+        try {
+          await deliver(
+            { productId: row.productId, index: row.index, url: row.url, kind: row.kind },
+            { buffer: fs.readFileSync(file), type: row.type || "image/jpeg" }
+          );
+          moved += 1;
+        } catch (error) {
+          failed += 1;
+          if (problems.length < 10) problems.push(`${error.message}  ${row.url}`);
+        }
+        const seen = moved + failed;
+        if (seen % 50 === 0) {
+          const mins = (Date.now() - started) / 60000;
+          const rate = mins > 0 ? Math.round(moved / mins) : 0;
+          process.stdout.write(`\r  filed ${moved} · failed ${failed} · ${rate}/min   `);
+        }
+      }
+    })
+  );
+
+  console.log(`\n\nfiled   : ${moved}`);
+  console.log(`failed  : ${failed}`);
+  if (missing) console.log(`missing : ${missing}  (in the manifest, not on disk)`);
+  if (problems.length) {
+    console.log("\nfirst problems:");
+    for (const line of problems) console.log(`  ${line}`);
+  }
+};
+
 const main = async () => {
   await login();
+
+  if (FROM_CACHE) {
+    const status = await json("/upload/migration/status");
+    if (!status.configured) {
+      console.error(
+        "The server has no image storage configured yet. Add the three CLOUDINARY_* settings and redeploy first."
+      );
+      exit(1);
+    }
+    return runFromCache();
+  }
 
   const status = await json("/upload/migration/status");
   if (!status.configured) {
@@ -214,6 +372,7 @@ const main = async () => {
 
   let moved = 0;
   let failed = 0;
+  let skipped = 0;
   const problems = [];
 
   for (;;) {
@@ -233,6 +392,12 @@ const main = async () => {
         while (queue.length) {
           const item = queue.shift();
           if (!item) return;
+          // Written off earlier in this run — do not spend twenty seconds
+          // finding that out again.
+          if (healthOf(hostOf(item.url)).dead) {
+            skipped += 1;
+            continue;
+          }
           try {
             const image = await fetchImage(item.url);
             await deliver(item, image);
