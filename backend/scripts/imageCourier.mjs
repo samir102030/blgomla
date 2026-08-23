@@ -105,6 +105,30 @@ const api = async (path, init = {}) => {
   return response;
 };
 
+/**
+ * The same call, but it refuses to hand back anything that is not the JSON it
+ * was promised.
+ *
+ * The first version called .json() on whatever came back. An endpoint that had
+ * not finished deploying answered 404 in HTML, .json() threw a parse error
+ * about an unexpected '<', and the run ended looking exactly like 'there is
+ * nothing to do' — no count, no reason, straight back to the prompt.
+ */
+const json = async (path, init = {}) => {
+  const response = await api(path, init);
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(
+      (init.method || 'GET') + ' ' + path + ' answered ' + response.status + ': ' + body.slice(0, 300)
+    );
+  }
+  try {
+    return JSON.parse(body);
+  } catch {
+    throw new Error(path + ' answered ' + response.status + ' but not JSON: ' + body.slice(0, 300));
+  }
+};
+
 /* ── the work ───────────────────────────────────────────────────────── */
 
 const fetchImage = async (url) => {
@@ -136,18 +160,13 @@ const deliver = async (item, buffer) => {
     (item.url.split("/").pop() || "image").split("?")[0] || "image.jpg"
   );
 
-  const response = await api("/upload/migration/push", { method: "POST", body: form });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok || !body.success) {
-    throw new Error(body.message || `push failed (${response.status})`);
-  }
-  return body;
+  return json("/upload/migration/push", { method: "POST", body: form });
 };
 
 const main = async () => {
   await login();
 
-  const status = await (await api("/upload/migration/status")).json();
+  const status = await json("/upload/migration/status");
   if (!status.configured) {
     console.error(
       "The server has no image storage configured yet. Add the three CLOUDINARY_* settings and redeploy first."
@@ -172,9 +191,13 @@ const main = async () => {
   for (;;) {
     const query = new URLSearchParams({ limit: String(BATCH), scope: SCOPE });
     if (HOST) query.set("host", HOST);
-    const batch = await (await api(`/upload/migration/pending?${query}`)).json();
+    const batch = await json(`/upload/migration/pending?${query}`);
     const items = batch.items || [];
-    if (!items.length) break;
+    if (!items.length) {
+      console.log(`nothing left to fetch (${batch.remaining ?? 0} outstanding)`);
+      break;
+    }
+    console.log(`fetching ${items.length} of ${batch.remaining} outstanding...`);
 
     const queue = [...items];
     await Promise.all(
@@ -191,15 +214,14 @@ const main = async () => {
             if (problems.length < 10) problems.push(`${error.message}  ${item.url}`);
           }
           const seen = moved + failed;
-          if (seen % 20 === 0) {
-            process.stdout.write(
-              `\r  moved ${moved}  failed ${failed}  of ${batch.remaining} outstanding   `
-            );
-          }
+          if (seen % 25 === 0) console.log(`  moved ${moved}  failed ${failed}`);
         }
       })
     );
-    process.stdout.write(`\r  moved ${moved}  failed ${failed}  of ${batch.remaining} outstanding   `);
+    console.log(`  moved ${moved}  failed ${failed}`);
+    // Say it as it happens rather than only in the summary: a run failing on
+    // every image should not take ten minutes to admit it.
+    if (problems.length) console.log(`  last problem: ${problems[problems.length - 1]}`);
 
     // Nothing in this batch worked. Repeating it would only ask the same
     // questions of the same server and get the same answers.
@@ -215,6 +237,7 @@ const main = async () => {
 };
 
 main().catch((error) => {
-  console.error(`\n${error.message}`);
+  console.error(`\nstopped: ${error.message}`);
+  if (error.cause) console.error(String(error.cause));
   exit(1);
 });
