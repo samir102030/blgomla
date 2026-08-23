@@ -83,12 +83,41 @@ export const createCoupon = controllerWrapper(
       storeId = req.store._id;
     } else {
       storeId = req.body.storeId;
+
+      /*
+        An operator with no store of their own gets the shop's, when there is
+        only one of them.
+
+        The coupon dialog sends `storeId: undefined` for an admin or a
+        super_admin — deliberately, because an operator has no store — and
+        this then answered 400 "Store ID is required". So the two roles that
+        run the shop could not create a coupon at all, by any route, while a
+        vendor could.
+
+        Asking them to choose would be the answer on a marketplace with many
+        sellers. This one has a single store, so the question has exactly one
+        possible answer and asking it is only a way to fail. The moment there
+        is a second store the fallback stops applying and the choice is
+        required again — with a message that says which stores exist.
+      */
       if (!storeId) {
-        return res.status(400).json({
-          success: false,
-          message: "Store ID is required when creating a coupon for a store",
-        });
+        const stores = await Store.find({ deleted: { $ne: true } })
+          .select("_id name")
+          .limit(2)
+          .lean();
+        if (stores.length === 1) {
+          storeId = stores[0]._id;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: stores.length
+              ? `This shop has ${stores.length} stores, so a coupon has to say which one it is for.`
+              : "There is no store to attach a coupon to yet.",
+          });
+        }
       }
+      // Still checked when the id came from the request, which is the only
+      // case where it could name a store that is gone.
       const target = await Store.findById(storeId).select("_id deleted");
       if (!target || target.deleted) {
         return res
