@@ -40,6 +40,7 @@ import PayoutsPage from "../pages/admin/PayoutsPage";
 import AuditLogPage from "../pages/admin/AuditLogPage";
 import RolesAccessPage from "../pages/admin/RolesAccessPage";
 import DataResetPage from "../pages/admin/DataResetPage";
+import ProductImagesPage from "../pages/admin/ProductImagesPage";
 import StudentsLayout from "../pages/admin/students/StudentsLayout";
 import StudentsOverviewPage from "../pages/admin/students/StudentsOverviewPage";
 import StudentsProductsPage from "../pages/admin/students/StudentsProductsPage";
@@ -245,6 +246,8 @@ const AdminRoutes: React.FC = () => {
         {/* Super-admin only; the page checks the role itself and the API
             enforces it again. */}
         <Route path="/data-reset" element={<DataResetPage />} />
+        {/* Admin only; the API enforces the same. */}
+        <Route path="/product-images" element={<ProductImagesPage />} />
         <Route
           path="/roles"
           element={

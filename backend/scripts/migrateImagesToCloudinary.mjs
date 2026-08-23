@@ -28,6 +28,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import Product from "../models/product.model.js";
+import { ANY_AUDIENCE } from "../utils/electronicsVisibility.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, "../.env") });
@@ -67,7 +68,14 @@ await mongoose.connect(process.env.MONGO_URI);
 
 const isOurs = (url) => /res\.cloudinary\.com/.test(String(url || ""));
 
-const products = await Product.find({ "images.0": { $exists: true } })
+// `audience` is not optional here. The product schema hides the electronics
+// section from any query that does not mention it, so the plain find this used
+// to be skipped 5,769 of the 25,660 images and then reported itself finished.
+const products = await Product.find({
+  audience: ANY_AUDIENCE,
+  deleted: { $ne: true },
+  "images.0": { $exists: true },
+})
   .select("_id images")
   .lean();
 

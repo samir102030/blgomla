@@ -2,6 +2,10 @@ import express from "express";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import {
+  getImageMigrationStatus,
+  runImageMigrationBatch,
+} from "../controllers/imageMigration.controller.js";
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -54,6 +58,20 @@ router.get("/test", (req, res) => {
     configured: uploadsConfigured(),
   });
 });
+
+/*
+  Moving the catalogue's photographs onto our own account, from the dashboard.
+
+  The equivalent script wants a checkout of this repository and a copy of the
+  production database credentials in a file on somebody's laptop, to do a job
+  the server is already configured for. These two do it where the credentials
+  already live, so the person who owns the shop needs a browser and nothing else.
+
+  Registered before "/upload" and "/delete" only for readability — they share no
+  path prefix, so the order does not matter here.
+*/
+router.get("/migration/status", protectRoute, adminRoute, getImageMigrationStatus);
+router.post("/migration/run", protectRoute, adminRoute, runImageMigrationBatch);
 
 // Authenticated users only. Every caller in the app is already logged in —
 // customers uploading a profile picture, vendors uploading store/product

@@ -90,6 +90,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       icon: ShoppingBagIcon,
       children: [
         { name: t("admin.products"), href: "/dashboard/products", perm: "products.view" },
+        // Not permission-gated: the job spends the shop's image-storage
+        // allowance, so it stays with the two roles that answer for the bill.
+        { name: t("admin.productImages", "Product images"), href: "/dashboard/product-images", roles: ["admin", "super_admin"] },
         { name: t("admin.category"), href: "/dashboard/category", perm: "categories.manage" },
         { name: t("admin.brands"), href: "/dashboard/brands", perm: "brands.manage" },
         { name: t("admin.storefrontVisibility", "Storefront visibility"), href: "/dashboard/storefront-visibility", perm: "categories.manage" },
