@@ -2,6 +2,7 @@ import Product from "../models/product.model.js";
 import Category from "../models/category.model.js";
 import Collection from "../models/collection.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
+import { isSellable } from "../utils/sellableCollection.js";
 
 // Single aggregation that pulls `brand`/`category`/`store` inline. Replaces
 // three sequential `.populate()` calls — saves ~2 round-trips per section.
@@ -145,11 +146,22 @@ const queries = {
     return cats;
   },
 
-  collections: () =>
-    Collection.find({ isActive: true })
-      .populate("items.product")
-      .sort({ createdAt: -1 })
-      .lean(),
+  /*
+    Bundles whose products still exist.
+
+    This query is the home page's own, separate from the one behind
+    /api/collections, and it went on serving all four broken bundles after that
+    one stopped. The home page showed them while "View All Bundles" led to a
+    page that correctly showed none — the shop disagreeing with itself, with the
+    half that looked fine being the wrong half.
+  */
+  collections: async () =>
+    (
+      await Collection.find({ isActive: true })
+        .populate("items.product")
+        .sort({ createdAt: -1 })
+        .lean()
+    ).filter(isSellable),
 };
 
 export const getHomeFeed = controllerWrapper("getHomeFeed", async (req, res) => {

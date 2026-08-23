@@ -6,6 +6,7 @@ import Store from "../models/store.model.js";
 import User from "../models/user.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { collectionItemsTotal } from "../utils/collectionPricing.js";
+import { isSellable } from "../utils/sellableCollection.js";
 
 // These are caller mistakes, not server faults. Thrown bare, controllerWrapper
 // classified them as 500s — which in production replaces the message with
@@ -196,23 +197,9 @@ export const createCollection = controllerWrapper(
   }
 );
 
-/**
- * A bundle is only offered while every product in it still exists.
- *
- * `populate` resolves a reference whose document has gone to `null`, and
- * nothing downstream expected that. The listing rendered one row per item with
- * no name and no price under a live "Add Bundle" button, and the add itself
- * read `product.stock` off the null and answered 500. Four bundles were
- * sitting on the storefront in exactly that state, priced 11,500 to 135,000.
- *
- * Partly resolved counts as broken. The price is for the set, so a bundle
- * missing one of its three members is not a cheaper bundle — it is the wrong
- * price for a different thing.
- */
-const isSellable = (collection) =>
-  Array.isArray(collection?.items) &&
-  collection.items.length > 0 &&
-  collection.items.every((item) => item?.product);
+/* The rule moved to utils/sellableCollection.js when it turned out the home
+   feed asks its own question of its own query, and was still serving the four
+   broken bundles this file had stopped serving. Imported at the top. */
 
 export const getCollections = controllerWrapper(
   "getCollections",
