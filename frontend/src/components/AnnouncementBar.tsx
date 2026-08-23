@@ -6,7 +6,7 @@ import { useAdvertisementStore } from "../stores/advertisement.store";
 const DISMISS_KEY = "announcementClosed";
 
 const AnnouncementBar: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isRtl = i18n.language === "ar";
   const {
     activeAdvertisements,

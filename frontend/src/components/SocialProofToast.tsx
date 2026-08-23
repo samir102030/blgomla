@@ -29,7 +29,7 @@ const timeAgo = (iso: string): string => {
 };
 
 const SocialProofToast: React.FC = () => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isRtl = i18n.language === "ar";
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [index, setIndex] = useState(0);
