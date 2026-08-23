@@ -297,6 +297,31 @@ export const parseProductExcel = (fileBuffer, templateType = 'full') => {
     return product;
   });
 
+  /*
+    Which columns the sheet actually had.
+
+    Every field above falls back to something — `parseInt(row['Stock']) || 0`,
+    `row['Description'] || ''`, an empty images array — so a sheet with no Stock
+    column and a sheet whose Stock column is empty arrive here identical. That
+    is right for a create and destructive for an update: re-uploading a sheet
+    that carries only names and Arabic names would set stock to 0 on every row
+    it matched and empty their images, and nothing in the parse or the import
+    would say so.
+
+    The header row is the only place the difference survives, so it is carried
+    out with the rows. `products` stays an array — the caller iterates it — and
+    the header list rides along beside it rather than changing that shape.
+  */
+  // Read from the header row itself, not from the first data row: sheet_to_json
+  // omits empty cells, so a first row with no SKU would report a sheet that has
+  // no SKU column, and the update would then leave every SKU alone for the
+  // wrong reason.
+  const header = XLSX.utils.sheet_to_json(worksheet, { header: 1, range: 0 })[0] || [];
+  Object.defineProperty(products, "sheetColumns", {
+    value: header.map((h) => String(h ?? "").trim()).filter(Boolean),
+    enumerable: false,
+  });
+
   return products;
 };
 

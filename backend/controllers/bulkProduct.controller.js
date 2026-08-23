@@ -185,6 +185,45 @@ export const bulkUploadProducts = async (req, res) => {
     // Parse Excel file
     const products = parseProductExcel(req.file.buffer, templateType);
 
+    /*
+      Which product fields this particular sheet is entitled to change.
+
+      A field whose column is absent must be left alone on an update, and the
+      parsed rows cannot say which those are — every one of them has a fallback,
+      so a missing column and an empty cell look the same by the time they get
+      here. The header row is the only place the difference survives, and the
+      parser carries it out under `sheetColumns`.
+
+      A sheet from an older export, or one an operator trimmed to the two
+      columns they meant to correct, is the normal case rather than the odd one.
+    */
+    const sheetColumns = new Set(products.sheetColumns || []);
+    const COLUMN_FOR = {
+      name: ['Product Name'],
+      nameAr: ['Arabic Name'],
+      sku: ['SKU'],
+      description: ['Description'],
+      descriptionAr: ['Arabic Description'],
+      price: ['Price'],
+      stock: ['Stock'],
+      minOrderQty: ['Min Order Qty'],
+      category: ['Category Name'],
+      brand: ['Brand Name'],
+      salePercentage: ['Sale Percentage'],
+      saleActive: ['Sale Active'],
+      featured: ['Featured'],
+      tags: ['Tags'],
+      features: ['Features'],
+      attributes: ['Attributes'],
+      installation: ['Installation Offered'],
+      bulkPricing: ['Bulk Pricing'],
+      images: ['Image URL 1', 'Image URL 2', 'Image URL 3', 'Image URL 4'],
+    };
+    // A field nobody mapped is one this sheet does not set, so it is not the
+    // sheet's to change either. Erring towards leaving data alone.
+    const suppliesField = (field) =>
+      (COLUMN_FOR[field] || []).some((column) => sheetColumns.has(column));
+
     if (!products || products.length === 0) {
       return res.status(400).json({
         success: false,
@@ -403,6 +442,21 @@ export const bulkUploadProducts = async (req, res) => {
           for (const [key, value] of Object.entries(newProduct)) {
             if (untouched.has(key)) continue;
             if (value === undefined) continue;
+            /*
+              And nothing the sheet did not carry a column for.
+
+              Every field is built with a fallback — `parseInt(row['Stock']) ||
+              0`, `row['Description'] || ''`, an empty images array — so a sheet
+              with no Stock column and a sheet whose Stock column is blank
+              arrive here identical. That is right for a create and destructive
+              for an update: uploading a sheet of names and Arabic names would
+              have set stock to 0 on every row it matched, emptied their images,
+              blanked their descriptions and cleared their tags, and nothing in
+              the preview or the summary would have said a word about it.
+
+              `undefined` cannot carry that difference, so the header row does.
+            */
+            if (!suppliesField(key)) continue;
             existing[key] = value;
           }
           // A sheet naming a product brings it back rather than leaving a row
