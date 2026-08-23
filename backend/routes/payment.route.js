@@ -14,7 +14,27 @@ import Order from "../models/order.model.js";
 import User from "../models/user.model.js";
 import { sendOrderConfirmationEmail } from "../utils/email.js";
 
+import {
+  isPaymentMethod,
+  isConfigured,
+  missingConfigFor,
+  paymentMethodStatus,
+} from "../config/paymentMethods.js";
+
 const router = express.Router();
+
+/**
+ * GET /api/payments/methods
+ *
+ * Which methods the shop takes, and which of them this server can complete
+ * today. Booleans and setting names only — never a value.
+ *
+ * Public because the checkout page needs it before anybody has signed in, and
+ * because it says nothing that is not already visible from trying to pay.
+ */
+router.get("/methods", (req, res) => {
+  res.status(200).json({ success: true, methods: paymentMethodStatus() });
+});
 
 /**
  * POST /api/payments/create-intent
@@ -30,6 +50,36 @@ router.post(
       return res.status(400).json({
         success: false,
         message: "orderId and paymentMethod are required",
+      });
+    }
+
+    if (!isPaymentMethod(paymentMethod)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "That payment method is not one this shop takes." });
+    }
+
+    /*
+      A gateway whose credentials are not on this server cannot be completed,
+      and finding that out from whatever the gateway's own client library
+      throws is how a customer ends up looking at a blank error at the last
+      step of a checkout. Stopped here instead, with the reason in the log for
+      whoever has to fix it and a sentence for the person waiting.
+
+      The names of the missing settings are deliberately not sent to the
+      customer: they are of no use to them and they describe the inside of the
+      server. Never their values, which are not read here at all.
+    */
+    if (!isConfigured(paymentMethod)) {
+      console.error(
+        `payment method ${paymentMethod} was selected but is not configured; missing: ${missingConfigFor(
+          paymentMethod
+        ).join(", ")}`
+      );
+      return res.status(503).json({
+        success: false,
+        message:
+          "This payment method is not available right now. Please choose another, or contact us and we will take the order over the phone.",
       });
     }
 

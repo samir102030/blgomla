@@ -1,5 +1,6 @@
 import { body, param, query, validationResult } from "express-validator";
 import mongoose from "mongoose";
+import { PAYMENT_METHODS, isPaymentMethod } from "../config/paymentMethods.js";
 
 // Helper function to wrap validations with error handling
 const validate = (validations) => {
@@ -11,8 +12,16 @@ const validate = (validations) => {
       return next();
     }
 
+    // The first failure, in the field the client already reads.
+    //
+    // This answered with `errors` alone. The checkout page looks for
+    // `message`, found none, and printed "Invalid order data provided" — so a
+    // customer rejected for their payment method was told nothing about the
+    // payment method. The array stays for anything that wants the detail.
+    const first = errors.array()[0];
     res.status(400).json({
       success: false,
+      message: first?.msg || "Invalid order data provided",
       errors: errors.array(),
     });
   };
@@ -79,14 +88,18 @@ export const validateCreateOrder = validate([
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("Invalid shipping address ID format"),
 
+  // Accepts everything the code can take, not the one method that needed no
+  // gateway on the day this was written. Whether a gateway's keys are present
+  // is a separate question, answered where the customer is handed over — and
+  // answered by name, rather than as a 400 from here with nothing in it.
   body("paymentMethod")
     .trim()
     .notEmpty()
     .withMessage("Payment method is required")
-    .custom((value) => {
-      return value.toLowerCase() === "cod";
-    })
-    .withMessage("Only Cash On Delivery payment method is accepted"),
+    .custom(isPaymentMethod)
+    .withMessage(
+      `Unknown payment method. Accepted: ${PAYMENT_METHODS.join(", ")}`
+    ),
 
   // body("itemsPrice")
   //   .isFloat({ min: 0 })

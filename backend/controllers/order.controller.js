@@ -1,6 +1,7 @@
 import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import User from "../models/user.model.js";
+import { PAYMENT_METHODS, isPaymentMethod } from "../config/paymentMethods.js";
 import Store from "../models/store.model.js";
 import mongoose from "mongoose";
 import { controllerWrapper } from "../utils/wrappers.js";
@@ -130,11 +131,13 @@ export const createOrder = controllerWrapper(
     }
 
     // Validate payment method
-    const validPaymentMethods = ["cod", "stripe", "paymob", "paymob_installment"];
-    if (!validPaymentMethods.includes(paymentMethod.toLowerCase())) {
+    // The same list the validator in front of this route uses, and the same
+    // list the checkout page renders. It lived here as a literal, one entry
+    // short of the page and five entries longer than the validator.
+    if (!isPaymentMethod(paymentMethod)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid payment method. Accepted: ${validPaymentMethods.join(", ")}`,
+        message: `Invalid payment method. Accepted: ${PAYMENT_METHODS.join(", ")}`,
       });
     }
 
