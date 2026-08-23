@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import Product from "../models/product.model.js";
+import Category from "../models/category.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { logAudit } from "../utils/audit.js";
 import { ANY_AUDIENCE } from "../utils/electronicsVisibility.js";
@@ -98,6 +99,15 @@ const hostOf = (url) => {
 
 const SCOPES = new Set(["all", "primary"]);
 
+/** Point whichever record it was at its new address. */
+const writeBack = async (item, url) =>
+  item.kind === "category"
+    ? Category.updateOne({ _id: item.productId }, { $set: { image: url } })
+    : Product.updateOne(
+        { _id: item.productId },
+        { $set: { [`images.${item.index}.url`]: url } }
+      );
+
 /**
  * Every image still hosted somewhere else, with the counts for both scopes and
  * one sample address per host for the reachability probe.
@@ -133,8 +143,42 @@ const survey = async () => {
       const seen = byHost.get(host);
       if (seen) seen.count += 1;
       else byHost.set(host, { host, count: 1, sample: url });
-      work.push({ productId: String(product._id), index, url, host });
+      work.push({ kind: "product", productId: String(product._id), index, url, host });
     });
+  }
+
+  /*
+    The department pictures are on the same borrowed servers.
+
+    Every one of the eighteen top-level departments illustrates itself with a
+    photograph hosted somewhere else — seventeen on egyptlaptop.com and one on
+    free-electronic.com, which is the one that was timing out at fifteen
+    seconds the day this was written, with the whole category rail waiting on
+    it. They were left out of the first version of this because the job was
+    described as moving the product images, and nobody counts a department as a
+    product until the rail is blank.
+
+    A category holds one picture in a plain string rather than a list, so its
+    index is always 0 and it is always "primary" — it is the only picture the
+    department has.
+  */
+  const categories = await Category.find({ image: { $nin: [null, ""] } })
+    .select("_id image name")
+    .lean();
+
+  for (const category of categories) {
+    const url = category.image;
+    if (isOurs(url)) {
+      migratedAll += 1;
+      migratedPrimary += 1;
+      continue;
+    }
+    if (!isRemote(url)) continue;
+    const host = hostOf(url);
+    const seen = byHost.get(host);
+    if (seen) seen.count += 1;
+    else byHost.set(host, { host, count: 1, sample: url });
+    work.push({ kind: "category", productId: String(category._id), index: 0, url, host });
   }
 
   const primaryWork = work.filter((item) => item.index === 0);
@@ -284,14 +328,16 @@ export const runImageMigrationBatch = controllerWrapper(
           folder: FOLDER,
           // Same input, same asset. Re-running after an interruption costs
           // nothing and never leaves a second copy behind.
-          public_id: `${item.productId}-${item.index}`,
+          // Prefixed by kind: a category and a product are different
+          // collections and their ids could in principle coincide.
+          public_id:
+            item.kind === "category"
+              ? `category-${item.productId}`
+              : `${item.productId}-${item.index}`,
           overwrite: false,
           resource_type: "image",
         });
-        await Product.updateOne(
-          { _id: item.productId },
-          { $set: { [`images.${item.index}.url`]: result.secure_url } }
-        );
+        await writeBack(item, result.secure_url);
         moved += 1;
         if (item.index === 0) movedPrimary += 1;
       } catch (error) {
@@ -379,7 +425,7 @@ export const getImageMigrationPending = controllerWrapper(
       scope,
       host,
       remaining: pool.length,
-      items: pool.slice(0, limit).map(({ productId, index, url }) => ({ productId, index, url })),
+      items: pool.slice(0, limit).map(({ kind, productId, index, url }) => ({ kind, productId, index, url })),
     });
   }
 );
@@ -412,10 +458,17 @@ export const pushImageMigration = controllerWrapper(
         .json({ success: false, message: "productId and index are both required." });
     }
 
-    const product = await Product.findOne({ _id: productId, audience: ANY_AUDIENCE })
-      .select("images")
-      .lean();
-    const current = product?.images?.[index]?.url;
+    const kind = req.body?.kind === "category" ? "category" : "product";
+    let current;
+    if (kind === "category") {
+      const category = await Category.findById(productId).select("image").lean();
+      current = category?.image;
+    } else {
+      const product = await Product.findOne({ _id: productId, audience: ANY_AUDIENCE })
+        .select("images")
+        .lean();
+      current = product?.images?.[index]?.url;
+    }
     if (!current) {
       return res.status(404).json({ success: false, message: "No image at that position." });
     }
@@ -429,7 +482,7 @@ export const pushImageMigration = controllerWrapper(
       const stream = api.uploader.upload_stream(
         {
           folder: FOLDER,
-          public_id: `${productId}-${index}`,
+          public_id: kind === "category" ? `category-${productId}` : `${productId}-${index}`,
           overwrite: false,
           resource_type: "image",
         },
@@ -438,7 +491,7 @@ export const pushImageMigration = controllerWrapper(
       stream.end(req.file.buffer);
     });
 
-    await Product.updateOne({ _id: productId }, { $set: { [`images.${index}.url`]: url } });
+    await writeBack({ kind, productId, index }, url);
 
     res.status(200).json({ success: true, url });
   }

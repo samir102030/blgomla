@@ -225,11 +225,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
             width={176}
             height={176}
             onLoad={() => setImgLoaded(true)}
-            onError={(e) => {
-              setImgLoaded(true);
-              (e.currentTarget as HTMLImageElement).src =
-                "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23f3f4f6'/><text x='32' y='38' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%239ca3af'>No image</text></svg>";
-            }}
+            // Only reveals the frame. Replacing the source here defeated the
+            // app-wide handler in lib/imageFallback, which runs first, in the
+            // capture phase, and is retrying — so a picture that was merely
+            // queued behind two dozen others became a permanent "No image".
+            onError={() => setImgLoaded(true)}
             className={`w-28 h-28 sm:w-36 sm:h-36 lg:w-44 lg:h-44 object-contain transition-all duration-500 group-hover:scale-105 ${
               imgLoaded ? "opacity-100" : "opacity-0"
             }`}

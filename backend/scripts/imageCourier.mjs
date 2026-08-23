@@ -178,6 +178,8 @@ const fetchImage = async (url) => {
 
 const deliver = async (item, image) => {
   const form = new FormData();
+  // A department picture and a product picture go to different collections.
+  form.append("kind", item.kind || "product");
   form.append("productId", item.productId);
   form.append("index", String(item.index));
   form.append(
