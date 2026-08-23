@@ -144,6 +144,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
         { name: t("admin.user"), href: "/dashboard/user", perm: "users.view" },
         { name: t("admin.customerReviews"), href: "/dashboard/reviews", perm: "reviews.manage" },
         { name: t("admin.customerSupport"), href: "/dashboard/support", perm: "support.view" },
+        { name: t("admin.contactMessages", "Customer messages"), href: "/dashboard/messages", perm: "support.view" },
       ],
     },
 

@@ -39,6 +39,7 @@ import stockAlertRoutes from "./stockAlert.route.js";
 import dataResetRoutes from "./dataReset.route.js";
 import studentProgramRoutes from "./studentProgram.route.js";
 import supportAssistantRoutes from "./supportAssistant.route.js";
+import contactRoutes from "./contact.route.js";
 
 const router = express.Router();
 
@@ -54,6 +55,7 @@ router.use("/stores", storeRoutes);
 router.use("/reviews", reviewRoutes);
 router.use("/chat", chatRoutes);
 router.use("/support", supportAssistantRoutes);
+router.use("/contact", contactRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/coupons", couponRoutes);
 router.use("/brand-requests", brandRequestRoutes);

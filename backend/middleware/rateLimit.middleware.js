@@ -131,6 +131,26 @@ export const studentVerifyLimiter = rateLimit({
  * a short one written by a script. A customer who reaches it is having a
  * genuinely hard day, which is what the hand-off to a human is for.
  */
+/**
+ * The contact form.
+ *
+ * The only write on this API an anonymous stranger can perform, which makes
+ * it the only one where a script can fill a collection unaided. Generous
+ * enough that a customer who mistypes their address and sends again twice is
+ * never turned away, tight enough that nobody fills the inbox from a laptop.
+ */
+export const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message:
+      "That is a lot of messages in one hour. Please give us a little time to reply to the ones you have already sent.",
+  },
+});
+
 export const supportAssistantLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 40,

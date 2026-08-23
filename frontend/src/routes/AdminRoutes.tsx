@@ -41,6 +41,7 @@ import AuditLogPage from "../pages/admin/AuditLogPage";
 import RolesAccessPage from "../pages/admin/RolesAccessPage";
 import DataResetPage from "../pages/admin/DataResetPage";
 import ProductImagesPage from "../pages/admin/ProductImagesPage";
+import ContactMessagesPage from "../pages/admin/ContactMessagesPage";
 import StudentsLayout from "../pages/admin/students/StudentsLayout";
 import StudentsOverviewPage from "../pages/admin/students/StudentsOverviewPage";
 import StudentsProductsPage from "../pages/admin/students/StudentsProductsPage";
@@ -248,6 +249,14 @@ const AdminRoutes: React.FC = () => {
         <Route path="/data-reset" element={<DataResetPage />} />
         {/* Admin only; the API enforces the same. */}
         <Route path="/product-images" element={<ProductImagesPage />} />
+        <Route
+          path="/messages"
+          element={
+            <RequirePermission perm="support.view">
+              <ContactMessagesPage />
+            </RequirePermission>
+          }
+        />
         <Route
           path="/roles"
           element={

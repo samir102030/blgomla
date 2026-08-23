@@ -757,6 +757,72 @@ export const sendReviewRequestEmail = async (user, order) => {
  * Back-in-stock / price-drop alert for a single product. `email` is a raw
  * address (alerts are anonymous-friendly), `type` is "restock" | "price_drop".
  */
+/**
+ * Tell the shop somebody wrote in.
+ *
+ * Goes to CONTACT_INBOX, falling back to the address inside FROM_EMAIL — so
+ * it lands somewhere real on the day it ships rather than waiting for one
+ * more setting to be filled in. `replyTo` is the customer, which is the
+ * whole point: whoever opens it can answer by pressing reply.
+ *
+ * Written in English on purpose. It is read by the shop, not the customer,
+ * and it quotes the customer's own words untouched.
+ */
+export const sendContactEnquiryEmail = async (enquiry) => {
+  const inbox =
+    process.env.CONTACT_INBOX ||
+    (FROM_EMAIL.match(/<([^>]+)>/)?.[1] ?? FROM_EMAIL);
+
+  const rows = [
+    ["Name", enquiry.name],
+    ["Email", enquiry.email],
+    ["Phone", enquiry.phone],
+    ["Company", enquiry.company],
+    ["Subject", enquiry.subject],
+  ].filter(([, value]) => value);
+
+  const escapeHtml = (value) =>
+    String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+  const body = `
+    <h1 class="h1 text" style="margin:0 0 12px;font-size:22px;font-weight:800;color:${T.navy};">New message from the contact page</h1>
+    <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 16px;">
+      ${rows
+        .map(
+          ([label, value]) =>
+            `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;font-size:13px;white-space:nowrap;">${label}</td>` +
+            `<td style="padding:4px 0;font-size:14px;">${escapeHtml(value)}</td></tr>`
+        )
+        .join("")}
+    </table>
+    <div style="padding:14px 16px;background:#f3f4f6;border-radius:10px;white-space:pre-wrap;font-size:14px;line-height:1.7;">${escapeHtml(
+      enquiry.message
+    )}</div>
+  `;
+
+  const html = renderEmailLayout({
+    lang: "en",
+    previewText: `${enquiry.name}: ${String(enquiry.message).slice(0, 90)}`,
+    body,
+  });
+  const text = [
+    ...rows.map(([label, value]) => `${label}: ${value}`),
+    "",
+    enquiry.message,
+  ].join("\n");
+
+  return sendEmail({
+    to: inbox,
+    subject: `Contact form: ${enquiry.subject || enquiry.name}`,
+    html,
+    text,
+    replyTo: enquiry.email,
+  });
+};
+
 export const sendStockAlertEmail = async (email, product, type, lang = "en") => {
   const l = pickLang(lang);
   const url = `${CLIENT_URL}/product/${product._id}`;

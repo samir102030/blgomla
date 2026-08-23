@@ -3,6 +3,8 @@ import { MapPinIcon, PhoneIcon, EnvelopeIcon, ChatBubbleLeftRightIcon, CheckCirc
 import PageHero from "./PageHero";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import toast from "react-hot-toast";
+import { axiosInstance } from "../lib/axios";
 
 interface ContactForm {
   name: string;
@@ -47,20 +49,43 @@ const Contact: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /*
+    This waited 1.2 seconds, wrote the fields to the browser console, said
+    thank you, and threw the message away. There was no request and no endpoint
+    to receive one, so every enquiry sent from this page since it went up is
+    gone — and each of those people is still waiting for a reply. The
+    price-on-request products send their customers here too.
+
+    The success state is now shown only after the server has the message.
+  */
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      console.log("Contact form submitted:", formData);
-      setIsSubmitting(false);
-      setIsSubmitted(true);
+    try {
+      await axiosInstance.post("/contact", {
+        ...formData,
+        // Which door they came through, so a quote request is recognisable
+        // among the general enquiries.
+        source: askingAbout ? "product-quote" : "contact",
+      });
 
+      setIsSubmitted(true);
       setTimeout(() => {
         setIsSubmitted(false);
         setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
       }, 4000);
-    }, 1200);
+    } catch (error: any) {
+      // Whatever went wrong, the words the customer typed stay on screen. The
+      // form is not cleared and no thank-you is shown, so nobody walks away
+      // believing a message was sent that was not.
+      toast.error(
+        error?.response?.data?.message ||
+          t("We could not send that. Please try again, or reach us on WhatsApp.")
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactCards = [
