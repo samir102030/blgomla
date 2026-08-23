@@ -1071,6 +1071,40 @@ export const updateOrderStatus = controllerWrapper(
       await awardPointsForDelivery(order._id);
     }
 
+    /*
+      Delivering an order has to write the delivery down.
+
+      This set `status` and nothing else, and `isDelivered`/`deliveredAt` are
+      what everything downstream actually reads. There are endpoints that do
+      write them — PUT /orders/:id/pay and /:id/deliver — and store actions
+      calling those endpoints, but no component anywhere calls the store
+      actions. So the flags were never set by anybody, and three things read
+      them and found nothing, permanently:
+
+        payout.controller filters vendor earnings on isDelivered && isPaid, so
+        every payout computed zero;
+        store.controller's revenue figures filter on isPaid, so a store's sales
+        read zero;
+        the post-purchase cron looks for orders delivered three days ago, so no
+        review request could ever be sent.
+
+      Cash on delivery is also settled here, because that is the moment the
+      money changes hands and there is no gateway to say so. Only for COD, and
+      only if it is not already paid: an online order is marked paid by its
+      webhook when the gateway confirms, and stamping paidAt again at delivery
+      would overwrite the hour the customer actually paid. An online order that
+      was never confirmed stays unpaid, which is the truth about it.
+    */
+    if (status === "delivered" && !order.isDelivered) {
+      const settle = { isDelivered: true, deliveredAt: new Date() };
+      if (order.paymentMethod === "cod" && !order.isPaid) {
+        settle.isPaid = true;
+        settle.paidAt = new Date();
+      }
+      await Order.updateOne({ _id: order._id }, { $set: settle });
+      Object.assign(order, settle);
+    }
+
     // This dropdown is how a cancellation actually happens — nothing in the
     // frontend calls the cancel route at all — so this is where the stock,
     // the coupon and the points have to come back.
@@ -1202,6 +1236,24 @@ export const markOrderDelivered = controllerWrapper(
         .json({ success: false, message: "Order not found" });
 
     await awardPointsForDelivery(order._id);
+
+    /*
+      Cash on delivery is settled here for the same reason it is settled in
+      updateOrderStatus: this is the moment the money changes hands, and no
+      gateway exists to say so.
+
+      Kept in step with that one on purpose. Nothing calls this endpoint today —
+      the dashboard changes the status through the dropdown instead — and two
+      doors to the same act that disagree about what the act means is how the
+      next person wires this one up and quietly gets different books.
+    */
+    if (order.paymentMethod === "cod" && !order.isPaid) {
+      await Order.updateOne(
+        { _id: order._id },
+        { $set: { isPaid: true, paidAt: new Date() } }
+      );
+      order.isPaid = true;
+    }
 
     res.status(200).json({ success: true, order });
   }
