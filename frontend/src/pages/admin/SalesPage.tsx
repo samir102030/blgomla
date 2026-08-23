@@ -3,6 +3,7 @@ import { ArrowDownIcon, ArrowUpIcon, CalendarIcon, ChartBarIcon } from "@heroico
 import { useAnalyticsStore } from "../../stores/analytics.store";
 import { useTranslation } from "react-i18next";
 import { useMoney } from "../../lib/money";
+import SaleAuditCard from "../../components/admin/SaleAuditCard";
 
 const SalesPage: React.FC = () => {
   const { t } = useTranslation();
@@ -442,6 +443,11 @@ const SalesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* What the shop is discounting right now. This page reports what was
+          sold; nothing reported what is currently marked down, which is how 860
+          products came to carry discounts nobody had decided on. */}
+      <SaleAuditCard />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div>

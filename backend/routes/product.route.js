@@ -61,6 +61,7 @@ import {
   updateCompetitorPrice,
   deleteCompetitorPrice,
 } from "../controllers/product.controller.js";
+import { getSaleAudit, clearSales } from "../controllers/saleAudit.controller.js";
 import { subscribeStockAlert } from "../controllers/stockAlert.controller.js";
 
 import {
@@ -139,6 +140,12 @@ router.delete("/cart/:productId", protectRoute, removeFromCart);
 // sibling route below: a permission check rather than a role check.
 router.post("/", protectRoute, requirePermission("products.create"), validateCreateProduct, createProduct);
 router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
+
+/* What the shop is discounting, and switching it off.
+
+   Registered above "/:productId" so "sales" is not read as a product id. */
+router.get("/sales/audit", protectRoute, adminRoute, getSaleAudit);
+router.post("/sales/clear", protectRoute, adminRoute, clearSales);
 router.get("/approvals", protectRoute, requirePermission("products.approve"), getProductApprovals);
 router.get("/pricing-insights", protectRoute, requirePermission("products.view"), getPricingInsights);
 router.post("/:productId/approve", protectRoute, requirePermission("products.approve"), approveProduct);
