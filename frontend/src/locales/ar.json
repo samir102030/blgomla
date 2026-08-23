@@ -4342,5 +4342,13 @@
   "Could not load the categories": "مقدرناش نحمّل الفئات",
   "Could not save": "مقدرناش نحفظ",
   "Saved — this account can work anywhere in the catalogue.": "اتحفظ — الحساب ده يقدر يشتغل في أي مكان في الكتالوج.",
-  "Saved — this account now works in {{count}} category branch(es).": "اتحفظ — الحساب ده بقى يشتغل في {{count}} فرع فئات."
+  "Saved — this account now works in {{count}} category branch(es).": "اتحفظ — الحساب ده بقى يشتغل في {{count}} فرع فئات.",
+  "Back": "رجوع",
+  "Close menu": "إغلاق القائمة",
+  "Close modal": "إغلاق النافذة",
+  "Dismiss": "إخفاء",
+  "Switch to dark mode": "التبديل للوضع الداكن",
+  "Switch to light mode": "التبديل للوضع الفاتح",
+  "Tabs": "تبويبات",
+  "Toggle coming soon": "تشغيل أو إيقاف وضع «قريبًا»"
 }

@@ -5,6 +5,7 @@ import { useReturnStore } from "../stores/return.store";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { cldImg } from "../lib/cldImage";
+import { orderStatusLabelKey } from "../lib/orderStatus";
 
 const AccountOrders: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -123,7 +124,7 @@ const AccountOrders: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-[var(--text)]">#{order._id.slice(-8).toUpperCase()}</p>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.status)}`}>{order.status}</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.status)}`}>{t(orderStatusLabelKey(order.status))}</span>
                   </div>
                   <p className="text-xs text-[var(--text-subtle)] mt-0.5">{order.createdAt?.slice(0, 10)} • {order.orderItems?.length || 0} {t("account.items", "items")}</p>
                 </div>
@@ -153,7 +154,7 @@ const AccountOrders: React.FC = () => {
       {showOrderModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowOrderModal(false)} aria-label="Close"><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowOrderModal(false)} aria-label={t("Close")}><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
             <div className="mb-6">
               <h2 className="text-xl font-bold text-[var(--text)]">{t("account.orderDetails", "Order Details")}</h2>
               <div className="h-1 w-16 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-accent)] rounded-full mt-2"></div>
@@ -169,7 +170,7 @@ const AccountOrders: React.FC = () => {
  <h3 className="text-sm font-semibold text-[var(--text)] mb-3 flex items-center gap-2"> {t("account.orderInfo", "Order Information")}</h3>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.orderId", "Order ID")}:</span><span className="font-medium text-[var(--text)]">#{selectedOrder?._id?.slice(-8)?.toUpperCase()}</span></div>
-                      <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.status", "Status")}:</span><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(selectedOrder?.status || "")}`}>{selectedOrder?.status}</span></div>
+                      <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.status", "Status")}:</span><span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(selectedOrder?.status || "")}`}>{selectedOrder?.status ? t(orderStatusLabelKey(selectedOrder.status)) : ""}</span></div>
                       {selectedOrder?.couponCode ? (
                         <>
                           <div className="flex justify-between"><span className="text-[var(--text-muted)]">{t("account.subtotal", "Subtotal")}:</span><span className="font-medium text-[var(--text)]">{(((selectedOrder?.itemsPrice ?? 0) + (selectedOrder?.shippingPrice ?? 0))).toFixed(2)} EGP</span></div>
@@ -249,7 +250,7 @@ const AccountOrders: React.FC = () => {
       {showReturnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 w-full max-w-lg relative">
-            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowReturnModal(false)} aria-label="Close"><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] transition-colors" onClick={() => setShowReturnModal(false)} aria-label={t("Close")}><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
             <div className="mb-5">
               <h2 className="text-xl font-bold text-[var(--text)]">{t("account.requestReturn", "Request Return")}</h2>
               <p className="text-xs text-[var(--text-muted)] mt-1">{t("account.returnOrderId", "Order")} #{selectedReturnOrder?._id?.slice(-8)?.toUpperCase()}</p>

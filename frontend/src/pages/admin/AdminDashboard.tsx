@@ -553,7 +553,7 @@ const AdminDashboard: React.FC = () => {
             <button
               onClick={() => setShowExportModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              aria-label="Close"
+              aria-label={t("Close")}
             >
               <svg
                 className="w-6 h-6"

@@ -357,7 +357,7 @@ const VendorCollectionsPage: React.FC = () => {
             <button
               onClick={() => setShowCreateModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              aria-label="Close"
+              aria-label={t("Close")}
             >
               <svg
                 className="w-6 h-6"
@@ -528,7 +528,7 @@ const VendorCollectionsPage: React.FC = () => {
             <button
               onClick={() => setShowViewModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              aria-label="Close"
+              aria-label={t("Close")}
             >
               <svg
                 className="w-6 h-6"
@@ -651,7 +651,7 @@ const VendorCollectionsPage: React.FC = () => {
             <button
               onClick={() => setShowEditModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              aria-label="Close"
+              aria-label={t("Close")}
             >
               <svg
                 className="w-6 h-6"
@@ -812,7 +812,7 @@ const VendorCollectionsPage: React.FC = () => {
             <button
               onClick={() => setShowDeleteModal(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              aria-label="Close"
+              aria-label={t("Close")}
             >
               <svg
                 className="w-6 h-6"

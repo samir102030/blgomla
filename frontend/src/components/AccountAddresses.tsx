@@ -111,7 +111,7 @@ const AccountAddresses: React.FC = () => {
       {showAddressModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-6 w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
-            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors" onClick={() => setShowAddressModal(false)} aria-label="Close"><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
+            <button className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--surface-2)] flex items-center justify-center text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)] transition-colors" onClick={() => setShowAddressModal(false)} aria-label={t("Close")}><XMarkIcon className="w-5 h-5" aria-hidden="true" /></button>
             <div className="mb-5">
               <h2 className="text-xl font-bold text-[var(--text)]">{editingAddress ? t("account.editAddress", "Edit Address") : t("account.addNewAddress", "Add New Address")}</h2>
               <p className="text-xs text-[var(--text-muted)] mt-1">{t("account.addressFormDesc", "Fill in your shipping or billing details.")}</p>

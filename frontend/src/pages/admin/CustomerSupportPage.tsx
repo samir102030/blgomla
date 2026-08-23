@@ -219,7 +219,7 @@ const CustomerSupportPage: React.FC = () => {
                 <button
                   onClick={() => setSelectedConversation(null)}
                   className="md:hidden p-1 text-gray-600 dark:text-slate-400"
-                  aria-label="Back"
+                  aria-label={t("Back")}
                 >
                   <svg className="w-5 h-5 ltr:rotate-0 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 </button>

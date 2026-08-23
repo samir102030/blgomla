@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import { getTheme, toggleTheme } from "../lib/theme";
 
@@ -11,6 +12,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
   className = "",
   showLabel = true,
 }) => {
+  const { t } = useTranslation();
   const [theme, setTheme] = useState(getTheme());
 
   useEffect(() => {
@@ -34,8 +36,8 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
     <button
       type="button"
       onClick={handleToggle}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? t("Switch to light mode") : t("Switch to dark mode")}
+      title={isDark ? t("Switch to light mode") : t("Switch to dark mode")}
       className={
         showLabel
           ? `inline-flex items-center gap-2 px-2.5 py-1.5 rounded-md border border-[var(--border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors ${className}`

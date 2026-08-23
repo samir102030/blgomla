@@ -4335,5 +4335,13 @@
   "Could not load the categories": "Could not load the categories",
   "Could not save": "Could not save",
   "Saved — this account can work anywhere in the catalogue.": "Saved — this account can work anywhere in the catalogue.",
-  "Saved — this account now works in {{count}} category branch(es).": "Saved — this account now works in {{count}} category branch(es)."
+  "Saved — this account now works in {{count}} category branch(es).": "Saved — this account now works in {{count}} category branch(es).",
+  "Back": "Back",
+  "Close menu": "Close menu",
+  "Close modal": "Close modal",
+  "Dismiss": "Dismiss",
+  "Switch to dark mode": "Switch to dark mode",
+  "Switch to light mode": "Switch to light mode",
+  "Tabs": "Tabs",
+  "Toggle coming soon": "Toggle coming soon"
 }

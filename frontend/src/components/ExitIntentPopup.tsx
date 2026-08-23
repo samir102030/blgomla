@@ -75,7 +75,7 @@ const ExitIntentPopup: React.FC = () => {
       >
         <button
           onClick={() => setOpen(false)}
-          aria-label="Close"
+          aria-label={t("Close")}
           className="absolute top-3 ltr:right-3 rtl:left-3 p-1.5 rounded-full hover:bg-[var(--surface-2)] z-10"
         >
           <XMarkIcon className="h-5 w-5 text-[var(--text-muted)]" />

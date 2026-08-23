@@ -120,7 +120,7 @@ const SocialProofToast: React.FC = () => {
         </div>
         <button
           onClick={dismiss}
-          aria-label="Dismiss"
+          aria-label={t("Dismiss")}
           className="absolute top-1.5 ltr:right-1.5 rtl:left-1.5 p-1 rounded-full hover:bg-[var(--surface-2)]"
         >
           <XMarkIcon className="h-3.5 w-3.5 text-[var(--text-muted)]" />

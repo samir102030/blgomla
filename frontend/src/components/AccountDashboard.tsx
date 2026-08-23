@@ -5,7 +5,7 @@ import { useOrderStore } from "../stores/order.store";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import ReferralCard from "./ReferralCard";
-import { isOpenStatus } from "../lib/orderStatus";
+import { isOpenStatus, orderStatusLabelKey } from "../lib/orderStatus";
 
 const AccountDashboard: React.FC = () => {
   const { t } = useTranslation();
@@ -120,7 +120,7 @@ const AccountDashboard: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-medium text-[var(--text)] truncate">#{order._id.slice(-8).toUpperCase()}</p>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.status)}`}>{order.status}</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusColor(order.status)}`}>{t(orderStatusLabelKey(order.status))}</span>
                   </div>
                   <p className="text-xs text-[var(--text-subtle)] mt-0.5">{order.createdAt?.slice(0, 10)} • {order.orderItems?.length || 0} {t("account.items", "items")}</p>
                 </div>

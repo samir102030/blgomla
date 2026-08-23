@@ -137,7 +137,7 @@ const ProductDetailsModal: React.FC<ProductDetailsModalProps> = ({
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200 rounded-full transition-colors duration-200"
-            aria-label="Close modal"
+            aria-label={t("Close modal")}
           >
             <XMarkIcon className="h-6 w-6 text-gray-500" />
           </button>

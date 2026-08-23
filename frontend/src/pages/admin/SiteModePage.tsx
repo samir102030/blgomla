@@ -129,7 +129,7 @@ const SiteModePage: React.FC = () => {
           className={`relative w-14 h-8 rounded-full transition ${
             draft.comingSoon ? "bg-[#00A8E8]" : "bg-gray-400"
           }`}
-          aria-label="Toggle coming soon"
+          aria-label={t("Toggle coming soon")}
         >
           <span
             className={`absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition ${

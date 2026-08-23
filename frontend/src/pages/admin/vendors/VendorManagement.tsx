@@ -234,7 +234,7 @@ const VendorManagement: React.FC = () => {
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm">
           <div className="border-b border-gray-200 overflow-x-auto">
-            <nav className="flex space-x-4 sm:space-x-8 px-3 sm:px-6 min-w-max" aria-label="Tabs">
+            <nav className="flex space-x-4 sm:space-x-8 px-3 sm:px-6 min-w-max" aria-label={t("Tabs")}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}

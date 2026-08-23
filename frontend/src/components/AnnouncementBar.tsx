@@ -88,7 +88,7 @@ const AnnouncementBar: React.FC = () => {
       <button
         type="button"
         onClick={dismiss}
-        aria-label="Dismiss"
+        aria-label={t("Dismiss")}
         className="absolute top-1/2 -translate-y-1/2 ltr:right-2 rtl:left-2 p-1 rounded-full hover:bg-white/20 transition-colors"
       >
         <XMarkIcon className="h-4 w-4" />
