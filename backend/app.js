@@ -146,17 +146,55 @@ app.get("/api/v1/health", async (req, res) => {
   });
 });
 
+/*
+  The image migration gets its own ceiling.
+
+  The global limit is 1,000 requests per fifteen minutes per IP — about one a
+  second — and it is the right shape for a storefront. It is the wrong shape
+  for moving a catalogue: 17,000 photographs have to be handed to this API one
+  at a time, so at the global rate the migration alone needs more than four
+  hours of doing nothing else, and the shop's own browser tabs spend the same
+  budget.
+
+  What happened in practice was worse than slow. The courier burned the window
+  in about three minutes and then took 429 for the remaining twelve, on every
+  request, from all six of its workers — so it looked like it was working and
+  moved nothing.
+
+  These routes are behind protectRoute and adminRoute, so the traffic they
+  admit is an administrator doing a bulk operation on their own shop. The limit
+  is still there, just sized for that job rather than for browsing. An
+  unauthenticated caller reaches the same 401 it always did, one JWT check
+  later, and is still bounded.
+*/
+const MIGRATION_PATH = /^\/api\/upload\/migration\//;
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 1000,
   message: "Too many requests from this IP, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => MIGRATION_PATH.test(req.path),
   // Shared across instances — the default memory store gives every warm
   // Lambda its own counter, which makes the limit meaningless on Vercel.
   store: new MongoRateLimitStore({ prefix: "rl:global" }),
 });
+
+const migrationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  // Enough to finish in one sitting with room to spare, and still a ceiling.
+  max: 20000,
+  message: "Too many migration requests from this IP, please try again later",
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MongoRateLimitStore({ prefix: "rl:migration" }),
+});
+
 app.use(limiter);
+// A string prefix rather than the regex above: app.use() treats a RegExp
+// differently across Express majors, and this mount has to be exact.
+app.use("/api/upload/migration", migrationLimiter);
 
 app.use(async (req, res, next) => {
   try {

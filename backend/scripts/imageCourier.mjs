@@ -184,8 +184,47 @@ const signInOnce = () => {
 */
 const replayable = (init) => !init.body || typeof init.body === "string";
 
+/*
+  One cooldown for the whole run, not one per request.
+
+  The first version waited 2s, then 4s, then 8s — per request. The limit is per
+  IP, so six workers each waiting their own two seconds and then all firing
+  again is not a backoff at all; it is the same burst on a two-second cycle.
+  What that printed was "rate limited — waiting 2s" forever, and it moved
+  nothing, because every wait was immediately spent by somebody else's retry.
+
+  A shared deadline fixes the shape: whoever meets the 429 sets the time
+  everybody may resume, and every worker checks it before sending. One burst
+  costs one pause instead of six.
+
+  It also grows properly, because the level is shared too — a second 429 while
+  already cooling means the pause was too short, so the next one is longer,
+  rather than every worker starting again from two seconds.
+*/
+let resumeAt = 0;
+let coolLevel = 0;
+
+const waitForCooldown = async () => {
+  while (Date.now() < resumeAt) {
+    await new Promise((r) => setTimeout(r, Math.min(1000, resumeAt - Date.now())));
+  }
+};
+
+const startCooldown = () => {
+  // Already cooling for this burst — do not stack another on top of it.
+  if (Date.now() < resumeAt) return;
+  coolLevel = Math.min(coolLevel + 1, 6);
+  const wait = Math.min(60000, 3000 * 2 ** (coolLevel - 1));
+  resumeAt = Date.now() + wait;
+  console.log(`\n  rate limited — everything pauses ${Math.round(wait / 1000)}s`);
+};
+
 const api = async (path, init = {}, depth = 0) => {
+  await waitForCooldown();
   const response = await fetch(API + path, { ...init, headers: { ...(init.headers || {}), cookie } });
+  // A clean answer means the last pause was long enough; let it decay so a
+  // single bad minute does not slow the rest of the run for good.
+  if (response.ok && coolLevel > 0 && Date.now() > resumeAt) coolLevel -= 1;
 
   if (response.status === 401 && depth < 2) {
     // A long run outlives its access token. Sign in again — silently now, from
@@ -204,12 +243,11 @@ const api = async (path, init = {}, depth = 0) => {
     batch is the heaviest thing that ever talks to it. Treating that as a
     failed image threw away work the server was willing to take a second later.
   */
-  if (response.status === 429 && depth < 4) {
-    const wait = 2000 * 2 ** depth;
-    console.log(`\n  rate limited — waiting ${wait / 1000}s`);
-    await new Promise((r) => setTimeout(r, wait));
+  if (response.status === 429 && depth < 6) {
+    startCooldown();
+    await waitForCooldown();
     if (replayable(init)) return api(path, init, depth + 1);
-    throw new Error(`${path} answered 429 — waited, retry`);
+    throw new Error(`${path} answered 429 — paused, retry`);
   }
 
   return response;
