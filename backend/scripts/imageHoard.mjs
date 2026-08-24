@@ -160,6 +160,52 @@ const AUDIENCES = [
   { label: "electronics", query: "&audience=electronics" },
 ];
 
+/*
+  Departments have photographs too.
+
+  158 of the 330 categories carry an `image`, and not one of them was on our
+  Cloudinary — they are still hot-linked to free-electronic.com (141) and
+  egyptlaptop.com (17). Those pictures are what the "shop by category" rail on
+  the home page and every department header render, so they are as load-bearing
+  as any product photograph and were being left behind entirely because the
+  walk only ever looked at products.
+
+  The API already knows the difference: /upload/migration/push takes a `kind`,
+  and files a category picture under its own public id rather than a product
+  slot. So they travel in the same manifest, marked.
+*/
+const listCategories = async (wanted, seen) => {
+  let body = null;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const response = await fetch(`${API}/categories?limit=1000`, {
+        signal: AbortSignal.timeout(45000),
+      });
+      if (response.ok) {
+        body = await response.json();
+        break;
+      }
+    } catch {
+      /* retried below */
+    }
+    await new Promise((r) => setTimeout(r, attempt * 2000));
+  }
+  if (!body) {
+    console.log("  categories would not come — skipped this run");
+    return;
+  }
+
+  for (const category of body.data || body.categories || []) {
+    const url = category?.image;
+    if (!url || typeof url !== "string" || !/^https?:/.test(url)) continue;
+    if (url.includes("res.cloudinary.com")) continue;
+    const key = `category:${category._id}:0`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    wanted.push({ kind: "category", productId: String(category._id), index: 0, url });
+  }
+};
+
 const listEverything = async () => {
   const wanted = [];
   const seen = new Set();
@@ -170,6 +216,10 @@ const listEverything = async () => {
     await listOne(audience, wanted, seen, lost);
     console.log(`  ${audience.label.padEnd(12)} ${wanted.length - before} images to move`);
   }
+
+  const beforeCategories = wanted.length;
+  await listCategories(wanted, seen);
+  console.log(`  ${"categories".padEnd(12)} ${wanted.length - beforeCategories} images to move`);
 
   if (lost.length) {
     console.log(
@@ -200,10 +250,10 @@ const listOne = async ({ label, query }, wanted, seen, lost) => {
         if (!url) return;
         // Already ours. Nothing to fetch and nothing to move.
         if (url.includes("res.cloudinary.com")) return;
-        const key = `${product._id}:${index}`;
+        const key = `product:${product._id}:${index}`;
         if (seen.has(key)) return;
         seen.add(key);
-        wanted.push({ productId: product._id, index, url });
+        wanted.push({ kind: "product", productId: String(product._id), index, url });
       });
     }
 
@@ -278,7 +328,7 @@ const main = async () => {
     try {
       for (const row of JSON.parse(fs.readFileSync(manifestPath, "utf8")).images || []) {
         if (row?.file && fs.existsSync(path.join(OUT, row.file))) {
-          already.set(`${row.productId}:${row.index}`, row);
+          already.set(`${row.kind || "product"}:${row.productId}:${row.index}`, row);
         }
       }
       console.log(`resuming: ${already.size} already on disk\n`);
@@ -298,7 +348,9 @@ const main = async () => {
     console.log(`  ${host.padEnd(28)} ${String(count).padStart(6)}`);
   }
 
-  const todo = wanted.filter((item) => !already.has(`${item.productId}:${item.index}`));
+  const todo = wanted.filter(
+    (item) => !already.has(`${item.kind || "product"}:${item.productId}:${item.index}`)
+  );
 
   /*
     Fetch each address once, not once per product that names it.
@@ -351,6 +403,7 @@ const main = async () => {
           // One file, a row for each product and slot that named it.
           for (const item of items) {
             rows.push({
+              kind: item.kind || "product",
               productId: item.productId,
               index: item.index,
               url,
