@@ -47,8 +47,24 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const API = (flag("api", env.BELGOMLA_API || "https://blgomla-api.vercel.app/api")).replace(/\/$/, "");
 const HOST = flag("host");
 const SCOPE = flag("scope", "all");
-const BATCH = Number(flag("batch", "40"));
-const CONCURRENCY = Number(flag("concurrency", "4"));
+/*
+  Bigger batches and more of them at once when the bytes come off a local disk.
+
+  The two modes are limited by different things. Fetching from somebody else's
+  shared host wants restraint — four at a time, forty per batch, so a server
+  having a bad afternoon is not made worse. Sending files already on this disk
+  is limited only by our own API, and being timid there costs an hour.
+
+  The batch size matters more than it looks. Every request to
+  /upload/migration/pending runs a fresh survey — a find() over all 11,797
+  products and their images, uncached — so the number of round trips is the
+  number of full scans the database is asked for. At forty per batch, sixteen
+  thousand outstanding images is four hundred scans; at two hundred, which is
+  what that endpoint will give, it is eighty.
+*/
+const FROM_CACHE_MODE = argv.includes("--from-cache");
+const BATCH = Number(flag("batch", FROM_CACHE_MODE ? "200" : "40"));
+const CONCURRENCY = Number(flag("concurrency", FROM_CACHE_MODE ? "6" : "4"));
 
 /*
   --from-cache: send what imageHoard.mjs already downloaded.
@@ -63,7 +79,7 @@ const CONCURRENCY = Number(flag("concurrency", "4"));
   the room, and the half that wants a password is minutes of reading files off
   a local disk. It also means a failed upload never costs a second download.
 */
-const FROM_CACHE = argv.includes("--from-cache");
+const FROM_CACHE = FROM_CACHE_MODE;
 const CACHE = path.resolve(flag("cache", path.join(HERE, "..", "..", "..", "blgomla-images")));
 
 /** What a browser sends. The point of this script is to look like one. */
@@ -277,52 +293,107 @@ const deliver = async (item, image) => {
  * file belongs to — so this asks the API for nothing but the uploads. An entry
  * whose file has since been deleted is reported rather than guessed at.
  */
+/*
+  Send what is still outstanding, asking the server which those are.
+
+  This walked the manifest from the top and pushed every row in it. The
+  manifest is what was *downloaded*, not what is still *missing* — so a run
+  that stopped halfway and was started again re-uploaded everything it had
+  already filed. Measured when the first run was interrupted: 9,426 of the
+  17,298 images were already on Cloudinary, so a plain restart would have spent
+  the majority of its time, and of the Cloudinary quota, replacing pictures
+  with identical copies of themselves.
+
+  The API already answers the right question. /upload/migration/pending returns
+  the work that remains, so the loop is: ask for a batch, find each item's file
+  in the manifest, send it, ask again. The server's own count of what is left
+  drives the progress, and stopping the run at any point costs nothing but the
+  batch in flight.
+
+  Keyed by kind, product and slot — the same triple the manifest is written
+  with — because a category picture and a product picture can share an id
+  space, and one product's third photograph is not its first.
+*/
 const runFromCache = async () => {
   // main() has already established that this exists and that its files are on
   // disk, before anyone was asked for a password.
   const rows =
     JSON.parse(fs.readFileSync(path.join(CACHE, "manifest.json"), "utf8")).images || [];
 
+  const key = (r) => `${r.kind || "product"}:${r.productId}:${r.index}`;
+  const onDisk = new Map(rows.map((r) => [key(r), r]));
+
   let moved = 0;
   let failed = 0;
   let missing = 0;
   const problems = [];
   const started = Date.now();
+  let firstRemaining = null;
 
-  const queue = [...rows];
-  await Promise.all(
-    Array.from({ length: CONCURRENCY }, async () => {
-      while (queue.length) {
-        const row = queue.shift();
-        if (!row) return;
-        const file = path.join(CACHE, row.file || "");
-        if (!row.file || !fs.existsSync(file)) {
-          missing += 1;
-          continue;
+  for (;;) {
+    const query = new URLSearchParams({ limit: String(BATCH), scope: SCOPE });
+    if (HOST) query.set("host", HOST);
+    const batch = await json(`/upload/migration/pending?${query}`);
+    const items = batch.items || [];
+    if (firstRemaining === null) {
+      firstRemaining = batch.remaining ?? items.length;
+      console.log(`the server still wants ${firstRemaining} image(s)\n`);
+    }
+    if (!items.length) {
+      console.log(`\nnothing left to send (${batch.remaining ?? 0} outstanding)`);
+      break;
+    }
+
+    const queue = [...items];
+    const before = moved + failed;
+    await Promise.all(
+      Array.from({ length: CONCURRENCY }, async () => {
+        while (queue.length) {
+          const item = queue.shift();
+          if (!item) return;
+          const row = onDisk.get(key(item));
+          const file = row?.file ? path.join(CACHE, row.file) : null;
+          if (!file || !fs.existsSync(file)) {
+            // Wanted by the server, never downloaded here. Reported rather
+            // than guessed at — imageHoard is what fills this gap.
+            missing += 1;
+            continue;
+          }
+          try {
+            await deliver(
+              { productId: item.productId, index: item.index, url: item.url, kind: item.kind },
+              { buffer: fs.readFileSync(file), type: row.type || "image/jpeg" }
+            );
+            moved += 1;
+          } catch (error) {
+            failed += 1;
+            if (problems.length < 10) problems.push(`${error.message}  ${item.url}`);
+          }
+          const seen = moved + failed;
+          if (seen % 25 === 0) {
+            const mins = (Date.now() - started) / 60000;
+            const rate = mins > 0 ? Math.round(moved / mins) : 0;
+            const left = rate > 0 ? Math.round((firstRemaining - seen) / rate) : 0;
+            process.stdout.write(
+              `\r  filed ${moved} · failed ${failed} · ${rate}/min · ~${left} min left    `
+            );
+          }
         }
-        try {
-          await deliver(
-            { productId: row.productId, index: row.index, url: row.url, kind: row.kind },
-            { buffer: fs.readFileSync(file), type: row.type || "image/jpeg" }
-          );
-          moved += 1;
-        } catch (error) {
-          failed += 1;
-          if (problems.length < 10) problems.push(`${error.message}  ${row.url}`);
-        }
-        const seen = moved + failed;
-        if (seen % 50 === 0) {
-          const mins = (Date.now() - started) / 60000;
-          const rate = mins > 0 ? Math.round(moved / mins) : 0;
-          process.stdout.write(`\r  filed ${moved} · failed ${failed} · ${rate}/min   `);
-        }
-      }
-    })
-  );
+      })
+    );
+
+    // Nothing in this batch could be sent, and nothing has been sent all run.
+    // Asking again would hand back the same batch and fail the same way.
+    if (moved === 0 && moved + failed + missing > before && failed + missing >= items.length) {
+      console.log(`\n\nthe whole first batch failed — stopping rather than looping`);
+      break;
+    }
+  }
 
   console.log(`\n\nfiled   : ${moved}`);
   console.log(`failed  : ${failed}`);
-  if (missing) console.log(`missing : ${missing}  (in the manifest, not on disk)`);
+  if (missing)
+    console.log(`missing : ${missing}  (the server wants these, they are not on this disk — run: node scripts/getpics.mjs)`);
   if (problems.length) {
     console.log("\nfirst problems:");
     for (const line of problems) console.log(`  ${line}`);
