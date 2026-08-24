@@ -33,8 +33,32 @@
 
 // Inline SVG: a data URI can never itself 404, which is what makes the
 // swap safe to perform unconditionally.
-/** Long enough for a queue to drain, short enough not to look stuck. */
-const RETRY_AFTER_MS = 900;
+
+/*
+  Two retries, not one, and the second waits considerably longer.
+
+  One retry after 900ms turned out to be a thin margin against the servers
+  these pictures are still hot-linked to. Both are ordinary shared hosting:
+  egyptlaptop.com answers in 0.7s most of the time and 2.2s when it is busy,
+  and free-electronic.com refuses connections outright for hours and then
+  comes back. A page asks for ninety pictures at once.
+
+  What that looked like: a home page where the department rail rendered as six
+  grey squares while every product picture beside it loaded, because the six
+  happened to be queued behind the slow moment. And it stays that way — the
+  guard below is permanent for the page, deliberately, so a placeholder that
+  cannot decode does not loop. So one unlucky second is a grey rail until the
+  visitor reloads.
+
+  Backing off 900ms then 2.5s covers a host having a bad moment without
+  hammering one that is genuinely down: three attempts total, spread over
+  three and a half seconds. A 404 costs one extra request, which is nothing.
+
+  The real fix is not here — it is the pictures living on our own CDN instead
+  of somebody else's shared host, which is what the image migration is for.
+  This is what keeps the shop looking whole until that finishes.
+*/
+const RETRY_DELAYS_MS = [900, 2500];
 
 const PLACEHOLDER =
   "data:image/svg+xml;utf8," +
@@ -56,18 +80,26 @@ export const installImageFallback = () => {
       // Guard against a loop if the placeholder ever fails to decode.
       if (target.dataset.fallbackApplied) return;
 
-      // The first failure buys one more try rather than a grey square. A
-      // data: URI cannot itself fail, so a placeholder that errors would mean
-      // something stranger than a slow host — leave that to the branch below.
-      if (!target.dataset.retried && !target.src.startsWith("data:")) {
-        target.dataset.retried = "1";
-        const original = target.currentSrc || target.src;
+      // A failure buys another try rather than a grey square, twice, with a
+      // longer wait the second time. A data: URI cannot itself fail, so a
+      // placeholder that errors would mean something stranger than a slow
+      // host — leave that to the branch below.
+      const tried = Number(target.dataset.retried || 0);
+      if (tried < RETRY_DELAYS_MS.length && !target.src.startsWith("data:")) {
+        target.dataset.retried = String(tried + 1);
+        // The address as it was first asked for, not the one carrying the
+        // previous attempt's cache-buster — otherwise each retry stacks
+        // another ?r= on the last and the URL grows with every failure.
+        const original =
+          target.dataset.originalSrc || target.currentSrc || target.src;
+        target.dataset.originalSrc = original;
         // srcset outranks src, so a stale candidate there would quietly undo
         // the retry by reloading the same failing address.
         target.removeAttribute("srcset");
         window.setTimeout(() => {
-          target.src = original + (original.includes("?") ? "&" : "?") + "r=1";
-        }, RETRY_AFTER_MS);
+          target.src =
+            original + (original.includes("?") ? "&" : "?") + "r=" + (tried + 1);
+        }, RETRY_DELAYS_MS[tried]);
         return;
       }
 
