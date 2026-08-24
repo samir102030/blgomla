@@ -278,19 +278,10 @@ const deliver = async (item, image) => {
  * whose file has since been deleted is reported rather than guessed at.
  */
 const runFromCache = async () => {
-  const manifestPath = path.join(CACHE, "manifest.json");
-  if (!fs.existsSync(manifestPath)) {
-    console.error(
-      `No manifest at ${manifestPath}.\n` +
-        `Run the downloader first — it needs no login:\n` +
-        `  node scripts/imageHoard.mjs\n`
-    );
-    exit(1);
-  }
-
-  const rows = JSON.parse(fs.readFileSync(manifestPath, "utf8")).images || [];
-  console.log(`cache   : ${CACHE}`);
-  console.log(`manifest: ${rows.length} images\n`);
+  // main() has already established that this exists and that its files are on
+  // disk, before anyone was asked for a password.
+  const rows =
+    JSON.parse(fs.readFileSync(path.join(CACHE, "manifest.json"), "utf8")).images || [];
 
   let moved = 0;
   let failed = 0;
@@ -339,6 +330,43 @@ const runFromCache = async () => {
 };
 
 const main = async () => {
+  /*
+    Everything that can be checked without a password, checked first.
+
+    Asking somebody to type their password and only then telling them the cache
+    is empty or somewhere else is the wrong order. The manifest is a local
+    file; whether it exists and what is in it costs nothing to find out, so it
+    is found out before the prompt.
+  */
+  if (FROM_CACHE) {
+    const manifestPath = path.join(CACHE, "manifest.json");
+    if (!fs.existsSync(manifestPath)) {
+      console.error(
+        `No manifest at ${manifestPath}.\n\n` +
+          `Run the downloader first — it needs no login:\n` +
+          `  node scripts/imageHoard.mjs\n\n` +
+          `Or point at an existing cache:\n` +
+          `  node scripts/imageCourier.mjs --from-cache --cache <folder>\n`
+      );
+      exit(1);
+    }
+    const rows = JSON.parse(fs.readFileSync(manifestPath, "utf8")).images || [];
+    const present = rows.filter((r) => r?.file && fs.existsSync(path.join(CACHE, r.file)));
+    if (!present.length) {
+      console.error(
+        `The manifest lists ${rows.length} images but none of the files are in ${CACHE}.\n` +
+          `Re-run the downloader, or pass --cache with the folder the files are actually in.\n`
+      );
+      exit(1);
+    }
+    const mb = present.reduce((sum, r) => sum + (r.bytes || 0), 0) / 1048576;
+    console.log(
+      `cache   : ${CACHE}\n` +
+        `ready   : ${present.length} images, ${mb.toFixed(0)} MB` +
+        `${rows.length > present.length ? `  (${rows.length - present.length} listed but not on disk)` : ""}\n`
+    );
+  }
+
   await login();
 
   if (FROM_CACHE) {
