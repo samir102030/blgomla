@@ -408,7 +408,11 @@ export const createOrder = controllerWrapper(
           await session.abortTransaction();
           return res.status(400).json({
             success: false,
-            message: `Minimum purchase of $${coupon.minimumPurchase} required for this coupon`,
+            // EGP. This said "$500" on a shop that has only ever traded in
+            // Egyptian pounds, to a customer being told why their coupon was
+            // refused — so the one number they needed to act on was quoted in
+            // the wrong currency, and 500 pounds read as roughly 25.
+            message: `Minimum purchase of ${coupon.minimumPurchase} EGP required for this coupon`,
           });
         }
 

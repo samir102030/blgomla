@@ -242,7 +242,10 @@ export const getRecentTransactions = controllerWrapper(
     const formattedTransactions = transactions.map((order) => ({
       id: order._id,
       customer: order.user?.name || "Unknown",
-      amount: `$${order.totalPrice.toFixed(2)}`,
+      // EGP. The dashboard's recent-transactions list was reporting this
+      // shop's takings in dollars, which is off by a factor of about twenty
+      // for anyone reading the figure rather than the label.
+      amount: `${order.totalPrice.toFixed(2)} EGP`,
       status: order.status,
       date: order.createdAt.toISOString().split("T")[0],
     }));

@@ -399,7 +399,10 @@ export const validateCoupon = controllerWrapper(
     if (subtotal < coupon.minimumPurchase) {
       return res.status(400).json({
         success: false,
-        message: `Minimum purchase of $${coupon.minimumPurchase} required`,
+        // EGP, for the same reason as the copy of this message in
+        // order.controller — this is the one the cart shows when a code is
+        // typed, so it is the one most customers actually read.
+        message: `Minimum purchase of ${coupon.minimumPurchase} EGP required`,
       });
     }
 
