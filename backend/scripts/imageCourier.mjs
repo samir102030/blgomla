@@ -112,9 +112,33 @@ const ask = (question, hidden = false) =>
 
 let cookie = "";
 
+/*
+  Asked for once, then remembered for as long as this process lives.
+
+  This read the prompt every time it was called, and it is called again
+  whenever the API answers 401 — which a run of this length always earns, since
+  the access token expires long before sixteen thousand images have been sent.
+
+  So a long run did not fail at that point. It stopped, silently, at a hidden
+  prompt nobody was watching, with all six workers blocked on it at once. From
+  the outside that is indistinguishable from still working, which is why this
+  migration has been abandoned halfway three times: the window was closed on a
+  process that was waiting for a password it had already been given.
+
+  Kept in a variable in this process and nowhere else — not written to disk,
+  not put in the environment, not logged — so it lives exactly as long as the
+  run and goes away with it.
+*/
+let credentials = null;
+
 const login = async () => {
-  const email = env.BELGOMLA_EMAIL || (await ask("admin email: "));
-  const password = env.BELGOMLA_PASSWORD || (await ask("password: ", true));
+  if (!credentials) {
+    credentials = {
+      email: env.BELGOMLA_EMAIL || (await ask("admin email: ")),
+      password: env.BELGOMLA_PASSWORD || (await ask("password: ", true)),
+    };
+  }
+  const { email, password } = credentials;
 
   const response = await fetch(`${API}/users/login`, {
     method: "POST",
@@ -123,6 +147,10 @@ const login = async () => {
   });
   if (!response.ok) {
     const body = await response.text();
+    // A wrong password should be asked again, not retried forever with the
+    // same wrong answer. Anything else — the API having a bad moment — keeps
+    // what it was given.
+    if (response.status === 400 || response.status === 401) credentials = null;
     throw new Error(`login failed (${response.status}): ${body.slice(0, 200)}`);
   }
   // The API authenticates by cookie, so the cookie is what has to be carried.
@@ -132,13 +160,58 @@ const login = async () => {
   console.log(`signed in to ${API}\n`);
 };
 
-const api = async (path, init = {}) => {
+/*
+  One sign-in at a time.
+
+  Six workers hit the same expired token within milliseconds of each other, so
+  six of them would each start their own login. Sharing the one in flight means
+  the API is asked once and the other five wait for that answer.
+*/
+let signingIn = null;
+const signInOnce = () => {
+  if (!signingIn) signingIn = login().finally(() => (signingIn = null));
+  return signingIn;
+};
+
+/*
+  Whether this request can simply be sent again.
+
+  A GET can. A POST carrying a FormData cannot: the body is a stream and the
+  first attempt consumes it, so replaying the same `init` uploads nothing and
+  earns a 400 — which reads as a permanent refusal and loses the image for
+  good. Those are handed back to the caller to rebuild instead, which
+  deliver() already knows how to do.
+*/
+const replayable = (init) => !init.body || typeof init.body === "string";
+
+const api = async (path, init = {}, depth = 0) => {
   const response = await fetch(API + path, { ...init, headers: { ...(init.headers || {}), cookie } });
-  if (response.status === 401) {
-    // A long run outlives its access token. Sign in again and let the caller retry.
-    await login();
-    return api(path, init);
+
+  if (response.status === 401 && depth < 2) {
+    // A long run outlives its access token. Sign in again — silently now, from
+    // the credentials already given.
+    await signInOnce();
+    if (replayable(init)) return api(path, init, depth + 1);
+    // The cookie is fresh; the body is not. Say so in a way deliver() will
+    // retry rather than write off.
+    throw new Error(`${path} answered 401 once — signed in again, retry`);
   }
+
+  /*
+    429 is the API asking for a moment, not a refusal.
+
+    The shop rate-limits by IP, and a courier sending two hundred images a
+    batch is the heaviest thing that ever talks to it. Treating that as a
+    failed image threw away work the server was willing to take a second later.
+  */
+  if (response.status === 429 && depth < 4) {
+    const wait = 2000 * 2 ** depth;
+    console.log(`\n  rate limited — waiting ${wait / 1000}s`);
+    await new Promise((r) => setTimeout(r, wait));
+    if (replayable(init)) return api(path, init, depth + 1);
+    throw new Error(`${path} answered 429 — waited, retry`);
+  }
+
   return response;
 };
 
@@ -291,8 +364,15 @@ const fetchImage = async (url) => {
   the same thing however many times they are asked, and repeating them just
   makes the run slower and the report less honest.
 */
-const PUSH_RETRY_MS = [1500, 4000];
-const PERMANENT = /answered (400|401|403|404|409|413|422)/;
+const PUSH_RETRY_MS = [1500, 4000, 8000];
+/*
+  Refusals the server means, which say the same however often they are asked.
+
+  401 is deliberately not among them. api() answers a 401 by signing in again
+  and handing the request back to be rebuilt, so a 401 reaching here means the
+  cookie is now fresh and this is the one case worth trying immediately.
+*/
+const PERMANENT = /answered (400|403|404|409|413|422)/;
 
 const deliver = async (item, image) => {
   const build = () => {
@@ -366,11 +446,39 @@ const runFromCache = async () => {
   const started = Date.now();
   let firstRemaining = null;
   let reportedProblems = 0;
+  let askFailures = 0;
 
   for (;;) {
     const query = new URLSearchParams({ limit: String(BATCH), scope: SCOPE });
     if (HOST) query.set("host", HOST);
-    const batch = await json(`/upload/migration/pending?${query}`);
+
+    /*
+      Asking what is left must not be able to end the run.
+
+      This call surveys every product in the catalogue, so it is the slowest
+      thing here and the likeliest to time out on a cold function. It threw
+      straight out of the loop, past everything already sent, and the process
+      exited — which after an hour of work is the most expensive possible way
+      to handle a request that would have succeeded on the next try.
+    */
+    let batch;
+    try {
+      batch = await json(`/upload/migration/pending?${query}`);
+      askFailures = 0;
+    } catch (error) {
+      askFailures += 1;
+      if (askFailures >= 5) {
+        console.log(`\n\ngave up asking what is left after 5 tries: ${error.message}`);
+        break;
+      }
+      const wait = 5000 * askFailures;
+      console.log(
+        `\n  could not ask what is left (${error.message.slice(0, 90)}) — retrying in ${wait / 1000}s`
+      );
+      await new Promise((r) => setTimeout(r, wait));
+      continue;
+    }
+
     const items = batch.items || [];
     if (firstRemaining === null) {
       firstRemaining = batch.remaining ?? items.length;
