@@ -348,9 +348,52 @@ const main = async () => {
     console.log(`  ${host.padEnd(28)} ${String(count).padStart(6)}`);
   }
 
-  const todo = wanted.filter(
+  let todo = wanted.filter(
     (item) => !already.has(`${item.kind || "product"}:${item.productId}:${item.index}`)
   );
+
+  /*
+    A file already on this disk is not downloaded again for a second owner.
+
+    The manifest is keyed by what owns a picture — kind, product, slot — but
+    the disk is keyed by the address it came from, so the same URL under a new
+    owner reads as work to do while its bytes are already sitting here.
+
+    That is not a corner case; it is how the Electronics department got stuck.
+    Its picture is
+    free-electronic.com/wp-content/uploads/2024/03/Arduino20Uno20R3-.jpg,
+    which is also a product photograph, and the product pass fetched it during
+    the window that host was answering. By the time the category pass ran the
+    host was refusing connections again, so the one department on the home page
+    with no picture had its picture on disk the whole time — under a different
+    key.
+
+    Matching on the address first means a new owner costs a manifest row and no
+    network at all, and a host being down stops mattering for anything already
+    fetched from it.
+  */
+  const rows = [...already.values()];
+
+  const haveUrl = new Map();
+  for (const row of already.values()) if (row?.url) haveUrl.set(row.url, row);
+
+  let reused = 0;
+  todo = todo.filter((item) => {
+    const have = haveUrl.get(item.url);
+    if (!have) return true;
+    rows.push({
+      kind: item.kind || "product",
+      productId: item.productId,
+      index: item.index,
+      url: item.url,
+      file: have.file,
+      type: have.type,
+      bytes: have.bytes,
+    });
+    reused += 1;
+    return false;
+  });
+  if (reused) console.log(`  ${reused} already on disk under another owner — no download needed`);
 
   /*
     Fetch each address once, not once per product that names it.
@@ -376,7 +419,6 @@ const main = async () => {
       ` (${already.size} already here)\n`
   );
 
-  const rows = [...already.values()];
   let done = 0;
   let failed = 0;
   let skipped = 0;
