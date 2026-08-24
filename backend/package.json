@@ -4,7 +4,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "getpics": "node scripts/imageHoard.mjs",
+    "movepics": "node scripts/imageCourier.mjs --from-cache"
   },
   "engines": {
     "node": ">=20"
