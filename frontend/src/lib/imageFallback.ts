@@ -70,7 +70,65 @@ const PLACEHOLDER =
       `</svg>`
   );
 
+/** Applied by both paths, so a give-up looks the same however it was reached. */
+const giveUp = (img: HTMLImageElement) => {
+  img.dataset.fallbackApplied = "1";
+  img.src = PLACEHOLDER;
+  // Stop the layout from stretching a 64×64 placeholder oddly when the
+  // original had no intrinsic size to fall back on.
+  img.style.objectFit = img.style.objectFit || "contain";
+};
+
+/*
+  A picture that never answers is a failure too.
+
+  Everything above waits for an `error` event, and a host that refuses a
+  connection sends one immediately. A host that has simply stopped answering
+  does not: free-electronic.com holds the connection open and says nothing for
+  eighteen seconds before the browser gives up on it. Two retries behind that,
+  each paying the same eighteen seconds, and the placeholder arrives the better
+  part of a minute after the page did.
+
+  What that looks like is the broken-image icon and the alt text, sitting in
+  the layout for the whole minute — which is worse than the grey square the
+  retries were protecting, and it is what the Electronics department card shows
+  today for exactly this reason.
+
+  So: a picture that has not loaded within DEADLINE_MS is given the placeholder
+  whether or not anything has been reported about it. The retry logic still
+  runs underneath, and if the real image arrives late it simply replaces the
+  placeholder, because a completed load overwrites nothing.
+
+  Ten seconds, not three: a first-time visitor on a slow phone connection
+  loading ninety pictures should not be handed grey squares for pictures that
+  were going to arrive.
+*/
+const DEADLINE_MS = 10000;
+const SWEEP_MS = 2000;
+
+const watchForSilence = () => {
+  window.setInterval(() => {
+    const now = Date.now();
+    for (const img of Array.from(document.images)) {
+      if (img.dataset.fallbackApplied) continue;
+      if (img.complete && img.naturalWidth > 0) continue;
+      if ((img.currentSrc || img.src || "").startsWith("data:")) continue;
+      // No src yet is not a slow load — it is a picture nobody has asked for.
+      if (!img.getAttribute("src") && !img.getAttribute("srcset")) continue;
+
+      const since = Number(img.dataset.watchedAt || 0);
+      if (!since) {
+        img.dataset.watchedAt = String(now);
+        continue;
+      }
+      if (now - since >= DEADLINE_MS) giveUp(img);
+    }
+  }, SWEEP_MS);
+};
+
 export const installImageFallback = () => {
+  watchForSilence();
+
   window.addEventListener(
     "error",
     (event) => {
@@ -97,17 +155,17 @@ export const installImageFallback = () => {
         // the retry by reloading the same failing address.
         target.removeAttribute("srcset");
         window.setTimeout(() => {
+          // The deadline restarts with the new attempt, so a retry gets its
+          // own ten seconds rather than inheriting a clock that has already
+          // run out.
+          delete target.dataset.watchedAt;
           target.src =
             original + (original.includes("?") ? "&" : "?") + "r=" + (tried + 1);
         }, RETRY_DELAYS_MS[tried]);
         return;
       }
 
-      target.dataset.fallbackApplied = "1";
-      target.src = PLACEHOLDER;
-      // Stop the layout from stretching a 64×64 placeholder oddly when the
-      // original had no intrinsic size to fall back on.
-      target.style.objectFit = target.style.objectFit || "contain";
+      giveUp(target);
     },
     true
   );
