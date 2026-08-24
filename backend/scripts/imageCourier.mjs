@@ -271,19 +271,55 @@ const fetchImage = async (url) => {
   }
 };
 
-const deliver = async (item, image) => {
-  const form = new FormData();
-  // A department picture and a product picture go to different collections.
-  form.append("kind", item.kind || "product");
-  form.append("productId", item.productId);
-  form.append("index", String(item.index));
-  form.append(
-    "image",
-    new Blob([image.buffer], { type: image.type }),
-    (item.url.split("/").pop() || "image").split("?")[0] || "image.jpg"
-  );
+/*
+  A push that fails is tried again, twice, before it counts as failed.
 
-  return json("/upload/migration/push", { method: "POST", body: form });
+  The first real run reported 23 failures out of several hundred sent, with no
+  pattern in them: nothing in the cache is over 3.3 MB against a 100 MB limit,
+  there is no rate limiter on the route, and the same images succeed when sent
+  again. That shape — a small, scattered minority — is what a serverless
+  function looks like when a cold start or a slow Cloudinary upload runs past
+  its deadline, not what a bad file looks like.
+
+  Losing an image to one bad second is worse here than anywhere else, because
+  nothing comes back for it: the run ends, the picture is still on somebody
+  else's server, and the only way to notice is to count the catalogue again.
+
+  Two retries, 1.5s then 4s. What is deliberately *not* retried is a refusal
+  the server means — 400 for a malformed request, 404 for an image that is no
+  longer at that position, 409 for storage that is not configured. Those say
+  the same thing however many times they are asked, and repeating them just
+  makes the run slower and the report less honest.
+*/
+const PUSH_RETRY_MS = [1500, 4000];
+const PERMANENT = /answered (400|401|403|404|409|413|422)/;
+
+const deliver = async (item, image) => {
+  const build = () => {
+    const form = new FormData();
+    // A department picture and a product picture go to different collections.
+    form.append("kind", item.kind || "product");
+    form.append("productId", item.productId);
+    form.append("index", String(item.index));
+    form.append(
+      "image",
+      new Blob([image.buffer], { type: image.type }),
+      (item.url.split("/").pop() || "image").split("?")[0] || "image.jpg"
+    );
+    return form;
+  };
+
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      // A FormData carrying a Blob cannot be sent twice — the body is consumed
+      // on the first attempt — so each try builds its own.
+      return await json("/upload/migration/push", { method: "POST", body: build() });
+    } catch (error) {
+      const done = attempt >= PUSH_RETRY_MS.length || PERMANENT.test(error.message);
+      if (done) throw error;
+      await new Promise((r) => setTimeout(r, PUSH_RETRY_MS[attempt]));
+    }
+  }
 };
 
 /**
@@ -329,6 +365,7 @@ const runFromCache = async () => {
   const problems = [];
   const started = Date.now();
   let firstRemaining = null;
+  let reportedProblems = 0;
 
   for (;;) {
     const query = new URLSearchParams({ limit: String(BATCH), scope: SCOPE });
@@ -381,6 +418,14 @@ const runFromCache = async () => {
         }
       })
     );
+
+    // Say why as it happens, not only in the summary. A run that is quietly
+    // losing one image in twenty should not have to finish before anyone can
+    // see what it is losing them to.
+    if (problems.length && problems.length !== reportedProblems) {
+      reportedProblems = problems.length;
+      console.log(`\n  last problem: ${problems[problems.length - 1]}`);
+    }
 
     // Nothing in this batch could be sent, and nothing has been sent all run.
     // Asking again would hand back the same batch and fail the same way.
