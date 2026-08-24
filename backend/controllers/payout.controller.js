@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Order from "../models/order.model.js";
 import Store from "../models/store.model.js";
 import StorePayout from "../models/storePayout.model.js";
+import ReturnRequest from "../models/return.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 
 const isAdmin = (user) =>
@@ -49,19 +50,61 @@ const aggregatePayable = async (storeId, periodStart, periodEnd) => {
   }
 
   const orders = await Order.find(filter)
-    .select("_id itemsPrice shippingPrice totalPrice deliveredAt")
+    .select("_id itemsPrice shippingPrice totalPrice deliveredAt couponDiscount pointsRedeemed")
     .lean();
 
-  const eligible = orders.filter((o) => !locked.has(String(o._id)));
+  const notLocked = orders.filter((o) => !locked.has(String(o._id)));
+
+  /*
+    An order that came back and was refunded is not a sale.
+
+    This counted every delivered, paid order — and a return does not touch any
+    of those three fields, so a customer who sent the goods back and got their
+    money returned still produced a full payout for the seller and a full
+    commission for the shop. Nothing anywhere subtracted it again.
+
+    Refunded is the only return state that means the money went back. A return
+    that is merely requested, approved, or received has not been settled yet
+    and its order stays payable until it is — otherwise a customer could park a
+    seller's earnings by opening a request.
+  */
+  const refunded = new Set(
+    (
+      await ReturnRequest.find({
+        order: { $in: notLocked.map((o) => o._id) },
+        status: "refunded",
+      })
+        .select("order")
+        .lean()
+    ).map((r) => String(r.order))
+  );
+
+  const eligible = notLocked.filter((o) => !refunded.has(String(o._id)));
 
   const grossSales = eligible.reduce((s, o) => s + (o.itemsPrice || 0), 0);
   const shippingTotal = eligible.reduce((s, o) => s + (o.shippingPrice || 0), 0);
+
+  /*
+    What the customer did not pay, reported but not deducted.
+
+    `itemsPrice` is the goods total *before* the coupon and before any loyalty
+    points — those come off `totalPrice`. So a 20% coupon means the customer
+    pays 80 and this pays the seller on 100, with the shop's commission also
+    charged on 100. Whether the shop absorbs its own promotions is a decision
+    about how this business runs, not a bug to be quietly reversed in a payout
+    calculation, so the figures are surfaced and the formula is left alone.
+  */
+  const discountsAbsorbed = eligible.reduce((s, o) => s + (o.couponDiscount || 0), 0);
+  const pointsRedeemed = eligible.reduce((s, o) => s + (o.pointsRedeemed || 0), 0);
 
   return {
     orderIds: eligible.map((o) => o._id),
     ordersCount: eligible.length,
     grossSales,
     shippingTotal,
+    refundedExcluded: notLocked.length - eligible.length,
+    discountsAbsorbed,
+    pointsRedeemed,
   };
 };
 
@@ -125,6 +168,20 @@ export const listEligibleStores = controllerWrapper(
     ]);
     const lockedIds = (locked[0]?.ids || []).map(String);
 
+    /*
+      The same exclusion aggregatePayable applies, so the two agree.
+
+      This list is what an operator clicks through to a preview. If it counted
+      refunded orders and the preview did not, the figure would shrink between
+      one screen and the next with nothing to explain why — which is worse than
+      either number alone, because it makes both of them untrustworthy.
+    */
+    const refundedIds = (
+      await ReturnRequest.find({ status: "refunded" }).select("order").lean()
+    ).map((r) => String(r.order));
+
+    const excluded = [...new Set([...lockedIds, ...refundedIds])];
+
     const match = {
       isDelivered: true,
       isPaid: true,
@@ -136,8 +193,8 @@ export const listEligibleStores = controllerWrapper(
       if (periodStart) match.deliveredAt.$gte = periodStart;
       if (periodEnd) match.deliveredAt.$lte = periodEnd;
     }
-    if (lockedIds.length) {
-      match._id = { $nin: lockedIds.map((id) => new mongoose.Types.ObjectId(id)) };
+    if (excluded.length) {
+      match._id = { $nin: excluded.map((id) => new mongoose.Types.ObjectId(id)) };
     }
 
     const rows = await Order.aggregate([
