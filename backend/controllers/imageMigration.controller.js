@@ -434,14 +434,33 @@ export const getImageMigrationPending = controllerWrapper(
     const limit = Math.min(Math.max(Number(req.query?.limit) || 50, 1), 200);
     const host = req.query?.host ? String(req.query.host) : null;
 
+    /*
+      `kind` so the department pictures can be moved on their own.
+
+      The survey lists every product image first and appends the category ones,
+      so with sixteen thousand products outstanding the categories sit past
+      position sixteen thousand — and a caller taking two hundred at a time
+      never reaches them. There are eighteen of them and they are the second
+      thing a visitor sees on the home page, so having them wait behind hours
+      of product photographs was an accident of list order, not a decision.
+
+      Filtering here rather than in the caller because the caller can only see
+      the page it was given.
+    */
+    const kind = req.query?.kind === "category" || req.query?.kind === "product"
+      ? req.query.kind
+      : null;
+
     const state = await survey();
     let pool = scope === "primary" ? state.primaryWork : state.work;
     if (host) pool = pool.filter((item) => item.host === host);
+    if (kind) pool = pool.filter((item) => (item.kind || "product") === kind);
 
     res.status(200).json({
       success: true,
       scope,
       host,
+      kind,
       remaining: pool.length,
       items: pool.slice(0, limit).map(({ kind, productId, index, url }) => ({ kind, productId, index, url })),
     });

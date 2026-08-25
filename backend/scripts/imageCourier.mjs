@@ -67,6 +67,20 @@ const BATCH = Number(flag("batch", FROM_CACHE_MODE ? "200" : "40"));
 const CONCURRENCY = Number(flag("concurrency", FROM_CACHE_MODE ? "6" : "4"));
 
 /*
+  --kind category: move the department pictures and nothing else.
+
+  There are eighteen of them against seventeen thousand product photographs,
+  and they are the ones a visitor meets first — the "Shop by Category" rail is
+  the second thing on the home page. Making them wait behind a run that takes
+  hours means the most visible part of the catalogue is the last part to be
+  fixed, for no reason other than that the list happened to be in that order.
+
+  Filtered on the client because the pending endpoint has no kind parameter,
+  which costs one survey per batch and is worth it for eighteen images.
+*/
+const KIND = flag("kind");
+
+/*
   --from-cache: send what imageHoard.mjs already downloaded.
 
   Moving a picture is two jobs. Fetching the bytes off the shop that hosts them
@@ -489,6 +503,7 @@ const runFromCache = async () => {
   for (;;) {
     const query = new URLSearchParams({ limit: String(BATCH), scope: SCOPE });
     if (HOST) query.set("host", HOST);
+    if (KIND) query.set("kind", KIND);
 
     /*
       Asking what is left must not be able to end the run.
@@ -520,7 +535,9 @@ const runFromCache = async () => {
     const items = batch.items || [];
     if (firstRemaining === null) {
       firstRemaining = batch.remaining ?? items.length;
-      console.log(`the server still wants ${firstRemaining} image(s)\n`);
+      console.log(
+        `the server still wants ${firstRemaining}${KIND ? ` ${KIND}` : ""} image(s)\n`
+      );
     }
     if (!items.length) {
       console.log(`\nnothing left to send (${batch.remaining ?? 0} outstanding)`);
