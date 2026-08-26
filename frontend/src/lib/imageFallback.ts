@@ -31,6 +31,8 @@
  * already stored. Only then the placeholder.
  */
 
+import { backupUrl } from "./imageBackup";
+
 // Inline SVG: a data URI can never itself 404, which is what makes the
 // swap safe to perform unconditionally.
 
@@ -70,8 +72,40 @@ const PLACEHOLDER =
       `</svg>`
   );
 
+/*
+  Before a grey square: the mirror.
+
+  Every picture the shop renders is copied weekly into a separate repository
+  and served from jsDelivr's CDN, on infrastructure that has nothing to do
+  with Cloudinary. The address is derivable from the failing one — see
+  `imageBackup.ts` — so this costs no request to find out, which matters at
+  the one moment it runs, when the network has already failed once.
+
+  A grey placeholder is what the shop looks like when Cloudinary is having a
+  bad afternoon. The mirror is what it looks like when it is not. One attempt
+  only: the retry counter is marked exhausted on the way, so a mirror that
+  fails too lands on the placeholder immediately instead of restarting the
+  whole ladder against a different host.
+*/
+const useMirror = (img: HTMLImageElement): boolean => {
+  if (img.dataset.mirrorTried) return false;
+  const original = img.dataset.originalSrc || img.currentSrc || img.src;
+  const mirror = backupUrl(original);
+  if (!mirror) return false;
+
+  img.dataset.mirrorTried = "1";
+  img.dataset.retried = String(RETRY_DELAYS_MS.length);
+  // srcset outranks src and still points at the host that just failed.
+  img.removeAttribute("srcset");
+  // A new attempt gets its own deadline rather than inheriting a spent one.
+  delete img.dataset.watchedAt;
+  img.src = mirror;
+  return true;
+};
+
 /** Applied by both paths, so a give-up looks the same however it was reached. */
 const giveUp = (img: HTMLImageElement) => {
+  if (useMirror(img)) return;
   img.dataset.fallbackApplied = "1";
   img.src = PLACEHOLDER;
   // Stop the layout from stretching a 64×64 placeholder oddly when the
@@ -143,6 +177,12 @@ export const installImageFallback = () => {
       // placeholder that errors would mean something stranger than a slow
       // host — leave that to the branch below.
       const tried = Number(target.dataset.retried || 0);
+
+      // One retry against the original host is a fair allowance for a busy
+      // moment. A second failure is better answered by a different host than
+      // by asking the same one a third time.
+      if (tried >= 1 && useMirror(target)) return;
+
       if (tried < RETRY_DELAYS_MS.length && !target.src.startsWith("data:")) {
         target.dataset.retried = String(tried + 1);
         // The address as it was first asked for, not the one carrying the
