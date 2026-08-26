@@ -15,6 +15,11 @@ import {
   updateCategory,
 } from "../controllers/category.controller.js";
 import {
+  getCategoryAudit,
+  fillCategoryImages,
+  hideEmptyCategories,
+} from "../controllers/categoryAudit.controller.js";
+import {
   bulkUploadCategories,
   downloadCategoryTemplate,
 } from "../controllers/bulkCategory.controller.js";
@@ -78,6 +83,17 @@ router.post(
 );
 
 // Admin
+/*
+  Departments with no picture, and departments with nothing in them.
+
+  Read first, then act — the two actions are separate calls on purpose, so
+  seeing the list is never the same gesture as changing it. Both invalidate
+  the storefront cache, because both change what a visitor sees.
+*/
+router.get("/audit/gaps", protectRoute, requirePermission("categories.manage"), getCategoryAudit);
+router.post("/audit/fill-images", protectRoute, requirePermission("categories.manage"), invalidate, fillCategoryImages);
+router.post("/audit/hide-empty", protectRoute, requirePermission("categories.manage"), invalidate, hideEmptyCategories);
+
 router.post("/", protectRoute, requirePermission("categories.manage"), invalidate, createCategory);
 router.put("/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, updateCategory);
 router.delete("/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, deleteCategory);

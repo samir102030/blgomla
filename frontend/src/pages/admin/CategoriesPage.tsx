@@ -6,6 +6,7 @@ import type { Category } from "../../types/category.type";
 import CategoryModal from "../../components/CategoryModal";
 import ViewCategoryModal from "../../components/ViewCategoryModal";
 import BulkCategoryUpload from "../../components/admin/BulkCategoryUpload";
+import CategoryGapsCard from "../../components/admin/CategoryGapsCard";
 
 const parentIdOf = (c: Category): string | null => {
   const parent = c.parentCategory;
@@ -204,6 +205,9 @@ const CategoriesPage: React.FC = () => {
       {/* Bulk upload panel — collapsed until asked for, so the everyday view
           of the page stays the tree. */}
       {bulkOpen && <BulkCategoryUpload onDone={fetchCategories} />}
+
+      {/* What is missing across the whole tree, and the two ways to close it. */}
+      <CategoryGapsCard />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
