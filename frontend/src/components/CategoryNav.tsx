@@ -1,5 +1,5 @@
 import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bars3Icon, ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useCategoryStore } from "../stores/category.store";
@@ -260,6 +260,367 @@ export const AllCategoriesMenu: React.FC = () => {
         </div>
       )}
     </li>
+  );
+};
+
+/* ───────────────────────── the department strip ───────────────────── */
+
+/**
+ * One department in the strip, with its branch hanging under it.
+ *
+ * The button is the department itself — clicking it opens that department's
+ * page rather than only expanding it — and the panel opens on hover and on
+ * focus so the row is usable from the keyboard as well as the mouse.
+ */
+const StripItem: React.FC<BranchProps> = ({ node, onPick }) => {
+  const [open, setOpen] = useState(false);
+  const { ref, flipped } = useEdgeFlip(open);
+  const hasChildren = node.children.length > 0;
+
+  return (
+    <li
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => onPick(node._id)}
+        onFocus={() => setOpen(true)}
+        aria-haspopup={hasChildren || undefined}
+        aria-expanded={hasChildren ? open : undefined}
+        /* No size of its own: the row sets one on itself and every item
+           inherits it, which is what lets the whole strip be measured and
+           resized as a unit. */
+        className={`flex items-center gap-1.5 py-2.5 px-1 font-semibold uppercase tracking-wide whitespace-nowrap border-b-2 transition-all ${
+          open
+            ? "text-[var(--brand-primary)] border-[var(--brand-primary)]"
+            : "text-[var(--text)] border-transparent hover:text-[var(--brand-primary)]"
+        }`}
+      >
+        {node.label}
+        {hasChildren && (
+          <ChevronDownIcon
+            className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        )}
+      </button>
+
+      {hasChildren && open && (
+        <div
+          ref={ref}
+          className={`absolute top-full w-60 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-b-xl shadow-2xl z-50 animate-fadeInDown ${
+            flipped ? "ltr:right-0 rtl:left-0" : "ltr:left-0 rtl:right-0"
+          }`}
+        >
+          <ul>
+            {node.children.map((child) => (
+              <DropdownRow key={child._id} node={child} onPick={onPick} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </li>
+  );
+};
+
+/**
+ * Which departments the strip shows, and in what order.
+ *
+ * A chosen shortlist rather than "every root", because the two things a bar
+ * has to be — complete and one line long — cannot both be true of a catalogue
+ * this size. The top level is eighteen departments; laid across the bar at
+ * their full names they run past seventeen hundred pixels, and the row that
+ * results is the reason this arrangement was tried once and taken out again.
+ *
+ * So the catalogue is not what decides the bar. This list is. Nothing here
+ * changes the tree, moves a product or hides a department — `AllCategoriesMenu`
+ * beside it still opens all of it, and a shopper who wants Monitors is one
+ * click from it there.
+ *
+ * `slug` is the key rather than the name or the id: an id says nothing to the
+ * person editing this list, and a name is something an operator is entitled to
+ * change — to "Security Systems", or to Arabic — which would silently empty the
+ * bar. Slugs are stable and readable, and any level of the tree can be named
+ * here, not only a root.
+ *
+ * `short` is the label the bar shows when the real name is too long to fit
+ * beside nine others. It is display only: the department keeps its real name
+ * on its own page, in the menu, in search and in breadcrumbs. Leave it out and
+ * the real name is used.
+ */
+export const BAR_DEPARTMENTS: {
+  slug: string;
+  short?: string;
+  shortAr?: string;
+}[] = [
+  // Full names, by choice. They are wider than the bar is at its largest
+  // type size, which is what `useFitToOneLine` below exists to absorb — the
+  // row sets its own size rather than the names being cut to fit it.
+  // Filling in a `short` here would let a department run at full type; the
+  // trade is a name in the bar that is not the department's real name.
+  { slug: "electronics" },
+  { slug: "computers-laptops" },
+  { slug: "storage" },
+  { slug: "networking" },
+  { slug: "surveillance-security" },
+  { slug: "printing-scanning" },
+  { slug: "point-of-sale-pos" },
+  { slug: "gaming-consoles-games" },
+  { slug: "telephony-conferencing" },
+];
+
+/*
+  Sizes the row will try, largest first.
+
+  Nine departments at their full names measure 1,594 pixels of type at 12px,
+  and the bar is 1,440 at its widest — so one line at full size is not on the
+  table, and shrinking to reach it means 10px, smaller than the nav row above
+  and small enough to be hard to read.
+
+  So the row is allowed two lines, and the type only drops if even two lines
+  will not hold it. The floor is 11px: below that the reading cost is worse
+  than the extra line it would save.
+*/
+const BAR_TYPE_SIZES = [12, 11.5, 11];
+
+/**
+ * Where to break a row that has to become two, so the halves come out even.
+ *
+ * Left to itself, flex-wrap fills the first line and drops whatever is left:
+ * with these names that is eight departments on top and Telephony plus Hot
+ * Deals underneath, which reads as a row that broke rather than a row of two
+ * lines. Splitting at the point where the two halves are closest in width
+ * gives five and five, and centred that looks like what it is.
+ *
+ * Returns the index the second line starts at, or null if it all fits on one.
+ */
+const balancePoint = (widths: number[], gap: number, room: number) => {
+  const line = (from: number, to: number) =>
+    widths.slice(from, to).reduce((sum, w) => sum + w, 0) + gap * Math.max(0, to - from - 1);
+
+  if (line(0, widths.length) <= room) return null;
+
+  let best = 1;
+  let bestWorst = Infinity;
+  for (let at = 1; at < widths.length; at += 1) {
+    const worst = Math.max(line(0, at), line(at, widths.length));
+    if (worst < bestWorst) {
+      bestWorst = worst;
+      best = at;
+    }
+  }
+  return { at: best, worst: bestWorst };
+};
+
+/**
+ * Set the row's type to the largest size on the ladder that keeps it to one
+ * line, and re-measure whenever the window or the department list changes.
+ *
+ * Measured from the items themselves rather than from the row's scroll width:
+ * the row is allowed to wrap, so its scroll width is never larger than the
+ * space it has and would report every size as fitting. Each item is nowrap, so
+ * the widths add up to what one line would need whether or not it is on one.
+ *
+ * Runs before paint, so the strip is never seen at the wrong size, and steps
+ * down at most five times — cheap enough not to matter, and it stops at the
+ * first size that fits.
+ */
+const useFitToOneLine = (signature: string) => {
+  const ref = useRef<HTMLUListElement>(null);
+  /* Null while it fits on one line; otherwise the index the second starts at.
+     Only this is React state — the size is written straight to the element, so
+     choosing it cannot cause the render that would make it be chosen again. */
+  const [splitAt, setSplitAt] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const row = ref.current;
+    if (!row) return;
+
+    /*
+      Only the width it has to fill can change what fits, and what this writes
+      changes the row's height — so without this guard the observer would
+      answer its own writes forever. The row is a block-level flex container,
+      so its width comes from the layout above it and never from the type
+      inside it, which is what makes the width safe to compare against.
+    */
+    let lastRoom = -1;
+
+    const fit = (force = false) => {
+      const room = row.clientWidth;
+      if (!force && room === lastRoom) return;
+      lastRoom = room;
+
+      const gap = Number.parseFloat(getComputedStyle(row).columnGap) || 0;
+
+      /* The line-break spacer is a child of the row and is full-width by
+         design; counting it would make every size look far too wide. */
+      const widthsAt = (size: number) => {
+        row.style.fontSize = `${size}px`;
+        return (Array.from(row.children) as HTMLElement[])
+          .filter((item) => item.dataset.barBreak === undefined)
+          .map((item) => item.getBoundingClientRect().width);
+      };
+
+      for (const size of BAR_TYPE_SIZES) {
+        const split = balancePoint(widthsAt(size), gap, room);
+        // One line at this size, or two whose wider half still fits.
+        if (!split) {
+          row.style.fontSize = `${size}px`;
+          setSplitAt(null);
+          return;
+        }
+        if (split.worst <= room) {
+          row.style.fontSize = `${size}px`;
+          setSplitAt(split.at);
+          return;
+        }
+      }
+
+      /* Narrower than two balanced lines at the smallest size we are willing
+         to use — a phone-width desktop window, or a much longer list. Take the
+         floor and let flex-wrap do whatever it has to. */
+      const floor = BAR_TYPE_SIZES[BAR_TYPE_SIZES.length - 1];
+      row.style.fontSize = `${floor}px`;
+      setSplitAt(null);
+    };
+
+    fit(true);
+
+    /* The bar sits in a container that changes width with the window, and on
+       a zoom or a late font swap without one. Observing the row catches all
+       three; the width guard makes the rest no-ops. */
+    const onResize = () => fit();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", onResize);
+      return () => window.removeEventListener("resize", onResize);
+    }
+    const observer = new ResizeObserver(onResize);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [signature]);
+
+  return { ref, splitAt };
+};
+
+/** Every node in the menu tree, by slug, at any depth. */
+const bySlugOf = (roots: CategoryNode[]) => {
+  const index = new Map<string, CategoryNode>();
+  const walk = (list: CategoryNode[]) => {
+    for (const node of list) {
+      if (node.slug) index.set(node.slug, node);
+      walk(node.children);
+    }
+  };
+  walk(roots);
+  return index;
+};
+
+/**
+ * The department strip: the chosen shortlist, across the bar.
+ *
+ * The row is allowed to wrap rather than scroll. A hidden horizontal scroller
+ * is a row whose right-hand half nobody finds, and clipping on one axis clips
+ * on both — it would swallow the very panels these items open. A second line
+ * on a narrow window is honest, still entirely usable, and is the signal that
+ * the list above has grown past what a bar can hold.
+ */
+export const CategoryBar: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
+  const tree = useCategoryMenuTree();
+  const navigate = useNavigate();
+
+  const departments = useMemo(() => {
+    const index = bySlugOf(tree);
+    const chosen: CategoryNode[] = [];
+    for (const entry of BAR_DEPARTMENTS) {
+      const node = index.get(entry.slug);
+      // A slug that matches nothing is skipped rather than rendered empty:
+      // a department can be renamed, hidden from the menu or deleted, and the
+      // bar should lose that one item and keep the rest.
+      if (!node) continue;
+      const short = language === "ar" ? entry.shortAr : entry.short;
+      chosen.push(short ? { ...node, label: short } : node);
+    }
+    // If the list matches nothing at all — every slug changed at once, or the
+    // catalogue was reseeded — fall back to the departments themselves rather
+    // than to a blank strip.
+    return chosen.length ? chosen : tree;
+  }, [tree, language]);
+
+  // Keyed on which departments are in the row, so a rename or a department
+  // appearing after the catalogue loads is re-measured rather than left at a
+  // size that was chosen for different words.
+  const { ref: rowRef, splitAt } = useFitToOneLine(
+    departments.map((node) => node.label).join("|")
+  );
+
+  // Nothing to show until the catalogue has loaded — and an empty strip would
+  // otherwise render as a bare line under the nav row.
+  if (!departments.length) return null;
+
+  const pick = (id: string) =>
+    navigate(`/products?category=${encodeURIComponent(id)}`);
+
+  const items: React.ReactNode[] = departments.map((node) => (
+    <StripItem key={node._id} node={node} onPick={pick} />
+  ));
+
+  /*
+    Not a category, on purpose.
+
+    Deals are a state a product is in, not a shelf it sits on: the same laptop
+    is on offer this week and not next, and filing it under a "Hot Deals"
+    department would take it out of Laptops while the offer lasts. The page
+    already gathers them by discount, so this is a link to that page — and the
+    one item in the row allowed to shout, because a row of identical grey
+    words is a row nothing stands out in.
+  */
+  items.push(
+    <li key="deals">
+      <Link
+        to="/deals"
+        /* The `!` is load-bearing. A scoped `a { color }` rule in the theme
+           beats a plain utility class on specificity, and this link came out
+           near-white on white — invisible, and only visible as such once the
+           component was rendered rather than typechecked. The nav row above
+           marks its Deals link the same way, for the same reason. */
+        className="block py-2.5 px-1 font-bold uppercase tracking-wide whitespace-nowrap !text-[var(--brand-accent)] border-b-2 border-transparent hover:!border-[var(--brand-accent)] transition-all"
+      >
+        {t("Hot Deals")}
+      </Link>
+    </li>
+  );
+
+  /* A full-width, zero-height item: the only thing in a flex row that can say
+     "everything after me starts a new line". Marked so the measurement above
+     skips it — it is 100% wide by definition and would swamp any sum. */
+  if (splitAt !== null && splitAt > 0 && splitAt < items.length) {
+    items.splice(
+      splitAt,
+      0,
+      <li
+        key="break"
+        data-bar-break=""
+        aria-hidden="true"
+        className="basis-full h-0 p-0 m-0"
+      />
+    );
+  }
+
+  return (
+    <ul
+      ref={rowRef}
+      /* The starting size, and the one that stands if the measurement never
+         runs. The hook writes an inline size, which wins over this. */
+      className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-0 text-[12px]"
+    >
+      {items}
+    </ul>
   );
 };
 

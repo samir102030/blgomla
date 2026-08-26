@@ -1,5 +1,6 @@
 {
   "Home": "Home",
+  "Hot Deals": "Hot Deals",
   "All Products": "All Products",
   "About Us": "About Us",
   "Contact": "Contact",
@@ -1145,7 +1146,7 @@
     }
   },
   "account.returns": "Returns",
-  "Collections": "Collections",
+  "Collections": "Bundles",
   "collections": {
     "title": "Collections",
     "subtitle": "Bundle deals curated by vendors. Save more when you buy them together.",
@@ -2210,7 +2211,7 @@
   "Full Name": "Full Name",
   "Full warranty on every product": "Full warranty on every product",
   "Get a custom price for": "Get a custom price for",
-  "Hand-picked product bundles at exclusive prices. Each collection is expertly curated to give you the best value.": "Hand-picked product bundles at exclusive prices. Each collection is expertly curated to give you the best value.",
+  "Hand-picked product bundles at exclusive prices. Each bundle is expertly curated to give you the best value.": "Hand-picked product bundles at exclusive prices. Each bundle is expertly curated to give you the best value.",
   "Items Total": "Items Total",
   "No Bundles Available Yet": "No Bundles Available Yet",
   "Qty": "Qty",

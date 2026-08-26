@@ -58,7 +58,7 @@ const CollectionsPage: React.FC = () => {
       <PageHero
         eyebrow={t("Curated Tech Bundles")}
         title={t("Save More with Bundles")}
-        subtitle={t("Hand-picked product bundles at exclusive prices. Each collection is expertly curated to give you the best value.")}
+        subtitle={t("Hand-picked product bundles at exclusive prices. Each bundle is expertly curated to give you the best value.")}
         breadcrumb={[{ label: t("Home"), to: "/" }, { label: t("Collections") }]}
         className="pb-6"
       />

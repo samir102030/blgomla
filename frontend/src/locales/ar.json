@@ -1,5 +1,6 @@
 {
   "Home": "الرئيسية",
+  "Hot Deals": "أقوى العروض",
   "All Products": "جميع المنتجات",
   "About Us": "من نحن",
   "Contact": "اتصل بنا",
@@ -1145,7 +1146,7 @@
     }
   },
   "account.returns": "المرتجعات",
-  "Collections": "المجموعات",
+  "Collections": "بندلات",
   "collections": {
     "title": "المجموعات",
     "subtitle": "عروض تجميعية من البائعين. وفر المزيد عند شرائها معاً.",
@@ -2210,7 +2211,7 @@
   "Full Name": "الاسم الكامل",
   "Full warranty on every product": "ضمان كامل على كل منتج",
   "Get a custom price for": "احصل على سعر مخصص لـ",
-  "Hand-picked product bundles at exclusive prices. Each collection is expertly curated to give you the best value.": "حزم منتجات منتقاة بأسعار حصرية. كل مجموعة تم انتقاؤها باحترافية لتحقق لك أفضل قيمة.",
+  "Hand-picked product bundles at exclusive prices. Each bundle is expertly curated to give you the best value.": "حزم منتجات منتقاة بأسعار حصرية. كل حزمة تم انتقاؤها باحترافية لتحقق لك أفضل قيمة.",
   "Items Total": "إجمالي العناصر",
   "No Bundles Available Yet": "لا توجد حزم متاحة بعد",
   "Qty": "الكمية",

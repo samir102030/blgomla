@@ -21,7 +21,7 @@ import i18n from "../lib/i18n";
 import NotificationBell from "./NotificationBell";
 import { cldImg } from "../lib/cldImage";
 import { getBaseUnitPrice } from "../lib/pricing";
-import { AllCategoriesMenu, CategoryAccordion } from "./CategoryNav";
+import { AllCategoriesMenu, CategoryBar, CategoryAccordion } from "./CategoryNav";
 import AnnouncementBar from "./AnnouncementBar";
 import ThemeToggle from "./ThemeToggle";
 import { useCan } from "../lib/permissions";
@@ -879,6 +879,24 @@ const Header: React.FC = () => {
                 </li>
               ))}
           </ul>
+        </div>
+      </nav>
+
+      {/*
+        The departments, across the bar, under the row that never changes.
+
+        Two rows because they answer two different questions. The row above is
+        the shop's own furniture — Home, Deals, Contact — and stays put. This
+        one is the catalogue, and a shopper who came for a router should not
+        have to open a menu to find out the shop sells routers.
+
+        It draws the same tree as the button above it, through the same hook,
+        so a department hidden from the menu is hidden from here too and the
+        electronics section stays behind its own switch exactly as before.
+      */}
+      <nav className="mn-deptbar hidden lg:block border-t border-[var(--line)]">
+        <div className="mn-site-width">
+          <CategoryBar />
         </div>
       </nav>
 
