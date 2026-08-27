@@ -1,0 +1,154 @@
+# Take a second copy of every picture the shop renders, into this repository's
+# `images` branch.
+#
+# Runs on GitHub's own machines, which can reach Cloudinary. The catalogue API
+# is public, so this needs no secret of any kind and no laptop has to stay
+# awake for it.
+#
+# ## Why the pictures are on a branch and not beside this file
+#
+# They are about a gigabyte and a half. On `main` they would be cloned by every
+# Vercel deployment — the site's build would drag them along forever — and
+# under `frontend/public/` they would be copied into the bundle as well.
+#
+# On their own branch none of that happens: Vercel builds `main` and shallow
+# clones it, so it never sees them, while GitHub still holds them and jsDelivr
+# still serves them:
+#
+#   https://cdn.jsdelivr.net/gh/samir102030/blgomla@images/files/<public id>
+#
+# This file has to live on `main` regardless of where the pictures go: GitHub
+# only schedules a workflow that exists on the default branch.
+
+name: Backup catalogue images
+
+on:
+  schedule:
+    # Sunday 03:00 UTC — 06:00 in Cairo, when nothing else is running.
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: "Re-fetch every picture, even ones already backed up"
+        type: boolean
+        default: false
+      concurrency:
+        description: "Parallel downloads"
+        type: string
+        default: "8"
+
+# The default token, this repository, its contents. Nothing here can reach the
+# shop's database or Cloudinary.
+permissions:
+  contents: write
+
+# A scheduled run and a manual one at once would race each other's pushes.
+concurrency:
+  group: image-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+
+    steps:
+      - name: Check out the scripts
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # The pictures, in a directory of their own. `images` must already exist
+      # — it is created once, as an orphan branch, when this is set up. A
+      # missing branch fails here loudly rather than silently backing up into
+      # the working tree of `main`, which is the one mistake that would put a
+      # gigabyte of photographs in front of Vercel.
+      - name: Check out the mirror
+        uses: actions/checkout@v4
+        with:
+          ref: images
+          path: mirror
+          fetch-depth: 1
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Fetch every picture the catalogue points at
+        env:
+          BELGOMLA_API: ${{ vars.BELGOMLA_API || 'https://blgomla-api.vercel.app/api' }}
+          # Optional. Without it the sweep covers everything a visitor can see,
+          # which is almost the whole catalogue. With it, deactivated and draft
+          # products are covered too. Add it as a repository secret named
+          # BELGOMLA_TOKEN if you want that.
+          BELGOMLA_TOKEN: ${{ secrets.BELGOMLA_TOKEN }}
+        run: |
+          node scripts/image-mirror/backup.mjs \
+            --out mirror \
+            --concurrency "${{ inputs.concurrency || '8' }}" \
+            ${{ inputs.refresh && '--refresh' || '' }}
+
+      - name: Commit what is new
+        working-directory: mirror
+        run: |
+          set -euo pipefail
+          git config user.name  "belgomla-backup"
+          git config user.email "actions@github.com"
+
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Nothing changed — the backup is already complete."
+            exit 0
+          fi
+
+          push() {
+            git push origin HEAD:images || {
+              git pull --rebase --autostash origin images && git push origin HEAD:images
+            }
+          }
+
+          # ── why this is pushed in pieces ──────────────────────────────
+          # The first run adds around seventeen thousand files and well over a
+          # gigabyte. GitHub refuses a push above 2 GB outright and starts
+          # timing out long before that, and a push that dies at 90% leaves
+          # nothing behind — the next run would start from zero. In chunks, an
+          # interrupted run keeps everything it had already sent and the next
+          # one carries on from there.
+          CHUNK=2000
+          mapfile -t NEW < <(git ls-files --others --exclude-standard)
+          TOTAL=${#NEW[@]}
+          echo "$TOTAL new files"
+
+          i=0
+          while [ "$i" -lt "$TOTAL" ]; do
+            printf '%s\0' "${NEW[@]:i:CHUNK}" | xargs -0 --no-run-if-empty git add --
+            i=$((i + CHUNK))
+            if [ "$i" -lt "$TOTAL" ]; then DONE=$i; else DONE=$TOTAL; fi
+            git commit -q -m "backup: pictures ${DONE}/${TOTAL}"
+            push
+            echo "pushed ${DONE}/${TOTAL}"
+          done
+
+          # Whatever else moved: the manifest, the reports, and any file a
+          # --refresh run replaced.
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -q -m "backup: manifest and reports"
+            push
+          fi
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo "### Image backup"
+            echo ""
+            if [ -f mirror/summary.json ]; then
+              echo '```json'
+              cat mirror/summary.json
+              echo '```'
+              [ -f mirror/GONE.md ] && { echo ""; head -8 mirror/GONE.md; }
+            else
+              echo "The run produced no summary — check the fetch step above."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
