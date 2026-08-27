@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import {
+  ArrowDownTrayIcon,
   ArrowPathIcon,
   EyeSlashIcon,
   PhotoIcon,
@@ -58,7 +59,7 @@ const CategoryGapsCard: React.FC = () => {
 
   const [audit, setAudit] = useState<Audit | null>(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<"" | "images" | "hide">("");
+  const [busy, setBusy] = useState<"" | "images" | "hide" | "export">("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -78,6 +79,40 @@ const CategoryGapsCard: React.FC = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  /*
+    Take the whole tree away, in whichever shape it is wanted.
+
+    Fetched through axios rather than linked with an <a href>, because the API
+    authenticates by cookie and lives on its own origin — a plain link would
+    arrive without one and download a 401. The bytes come back here and are
+    saved from the page, which also means a failure surfaces as a message
+    rather than as a file full of error JSON.
+  */
+  const download = async (format: "txt" | "csv" | "json") => {
+    setBusy("export");
+    try {
+      const { data } = await axiosInstance.get(`/categories/export/tree?format=${format}`, {
+        responseType: "blob",
+      });
+      const url = URL.createObjectURL(data as Blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `categories-${new Date().toISOString().slice(0, 10)}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      // Freed on the next tick — revoking immediately can cancel the save in
+      // some browsers before it has read the blob.
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || (ar ? "مش قادر أنزّل الشجرة" : "Could not download the tree")
+      );
+    } finally {
+      setBusy("");
+    }
+  };
 
   const fillImages = async () => {
     setBusy("images");
@@ -113,6 +148,37 @@ const CategoryGapsCard: React.FC = () => {
     }
   };
 
+  /*
+    Downloading the tree has nothing to do with anything being wrong with it,
+    so it sits in both states — including the one where this card has collapsed
+    to a single line because there is nothing left to fix. Putting it only in
+    the problem view would mean the export quietly disappeared on the day the
+    problems were solved.
+  */
+  const downloads = (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-xs text-gray-500 inline-flex items-center gap-1.5">
+        <ArrowDownTrayIcon className="w-4 h-4" aria-hidden="true" />
+        {ar ? "نزّل الشجرة كاملة:" : "Download the whole tree:"}
+      </span>
+      {([
+        ["txt", ar ? "شجرة للقراءة" : "tree to read"],
+        ["csv", "Excel"],
+        ["json", "JSON"],
+      ] as const).map(([format, label]) => (
+        <button
+          key={format}
+          type="button"
+          onClick={() => download(format)}
+          disabled={busy !== ""}
+          className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          {busy === "export" ? (ar ? "بينزّل…" : "Downloading…") : label}
+        </button>
+      ))}
+    </div>
+  );
+
   if (loading && !audit) {
     return <div className="h-32 rounded-2xl bg-gray-100 animate-pulse" />;
   }
@@ -120,13 +186,16 @@ const CategoryGapsCard: React.FC = () => {
 
   if (!audit.needsImage && !audit.empty) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center gap-3">
-        <Squares2X2Icon className="w-5 h-5 text-emerald-600" aria-hidden="true" />
-        <p className="text-sm text-gray-600">
-          {ar
-            ? "كل قسم فيه بضاعة وليه صورة. مفيش حاجة ناقصة."
-            : "Every category holds stock and has a picture. Nothing missing."}
-        </p>
+      <div className="bg-white rounded-2xl border border-gray-200 p-5">
+        <div className="flex items-center gap-3">
+          <Squares2X2Icon className="w-5 h-5 text-emerald-600" aria-hidden="true" />
+          <p className="text-sm text-gray-600">
+            {ar
+              ? `كل قسم فيه بضاعة وليه صورة — ${audit.categories} قسم. مفيش حاجة ناقصة.`
+              : `Every one of the ${audit.categories} categories holds stock and has a picture. Nothing missing.`}
+          </p>
+        </div>
+        <div className="mt-4 pt-4 border-t border-gray-100">{downloads}</div>
       </div>
     );
   }
@@ -258,6 +327,8 @@ const CategoryGapsCard: React.FC = () => {
           </div>
         </div>
       )}
+
+      <div className="mt-5 pt-4 border-t border-gray-100">{downloads}</div>
     </div>
   );
 };

@@ -160,6 +160,137 @@ export const getCategoryAudit = controllerWrapper(
   }
 );
 
+/* ── the whole tree, to take away ───────────────────────────────────── */
+
+const parentIdOf = (c) => (c.parentCategory ? String(c.parentCategory) : null);
+
+/**
+ * The tree, with the stock counted the way a person means it.
+ *
+ * Every row carries both numbers, because one of them alone is misleading:
+ * `here` is what is filed directly under this category, `branch` is this
+ * category plus everything beneath it. 44 categories in this catalogue hold
+ * nothing directly and thousands underneath — the Electronics root among them —
+ * so a table showing only the first would report most departments as empty.
+ *
+ * Three shapes, because they get used differently: a drawn tree to read, a
+ * table to sort, and the raw rows for anything that has to consume it.
+ */
+export const exportCategoryTree = controllerWrapper(
+  "exportCategoryTree",
+  async (req, res) => {
+    const categories = await Category.find({ deleted: { $ne: true } })
+      .select("_id name nameAr image parentCategory isActive slug sortOrder")
+      .lean();
+
+    const direct = await directCounts();
+    const kids = childrenOf(categories);
+    const inBranch = branchCounter(direct, kids);
+
+    const byId = new Map(categories.map((c) => [String(c._id), c]));
+    const roots = categories
+      .filter((c) => {
+        const p = parentIdOf(c);
+        return !p || !byId.has(p);
+      })
+      .map((c) => String(c._id))
+      .sort((a, b) => (byId.get(a)?.sortOrder ?? 0) - (byId.get(b)?.sortOrder ?? 0));
+
+    for (const list of kids.values()) {
+      list.sort((a, b) => (byId.get(a)?.name || "").localeCompare(byId.get(b)?.name || ""));
+    }
+
+    const rows = [];
+    const walk = (id, depth, trail) => {
+      const c = byId.get(id);
+      if (!c) return;
+      const here = [...trail, c.name];
+      rows.push({
+        id,
+        level: depth,
+        name: c.name || "",
+        nameAr: c.nameAr || "",
+        parent: trail.length ? trail[trail.length - 1] : "",
+        fullPath: here.join(" > "),
+        productsHere: direct.get(id) || 0,
+        productsInBranch: inBranch(id),
+        subCategories: (kids.get(id) || []).length,
+        active: c.isActive === false ? "no" : "yes",
+        picture: isOurs(c.image) ? "ours" : c.image ? "dead link" : "none",
+        slug: c.slug || "",
+      });
+      for (const k of kids.get(id) || []) walk(k, depth + 1, here);
+    };
+    roots.forEach((id) => walk(id, 0, []));
+
+    const total = rows.reduce((s, r) => s + r.productsHere, 0);
+    const format = String(req.query?.format || "txt").toLowerCase();
+    const stamp = new Date().toISOString().slice(0, 10);
+
+    if (format === "json") {
+      res.setHeader("Content-Disposition", `attachment; filename="categories-${stamp}.json"`);
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      return res.status(200).send(JSON.stringify({ categories: rows }, null, 1));
+    }
+
+    if (format === "csv") {
+      const columns = Object.keys(rows[0] || { id: "" });
+      const cell = (v) => {
+        const s = String(v ?? "");
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const csv = [
+        columns.join(","),
+        ...rows.map((r) => columns.map((k) => cell(r[k])).join(",")),
+      ].join("\r\n");
+      res.setHeader("Content-Disposition", `attachment; filename="categories-${stamp}.csv"`);
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      // A BOM, so Excel reads the Arabic column as Arabic instead of mojibake.
+      return res.status(200).send("﻿" + csv);
+    }
+
+    const lines = [
+      "Belgomla — category tree",
+      `${rows.length} categories · ${total} products · ${stamp}`,
+      "",
+      "[n] = everything in the branch      here:n = filed directly on this category",
+      "",
+    ];
+    const draw = (id, depth, lastAt) => {
+      const c = byId.get(id);
+      if (!c) return;
+      const children = kids.get(id) || [];
+      const d = direct.get(id) || 0;
+      const b = inBranch(id);
+
+      let prefix = "";
+      for (let i = 0; i < depth; i += 1) prefix += lastAt[i] ? "    " : "│   ";
+      if (depth > 0) prefix += lastAt[depth] ? "└── " : "├── ";
+
+      const marks = [];
+      if (c.isActive === false) marks.push("hidden");
+      if (!isOurs(c.image)) marks.push(c.image ? "picture is a dead link" : "no picture");
+      if (b === 0) marks.push("EMPTY");
+
+      lines.push(
+        `${prefix}${c.name}` +
+          (c.nameAr ? `  ·  ${c.nameAr}` : "") +
+          `  [${b}${d !== b ? ` here:${d}` : ""}]` +
+          (marks.length ? `  (${marks.join(", ")})` : "")
+      );
+      children.forEach((k, i) => draw(k, depth + 1, [...lastAt, i === children.length - 1]));
+    };
+    roots.forEach((id, i) => {
+      draw(id, 0, [i === roots.length - 1]);
+      lines.push("");
+    });
+
+    res.setHeader("Content-Disposition", `attachment; filename="categories-${stamp}.txt"`);
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    return res.status(200).send(lines.join("\r\n"));
+  }
+);
+
 /* ── giving them pictures ───────────────────────────────────────────── */
 
 export const fillCategoryImages = controllerWrapper(

@@ -16,6 +16,7 @@ import {
 } from "../controllers/category.controller.js";
 import {
   getCategoryAudit,
+  exportCategoryTree,
   fillCategoryImages,
   hideEmptyCategories,
 } from "../controllers/categoryAudit.controller.js";
@@ -91,6 +92,7 @@ router.post(
   the storefront cache, because both change what a visitor sees.
 */
 router.get("/audit/gaps", protectRoute, requirePermission("categories.manage"), getCategoryAudit);
+router.get("/export/tree", protectRoute, requirePermission("categories.manage"), exportCategoryTree);
 router.post("/audit/fill-images", protectRoute, requirePermission("categories.manage"), invalidate, fillCategoryImages);
 router.post("/audit/hide-empty", protectRoute, requirePermission("categories.manage"), invalidate, hideEmptyCategories);
 
