@@ -157,26 +157,37 @@ const SWEEP_MS = 2000;
   squares is this, not a picture problem: the pictures were fine and were still
   waiting their turn.
 
-  So the clock only runs while the picture is somewhere the browser would
-  actually be fetching it — on screen, or within roughly a screen of it in
-  either direction, which also covers the cards scrolled off the side of a
-  horizontal rail. Anything further away has its clock cleared, so it starts a
-  fresh ten seconds when the visitor brings it into range rather than
-  inheriting one that ran out while it was parked off screen.
-*/
-const NEAR_VIEWPORT_PX = 800;
+  Guessing the distance at which the browser starts fetching does not work.
+  A first attempt allowed a screen's worth of margin, on the reasoning that
+  Chrome's own lazy threshold is wider than that. Measured on the live home
+  page it still handed out sixteen placeholders, and
+  `performance.getEntriesByType("resource")` showed **zero** requests for any
+  of them: the department rail sits 226px below the fold, comfortably inside
+  an 800px margin, and with nobody scrolling the browser had simply never
+  asked for it. The threshold is the browser's business, it moves with
+  connection speed and layout, and it is not observable from here.
 
-const browserWouldBeFetching = (img: HTMLImageElement): boolean => {
-  if (img.loading !== "lazy") return true;
+  So the rule is not a distance at all. The clock runs only while the picture
+  is actually on screen — which is also the only time a grey square is
+  something a visitor can see. Off screen the clock is cleared rather than
+  paused, so a picture gets its full ten seconds from the moment it is
+  scrolled into view.
+
+  This covers the cards parked off the side of a horizontal rail too, and it
+  needs no guess about eager images either: one that is off screen and broken
+  is not worth a placeholder until somebody looks at it, and the `error`
+  handler above still catches it the moment the request genuinely fails.
+*/
+const isOnScreen = (img: HTMLImageElement): boolean => {
   const box = img.getBoundingClientRect();
-  // A zero box is a picture inside something hidden or not laid out. The
-  // browser is not fetching that either, and it has no position to judge.
+  // A zero box is a picture inside something hidden or not laid out. It has
+  // no position to judge, and nobody is looking at it.
   if (box.width === 0 && box.height === 0) return false;
   return (
-    box.bottom > -NEAR_VIEWPORT_PX &&
-    box.top < window.innerHeight + NEAR_VIEWPORT_PX &&
-    box.right > -NEAR_VIEWPORT_PX &&
-    box.left < window.innerWidth + NEAR_VIEWPORT_PX
+    box.bottom > 0 &&
+    box.top < window.innerHeight &&
+    box.right > 0 &&
+    box.left < window.innerWidth
   );
 };
 
@@ -189,9 +200,9 @@ const watchForSilence = () => {
       if ((img.currentSrc || img.src || "").startsWith("data:")) continue;
       // No src yet is not a slow load — it is a picture nobody has asked for.
       if (!img.getAttribute("src") && !img.getAttribute("srcset")) continue;
-      // Neither is a lazy picture parked off screen. Clear the clock rather
-      // than pause it, so it gets its full allowance when it scrolls in.
-      if (!browserWouldBeFetching(img)) {
+      // Neither is a picture parked off screen. Clear the clock rather than
+      // pause it, so it gets its full allowance when it scrolls in.
+      if (!isOnScreen(img)) {
         delete img.dataset.watchedAt;
         continue;
       }
