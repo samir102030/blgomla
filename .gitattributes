@@ -1,0 +1,8 @@
+# Pictures are bytes. None of this is text, and none of it should have its
+# line endings "helpfully" rewritten on checkout — that corrupts an image.
+files/**     -text -diff
+external/**  -text -diff
+
+# The bookkeeping is text, and should be the same text on every machine.
+*.json  text eol=lf
+*.md    text eol=lf
