@@ -292,13 +292,28 @@ const StripItem: React.FC<BranchProps> = ({ node, onPick }) => {
         onFocus={() => setOpen(true)}
         aria-haspopup={hasChildren || undefined}
         aria-expanded={hasChildren ? open : undefined}
-        /* No size of its own: the row sets one on itself and every item
-           inherits it, which is what lets the whole strip be measured and
-           resized as a unit. */
-        className={`flex items-center gap-1.5 py-2.5 px-1 font-semibold uppercase tracking-wide whitespace-nowrap border-b-2 transition-all ${
+        /*
+          A pill on the band, filling white when it opens.
+
+          No font size of its own: the row sets one on itself and every item
+          inherits it, which is what lets the whole strip be measured and
+          resized as a unit.
+
+          The colours are literals rather than theme tokens on purpose — the
+          band underneath is one brand blue in both themes, so a pill that
+          followed the theme would be light-on-light half the time. What has
+          to stay legible here is the pill against the band, not the pill
+          against the page.
+        */
+        className={`flex items-center gap-1.5 py-1.5 px-3 rounded-full font-semibold uppercase tracking-wide whitespace-nowrap transition-colors ${
+          /* `bg-[#FFFFFF]`, not `bg-white`: the theme redefines the plain
+             utility to `var(--surface)` in a later rule of equal specificity,
+             which in dark mode is near-black. An open pill would have come out
+             dark with blue text, on a blue band. An arbitrary value gets its
+             own class name that nothing else targets. */
           open
-            ? "text-[var(--brand-primary)] border-[var(--brand-primary)]"
-            : "text-[var(--text)] border-transparent hover:text-[var(--brand-primary)]"
+            ? "bg-[#FFFFFF] text-[#0369A1]"
+            : "bg-white/10 text-white hover:bg-white/25"
         }`}
       >
         {node.label}
@@ -312,7 +327,12 @@ const StripItem: React.FC<BranchProps> = ({ node, onPick }) => {
       {hasChildren && open && (
         <div
           ref={ref}
-          className={`absolute top-full w-60 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-b-xl shadow-2xl z-50 animate-fadeInDown ${
+          /* Rounded on all four corners now that what it hangs from is a pill
+             rather than a full-width tab. It stays flush against the trigger:
+             an absolutely positioned panel sits outside its parent's box, so
+             any gap between them is a gap the pointer can fall through and
+             close the menu on the way down. */
+          className={`absolute top-full w-60 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 animate-fadeInDown ${
             flipped ? "ltr:right-0 rtl:left-0" : "ltr:left-0 rtl:right-0"
           }`}
         >
@@ -584,12 +604,18 @@ export const CategoryBar: React.FC = () => {
     <li key="deals">
       <Link
         to="/deals"
-        /* The `!` is load-bearing. A scoped `a { color }` rule in the theme
-           beats a plain utility class on specificity, and this link came out
-           near-white on white — invisible, and only visible as such once the
-           component was rendered rather than typechecked. The nav row above
-           marks its Deals link the same way, for the same reason. */
-        className="block py-2.5 px-1 font-bold uppercase tracking-wide whitespace-nowrap !text-[var(--brand-accent)] border-b-2 border-transparent hover:!border-[var(--brand-accent)] transition-all"
+        /*
+          Amber, because everything else on this band is white on blue and a
+          white pill among white pills is not an exception. Warm against the
+          cold ground is the one contrast the row has left to spend, and this
+          is the item worth spending it on.
+
+          The `!` is load-bearing: a scoped `a { color }` rule in the theme
+          beats a plain utility class on specificity, and this link once came
+          out near-white on white — invisible, and only visible as such when
+          the component was rendered rather than typechecked.
+        */
+        className="block py-1.5 px-3 rounded-full font-bold uppercase tracking-wide whitespace-nowrap bg-[#FFB020] !text-[#4A2A00] hover:bg-[#FFC559] transition-colors"
       >
         {t("Hot Deals")}
       </Link>
@@ -617,7 +643,7 @@ export const CategoryBar: React.FC = () => {
       ref={rowRef}
       /* The starting size, and the one that stands if the measurement never
          runs. The hook writes an inline size, which wins over this. */
-      className="flex flex-wrap items-center justify-center gap-x-3.5 gap-y-0 text-[12px]"
+      className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5 py-2 text-[12px]"
     >
       {items}
     </ul>

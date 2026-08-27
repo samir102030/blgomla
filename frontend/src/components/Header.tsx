@@ -894,7 +894,10 @@ const Header: React.FC = () => {
         so a department hidden from the menu is hidden from here too and the
         electronics section stays behind its own switch exactly as before.
       */}
-      <nav className="mn-deptbar hidden lg:block border-t border-[var(--line)]">
+      {/* No rule above it: the band is a different colour from the row above,
+          which separates the two on its own. A hairline as well reads as a
+          seam. */}
+      <nav className="mn-deptbar hidden lg:block">
         <div className="mn-site-width">
           <CategoryBar />
         </div>
