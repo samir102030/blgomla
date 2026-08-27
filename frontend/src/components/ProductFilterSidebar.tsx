@@ -3,7 +3,6 @@ import { TagIcon, StarIcon, CubeIcon } from "@heroicons/react/24/outline";
 import type { Category } from "../types/category.type";
 import type { Brand } from "../types/brand.type";
 import { useTranslation } from "react-i18next";
-import { getCategoryIcon } from "../lib/categoryIcon";
 
 /**
  * Parent id whether the field arrives populated or as a raw id.
@@ -260,10 +259,6 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
               onChange={(e) => handleCategoryChange(node._id, e.target.checked)}
               className="w-4 h-4 shrink-0 rounded border-[var(--border)] text-[var(--brand-primary)] focus:ring-[var(--brand-primary)]/20"
             />
-            {(() => {
-              const Icon = getCategoryIcon(node.name);
-              return <Icon className="w-4 h-4 shrink-0 text-[var(--text-muted)]" aria-hidden="true" />;
-            })()}
             <span
               className={`truncate ${
                 depth === 0 ? "text-sm text-[var(--text)]" : "text-xs text-[var(--text-muted)]"
