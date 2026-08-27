@@ -1,0 +1,234 @@
+# Pictures the source no longer serves
+
+Last checked: 2026-08-27T00:23:13.730Z
+
+- **0** are gone upstream but **held here** — this backup is the only copy left.
+- **112** were gone before anything copied them. Those catalogue entries need a new picture.
+
+## Lost — no copy anywhere
+
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R200.5W.jpg
+  - seen at: categories:[139].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Thermoelectric-Cooler-Peltier.jpg
+  - seen at: categories:[64].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Tantalum-Capacitor-8.jpg
+  - seen at: categories:[103].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/MagnetS-1.png
+  - seen at: categories:[40].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Bullet-Connector.jpg
+  - seen at: categories:[13].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Rechargeable-Batteries.jpg
+  - seen at: categories:[61].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/MAG201PH20Stabilizer-10.jpg
+  - seen at: categories:[124].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Super-Capacitor1-1.jpg
+  - seen at: categories:[93].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Air-Fluid-Control.png
+  - seen at: categories:[5].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Glass-Fuse-T5-1.png
+  - seen at: categories:[70].image
+- `404` https://free-electronic.com/wp-content/uploads/2021/01/classic20control.jpg
+  - seen at: categories:[30].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Straight-Tweezers-Stainless-Steel.jpeg
+  - seen at: categories:[82].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Aluminio-Disc-for-Servo.jpg
+  - seen at: categories:[91].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Non-rechargeable-Batteries.jpg
+  - seen at: categories:[41].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/UPS-Power-Inverters.png
+  - seen at: categories:[129].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/HSS-Circular-Saw-Blades-For-Any-Drill-6-PCS.jpg
+  - seen at: categories:[22].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-100W.jpg
+  - seen at: categories:[66].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/F-Connectors-4.5mm.jpg
+  - seen at: categories:[75].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-1W-1.jpg
+  - seen at: categories:[96].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Heat-Shrink-Wrapping.jpg
+  - seen at: categories:[52].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Resistor-3W-77.jpg
+  - seen at: categories:[120].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/5d3ac9a7-a33d-49e0-9b09-e29a4cc7de4a.jpg
+  - seen at: categories:[7].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/KeyPads.jpg
+  - seen at: categories:[71].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/ZIF-SOCKET40.jpg
+  - seen at: categories:[117].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Robotics-Accessories.jpg
+  - seen at: categories:[79].image
+- `404` https://free-electronic.com/wp-content/uploads/2024/05/915109c4-a7e9-4d1a-a302-7f313a74459b.jpg
+  - seen at: categories:[28].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/TE-801.jpg
+  - seen at: categories:[20].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Panel-Meters.jpg
+  - seen at: categories:[87].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/afbf873c-5ee6-4ea2-9cb4-c20e6cfc5d6f.jpg
+  - seen at: categories:[48].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/CNC-3d-Printer-Parts.jpg
+  - seen at: categories:[27].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Screws-Nuts.jpg
+  - seen at: categories:[62].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/08/Transistor-pack.jpg
+  - seen at: categories:[19].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/05/Integrated-Circuits-ICs.jpg
+  - seen at: categories:[24].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Spray-Glue.jpg
+  - seen at: categories:[44].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/FUSEHOLDER4-1.jpg
+  - seen at: categories:[50].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Metal-Caster-Wheel-for-Robot-20mm.jpg
+  - seen at: categories:[113].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/1206-SMD-1.jpg
+  - seen at: categories:[45].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Measuring-Instruments-1.jpg
+  - seen at: categories:[21].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Small-Stepper-Motor-5Vdc4-Phase.jpg
+  - seen at: categories:[102].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Bread-Boards-Accessories.jpg
+  - seen at: categories:[11].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Copper-Spacer.jpg
+  - seen at: categories:[43].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-5W-1.png
+  - seen at: categories:[130].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/08/KADA8522B2B.jpg
+  - seen at: categories:[63].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Rotary-Pot-3PIN-1.jpg
+  - seen at: categories:[150].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/08/1058-2.jpg
+  - seen at: categories:[77].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Crystal-4PIN.jpg
+  - seen at: categories:[85].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/8765b564-48f1-4c72-846b-6c7931c73a1c.jpg
+  - seen at: categories:[42].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/ESC-EMAX-BLHeli-40A.jpg
+  - seen at: categories:[56].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/ARM-Boards.jpg
+  - seen at: categories:[4].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Cables-Wires-Crocodiles.jpg
+  - seen at: categories:[95].image
+- `404` https://free-electronic.com/wp-content/uploads/2023/11/PRESS4.jpg
+  - seen at: categories:[144].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Male-USBA-SMD.jpg
+  - seen at: categories:[112].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Terminal-Block6.jpg
+  - seen at: categories:[104].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-10W.jpg
+  - seen at: categories:[83].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/TOE28892220B.jpg
+  - seen at: categories:[97].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/ACPMJpp07.jpg
+  - seen at: categories:[88].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/HLS-T9015F.jpg
+  - seen at: categories:[136].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/LED-White-HP.jpg
+  - seen at: categories:[54].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Electrolytic-Cap-SMD.jpg
+  - seen at: categories:[80].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Ceramic-Fuse-T6.jpg
+  - seen at: categories:[15].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/CAP120.jpg
+  - seen at: categories:[47].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-2W-1.jpg
+  - seen at: categories:[114].image
+- `404` https://free-electronic.com/wp-content/uploads/2024/03/Arduino-Boards-4.png
+  - seen at: categories:[35].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-50W.jpg
+  - seen at: categories:[125].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Raspberry-Pi.jpg
+  - seen at: categories:[60].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/TO-220-5L-1.jpg
+  - seen at: categories:[161].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Small-Geared-DC-Motor-6Vdc-100-RPM.jpg
+  - seen at: categories:[33].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/KSD-301.jpg
+  - seen at: categories:[148].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Trimmer-Capacitor-1.jpg
+  - seen at: categories:[29].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/NTC-10D25-1.jpg
+  - seen at: categories:[146].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/DC-AC-Converters.jpg
+  - seen at: categories:[49].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Electrolytic-Capacitor-162.jpg
+  - seen at: categories:[59].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Arduino-Development-Boards2.jpg
+  - seen at: categories:[6].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Integrated-Circuits-ICs.jpg
+  - seen at: categories:[2].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Transformer1A.jpg
+  - seen at: categories:[155].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Power-Supply.jpg
+  - seen at: categories:[100].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/05/Batteries-Battery-Accessories.jpg
+  - seen at: categories:[8].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Led-MR88.jpg
+  - seen at: categories:[3].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Solar-Cell.jpg
+  - seen at: categories:[119].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/LDR-3.jpg
+  - seen at: categories:[138].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/T-FUSE.jpg
+  - seen at: categories:[108].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Battery-Accessories.jpg
+  - seen at: categories:[9].image
+- `404` https://free-electronic.com/wp-content/uploads/2021/03/Power-Module.jpg
+  - seen at: categories:[89].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-0.5W.jpg
+  - seen at: categories:[1].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-0.25W-e1579188251322-1.jpg
+  - seen at: categories:[23].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Laser-Module-Emitter-5Vdc-5mW.jpg
+  - seen at: categories:[127].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Relay-Solid-State-Modules.jpg
+  - seen at: categories:[111].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Sensors.jpg
+  - seen at: categories:[101].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Heat-Sinks.jpg
+  - seen at: categories:[36].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Displays-LCD-7-Seg-LED-.jpg
+  - seen at: categories:[34].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Tools.jpg
+  - seen at: categories:[65].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Connectors.jpg
+  - seen at: categories:[31].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-25W.jpg
+  - seen at: categories:[106].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Cutoff-Thermal-Fuse-32.jpg
+  - seen at: categories:[32].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Boxes-Enclosure.jpg
+  - seen at: categories:[10].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/R-7W-1.jpg
+  - seen at: categories:[134].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/TM4C123G.jpg
+  - seen at: categories:[81].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/TOP3.jpg
+  - seen at: categories:[152].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Piezo-Buzzer-20mm.jpg
+  - seen at: categories:[26].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Components.jpg
+  - seen at: categories:[16].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Mean20Well.png
+  - seen at: categories:[73].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Ceramic-Capacitor1-1.jpg
+  - seen at: categories:[14].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/YTH-109S.jpg
+  - seen at: categories:[94].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/VARISTOR.jpg
+  - seen at: categories:[159].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/IC-Programmers-Testers-Data-Converters.jpg
+  - seen at: categories:[53].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/Adapter-Fixed-2.jpg
+  - seen at: categories:[132].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/GBJ5010.jpg
+  - seen at: categories:[12].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Motors-Drives.jpg
+  - seen at: categories:[55].image
+- `404` https://free-electronic.com/wp-content/uploads/2019/07/Fans.png
+  - seen at: categories:[18].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/TFT-Shield-LCD-Module-3.5-inch.jpg
+  - seen at: categories:[38].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/3-Blade-Plastic-Propeller-Fan-Blade-for-DIY-Toys-Mini-Car-90MM.jpg
+  - seen at: categories:[78].image
+- `404` https://free-electronic.com/wp-content/uploads/2022/02/NR-10PIN-2.jpg
+  - seen at: categories:[142].image
+
