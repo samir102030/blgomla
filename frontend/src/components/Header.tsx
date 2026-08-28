@@ -92,9 +92,9 @@ const Header: React.FC = () => {
   const user = useUserStore((state) => state.user);
   const can = useCan();
   const logout = useUserStore((state) => state.logout);
-  const categories = useCategoryStore((state) => state.categories);
+  // The lists themselves are read where they are rendered — this component
+  // only starts the refresh below.
   const fetchCategories = useCategoryStore((state) => state.fetchCategories);
-  const brands = useBrandStore((state) => state.brands);
   const fetchBrands = useBrandStore((state) => state.fetchBrands);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -111,11 +111,32 @@ const Header: React.FC = () => {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Load categories/brands once for the category menu and search (stores are
-  // persisted, so this is usually a no-op after first visit).
+  /*
+    Refresh the menus every load, not only when there is nothing to show.
+
+    Both stores are persisted, and this used to skip the request whenever the
+    persisted copy was non-empty — "usually a no-op after first visit", which
+    was the intent and also the bug. After a first visit the copy in
+    localStorage was the only catalogue that browser would ever see. Not on the
+    next visit, not on a reload: nothing but a language change or clearing site
+    data ever replaced it.
+
+    What that looked like: an operator ticks nine departments for the strip,
+    saves, reloads, and the strip shows the one department that happened to be
+    ticked the last time that browser fetched. The tick had saved — the server
+    had all fifteen — and the page was reading a list from days earlier. Renamed
+    departments, new pictures, categories deleted: same story. This browser was
+    holding 367 categories when the shop had 349.
+
+    So the persisted copy keeps doing the one job it is good at — the menu is
+    painted from it on the first frame, with no wait and no flash of an empty
+    bar — and the request behind it corrects whatever has changed since. The
+    list is one small response and the edge caches it, so this costs a
+    conditional request per page load and buys a shop that is actually current.
+  */
   useEffect(() => {
-    if (!categories.length) fetchCategories();
-    if (!brands.length) fetchBrands();
+    fetchCategories();
+    fetchBrands();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
