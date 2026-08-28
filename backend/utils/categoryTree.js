@@ -57,6 +57,46 @@ export const collectCategoryIds = async (categoryId) => {
 };
 
 /**
+ * Several selected categories, pooled into the one set of ids to match on.
+ *
+ * Each selection is expanded to its own subtree, because picking a branch has
+ * to mean everything under it and products hang off the leaves.
+ *
+ * A selection that contains another selection is dropped first. Pooling alone
+ * is a union, which is right for two siblings — tick Buzzers and Bridge
+ * Rectifiers and you want both — and wrong the moment one selection sits
+ * inside another. Arriving on the catalogue through Electronics leaves
+ * Electronics ticked, so ticking Bridge Rectifiers below it produced
+ * Electronics ∪ Bridge Rectifiers, which is Electronics: the same page and the
+ * same first row, so the narrower click looked like it had done nothing.
+ * Ticking further down means narrowing, and the broader selection is the one
+ * the visitor is moving away from.
+ *
+ * Lives here rather than in the listing controller because the product list
+ * and the brand facets beside it have to agree about what "these categories"
+ * means. Two copies of this reasoning would disagree the first time one of
+ * them changed.
+ *
+ * @returns {Promise<string[]>} every category id the selection covers.
+ */
+export const pooledCategoryIds = async (categoryIds = []) => {
+  const unique = [...new Set(categoryIds.map(String).filter(Boolean))];
+  if (!unique.length) return [];
+
+  const subtrees = await Promise.all(unique.map((id) => collectCategoryIds(id)));
+  const kept = unique
+    .map((_, index) => index)
+    .filter((index) => {
+      const subtree = new Set(subtrees[index].map(String));
+      return !unique.some(
+        (other, otherIndex) => otherIndex !== index && subtree.has(String(other))
+      );
+    });
+
+  return [...new Set(kept.flatMap((index) => subtrees[index].map(String)))];
+};
+
+/**
  * The value to assign to a `category` query field.
  *
  * Leaves stay a plain equality match — no `$in` wrapper around a single id, so

@@ -3,6 +3,7 @@ import { TagIcon, StarIcon, CubeIcon } from "@heroicons/react/24/outline";
 import type { Category } from "../types/category.type";
 import type { Brand } from "../types/brand.type";
 import { useTranslation } from "react-i18next";
+import { axiosInstance } from "../lib/axios";
 
 /**
  * Parent id whether the field arrives populated or as a raw id.
@@ -58,6 +59,59 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
   });
 
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  /*
+    Which brands the ticked categories actually hold.
+
+    `null` means no category is ticked, and the whole list is offered — which
+    is what the sidebar did before this existed. A map means the server has
+    answered for this selection, and only the brands in it are worth showing:
+    a filter whose options mostly lead to an empty page is worse than no
+    filter, because every dead one costs a click to find that out.
+
+    The counts come back as ids, not brands. The list is already in props;
+    sending it again on every tick would be the same payload twice.
+  */
+  const [brandCounts, setBrandCounts] = useState<Map<string, number> | null>(null);
+
+  const categoryKey = filters.categories.join(",");
+  useEffect(() => {
+    if (!categoryKey) {
+      setBrandCounts(null);
+      return;
+    }
+    // A fast second tick must not be answered by the first request landing
+    // late with the previous selection's brands.
+    let live = true;
+    axiosInstance
+      .get("/products/brand-facets", { params: { categoryIds: categoryKey } })
+      .then(({ data }) => {
+        if (!live) return;
+        const rows: { brandId: string; count: number }[] = data?.brands || [];
+        setBrandCounts(new Map(rows.map((r) => [r.brandId, r.count])));
+      })
+      .catch(() => {
+        // Offering every brand is the honest failure: a request that did not
+        // answer is not evidence that a department has no brands in it.
+        if (live) setBrandCounts(null);
+      });
+    return () => {
+      live = false;
+    };
+  }, [categoryKey]);
+
+  /*
+    A brand already ticked stays on the list even when the categories now
+    ticked hold nothing of it. Otherwise the control that is filtering the page
+    disappears from the page it is filtering, and the only way back is Clear
+    all — which throws away the category choice too.
+  */
+  const visibleBrands = useMemo(() => {
+    if (!brandCounts) return brands || [];
+    return (brands || []).filter(
+      (b) => brandCounts.has(b._id!) || filters.brands.includes(b._id!)
+    );
+  }, [brands, brandCounts, filters.brands]);
 
   // Lock body scroll while the mobile drawer is open.
   useEffect(() => {
@@ -419,7 +473,7 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
         {expandedSections.brand && (
           <div className="px-3 pb-3">
             <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
-              {brands?.map((brand) => (
+              {visibleBrands.map((brand) => (
                 <label
                   key={brand._id}
                   className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[var(--surface-2)]/60 cursor-pointer transition-colors"
@@ -435,9 +489,22 @@ const ProductFilterSidebar: React.FC<FilterSidebarProps> = ({
                       <img loading="lazy" decoding="async" src={brand.logo} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} className="w-5 h-5 object-contain" />
                     )}
                     <span className="text-sm text-[var(--text)] truncate">{brand.name}</span>
+                    {brandCounts?.has(brand._id!) && (
+                      <span className="text-[11px] text-[var(--text-muted)] shrink-0 tabular-nums">
+                        {brandCounts.get(brand._id!)}
+                      </span>
+                    )}
                   </div>
                 </label>
               ))}
+              {brandCounts && visibleBrands.length === 0 && (
+                <p className="text-xs text-[var(--text-muted)] px-2 py-3">
+                  {t(
+                    "No brands in the selected categories",
+                    "No brands in the selected categories"
+                  )}
+                </p>
+              )}
             </div>
           </div>
         )}

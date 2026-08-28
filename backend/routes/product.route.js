@@ -18,6 +18,7 @@ import {
   filterProducts,
   getAllProducts,
   getBestSellers,
+  getBrandFacets,
   getCart,
   getFeaturedProducts,
   getMostRatedProducts,
@@ -109,6 +110,9 @@ router.get(
 );
 router.get("/storefront", publicListCache, translateResponse, getStorefrontProducts);
 router.get("/search-suggestions", publicListCache, translateResponse, getSearchSuggestions);
+// Which brands the ticked categories actually hold. Cached like the other
+// public reads: it changes when the catalogue does, not between two clicks.
+router.get("/brand-facets", publicListCache, getBrandFacets);
 router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);
 router.get("/newest", publicListCache, translateResponse, getNewestProducts);
 router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);

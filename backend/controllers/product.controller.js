@@ -1,5 +1,9 @@
 import Product from "../models/product.model.js";
-import { ANY_AUDIENCE, isElectronicsCategory } from "../utils/electronicsVisibility.js";
+import {
+  ANY_AUDIENCE,
+  HIDE_ELECTRONICS,
+  isElectronicsCategory,
+} from "../utils/electronicsVisibility.js";
 import { scopedCategoryIds } from "../utils/categoryScope.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
@@ -13,7 +17,7 @@ import CategoryRequest from "../models/categoryRequest.model.js";
 import Order from "../models/order.model.js";
 import { logEventSafe } from "./event.controller.js";
 import { logAudit, diff } from "../utils/audit.js";
-import { categoryFilterValue, collectCategoryIds } from "../utils/categoryTree.js";
+import { categoryFilterValue, pooledCategoryIds } from "../utils/categoryTree.js";
 import mongoose from "mongoose";
 import { resolveProductStore } from "../utils/houseStore.js";
 
@@ -548,34 +552,9 @@ export const getStorefrontProducts = controllerWrapper(
 
     const categoryIds = [...new Set(list(category))];
     if (categoryIds.length) {
-      // Each selection is expanded to its own subtree — picking a branch has
-      // to mean everything under it — and the subtrees are pooled.
-      const subtrees = await Promise.all(categoryIds.map((id) => collectCategoryIds(id)));
-
-      /*
-        A selection that contains another selection is dropped first.
-
-        Pooling alone is a union, which is right for two siblings — tick
-        Buzzers and Bridge Rectifiers and you want both — and wrong the moment
-        one selection sits inside another. Arriving on the catalogue through
-        Electronics leaves Electronics ticked, so ticking Bridge Rectifiers
-        below it produced Electronics ∪ Bridge Rectifiers, which is Electronics:
-        5,656 products, the same page, the same first row. The narrower click
-        looked like it had done nothing, because as a union it had.
-
-        Ticking further down means narrowing. The broader selection is what
-        the visitor is moving away from, so it is the one that goes.
-      */
-      const keptIndexes = categoryIds
-        .map((_, index) => index)
-        .filter((index) => {
-          const subtree = new Set(subtrees[index].map(String));
-          return !categoryIds.some(
-            (other, otherIndex) => otherIndex !== index && subtree.has(String(other)),
-          );
-        });
-
-      const pool = [...new Set(keptIndexes.flatMap((index) => subtrees[index].map(String)))];
+      // Pooled in one place so the brand facets beside this list cannot
+      // disagree with it about what the selection covers.
+      const pool = await pooledCategoryIds(categoryIds);
       // One id stays a plain equality match, so the existing index is used
       // exactly as it was before any of this.
       query.category = pool.length === 1 ? pool[0] : { $in: pool };
@@ -583,7 +562,6 @@ export const getStorefrontProducts = controllerWrapper(
       const inBranch = await Promise.all(categoryIds.map((id) => isElectronicsCategory(id)));
       if (inBranch.some(Boolean)) query.audience = ANY_AUDIENCE;
     }
-
     const brandIds = list(brand);
     if (brandIds.length) query.brand = brandIds.length === 1 ? brandIds[0] : { $in: brandIds };
     if (inStock === "true") query.stock = { $gt: 0 };
@@ -2047,5 +2025,93 @@ export const deleteCompetitorPrice = controllerWrapper(
     );
     await product.save();
     res.status(200).json({ success: true, message: "Competitor price removed" });
+  }
+);
+
+/**
+ * Which brands are actually on the shelves the visitor is looking at.
+ *
+ * The sidebar used to list every brand in the shop whatever was ticked above
+ * it, so choosing Networking still offered a hundred brands that sell nothing
+ * in Networking — a filter whose options mostly lead to an empty page is worse
+ * than no filter, because each dead option costs a click to find out.
+ *
+ * Scoped to the same pooled set of categories the product list uses, through
+ * the same helper, so the two cannot answer differently. Returns ids and
+ * counts rather than whole brands: the sidebar already holds the brands, and
+ * sending them again would be the same payload twice on every tick.
+ *
+ * A brand linked to one of these categories but holding nothing in it yet
+ * comes back at count 0. That is a deliberate shelf an operator made, and a
+ * brand page that exists should be reachable from the department it was filed
+ * under even before the first product lands there.
+ *
+ * No selection means no scope — an empty list with `scoped: false`, which the
+ * sidebar reads as "show them all" rather than as "show none".
+ */
+export const getBrandFacets = controllerWrapper(
+  "getBrandFacets",
+  async (req, res) => {
+    const selected = [
+      ...new Set(
+        String(req.query.categoryIds ?? req.query.categoryId ?? "")
+          .split(",")
+          .map((v) => v.trim())
+          .filter(Boolean)
+      ),
+    ];
+
+    if (!selected.length) {
+      return res.status(200).json({ success: true, scoped: false, brands: [] });
+    }
+
+    const pool = (await pooledCategoryIds(selected)).filter((id) =>
+      mongoose.Types.ObjectId.isValid(id)
+    );
+    if (!pool.length) {
+      return res.status(200).json({ success: true, scoped: true, brands: [] });
+    }
+    const objectIds = pool.map((id) => new mongoose.Types.ObjectId(id));
+
+    /*
+      The audience clause is written out here rather than left to the schema.
+
+      `Product.aggregate` runs no query middleware, so the hook that keeps an
+      unpublished section out of every listing never fires — an aggregation
+      that says nothing about `audience` quietly sees all of it. The listing
+      beside this one gets the hook, so without this the brand list would offer
+      brands whose products the page cannot show.
+
+      Same rule as the listing: a selection inside the electronics branch is a
+      visitor asking for that section, so the hiding comes off.
+    */
+    const match = { deleted: { $ne: true }, category: { $in: objectIds } };
+    const inBranch = await Promise.all(selected.map((id) => isElectronicsCategory(id)));
+    if (!inBranch.some(Boolean)) Object.assign(match, HIDE_ELECTRONICS);
+
+    const [counted, linked] = await Promise.all([
+      Product.aggregate([
+        { $match: match },
+        { $group: { _id: "$brand", count: { $sum: 1 } } },
+        { $match: { _id: { $ne: null } } },
+      ]),
+      Brand.find({ deleted: { $ne: true }, categories: { $in: objectIds } })
+        .select("_id")
+        .lean(),
+    ]);
+
+    const counts = new Map(counted.map((row) => [String(row._id), row.count]));
+    for (const brand of linked) {
+      const id = String(brand._id);
+      if (!counts.has(id)) counts.set(id, 0);
+    }
+
+    res.status(200).json({
+      success: true,
+      scoped: true,
+      brands: [...counts.entries()]
+        .map(([brandId, count]) => ({ brandId, count }))
+        .sort((a, b) => b.count - a.count),
+    });
   }
 );
