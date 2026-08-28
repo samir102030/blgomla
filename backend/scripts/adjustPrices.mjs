@@ -2,6 +2,7 @@
  * Move prices by a percentage, and optionally put the stock back on the shelf.
  *
  *   node scripts/adjustPrices.mjs --percent 20 --dry
+ *   node scripts/adjustPrices.mjs --stock 10 --only-empty --dry        (no price change)
  *   node scripts/adjustPrices.mjs --percent 20 --confirm
  *   node scripts/adjustPrices.mjs --percent 12 --category "Smart Locks" --stock 10 --only-empty --dry
  *   node scripts/adjustPrices.mjs --restore <snapshot.json> --confirm
@@ -64,8 +65,20 @@ const snapshotPath =
     ? args[args.indexOf("--snapshot") + 1]
     : join(__dirname, `price-snapshot-${Date.now()}.json`);
 
-if (!restorePath && !Number.isFinite(percent)) {
-  console.error("usage: node scripts/adjustPrices.mjs --percent <n> [--category <name|slug>] [--stock <n> [--only-empty]] (--dry | --confirm)");
+/*
+  A run has to do something: move prices, put stock back, or both.
+
+  `--stock` on its own is the case that turned up in practice. 1,022 products
+  across every department read unavailable and needed putting back on the
+  shelf, and their prices were fine — but a price pass cannot be asked for
+  "zero percent" as a way of standing still. 607 of those products are priced
+  in piastres, and multiplying by one still sends every one of them through
+  `roundPrice`. So when no percentage is given, the price is not written at all
+  rather than written back at what it should be.
+*/
+const raise = Number.isFinite(percent);
+if (!restorePath && !raise && newStock === null) {
+  console.error("usage: node scripts/adjustPrices.mjs (--percent <n> | --stock <n>) [--category <name|slug>] [--only-empty] (--dry | --confirm)");
   process.exit(1);
 }
 if (newStock !== null && (!Number.isInteger(newStock) || newStock < 0)) {
@@ -186,10 +199,10 @@ const products = fromPath
       }));
     })()
   : await Product.find({ ...SCOPE, price: { $gt: 0 } }).select("_id price stock").lean();
-const factor = 1 + percent / 100;
+const factor = raise ? 1 + percent / 100 : 1;
 
 console.log(`products with a price: ${products.length}`);
-console.log(`factor: x${factor}`);
+console.log(raise ? `factor: x${factor}` : "prices: not touched — this is a stock run");
 if (newStock !== null) {
   const out = products.filter((p) => !(Number(p.stock) > 0)).length;
   console.log(
@@ -199,8 +212,10 @@ if (newStock !== null) {
   );
 }
 
-const sample = products.slice(0, 5).map((p) => `${p.price} -> ${roundPrice(p.price * factor)}`);
-console.log("sample:", sample.join(", "));
+if (raise) {
+  const sample = products.slice(0, 5).map((p) => `${p.price} -> ${roundPrice(p.price * factor)}`);
+  console.log("sample:", sample.join(", "));
+}
 
 if (dry) {
   const skipped = await Product.countDocuments({ ...SCOPE, $or: [{ price: 0 }, { price: null }] });
@@ -214,7 +229,7 @@ await writeFile(
   snapshotPath,
   JSON.stringify({
     takenAt: new Date().toISOString(),
-    percent,
+    percent: raise ? percent : 0,
     ...(categoryArg ? { category: categoryArg } : {}),
     prices: products.map((p) => [String(p._id), p.price]),
     // Only when this run sets stock: a snapshot that did not touch stock must
@@ -244,7 +259,7 @@ for (let i = 0; i < products.length; i += CHUNK) {
       filter: { _id: p._id },
       update: {
         $set: {
-          price: roundPrice(p.price * factor),
+          ...(raise ? { price: roundPrice(p.price * factor) } : {}),
           // A product that already has a count keeps it under --only-empty.
           // The snapshot still records its stock, so a restore puts back what
           // was there either way.
@@ -261,7 +276,9 @@ for (let i = 0; i < products.length; i += CHUNK) {
 }
 
 console.log(
-  newStock !== null ? `products changed: ${changed} (price and stock)` : `prices changed: ${changed}`
+  `products changed: ${changed} (${
+    raise && newStock !== null ? "price and stock" : raise ? "price" : "stock"
+  })`
 );
 
 await mongoose.disconnect();
