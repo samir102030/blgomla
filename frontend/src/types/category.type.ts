@@ -14,6 +14,9 @@ export interface Category {
   showInMenu?: boolean;
   /** A slot on the department strip under the navbar. Off unless switched on. */
   showInBar?: boolean;
+  /** Where it sits on that strip. Independent of sortOrder, which arranges the
+   *  menus; 0 means "unset" and falls back to sortOrder. */
+  barOrder?: number;
   deleted: boolean;
   slug?: string;
   metaTitle?: string;

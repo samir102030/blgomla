@@ -105,6 +105,25 @@ const categorySchema = new mongoose.Schema(
       default: false,
     },
     /**
+     * Where it sits on the strip, independent of `sortOrder`.
+     *
+     * `sortOrder` arranges the menus and the department pages — every category
+     * has one, and moving a department there moves it everywhere. The strip is
+     * a dozen items out of three hundred and forty-nine, and the order that
+     * reads well across a bar is not the order that reads well down a menu:
+     * the shortest names want to be together, the department somebody is
+     * running an offer on wants to be first. Sharing one number would mean
+     * arranging the bar rearranges the shop.
+     *
+     * Only the ticked ones carry a meaningful value; everything else keeps 0
+     * and falls back to `sortOrder`, which is what an untouched catalogue
+     * looks like.
+     */
+    barOrder: {
+      type: Number,
+      default: 0,
+    },
+    /**
      * Marks a category as the root of a named section of the shop.
      *
      * Only the electronics branch uses it today, and it uses it so the code

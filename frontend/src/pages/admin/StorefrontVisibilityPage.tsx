@@ -16,8 +16,10 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Bars3Icon, XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { axiosInstance } from "../../lib/axios";
 
 type Kind = "categories" | "brands";
@@ -33,7 +35,60 @@ interface Row {
   isActive?: boolean;
   showInMenu?: boolean;
   showInBar?: boolean;
+  barOrder?: number;
 }
+
+/**
+ * One department on the strip, in the little panel that arranges it.
+ *
+ * Deliberately not a row of the list below. The list is three hundred and
+ * forty-nine categories deep and arranging a bar of twelve by dragging across
+ * it is not arranging, it is hunting — so the twelve get their own strip at the
+ * top, in the order they appear on the shop, short enough to see at once.
+ */
+const BarChip: React.FC<{
+  row: Row;
+  isAr: boolean;
+  onRemove: (id: string) => void;
+}> = ({ row, isAr, onRemove }) => {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: `bar-${row._id}` });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      className="flex items-center gap-2 ps-2 pe-1 py-1.5 rounded-full bg-[var(--surface-2)] border border-[var(--border)]"
+    >
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-[var(--text-subtle)] touch-none"
+        title={t("visibility.drag", "Drag to reorder")}
+      >
+        <Bars3Icon className="w-4 h-4" />
+      </button>
+      <span className="text-sm text-[var(--text)] whitespace-nowrap">
+        {isAr && row.nameAr ? row.nameAr : row.name}
+      </span>
+      <button
+        type="button"
+        onClick={() => onRemove(row._id)}
+        aria-label={t("visibility.removeFromBar", "Take off the bar")}
+        title={t("visibility.removeFromBar", "Take off the bar")}
+        className="w-5 h-5 flex items-center justify-center rounded-full text-[var(--text-subtle)] hover:bg-[var(--bg)] hover:text-[var(--text)]"
+      >
+        <XMarkIcon className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+};
 
 /** One draggable row. */
 const SortableRow: React.FC<{
@@ -93,7 +148,15 @@ const SortableRow: React.FC<{
           className="w-9 h-9 rounded-lg object-contain bg-[var(--bg)] shrink-0"
         />
       ) : (
-        <div className="w-9 h-9 rounded-lg bg-[var(--bg)] border border-[var(--border)] shrink-0" />
+        /* An empty square and a missing picture looked the same, which made a
+           column of them impossible to read: you could not tell the categories
+           that need a photograph from the ones whose photograph is pale. */
+        <div
+          title={t("visibility.noImage", "No picture yet")}
+          className="w-9 h-9 rounded-lg bg-[var(--bg)] border border-dashed border-[var(--border)] shrink-0 flex items-center justify-center text-[var(--text-subtle)]"
+        >
+          <PhotoIcon className="w-4 h-4" />
+        </div>
       )}
 
       <div className="flex-1 min-w-0">
@@ -185,6 +248,72 @@ const StorefrontVisibilityPage: React.FC = () => {
     load();
   }, [load]);
 
+  /*
+    The strip, in the order the shop shows it.
+
+    Derived from the same rows rather than held separately, so ticking "In top
+    bar" on any row below puts it here and taking it off here unticks it there.
+    Two lists that could disagree about the same flag is a bug waiting for
+    somebody to find it.
+
+    A department nobody has positioned carries 0, which sorts it first — right,
+    because the alternative is a newly ticked one appearing at the end where
+    nobody looks for it. This matches how the storefront sorts the strip.
+  */
+  const barRows = useMemo(
+    () =>
+      rows
+        .filter((r) => r.showInBar === true)
+        .sort(
+          (a, b) =>
+            (a.barOrder ?? 0) - (b.barOrder ?? 0) ||
+            (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+            a.name.localeCompare(b.name)
+        ),
+    [rows]
+  );
+
+  /** Renumber the strip from an ordered list of ids, 1..n. */
+  const applyBarOrder = (ordered: string[]) => {
+    const position = new Map(ordered.map((id, index) => [id, index + 1]));
+    setRows((prev) =>
+      prev.map((r) =>
+        position.has(r._id) ? { ...r, barOrder: position.get(r._id) } : r
+      )
+    );
+    setDirty(true);
+  };
+
+  const handleBarDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = barRows.map((r) => r._id);
+    const from = ids.indexOf(String(active.id).replace(/^bar-/, ""));
+    const to = ids.indexOf(String(over.id).replace(/^bar-/, ""));
+    if (from < 0 || to < 0) return;
+    applyBarOrder(arrayMove(ids, from, to));
+  };
+
+  /*
+    Taking one off does not just untick it — it renumbers the rest.
+
+    Leaving the old positions behind works, because the sort only cares about
+    order and not about the gaps. But the numbers are what the next reorder is
+    built on, and a list numbered 1, 3, 4, 9 is one an operator will eventually
+    see in an export and have to reason about. Cheap to keep tidy.
+  */
+  const removeFromBar = (id: string) => {
+    const ordered = barRows.map((r) => r._id).filter((rowId) => rowId !== id);
+    const position = new Map(ordered.map((rowId, index) => [rowId, index + 1]));
+    setRows((prev) =>
+      prev.map((r) => {
+        if (r._id === id) return { ...r, showInBar: false, barOrder: 0 };
+        return position.has(r._id) ? { ...r, barOrder: position.get(r._id) } : r;
+      })
+    );
+    setDirty(true);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -202,8 +331,24 @@ const StorefrontVisibilityPage: React.FC = () => {
     field: "isActive" | "showInMenu" | "showInBar",
     value: boolean
   ) => {
+    // A newly ticked department joins the end of the strip rather than jumping
+    // to the front of it: it is an addition, and where it goes is the next
+    // thing the panel above lets you decide.
+    const nextPosition =
+      Math.max(0, ...barRows.map((r) => r.barOrder ?? 0)) + 1;
+
     setRows((prev) =>
-      prev.map((r) => (r._id === id ? { ...r, [field]: value } : r))
+      prev.map((r) =>
+        r._id === id
+          ? {
+              ...r,
+              [field]: value,
+              ...(field === "showInBar"
+                ? { barOrder: value ? nextPosition : 0 }
+                : {}),
+            }
+          : r
+      )
     );
     setDirty(true);
   };
@@ -218,7 +363,9 @@ const StorefrontVisibilityPage: React.FC = () => {
           showInMenu: r.showInMenu !== false,
           // Sent only for categories: the brands handler has no such field and
           // a stray one would be written to every brand row.
-          ...(kind === "categories" ? { showInBar: r.showInBar === true } : {}),
+          ...(kind === "categories"
+            ? { showInBar: r.showInBar === true, barOrder: r.barOrder ?? 0 }
+            : {}),
         })),
       });
       toast.success(t("visibility.saved", "Saved — refresh the storefront to see it"));
@@ -310,6 +457,66 @@ const StorefrontVisibilityPage: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {/* the strip, arranged on its own */}
+      {kind === "categories" && !loading && (
+        <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+          <div className="flex items-baseline justify-between gap-3 flex-wrap">
+            <h2 className="text-sm font-semibold text-[var(--text)]">
+              {t("visibility.barTitle", "The bar under the menu")}
+              <span className="ms-2 text-[var(--text-muted)] font-normal tabular-nums">
+                {barRows.length}
+              </span>
+            </h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              {t(
+                "visibility.barHint",
+                "Drag to order it. The first 12 sit on the bar; the rest go under More."
+              )}
+            </p>
+          </div>
+
+          {barRows.length === 0 ? (
+            <p className="text-xs text-[var(--text-muted)] py-2">
+              {t(
+                "visibility.barEmpty",
+                "Nothing on it yet — tick “In top bar” on any category below."
+              )}
+            </p>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleBarDragEnd}
+            >
+              <SortableContext
+                items={barRows.map((r) => `bar-${r._id}`)}
+                strategy={horizontalListSortingStrategy}
+              >
+                <div className="flex flex-wrap gap-2">
+                  {barRows.map((row, index) => (
+                    <React.Fragment key={row._id}>
+                      {/* Where the bar starts its second row, and where More
+                          begins — shown because twelve is not a number anybody
+                          can count to reliably in a wrapped list of pills. */}
+                      {index === 12 && (
+                        <div className="basis-full flex items-center gap-2 pt-1">
+                          <span className="h-px flex-1 bg-[var(--border)]" />
+                          <span className="text-[11px] text-[var(--text-muted)]">
+                            {t("visibility.barUnderMore", "under More")}
+                          </span>
+                          <span className="h-px flex-1 bg-[var(--border)]" />
+                        </div>
+                      )}
+                      <BarChip row={row} isAr={isAr} onRemove={removeFromBar} />
+                    </React.Fragment>
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </div>
+      )}
 
       {!loading && rows.length > 0 && (
         <div className="flex flex-wrap gap-4 text-xs text-[var(--text-muted)] bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3">

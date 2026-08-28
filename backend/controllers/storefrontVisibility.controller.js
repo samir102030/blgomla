@@ -94,7 +94,7 @@ export const listForVisibility = controllerWrapper(
 
     const select =
       target.namespace === "categories"
-        ? "name nameAr image parentCategory sortOrder isActive showInMenu showInBar"
+        ? "name nameAr image parentCategory sortOrder isActive showInMenu showInBar barOrder"
         : "name nameAr logo sortOrder isActive showInMenu";
 
     const rows = await target.model
@@ -145,6 +145,10 @@ export const updateVisibility = controllerWrapper(
       // Categories only — a brand has no slot on the department strip, and a
       // brands payload never carries the field.
       if (item.showInBar !== undefined) set.showInBar = !!item.showInBar;
+      // The strip's own order, sent as a position rather than derived from the
+      // row's place in this list: the strip holds a dozen of these rows and the
+      // list holds all of them, so its order is a separate statement.
+      if (item.barOrder !== undefined) set.barOrder = Number(item.barOrder) || 0;
       return {
         updateOne: { filter: { _id: item._id }, update: { $set: set } },
       };

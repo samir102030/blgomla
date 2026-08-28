@@ -550,12 +550,8 @@ const useFitToOneLine = (signature: string) => {
  * The departments an operator has put on the strip, in the order they arranged
  * them.
  *
- * `sortOrder` rather than the shape of the tree: the storefront visibility
- * screen drags one flat list and renumbers every row in it, so that number is
- * a statement about the whole catalogue's order and not about a position among
- * siblings. Two departments from different branches then sit in the bar in the
- * order they sit in on that screen, which is the only order the person
- * arranging it can see.
+ * Ordered by the strip's own number, which the panel at the top of the
+ * storefront visibility screen writes. Any level of the tree can be on it.
  */
 const barPicksOf = (roots: CategoryNode[]) => {
   const picked: CategoryNode[] = [];
@@ -566,8 +562,26 @@ const barPicksOf = (roots: CategoryNode[]) => {
     }
   };
   walk(roots);
+  /*
+    `barOrder` first, and `sortOrder` only where nobody has set one.
+
+    The two are deliberately different numbers. `sortOrder` arranges the menus
+    and the department pages, where the order is the shop's shape; the strip is
+    a dozen items out of hundreds, and the order that reads across a bar is not
+    the order that reads down a menu. Sharing one number would mean arranging
+    the bar rearranged the shop.
+
+    A category that has never been positioned on the strip carries 0, which
+    sorts it above everything positioned — right, because the alternative is a
+    newly ticked department appearing at the end where nobody looks. Ties fall
+    to `sortOrder`, then to the name, so the order is total and the strip never
+    reshuffles itself between two loads.
+  */
   picked.sort(
-    (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.label.localeCompare(b.label)
+    (a, b) =>
+      (a.barOrder ?? 0) - (b.barOrder ?? 0) ||
+      (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+      a.label.localeCompare(b.label)
   );
   return picked;
 };
