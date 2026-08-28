@@ -34,8 +34,14 @@
 const CLOUDINARY_HOST = "res.cloudinary.com";
 
 /** Change this if the mirror ever moves. Nothing else here is site-specific. */
-export const BACKUP_CDN =
-  "https://cdn.jsdelivr.net/gh/samir102030/blgomla@images/files";
+export const MIRROR_ROOT = "https://cdn.jsdelivr.net/gh/samir102030/blgomla@images";
+
+/*
+  Cloudinary pictures live under `files/`, everything else under `external/`.
+  Two prefixes rather than one because the mirror files them by two different
+  rules — a public id, and a hash — and a single root would hide that.
+*/
+export const BACKUP_CDN = `${MIRROR_ROOT}/files`;
 
 /*
   Everything between /upload/ and the public id is delivery instruction, not
@@ -76,9 +82,8 @@ export const publicIdOf = (url: string): string | null => {
  * The mirror's address for a live Cloudinary URL, or null when there is no
  * mirrored copy to point at.
  *
- * Null for anything not on our Cloudinary — a picture still hot-linked to a
- * vendor's site is mirrored under a hash of its address, which cannot be
- * derived here and is not worth a lookup for the hundred or so that remain.
+ * Null for anything not on our Cloudinary — those are filed under a hash of
+ * their address instead, and `externalBackupUrl` below works that one out.
  *
  * Null, too, for an id carrying no file extension. Cloudinary does not need
  * one; the mirror gives every file the extension its bytes turned out to
@@ -91,6 +96,78 @@ export const backupUrl = (url: string | null | undefined): string | null => {
   if (!id) return null;
   if (!/\.[a-z0-9]{2,5}$/i.test(id)) return null;
   return `${BACKUP_CDN}/${id}`;
+};
+
+
+/* ── pictures on somebody else's server ─────────────────────────────── */
+
+/*
+  A third of the catalogue is still hot-linked.
+
+  4,000 products point at cdn.shopify.com and a handful at other hosts — an
+  import that has not been through the image migration yet. Those have no
+  public id to swap a prefix on, so the mirror files them under a hash of the
+  address instead: `external/<first two hex>/<sha1><ext>`. The rules below have
+  to match `pathFor` in scripts/image-mirror/backup.mjs exactly, the same way
+  the Cloudinary rules above do.
+
+  SHA-1 is what the mirror uses, so it is what this uses. It is not standing in
+  for anything security depends on here — it names a file.
+
+  Asynchronous, because the browser's only digest is. That is why this is a
+  separate function rather than a branch inside `backupUrl`: the Cloudinary
+  case is a string transform and stays one, and only the case that genuinely
+  needs a promise pays for it.
+*/
+
+const IMAGE_EXTENSIONS = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+  "gif",
+  "avif",
+  "bmp",
+  "svg",
+]);
+
+/** The extension the mirror filed it under, from the address alone. */
+const extensionOf = (url: string): string => {
+  const clean = url.split("?")[0].split("#")[0];
+  const ext = (clean.split(".").pop() || "").toLowerCase();
+  if (!IMAGE_EXTENSIONS.has(ext)) return ".jpg";
+  return `.${ext === "jpeg" ? "jpg" : ext}`;
+};
+
+const sha1Hex = async (text: string): Promise<string | null> => {
+  // Absent on an insecure origin, and in a few older browsers. Without it
+  // there is no address to compute, which is a placeholder — the same answer
+  // as before this existed.
+  if (!globalThis.crypto?.subtle) return null;
+  try {
+    const bytes = new TextEncoder().encode(text);
+    const digest = await globalThis.crypto.subtle.digest("SHA-1", bytes);
+    return [...new Uint8Array(digest)]
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * The mirror's address for a picture hosted somewhere that is not our
+ * Cloudinary, or null when one cannot be worked out.
+ */
+export const externalBackupUrl = async (
+  url: string | null | undefined
+): Promise<string | null> => {
+  if (!url || !/^https?:\/\//i.test(url)) return null;
+  if (url.includes(`${CLOUDINARY_HOST}/`)) return null;
+
+  const digest = await sha1Hex(url);
+  if (!digest) return null;
+  return `${MIRROR_ROOT}/external/${digest.slice(0, 2)}/${digest}${extensionOf(url)}`;
 };
 
 export default backupUrl;

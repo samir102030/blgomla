@@ -31,7 +31,7 @@
  * already stored. Only then the placeholder.
  */
 
-import { backupUrl } from "./imageBackup";
+import { backupUrl, externalBackupUrl } from "./imageBackup";
 
 // Inline SVG: a data URI can never itself 404, which is what makes the
 // swap safe to perform unconditionally.
@@ -87,30 +87,62 @@ const PLACEHOLDER =
   fails too lands on the placeholder immediately instead of restarting the
   whole ladder against a different host.
 */
-const useMirror = (img: HTMLImageElement): boolean => {
-  if (img.dataset.mirrorTried) return false;
-  const original = img.dataset.originalSrc || img.currentSrc || img.src;
-  const mirror = backupUrl(original);
-  if (!mirror) return false;
-
-  img.dataset.mirrorTried = "1";
+const aimAt = (img: HTMLImageElement, mirror: string) => {
   img.dataset.retried = String(RETRY_DELAYS_MS.length);
   // srcset outranks src and still points at the host that just failed.
   img.removeAttribute("srcset");
   // A new attempt gets its own deadline rather than inheriting a spent one.
   delete img.dataset.watchedAt;
   img.src = mirror;
+};
+
+const useMirror = (img: HTMLImageElement): boolean => {
+  if (img.dataset.mirrorTried) return false;
+  const original = img.dataset.originalSrc || img.currentSrc || img.src;
+
+  const mirror = backupUrl(original);
+  if (mirror) {
+    img.dataset.mirrorTried = "1";
+    aimAt(img, mirror);
+    return true;
+  }
+
+  /*
+    A picture on somebody else's server has a mirror too — filed under a hash
+    of its address rather than a public id, because it has no public id to file
+    under. Four thousand products are still hot-linked to cdn.shopify.com from
+    an import that has not been through the image migration, and until it has,
+    this is the only thing standing between one bad afternoon at that host and
+    a third of the catalogue showing grey squares.
+
+    The address has to be hashed, and the browser's digest is asynchronous, so
+    unlike the branch above this cannot answer in the same tick. It claims the
+    attempt immediately — `mirrorTried` before the await, so a second error on
+    the same picture cannot start a second one — and paints the placeholder
+    itself if the hash turns out to be unavailable.
+  */
+  if (!/^https?:\/\//i.test(original)) return false;
+  img.dataset.mirrorTried = "1";
+  externalBackupUrl(original).then((external) => {
+    if (external) aimAt(img, external);
+    else paintPlaceholder(img);
+  });
   return true;
 };
 
-/** Applied by both paths, so a give-up looks the same however it was reached. */
-const giveUp = (img: HTMLImageElement) => {
-  if (useMirror(img)) return;
+/** The grey square, and the mark that stops anything trying again. */
+const paintPlaceholder = (img: HTMLImageElement) => {
   img.dataset.fallbackApplied = "1";
   img.src = PLACEHOLDER;
   // Stop the layout from stretching a 64×64 placeholder oddly when the
   // original had no intrinsic size to fall back on.
   img.style.objectFit = img.style.objectFit || "contain";
+};
+
+/** Applied by both paths, so a give-up looks the same however it was reached. */
+const giveUp = (img: HTMLImageElement) => {
+  if (useMirror(img)) return;
+  paintPlaceholder(img);
 };
 
 /*
