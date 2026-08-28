@@ -3,7 +3,7 @@
  *
  *   node scripts/adjustPrices.mjs --percent 20 --dry
  *   node scripts/adjustPrices.mjs --percent 20 --confirm
- *   node scripts/adjustPrices.mjs --percent 10 --category "Smart Locks" --stock 10 --dry
+ *   node scripts/adjustPrices.mjs --percent 12 --category "Smart Locks" --stock 10 --only-empty --dry
  *   node scripts/adjustPrices.mjs --restore <snapshot.json> --confirm
  *
  * `--category` narrows the run to one department and everything beneath it,
@@ -17,6 +17,13 @@
  * Only products with a price are given stock: availability is read off `stock`
  * and never off `price`, so stocking an unpriced product would put it on sale
  * for nothing.
+ *
+ * `--only-empty` narrows that to the products currently at zero. Add it
+ * whenever some of the department is genuinely counted: the whole point of
+ * `--stock` was a shelf where every line read unavailable, and by the time
+ * Smart Locks had grown to 85 products, 25 of them carried real figures that a
+ * flat number would have erased. A stock count somebody keeps is not ours to
+ * overwrite on the way past.
  *
  * `price` is the only stored money on a product: the sale price is a virtual
  * computed from `salePercentage`, so a product on sale follows the new price by
@@ -51,13 +58,14 @@ const percent = Number(args[args.indexOf("--percent") + 1]);
 const restorePath = args.includes("--restore") ? args[args.indexOf("--restore") + 1] : null;
 const categoryArg = args.includes("--category") ? args[args.indexOf("--category") + 1] : null;
 const newStock = args.includes("--stock") ? Number(args[args.indexOf("--stock") + 1]) : null;
+const onlyEmpty = args.includes("--only-empty");
 const snapshotPath =
   args.includes("--snapshot")
     ? args[args.indexOf("--snapshot") + 1]
     : join(__dirname, `price-snapshot-${Date.now()}.json`);
 
 if (!restorePath && !Number.isFinite(percent)) {
-  console.error("usage: node scripts/adjustPrices.mjs --percent <n> [--category <name|slug>] [--stock <n>] (--dry | --confirm)");
+  console.error("usage: node scripts/adjustPrices.mjs --percent <n> [--category <name|slug>] [--stock <n> [--only-empty]] (--dry | --confirm)");
   process.exit(1);
 }
 if (newStock !== null && (!Number.isInteger(newStock) || newStock < 0)) {
@@ -184,7 +192,11 @@ console.log(`products with a price: ${products.length}`);
 console.log(`factor: x${factor}`);
 if (newStock !== null) {
   const out = products.filter((p) => !(Number(p.stock) > 0)).length;
-  console.log(`stock: every one of them set to ${newStock} (${out} are out of stock today)`);
+  console.log(
+    onlyEmpty
+      ? `stock: ${out} at zero set to ${newStock}; the other ${products.length - out} keep the count they have`
+      : `stock: every one of them set to ${newStock} (${out} are at zero today)`
+  );
 }
 
 const sample = products.slice(0, 5).map((p) => `${p.price} -> ${roundPrice(p.price * factor)}`);
@@ -233,7 +245,12 @@ for (let i = 0; i < products.length; i += CHUNK) {
       update: {
         $set: {
           price: roundPrice(p.price * factor),
-          ...(newStock !== null ? { stock: newStock } : {}),
+          // A product that already has a count keeps it under --only-empty.
+          // The snapshot still records its stock, so a restore puts back what
+          // was there either way.
+          ...(newStock !== null && (!onlyEmpty || !(Number(p.stock) > 0))
+            ? { stock: newStock }
+            : {}),
         },
       },
     },
