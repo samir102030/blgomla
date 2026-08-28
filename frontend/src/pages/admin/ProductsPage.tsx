@@ -11,6 +11,7 @@ import { axiosInstance } from "../../lib/axios";
 import AddProductModal from "../../components/AddProductModal";
 import ProductDetailsModal from "../../components/ProductDetailsModal";
 import StockGapsCard from "../../components/admin/StockGapsCard";
+import RepriceCard from "../../components/admin/RepriceCard";
 import EditProductModal from "../../components/EditProductModal";
 import DeleteProductModal from "../../components/DeleteProductModal";
 import FilterModal, { type ProductFilters } from "../../components/FilterModal";
@@ -387,6 +388,7 @@ const ProductsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Priced products nobody can buy. Hides itself when there are none. */}
       <StockGapsCard />
+      <RepriceCard />
 
       {loading && (
         <div className="text-sm text-gray-500">

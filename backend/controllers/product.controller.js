@@ -11,6 +11,7 @@ import { paginateProducts } from "../utils/productPagination.js";
 import User from "../models/user.model.js";
 import Brand from "../models/brand.model.js";
 import Category from "../models/category.model.js";
+import PriceSnapshot from "../models/priceSnapshot.model.js";
 import Notification from "../models/notification.model.js";
 import BrandRequest from "../models/brandRequest.model.js";
 import CategoryRequest from "../models/categoryRequest.model.js";
@@ -2187,5 +2188,177 @@ export const restockEmpty = controllerWrapper("restockEmpty", async (req, res) =
     success: true,
     changed: result.modifiedCount,
     quantity,
+  });
+});
+
+/* ── repricing a department ─────────────────────────────────────────── */
+
+/*
+  The same job scripts/adjustPrices.mjs does, for one department, behind a
+  button — with the same safety the script has, because that safety is the
+  whole reason a price change is not as casual as a stock change.
+
+  A percentage cannot be undone by arithmetic: down 12% does not cancel up 12%,
+  and the rounding loses a little more each way. So every run writes down what
+  the prices were before it touched them, and the undo replays those numbers.
+
+  Capped at 1,000 products. Past that the sensible tool is the script, which
+  chunks its writes and keeps its snapshot on disk where a person can read it.
+*/
+const REPRICE_CAP = 1000;
+
+/** Prices in a branch, rounded the way the script rounds them. */
+const repricePlan = async (categoryId, percent) => {
+  const pool = (await pooledCategoryIds([categoryId])).filter((id) =>
+    mongoose.Types.ObjectId.isValid(id)
+  );
+  if (!pool.length) return null;
+
+  const products = await Product.find({
+    audience: ANY_AUDIENCE,
+    deleted: { $ne: true },
+    category: { $in: pool.map((id) => new mongoose.Types.ObjectId(id)) },
+    price: { $gt: 0 },
+  })
+    .select("_id price")
+    .lean();
+
+  const factor = 1 + Number(percent) / 100;
+  // Whole pounds, except under a pound where rounding to the pound would send
+  // a quarter-pound component to zero. Same rule the script uses.
+  const round = (value) => (value < 1 ? Math.round(value * 100) / 100 : Math.round(value));
+
+  return products.map((p) => ({
+    product: p._id,
+    was: p.price,
+    became: round(p.price * factor),
+  }));
+};
+
+/** What a raise would do, before anybody presses anything. */
+export const getRepricePreview = controllerWrapper(
+  "getRepricePreview",
+  async (req, res) => {
+    const percent = Number(req.query.percent);
+    if (!Number.isFinite(percent) || percent === 0) {
+      return res.status(400).json({ success: false, message: "Give a percentage." });
+    }
+    const plan = await repricePlan(req.query.categoryId, percent);
+    if (!plan) {
+      return res.status(404).json({ success: false, message: "No such category." });
+    }
+
+    const pending = await PriceSnapshot.findOne({ undoneAt: { $exists: false } })
+      .sort({ createdAt: -1 })
+      .select("categoryName percent createdAt byName entries")
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      count: plan.length,
+      cap: REPRICE_CAP,
+      before: plan.reduce((sum, e) => sum + e.was, 0),
+      after: plan.reduce((sum, e) => sum + e.became, 0),
+      // What the undo button would undo, if anything.
+      last: pending
+        ? {
+            id: String(pending._id),
+            categoryName: pending.categoryName,
+            percent: pending.percent,
+            count: pending.entries.length,
+            at: pending.createdAt,
+            by: pending.byName,
+          }
+        : null,
+    });
+  }
+);
+
+/** Move them, after writing down what they were. */
+export const applyReprice = controllerWrapper("applyReprice", async (req, res) => {
+  const percent = Number(req.body?.percent);
+  if (!Number.isFinite(percent) || percent === 0 || Math.abs(percent) > 100) {
+    return res.status(400).json({
+      success: false,
+      message: "Give a percentage between -100 and 100, and not zero.",
+    });
+  }
+
+  const category = await Category.findById(req.body?.categoryId).select("name").lean();
+  const plan = await repricePlan(req.body?.categoryId, percent);
+  if (!plan || !category) {
+    return res.status(404).json({ success: false, message: "No such category." });
+  }
+  if (!plan.length) {
+    return res.status(400).json({ success: false, message: "Nothing priced in there." });
+  }
+  if (plan.length > REPRICE_CAP) {
+    return res.status(400).json({
+      success: false,
+      message: `That is ${plan.length} products. This button stops at ${REPRICE_CAP} — use scripts/adjustPrices.mjs for a run that size.`,
+    });
+  }
+
+  // Written first, and awaited, so a run that dies half way through still has
+  // its before-image on disk. A snapshot saved afterwards would be missing for
+  // exactly the run that needed it.
+  const snapshot = await PriceSnapshot.create({
+    categoryId: category._id,
+    categoryName: category.name,
+    percent,
+    entries: plan,
+    byName: req.user?.name || req.user?.email,
+  });
+
+  const result = await Product.bulkWrite(
+    plan.map((e) => ({
+      updateOne: { filter: { _id: e.product }, update: { $set: { price: e.became } } },
+    })),
+    { ordered: false }
+  );
+
+  logAudit(req, "product.repriced", "category", category._id, {
+    percent,
+    count: plan.length,
+    changed: result.modifiedCount,
+    snapshot: String(snapshot._id),
+  });
+
+  res.status(200).json({
+    success: true,
+    changed: result.modifiedCount,
+    percent,
+    categoryName: category.name,
+  });
+});
+
+/** Put the last raise back, from the numbers it wrote down. */
+export const undoReprice = controllerWrapper("undoReprice", async (req, res) => {
+  const snapshot = await PriceSnapshot.findOne({ undoneAt: { $exists: false } })
+    .sort({ createdAt: -1 });
+  if (!snapshot) {
+    return res.status(404).json({ success: false, message: "Nothing to undo." });
+  }
+
+  const result = await Product.bulkWrite(
+    snapshot.entries.map((e) => ({
+      updateOne: { filter: { _id: e.product }, update: { $set: { price: e.was } } },
+    })),
+    { ordered: false }
+  );
+
+  snapshot.undoneAt = new Date();
+  await snapshot.save();
+
+  logAudit(req, "product.reprice_undone", "category", snapshot.categoryId, {
+    percent: snapshot.percent,
+    restored: result.modifiedCount,
+    snapshot: String(snapshot._id),
+  });
+
+  res.status(200).json({
+    success: true,
+    restored: result.modifiedCount,
+    categoryName: snapshot.categoryName,
   });
 });

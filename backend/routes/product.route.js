@@ -20,6 +20,9 @@ import {
   getBestSellers,
   getBrandFacets,
   getStockGaps,
+  getRepricePreview,
+  applyReprice,
+  undoReprice,
   restockEmpty,
   getCart,
   getFeaturedProducts,
@@ -125,6 +128,9 @@ router.get("/brand-facets", publicListCache, getBrandFacets);
 */
 router.get("/audit/stock-gaps", protectRoute, requirePermission("products.bulk"), getStockGaps);
 router.post("/audit/restock", protectRoute, requirePermission("products.bulk"), restockEmpty);
+router.get("/audit/reprice", protectRoute, requirePermission("products.bulk"), getRepricePreview);
+router.post("/audit/reprice", protectRoute, requirePermission("products.bulk"), applyReprice);
+router.post("/audit/reprice/undo", protectRoute, requirePermission("products.bulk"), undoReprice);
 router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);
 router.get("/newest", publicListCache, translateResponse, getNewestProducts);
 router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);
