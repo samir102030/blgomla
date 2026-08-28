@@ -407,6 +407,26 @@ export const BAR_DEPARTMENTS: {
 */
 const BAR_TYPE_SIZES = [12, 11.5, 11];
 
+/*
+  How many pills the band will carry before the rest go under "More".
+
+  The switch on the storefront visibility screen means the list is no longer
+  nine things somebody wrote in a file — it is whatever an operator ticks, and
+  ticking all eighteen departments (or all three hundred and forty-nine
+  categories) has to produce something other than a wall of pills where the
+  header used to be.
+
+  Twelve because that is what two balanced lines hold at these names and this
+  type: the nine in the bar today measure 1,721px, and twelve of that length
+  come to roughly 2,300 — under two lines of a 1,440px bar with the gaps. Past
+  that the band stops being a shortcut and becomes a second menu, which is what
+  the menu beside it is already for.
+
+  Everything past the cap is still reachable, and still in the order it was
+  arranged: it moves into one more pill at the end rather than disappearing.
+*/
+const BAR_MAX_PILLS = 12;
+
 /**
  * Where to break a row that has to become two, so the halves come out even.
  *
@@ -566,6 +586,79 @@ const bySlugOf = (roots: CategoryNode[]) => {
 };
 
 /**
+ * The pill that carries whatever the band could not.
+ *
+ * Same shape and the same open-on-hover behaviour as a department, because to
+ * a visitor it is one more thing on the row. Its panel is wider and in two
+ * columns: what it holds is a flat list of departments rather than one
+ * department's children, and a single column of twelve would run off the
+ * bottom of a short window.
+ */
+const StripOverflow: React.FC<{
+  nodes: CategoryNode[];
+  onPick: (id: string) => void;
+}> = ({ nodes, onPick }) => {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const { ref, flipped } = useEdgeFlip(open);
+
+  return (
+    <li
+      className="relative"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") setOpen(false);
+      }}
+    >
+      <button
+        type="button"
+        onFocus={() => setOpen(true)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className={`flex items-center gap-1.5 py-1.5 px-3 rounded-full font-semibold uppercase tracking-wide whitespace-nowrap transition-colors ${
+          open
+            ? "bg-[#FFFFFF] text-[#0369A1]"
+            : "bg-white/10 text-white hover:bg-white/25"
+        }`}
+      >
+        {t("More")}
+        <span className="tabular-nums opacity-80">{nodes.length}</span>
+        <ChevronDownIcon
+          className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div
+          ref={ref}
+          className={`absolute top-full w-[26rem] max-w-[90vw] p-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl z-50 animate-fadeInDown ${
+            flipped ? "ltr:right-0 rtl:left-0" : "ltr:left-0 rtl:right-0"
+          }`}
+        >
+          <ul className="grid grid-cols-2 gap-x-2 max-h-[60vh] overflow-y-auto">
+            {nodes.map((node) => (
+              <li key={node._id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onPick(node._id);
+                  }}
+                  className="w-full text-start px-3 py-2 rounded-lg text-sm text-[var(--text)] hover:bg-[var(--surface-2)] transition-colors truncate"
+                >
+                  {node.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </li>
+  );
+};
+
+/**
  * The department strip: the chosen shortlist, across the bar.
  *
  * The row is allowed to wrap rather than scroll. A hidden horizontal scroller
@@ -611,11 +704,22 @@ export const CategoryBar: React.FC = () => {
     return chosen.length ? chosen : tree;
   }, [tree, language]);
 
+  /*
+    The band carries the first twelve; the rest go under one more pill.
+
+    Measured on what is actually rendered, so the fitting below never has to
+    reason about items that are not there — which is also what keeps it stable:
+    a measurement that could hide an item would change what it measures next
+    time and oscillate.
+  */
+  const onBand = departments.slice(0, BAR_MAX_PILLS);
+  const underMore = departments.slice(BAR_MAX_PILLS);
+
   // Keyed on which departments are in the row, so a rename or a department
   // appearing after the catalogue loads is re-measured rather than left at a
   // size that was chosen for different words.
   const { ref: rowRef, splitAt } = useFitToOneLine(
-    departments.map((node) => node.label).join("|")
+    onBand.map((node) => node.label).join("|") + `|+${underMore.length}`
   );
 
   // Nothing to show until the catalogue has loaded — and an empty strip would
@@ -625,9 +729,15 @@ export const CategoryBar: React.FC = () => {
   const pick = (id: string) =>
     navigate(`/products?category=${encodeURIComponent(id)}`);
 
-  const items: React.ReactNode[] = departments.map((node) => (
+  const items: React.ReactNode[] = onBand.map((node) => (
     <StripItem key={node._id} node={node} onPick={pick} />
   ));
+
+  if (underMore.length) {
+    items.push(
+      <StripOverflow key="more" nodes={underMore} onPick={pick} />
+    );
+  }
 
   /*
     Not a category, on purpose.
