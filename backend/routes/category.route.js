@@ -45,12 +45,47 @@ const memCache = cache({ namespace: "categories", ttl: 5 * 60_000 });
 // catalogue as it was before the edit.
 const invalidate = invalidateStorefront("categories");
 
+/*
+  The dashboard reads this route too, and it must not be cached at the edge.
+
+  `includeHidden=true` is the dashboard's list — the one with a checkbox on
+  every row. Keying both caches on the full URL keeps its answer apart from the
+  storefront's, which is what the note above is about, but "apart" is not the
+  same as "fresh": Vercel's edge held the dashboard's copy for a minute of its
+  own accord. Measured, twice in a row a second apart: `x-vercel-cache: MISS`
+  then `HIT, age: 2`.
+
+  What that looked like from a chair: tick the box, the PUT lands and saves,
+  the page refetches, the edge answers with the list from before the tick, and
+  the checkbox goes back to where it was. Every toggle on that screen, every
+  time — a control that visibly does nothing.
+
+  Clearing the server's own cache on write, which the PUT already does, cannot
+  reach a copy held in front of it. So the admin list opts out of caching
+  altogether. It is one small response, read by a handful of people, and it is
+  the one read in the shop that happens immediately after a write.
+
+  The storefront's answer — nobody has just edited it, and everybody asks for
+  it — is cached exactly as before.
+*/
+const listCache = (req, res, next) => {
+  if (req.query.includeHidden) {
+    res.set("Cache-Control", "private, no-store");
+    // Past the server's own store as well. The PUT clears that one, but it
+    // clears it on the way in rather than after the save, so a read landing in
+    // between could put the old answer straight back. The dashboard's list is
+    // the one read in the shop that must simply be true.
+    return next();
+  }
+  return publicCache(req, res, () => memCache(req, res, next));
+};
+
 // Public (static before dynamic)
 // The response depends on `includeHidden`. Both caches key on the full URL,
 // query string included, so the dashboard's answer and the storefront's are
 // stored apart — which is the only reason it is safe to vary the body by a
 // query parameter on a cached route at all.
-router.get("/", publicCache, memCache, translateResponse, getAllCategories);
+router.get("/", listCache, translateResponse, getAllCategories);
 router.get("/tree", publicCache, memCache, translateResponse, getCategoryTree);
 router.get("/slug/:slug", publicCache, memCache, translateResponse, getCategoryBySlug);
 
