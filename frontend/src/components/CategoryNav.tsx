@@ -526,6 +526,32 @@ const useFitToOneLine = (signature: string) => {
   return { ref, splitAt };
 };
 
+/**
+ * The departments an operator has put on the strip, in the order they arranged
+ * them.
+ *
+ * `sortOrder` rather than the shape of the tree: the storefront visibility
+ * screen drags one flat list and renumbers every row in it, so that number is
+ * a statement about the whole catalogue's order and not about a position among
+ * siblings. Two departments from different branches then sit in the bar in the
+ * order they sit in on that screen, which is the only order the person
+ * arranging it can see.
+ */
+const barPicksOf = (roots: CategoryNode[]) => {
+  const picked: CategoryNode[] = [];
+  const walk = (list: CategoryNode[]) => {
+    for (const node of list) {
+      if (node.showInBar === true) picked.push(node);
+      walk(node.children);
+    }
+  };
+  walk(roots);
+  picked.sort(
+    (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.label.localeCompare(b.label)
+  );
+  return picked;
+};
+
 /** Every node in the menu tree, by slug, at any depth. */
 const bySlugOf = (roots: CategoryNode[]) => {
   const index = new Map<string, CategoryNode>();
@@ -555,6 +581,19 @@ export const CategoryBar: React.FC = () => {
   const navigate = useNavigate();
 
   const departments = useMemo(() => {
+    /*
+      What the operator chose, if they have chosen.
+
+      The switch on the storefront visibility screen is the list now. The
+      hard-coded shortlist below stays as the fallback for the one state that
+      screen cannot express: nothing ticked at all. That is what every
+      catalogue looks like the moment this ships, and a bar that empties itself
+      on deploy — then fills again the first time somebody ticks one box — is a
+      worse answer than the nine it has been showing.
+    */
+    const picked = barPicksOf(tree);
+    if (picked.length) return picked;
+
     const index = bySlugOf(tree);
     const chosen: CategoryNode[] = [];
     for (const entry of BAR_DEPARTMENTS) {

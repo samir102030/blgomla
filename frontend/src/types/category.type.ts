@@ -12,6 +12,8 @@ export interface Category {
   // Whether the storefront's category menu lists it. Independent of isActive:
   // a live, browsable category can still be kept out of the menu.
   showInMenu?: boolean;
+  /** A slot on the department strip under the navbar. Off unless switched on. */
+  showInBar?: boolean;
   deleted: boolean;
   slug?: string;
   metaTitle?: string;

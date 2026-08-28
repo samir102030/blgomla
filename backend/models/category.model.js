@@ -88,6 +88,23 @@ const categorySchema = new mongoose.Schema(
       default: true,
     },
     /**
+     * A slot on the department strip under the navbar.
+     *
+     * Separate from `showInMenu` because the two lists answer different
+     * questions. The menu holds the whole catalogue and is meant to: a shopper
+     * who opens it is looking for something specific. The strip is a shortlist
+     * of about nine, sitting in front of everyone on every page, and it is
+     * useful precisely because it is short — putting all eighteen departments
+     * in it would make it another menu rather than a shortcut.
+     *
+     * So it defaults to off. A category earns a place on the strip by being
+     * switched on for it, not by existing.
+     */
+    showInBar: {
+      type: Boolean,
+      default: false,
+    },
+    /**
      * Marks a category as the root of a named section of the shop.
      *
      * Only the electronics branch uses it today, and it uses it so the code

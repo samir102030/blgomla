@@ -32,6 +32,7 @@ interface Row {
   sortOrder?: number;
   isActive?: boolean;
   showInMenu?: boolean;
+  showInBar?: boolean;
 }
 
 /** One draggable row. */
@@ -39,8 +40,14 @@ const SortableRow: React.FC<{
   row: Row;
   isAr: boolean;
   depth: number;
-  onToggle: (id: string, field: "isActive" | "showInMenu", value: boolean) => void;
-}> = ({ row, isAr, depth, onToggle }) => {
+  /** Brands have no department strip, so they get no switch for it. */
+  showBarToggle: boolean;
+  onToggle: (
+    id: string,
+    field: "isActive" | "showInMenu" | "showInBar",
+    value: boolean
+  ) => void;
+}> = ({ row, isAr, depth, showBarToggle, onToggle }) => {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: row._id });
@@ -124,6 +131,21 @@ const SortableRow: React.FC<{
         />
         {t("visibility.inMenu", "In menu")}
       </label>
+
+      {/* The strip under the navbar. Unticked by default and deliberately so:
+          it holds about nine, and its whole use is that it is shorter than the
+          menu beside it. Drag order decides the order it appears in. */}
+      {showBarToggle && (
+        <label className="flex items-center gap-1.5 text-[11px] cursor-pointer shrink-0 text-[var(--text-muted)]">
+          <input
+            type="checkbox"
+            checked={row.showInBar === true}
+            onChange={(e) => onToggle(row._id, "showInBar", e.target.checked)}
+            className="w-4 h-4 accent-[var(--brand-accent)]"
+          />
+          {t("visibility.inBar", "In top bar")}
+        </label>
+      )}
     </div>
   );
 };
@@ -175,7 +197,11 @@ const StorefrontVisibilityPage: React.FC = () => {
     setDirty(true);
   };
 
-  const toggle = (id: string, field: "isActive" | "showInMenu", value: boolean) => {
+  const toggle = (
+    id: string,
+    field: "isActive" | "showInMenu" | "showInBar",
+    value: boolean
+  ) => {
     setRows((prev) =>
       prev.map((r) => (r._id === id ? { ...r, [field]: value } : r))
     );
@@ -190,6 +216,9 @@ const StorefrontVisibilityPage: React.FC = () => {
           _id: r._id,
           isActive: r.isActive !== false,
           showInMenu: r.showInMenu !== false,
+          // Sent only for categories: the brands handler has no such field and
+          // a stray one would be written to every brand row.
+          ...(kind === "categories" ? { showInBar: r.showInBar === true } : {}),
         })),
       });
       toast.success(t("visibility.saved", "Saved — refresh the storefront to see it"));
@@ -324,6 +353,7 @@ const StorefrontVisibilityPage: React.FC = () => {
                   row={row}
                   isAr={isAr}
                   depth={depthById.get(row._id) || 0}
+                  showBarToggle={kind === "categories"}
                   onToggle={toggle}
                 />
               ))}

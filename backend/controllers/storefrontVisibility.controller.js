@@ -33,7 +33,7 @@ export const listForVisibility = controllerWrapper(
 
     const select =
       target.namespace === "categories"
-        ? "name nameAr image parentCategory sortOrder isActive showInMenu"
+        ? "name nameAr image parentCategory sortOrder isActive showInMenu showInBar"
         : "name nameAr logo sortOrder isActive showInMenu";
 
     const rows = await target.model
@@ -78,6 +78,9 @@ export const updateVisibility = controllerWrapper(
       const set = { sortOrder: (index + 1) * 10 };
       if (item.isActive !== undefined) set.isActive = !!item.isActive;
       if (item.showInMenu !== undefined) set.showInMenu = !!item.showInMenu;
+      // Categories only — a brand has no slot on the department strip, and a
+      // brands payload never carries the field.
+      if (item.showInBar !== undefined) set.showInBar = !!item.showInBar;
       return {
         updateOne: { filter: { _id: item._id }, update: { $set: set } },
       };
