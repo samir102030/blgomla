@@ -8,11 +8,12 @@
  * has it and the strip falls back to the shortlist hard-coded in
  * CategoryNav.tsx — which is why nothing changes on deploy. But that fallback
  * is all-or-nothing: the moment somebody ticks one box the other eight
- * disappear, which is a confusing first move for whoever opens that screen.
+ * disappear, which is a confusing first move for whoever opens that screen,
+ * and is exactly what happened.
  *
- * So this writes the current nine in, once. Afterwards the screen holds the
- * real list, ticking a tenth adds it rather than replacing nine, and the
- * fallback is never reached again.
+ * So this writes the current nine in. Afterwards the screen holds the real
+ * list, ticking a tenth adds it rather than replacing nine, and the fallback is
+ * never reached again. Safe to run at any point: it only ever adds.
  *
  * Matched on slug, the same key the hard-coded list uses: an id means nothing
  * to a person reading this, and a name is something an operator may rename.
@@ -47,18 +48,24 @@ const SLUGS = [
 
 await mongoose.connect(process.env.MONGO_URI);
 
+/*
+  Additive, not all-or-nothing.
+
+  This used to refuse the moment anything was ticked, on the reasoning that the
+  screen was then in charge. In practice the first thing that happens is
+  somebody ticks one box to see what it does — and that is precisely the state
+  where the other eight vanish from the strip and this script is most wanted.
+  Refusing there left the only way out as ticking eight boxes by hand in a list
+  of three hundred and forty-seven.
+
+  So it adds the ones that are missing and leaves everything else exactly as it
+  is. It never unticks anything, which is what makes running it twice safe.
+*/
 const already = await Category.countDocuments({
   showInBar: true,
   deleted: { $ne: true },
 });
-if (already) {
-  console.log(
-    `${already} categories are already on the strip — the screen is in charge now.\n` +
-      `Nothing to seed. Arrange it there instead.`
-  );
-  await mongoose.disconnect();
-  process.exit(0);
-}
+if (already) console.log(`${already} already on the strip — those are left alone.\n`);
 
 const missing = [];
 const found = [];
@@ -88,10 +95,15 @@ if (!apply) {
 }
 
 const result = await Category.updateMany(
-  { _id: { $in: found.map((c) => c._id) } },
+  { _id: { $in: found.map((c) => c._id) }, showInBar: { $ne: true } },
   { $set: { showInBar: true } }
 );
-console.log(`\nPut ${result.modifiedCount} departments on the strip.`);
+console.log(
+  `\nPut ${result.modifiedCount} departments on the strip` +
+    (found.length - result.modifiedCount
+      ? ` (${found.length - result.modifiedCount} were already there).`
+      : ".")
+);
 console.log("Arrange them at: Admin → Storefront visibility → Categories");
 
 await mongoose.disconnect();

@@ -19,6 +19,67 @@ const MODELS = {
 const resolve = (kind) => MODELS[kind] || null;
 
 /**
+ * The same rows, but each parent followed by its own children.
+ *
+ * Sorting by `sortOrder` alone is what the catalogue used to be arranged with,
+ * and it holds while every category has a deliberate number. Three hundred and
+ * forty-seven do not: an import gives whole branches the same sortOrder, and
+ * ties then fall back to the name — so "Amplifiers & Mixers" sorted above
+ * "Sound Systems", the department it belongs to, and the screen listed it three
+ * rows under Electronics instead. Read down the page and the tree is shredded:
+ * children of three different departments interleaved, each labelled with a
+ * parent that is nowhere near it.
+ *
+ * That matters more than it looks. This screen is not a report — it is the one
+ * place the storefront's order is decided, and an operator cannot arrange a
+ * list in which they cannot find anything.
+ *
+ * So the flat result is walked into tree order here rather than in the query:
+ * Mongo cannot express "depth-first over a parent pointer" in a sort, and the
+ * list is small enough that doing it in memory costs nothing. Within each
+ * level the order the query gave is kept, so `sortOrder` still decides what
+ * comes first among siblings — which is exactly what dragging a row writes.
+ *
+ * A category whose parent is missing (deleted, or filtered out) is treated as a
+ * root rather than dropped, because a row nobody can see is a row nobody can
+ * switch back on. `seen` stops a broken parent chain from repeating a subtree
+ * forever.
+ */
+const inTreeOrder = (rows) => {
+  const byId = new Map(rows.map((row) => [String(row._id), row]));
+  const childrenOf = new Map();
+  const roots = [];
+
+  for (const row of rows) {
+    const parent = row.parentCategory?._id || row.parentCategory;
+    const parentId = parent ? String(parent) : null;
+    if (!parentId || !byId.has(parentId)) {
+      roots.push(row);
+      continue;
+    }
+    if (!childrenOf.has(parentId)) childrenOf.set(parentId, []);
+    childrenOf.get(parentId).push(row);
+  }
+
+  const out = [];
+  const seen = new Set();
+  const walk = (list) => {
+    for (const row of list) {
+      const id = String(row._id);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      out.push(row);
+      walk(childrenOf.get(id) || []);
+    }
+  };
+  walk(roots);
+
+  // Anything a cycle kept out still has to be reachable.
+  for (const row of rows) if (!seen.has(String(row._id))) out.push(row);
+  return out;
+};
+
+/**
  * Everything an operator can arrange, including the hidden ones — the admin
  * view must show what is switched off, otherwise it can never be switched
  * back on.
@@ -46,7 +107,10 @@ export const listForVisibility = controllerWrapper(
       )
       .sort({ sortOrder: 1, name: 1 });
 
-    res.status(200).json({ success: true, items: rows });
+    res.status(200).json({
+      success: true,
+      items: target.namespace === "categories" ? inTreeOrder(rows) : rows,
+    });
   }
 );
 
