@@ -69,9 +69,9 @@ export const sendSMS = async (to, body) => {
 // Short bilingual order messages. Kept terse — SMS is charged per segment.
 export const orderSmsText = (lang, kind, orderNum) => {
   const ar = {
-    confirmed: `بلجملة: تم استلام طلبك #${orderNum}. شكراً لك!`,
-    shipped: `بلجملة: تم شحن طلبك #${orderNum} وهو في الطريق إليك.`,
-    delivered: `بلجملة: تم توصيل طلبك #${orderNum}. نتمنى لك تجربة سعيدة!`,
+    confirmed: `بالجملة: تم استلام طلبك #${orderNum}. شكراً لك!`,
+    shipped: `بالجملة: تم شحن طلبك #${orderNum} وهو في الطريق إليك.`,
+    delivered: `بالجملة: تم توصيل طلبك #${orderNum}. نتمنى لك تجربة سعيدة!`,
   };
   const en = {
     confirmed: `Belgomla: Order #${orderNum} received. Thank you!`,

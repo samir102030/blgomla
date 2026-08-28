@@ -254,8 +254,8 @@ const STRINGS = {
     questions: "هل لديك سؤال؟ راسلنا على",
     visitStore: "زيارة المتجر",
     rights: "جميع الحقوق محفوظة.",
-    address: "بلجملة، القاهرة، مصر",
-    youReceived: "أنت تتلقى هذا البريد لأن لديك حسابًا في بلجملة.",
+    address: "بالجملة، القاهرة، مصر",
+    youReceived: "أنت تتلقى هذا البريد لأن لديك حسابًا في بالجملة.",
     unsubscribeNote: "لا يمكن إلغاء الاشتراك في رسائل الحساب التشغيلية.",
     privacy: "الخصوصية",
     terms: "الشروط",
@@ -433,7 +433,7 @@ export const sendWelcomeEmail = async (user) => {
 
   const subjectMap = {
     en: "Welcome to Belgomla — verify your email",
-    ar: "أهلًا بك في بلجملة — يرجى تأكيد بريدك الإلكتروني",
+    ar: "أهلًا بك في بالجملة — يرجى تأكيد بريدك الإلكتروني",
   };
   const previewMap = {
     en: code ? `Your verification code is ${code}` : "Your account is ready.",
@@ -456,7 +456,7 @@ export const sendWelcomeEmail = async (user) => {
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">أهلًا بك معنا 🎉</h1>
     <p class="text" style="margin:0 0 14px;">${greeting("ar", name)}</p>
-    <p class="text" style="margin:0 0 14px;">حسابك في بلجملة جاهز. أصبحت الآن جزءًا من السوق الأول في مصر لتكنولوجيا المعلومات والشبكات — من الراوترات والسويتشات إلى السيرفرات وأنظمة الأمن وأكثر.</p>
+    <p class="text" style="margin:0 0 14px;">حسابك في بالجملة جاهز. أصبحت الآن جزءًا من السوق الأول في مصر لتكنولوجيا المعلومات والشبكات — من الراوترات والسويتشات إلى السيرفرات وأنظمة الأمن وأكثر.</p>
     ${code ? `
       <p class="text" style="margin:18px 0 8px;font-weight:600;">خطوة أخيرة — يرجى تأكيد بريدك الإلكتروني بهذا الرمز:</p>
       ${codeBox(code)}
@@ -473,7 +473,7 @@ export const sendWelcomeEmail = async (user) => {
   });
 
   const text = lang === "ar"
-    ? `أهلًا بك في بلجملة\n\n${greeting("ar", name)}\nحسابك جاهز.${code ? `\n\nرمز التحقق: ${code}\nالصلاحية: 24 ساعة` : ""}\n\nالدعم: ${SUPPORT_EMAIL}`
+    ? `أهلًا بك في بالجملة\n\n${greeting("ar", name)}\nحسابك جاهز.${code ? `\n\nرمز التحقق: ${code}\nالصلاحية: 24 ساعة` : ""}\n\nالدعم: ${SUPPORT_EMAIL}`
     : `Welcome to Belgomla\n\n${greeting("en", name)}\nYour account is ready.${code ? `\n\nVerification code: ${code}\nExpires in 24 hours` : ""}\n\nSupport: ${SUPPORT_EMAIL}`;
 
   return sendEmail({ to: user.email, subject: subjectMap[lang], html, text });
@@ -488,7 +488,7 @@ export const sendVerificationEmail = async (user) => {
 
   const subjectMap = {
     en: "Your Belgomla verification code",
-    ar: "رمز التحقق الخاص بك في بلجملة",
+    ar: "رمز التحقق الخاص بك في بالجملة",
   };
   const previewMap = {
     en: `Your code: ${code}`,
@@ -509,7 +509,7 @@ export const sendVerificationEmail = async (user) => {
     <p class="text" style="margin:0 0 14px;">${greeting("ar", user.name)}</p>
     <p class="text" style="margin:0 0 8px;">استخدم الرمز أدناه لتأكيد بريدك وإتمام تسجيل الدخول:</p>
     ${codeBox(code)}
-    ${noticeBlock("warning", "صلاحية هذا الرمز 24 ساعة. لا تشاركه مع أي شخص — موظفو بلجملة لن يطلبوا منك هذا الرمز أبدًا.")}
+    ${noticeBlock("warning", "صلاحية هذا الرمز 24 ساعة. لا تشاركه مع أي شخص — موظفو بالجملة لن يطلبوا منك هذا الرمز أبدًا.")}
     <p class="text-muted" style="margin:14px 0 0;color:${T.textMuted};font-size:13px;">إن لم تطلب هذا الرمز يمكنك تجاهل الرسالة — حسابك آمن.</p>
   `;
 
@@ -536,7 +536,7 @@ export const sendPasswordResetEmail = async (user, resetToken, clientUrl) => {
 
   const subjectMap = {
     en: "Reset your Belgomla password",
-    ar: "إعادة تعيين كلمة المرور في بلجملة",
+    ar: "إعادة تعيين كلمة المرور في بالجملة",
   };
   const previewMap = {
     en: "Click to reset your password. Link valid for 1 hour.",
@@ -556,7 +556,7 @@ export const sendPasswordResetEmail = async (user, resetToken, clientUrl) => {
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">إعادة تعيين كلمة المرور</h1>
     <p class="text" style="margin:0 0 14px;">${greeting("ar", user.name)}</p>
-    <p class="text" style="margin:0 0 14px;">تلقّينا طلبًا لإعادة تعيين كلمة المرور لحسابك في بلجملة. اضغط الزر بالأسفل لاختيار كلمة مرور جديدة.</p>
+    <p class="text" style="margin:0 0 14px;">تلقّينا طلبًا لإعادة تعيين كلمة المرور لحسابك في بالجملة. اضغط الزر بالأسفل لاختيار كلمة مرور جديدة.</p>
     ${ctaButton(resetLink, "إعادة تعيين كلمة المرور")}
     <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">لا يعمل الزر؟ انسخ هذا الرابط إلى المتصفح:</p>
     <p style="margin:0 0 14px;word-break:break-all;font-family:'SFMono-Regular',Menlo,Monaco,Consolas,monospace;font-size:12px;color:${T.orange};direction:ltr;">${resetLink}</p>
@@ -1044,7 +1044,7 @@ export const sendStudentVerificationEmail = async (user, profile, token, clientU
 
   const subjectMap = {
     en: "Confirm your university email — Belgomla Students",
-    ar: "أكّد بريدك الجامعي — طلاب بلجملة",
+    ar: "أكّد بريدك الجامعي — طلاب بالجملة",
   };
   const previewMap = {
     en: "One click to confirm your faculty address and unlock your student discount.",
@@ -1064,7 +1064,7 @@ export const sendStudentVerificationEmail = async (user, profile, token, clientU
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">أكّد بريدك الجامعي</h1>
     <p class="text" style="margin:0 0 14px;">${greeting("ar", user?.name)}</p>
-    <p class="text" style="margin:0 0 14px;">طلبت الانضمام لبرنامج طلاب بلجملة باستخدام <strong>${profile.universityEmail}</strong>. أكّد البريد لتحصل على كود الخصم الشخصي على الإلكترونيات.</p>
+    <p class="text" style="margin:0 0 14px;">طلبت الانضمام لبرنامج طلاب بالجملة باستخدام <strong>${profile.universityEmail}</strong>. أكّد البريد لتحصل على كود الخصم الشخصي على الإلكترونيات.</p>
     ${ctaButton(link, "تأكيد البريد")}
     <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">لا يعمل الزر؟ انسخ هذا الرابط إلى المتصفح:</p>
     <p style="margin:0 0 14px;word-break:break-all;font-family:'SFMono-Regular',Menlo,Monaco,Consolas,monospace;font-size:12px;color:${T.orange};direction:ltr;">${link}</p>

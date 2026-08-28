@@ -328,7 +328,7 @@ const STATIC = {
     "You can pay cash on delivery, by card, or in instalments.",
   ],
   greeting: [
-    "أهلاً بيك في بلجملة. أقدر أساعدك في طلبك، أو في منتج بتدوّر عليه، أو في الشحن والإرجاع.",
+    "أهلاً بيك في بالجملة. أقدر أساعدك في طلبك، أو في منتج بتدوّر عليه، أو في الشحن والإرجاع.",
     "Welcome to Belgomla. I can help with your order, with a product you are looking for, or with shipping and returns.",
   ],
 };
