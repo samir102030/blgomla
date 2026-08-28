@@ -2207,6 +2207,24 @@ export const restockEmpty = controllerWrapper("restockEmpty", async (req, res) =
 */
 const REPRICE_CAP = 1000;
 
+/*
+  What counts as a percentage, in both directions.
+
+  `-100` has to be excluded rather than merely bounded. It passes an
+  `Math.abs(percent) > 100` test, gives a factor of exactly zero, and turns
+  every price in the department into 0 — which in this shop does not read as
+  "free", it reads as quote-only, so a mistyped minus would quietly convert a
+  whole department and nothing would look broken until somebody noticed. The
+  snapshot would get it back, but a guard is cheaper than an undo.
+
+  Preview and apply share this so the two cannot disagree. They did: the
+  preview accepted anything finite and drew totals for -500, and Apply then
+  refused it with a 400 the button had given no warning about.
+*/
+const PERCENT_RULE = "Give a percentage above -100 and up to 100, and not zero.";
+const isSanePercent = (percent) =>
+  Number.isFinite(percent) && percent !== 0 && percent > -100 && percent <= 100;
+
 /** Prices in a branch, rounded the way the script rounds them. */
 const repricePlan = async (categoryId, percent) => {
   const pool = (await pooledCategoryIds([categoryId])).filter((id) =>
@@ -2240,8 +2258,8 @@ export const getRepricePreview = controllerWrapper(
   "getRepricePreview",
   async (req, res) => {
     const percent = Number(req.query.percent);
-    if (!Number.isFinite(percent) || percent === 0) {
-      return res.status(400).json({ success: false, message: "Give a percentage." });
+    if (!isSanePercent(percent)) {
+      return res.status(400).json({ success: false, message: PERCENT_RULE });
     }
     const plan = await repricePlan(req.query.categoryId, percent);
     if (!plan) {
@@ -2277,11 +2295,8 @@ export const getRepricePreview = controllerWrapper(
 /** Move them, after writing down what they were. */
 export const applyReprice = controllerWrapper("applyReprice", async (req, res) => {
   const percent = Number(req.body?.percent);
-  if (!Number.isFinite(percent) || percent === 0 || Math.abs(percent) > 100) {
-    return res.status(400).json({
-      success: false,
-      message: "Give a percentage between -100 and 100, and not zero.",
-    });
+  if (!isSanePercent(percent)) {
+    return res.status(400).json({ success: false, message: PERCENT_RULE });
   }
 
   const category = await Category.findById(req.body?.categoryId).select("name").lean();

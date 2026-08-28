@@ -3599,6 +3599,7 @@
   "stock.fill": "Put them back on the shelf",
   "stock.done": "{{count}} products are back on the shelf",
   "stock.failed": "Couldn't set the stock",
+  "reprice.range": "A percentage above -100 and up to 100.",
   "reprice.title": "Move a department's prices",
   "reprice.subtitle": "Every priced product in the department and everything under it. The old prices are kept, so this can be put back.",
   "reprice.pick": "Choose a department…",

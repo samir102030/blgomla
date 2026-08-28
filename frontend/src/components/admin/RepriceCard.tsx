@@ -56,8 +56,11 @@ const RepriceCard: React.FC = () => {
     [categories]
   );
 
+  /** The server's rule, so the field cannot ask for something Apply refuses. */
+  const sane = Number.isFinite(percent) && percent !== 0 && percent > -100 && percent <= 100;
+
   const load = useCallback(async () => {
-    if (!categoryId || !percent) {
+    if (!categoryId || !sane) {
       setPreview(null);
       return;
     }
@@ -69,10 +72,18 @@ const RepriceCard: React.FC = () => {
     } catch {
       setPreview(null);
     }
-  }, [categoryId, percent]);
+  }, [categoryId, percent, sane]);
 
+  /*
+    A beat before asking.
+
+    The preview counts every priced product in the branch, and the field fires
+    on each keystroke — typing "12" into Electronics was two full scans of
+    5,656 products for one number nobody had finished typing yet.
+  */
   useEffect(() => {
-    load();
+    const timer = window.setTimeout(load, 350);
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   const apply = async () => {
@@ -161,7 +172,7 @@ const RepriceCard: React.FC = () => {
         <button
           type="button"
           onClick={apply}
-          disabled={busy || !preview?.count || tooMany}
+          disabled={busy || !sane || !preview?.count || tooMany}
           className="inline-flex items-center gap-2 bg-[var(--brand-primary)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 disabled:opacity-40 transition-opacity"
         >
           {busy && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
@@ -183,6 +194,12 @@ const RepriceCard: React.FC = () => {
           </button>
         )}
       </div>
+
+      {!sane && percent !== 0 && (
+        <p className="text-xs text-[var(--text-muted)]">
+          {t("reprice.range", "A percentage above -100 and up to 100.")}
+        </p>
+      )}
 
       {preview && (
         <p
