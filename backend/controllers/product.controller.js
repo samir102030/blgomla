@@ -2115,3 +2115,77 @@ export const getBrandFacets = controllerWrapper(
     });
   }
 );
+
+/* ── stock gaps ─────────────────────────────────────────────────────── */
+
+/*
+  Products that are priced and unavailable.
+
+  A shop with 1,022 of them across every department is not a shop with a
+  stocking problem — it is an import that arrived without a stock column, and
+  every one of those products reads "Out of Stock" to a customer who could have
+  bought it. The script that fixes this lives in scripts/adjustPrices.mjs and
+  wants a terminal and a database URL; this pair is the same thing behind a
+  button, which is the difference between fixed and fixable.
+
+  `audience` is named explicitly in both. The schema hook hides the unpublished
+  section from any query that does not mention it, which is right for a
+  storefront listing and wrong here: a count that excluded that branch would
+  disagree with an updateMany, which the hook does not reach at all — and the
+  screen would report a number it had not changed.
+*/
+const STOCK_GAP = {
+  audience: ANY_AUDIENCE,
+  deleted: { $ne: true },
+  price: { $gt: 0 },
+  $or: [{ stock: { $lte: 0 } }, { stock: { $exists: false } }],
+};
+
+/** How many are sitting there, and how many cannot be helped by a number. */
+export const getStockGaps = controllerWrapper("getStockGaps", async (req, res) => {
+  const [empty, unpriced, total] = await Promise.all([
+    Product.countDocuments(STOCK_GAP),
+    // A product with no price stays out of stock on purpose: availability is
+    // read off `stock`, so stocking one would put it on sale for nothing.
+    Product.countDocuments({
+      audience: ANY_AUDIENCE,
+      deleted: { $ne: true },
+      $or: [{ price: { $lte: 0 } }, { price: { $exists: false } }],
+    }),
+    Product.countDocuments({ audience: ANY_AUDIENCE, deleted: { $ne: true } }),
+  ]);
+
+  res.status(200).json({ success: true, empty, unpriced, total });
+});
+
+/**
+ * Give every priced product with no stock the same quantity.
+ *
+ * Only the ones at zero. A product somebody has counted — 7 of this, 3 of
+ * that — keeps its figure, because a stock count somebody is keeping is not
+ * this button's to flatten on the way past.
+ */
+export const restockEmpty = controllerWrapper("restockEmpty", async (req, res) => {
+  const quantity = Number(req.body?.quantity);
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100000) {
+    return res.status(400).json({
+      success: false,
+      message: "Give a whole number of units between 1 and 100000.",
+    });
+  }
+
+  const before = await Product.countDocuments(STOCK_GAP);
+  const result = await Product.updateMany(STOCK_GAP, { $set: { stock: quantity } });
+
+  logAudit(req, "product.restocked", "product", null, {
+    quantity,
+    matched: before,
+    changed: result.modifiedCount,
+  });
+
+  res.status(200).json({
+    success: true,
+    changed: result.modifiedCount,
+    quantity,
+  });
+});

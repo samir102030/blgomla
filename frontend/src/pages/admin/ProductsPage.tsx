@@ -10,6 +10,7 @@ import { useVendorStore } from "../../stores/vendor.store";
 import { axiosInstance } from "../../lib/axios";
 import AddProductModal from "../../components/AddProductModal";
 import ProductDetailsModal from "../../components/ProductDetailsModal";
+import StockGapsCard from "../../components/admin/StockGapsCard";
 import EditProductModal from "../../components/EditProductModal";
 import DeleteProductModal from "../../components/DeleteProductModal";
 import FilterModal, { type ProductFilters } from "../../components/FilterModal";
@@ -384,6 +385,9 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Priced products nobody can buy. Hides itself when there are none. */}
+      <StockGapsCard />
+
       {loading && (
         <div className="text-sm text-gray-500">
           {t("product.loadingProducts")}

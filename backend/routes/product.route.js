@@ -19,6 +19,8 @@ import {
   getAllProducts,
   getBestSellers,
   getBrandFacets,
+  getStockGaps,
+  restockEmpty,
   getCart,
   getFeaturedProducts,
   getMostRatedProducts,
@@ -113,6 +115,16 @@ router.get("/search-suggestions", publicListCache, translateResponse, getSearchS
 // Which brands the ticked categories actually hold. Cached like the other
 // public reads: it changes when the catalogue does, not between two clicks.
 router.get("/brand-facets", publicListCache, getBrandFacets);
+
+/*
+  Priced products with no stock, and the button that fills them.
+
+  Admin-only and behind the same permission as the other bulk writes. Static
+  paths, so they sit above the `/:productId` routes below and are never
+  swallowed by them.
+*/
+router.get("/audit/stock-gaps", protectRoute, requirePermission("products.bulk"), getStockGaps);
+router.post("/audit/restock", protectRoute, requirePermission("products.bulk"), restockEmpty);
 router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);
 router.get("/newest", publicListCache, translateResponse, getNewestProducts);
 router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);
