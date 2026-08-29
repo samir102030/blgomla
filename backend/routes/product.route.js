@@ -67,7 +67,12 @@ import {
   updateCompetitorPrice,
   deleteCompetitorPrice,
 } from "../controllers/product.controller.js";
-import { getSaleAudit, clearSales } from "../controllers/saleAudit.controller.js";
+import {
+  getSaleAudit,
+  clearSales,
+  capSales,
+  undoCapSales,
+} from "../controllers/saleAudit.controller.js";
 import { subscribeStockAlert } from "../controllers/stockAlert.controller.js";
 
 import {
@@ -163,11 +168,15 @@ router.delete("/cart/:productId", protectRoute, removeFromCart);
 router.post("/", protectRoute, requirePermission("products.create"), validateCreateProduct, createProduct);
 router.put("/bulk-update", protectRoute, adminRoute, bulkUpdateProducts);
 
-/* What the shop is discounting, and switching it off.
+/* What the shop is discounting, and the two ways to rein it in: switch the
+   discounts off, or cap how deep they go (with an undo, because capping
+   overwrites the old percentages).
 
    Registered above "/:productId" so "sales" is not read as a product id. */
 router.get("/sales/audit", protectRoute, adminRoute, getSaleAudit);
 router.post("/sales/clear", protectRoute, adminRoute, clearSales);
+router.post("/sales/cap", protectRoute, adminRoute, capSales);
+router.post("/sales/cap/undo", protectRoute, adminRoute, undoCapSales);
 router.get("/approvals", protectRoute, requirePermission("products.approve"), getProductApprovals);
 router.get("/pricing-insights", protectRoute, requirePermission("products.view"), getPricingInsights);
 router.post("/:productId/approve", protectRoute, requirePermission("products.approve"), approveProduct);

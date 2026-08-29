@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import SaleSnapshot from "../models/saleSnapshot.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { logAudit } from "../utils/audit.js";
 import { ANY_AUDIENCE } from "../utils/electronicsVisibility.js";
@@ -102,5 +103,115 @@ export const clearSales = controllerWrapper("clearSales", async (req, res) => {
     cleared: result.modifiedCount,
     // Said plainly, because it is what makes this safe to press.
     note: "salePercentage was left as it was; only saleActive changed.",
+  });
+});
+
+/**
+ * Put a ceiling on the discounts instead of switching them off.
+ *
+ * Clearing is the blunt answer: everything stops, including whatever was
+ * deliberate. A cap is the other one — a shop that is willing to discount, but
+ * not to give a EGP 1,199 battery away for 24, says so as a number. Everything
+ * above the line comes down to the line; everything at or below it is left
+ * exactly as it was, because those are the ones that look like real pricing.
+ *
+ * The filter deliberately does not mention `saleActive`. A percentage sitting
+ * on a switched-off product is not harmless: it is a loaded gun, and the moment
+ * anybody toggles the sale back on the shop is charging 90% off again. The
+ * numbers are what get capped, so every number gets capped.
+ *
+ * This one does erase something, which clearing did not — so, like the price
+ * raise, it writes down what it is about to overwrite before it overwrites it.
+ */
+export const capSales = controllerWrapper("capSales", async (req, res) => {
+  const cap = Number(req.body?.maxPercentage);
+  if (!Number.isFinite(cap) || cap < 1 || cap > 100) {
+    return res.status(400).json({
+      success: false,
+      message: "Give a ceiling between 1 and 100.",
+    });
+  }
+
+  // Only what is above the line. Products already at or under it are not
+  // touched, so this is safe to press twice.
+  const filter = {
+    audience: ANY_AUDIENCE,
+    deleted: { $ne: true },
+    salePercentage: { $gt: cap },
+  };
+
+  const rows = await Product.find(filter).select("_id salePercentage").lean();
+  if (!rows.length) {
+    // No snapshot for a run that changes nothing: an empty one would become the
+    // newest un-undone snapshot and quietly swallow the undo of a real run.
+    return res.status(200).json({ success: true, capped: 0, cap });
+  }
+
+  // Written first, and awaited, so a run that dies half way through still has
+  // its before-image on disk. A snapshot saved afterwards would be missing for
+  // exactly the run that needed it.
+  const snapshot = await SaleSnapshot.create({
+    cap,
+    entries: rows.map((p) => ({ product: p._id, was: p.salePercentage })),
+    byName: req.user?.name || req.user?.email,
+  });
+
+  const result = await Product.updateMany(filter, { $set: { salePercentage: cap } });
+
+  await logAudit(req, "product.sales.capped", "product", null, {
+    cap,
+    matched: rows.length,
+    modified: result.modifiedCount,
+    snapshot: String(snapshot._id),
+  });
+
+  res.status(200).json({
+    success: true,
+    capped: result.modifiedCount,
+    cap,
+    // Said plainly, because it is what makes this safe to press.
+    note: `Discounts above ${cap}% were lowered to ${cap}%; the rest were left alone, and saleActive did not change.`,
+  });
+});
+
+/**
+ * Put the last cap back, from the numbers it wrote down.
+ *
+ * It restores what the run overwrote, so a percentage somebody edited by hand
+ * in the meantime goes back to its pre-cap value too. That is the same bargain
+ * the price undo makes, and the reason the button is offered for the newest
+ * run only.
+ */
+export const undoCapSales = controllerWrapper("undoCapSales", async (req, res) => {
+  const snapshot = await SaleSnapshot.findOne({ undoneAt: { $exists: false } }).sort({
+    createdAt: -1,
+  });
+  if (!snapshot) {
+    return res.status(404).json({ success: false, message: "Nothing to undo." });
+  }
+
+  const result = await Product.bulkWrite(
+    snapshot.entries.map((e) => ({
+      updateOne: {
+        filter: { _id: e.product },
+        update: { $set: { salePercentage: e.was } },
+      },
+    })),
+    { ordered: false }
+  );
+
+  snapshot.undoneAt = new Date();
+  await snapshot.save();
+
+  await logAudit(req, "product.sales.cap_undone", "product", null, {
+    cap: snapshot.cap,
+    restored: result.modifiedCount,
+    snapshot: String(snapshot._id),
+  });
+
+  res.status(200).json({
+    success: true,
+    restored: result.modifiedCount,
+    cap: snapshot.cap,
   });
 });
