@@ -139,6 +139,7 @@ const DealsManagerPage: React.FC = () => {
 
   const [ceiling, setCeiling] = useState(CEILING);
   const [sweeping, setSweeping] = useState(false);
+  const [picking, setPicking] = useState(false);
 
   const overCeiling = percentage > CEILING;
 
@@ -273,14 +274,67 @@ const DealsManagerPage: React.FC = () => {
       return next;
     });
 
-  /** Every mutation on this page is this one request with a different body. */
+  /**
+   * Select every row the current view matches, not just the page on screen.
+   *
+   * The header checkbox ticks what is rendered, which is fifty rows. Someone
+   * clearing a campaign of four hundred products reads that as "select all",
+   * presses remove, watches the number fall by fifty, and does it again —
+   * except the pages behind it never come into view, so the count walks down in
+   * fifty-sized steps and never reaches the end. The set the operator means is
+   * the whole result, so this walks it.
+   */
+  const selectAllMatching = async () => {
+    setPicking(true);
+    try {
+      const ids: string[] = [];
+      for (let p = 1; p <= 200; p++) {
+        const { data } =
+          tab === "in"
+            ? await axiosInstance.get("/products/saleProducts", { params: { page: p, limit: 100 } })
+            : await axiosInstance.get("/products", {
+                params: {
+                  page: p,
+                  limit: 100,
+                  audience: "public",
+                  ...(debounced ? { search: debounced } : {}),
+                  ...(categoryId ? { categoryId } : {}),
+                },
+              });
+        ids.push(...(data?.data ?? []).map((r: Row) => r._id));
+        if (p >= (data?.pages ?? 1)) break;
+      }
+      setPicked(new Set(ids));
+      toast.success(ar ? `${ids.length} متحددين` : `${ids.length} selected`);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || (ar ? "مانفعش" : "That did not work"));
+    } finally {
+      setPicking(false);
+    }
+  };
+
+  /**
+   * Every mutation on this page is this one request with a different body.
+   *
+   * Sent in chunks, because the selection is no longer bounded by what fits on
+   * a page: a whole-catalogue selection in a single body is a request big
+   * enough for a proxy to refuse, and the refusal would land after the operator
+   * had already been told the work was under way.
+   */
   const apply = async (updateData: Record<string, unknown>, done: string) => {
     const ids = Array.from(picked);
     if (!ids.length) return;
     setBusy(true);
     try {
-      const { data } = await axiosInstance.put("/products/bulk-update", { ids, updateData });
-      toast.success(`${done} — ${Number(data?.modifiedCount ?? 0).toLocaleString()}`);
+      let changed = 0;
+      for (let i = 0; i < ids.length; i += 200) {
+        const { data } = await axiosInstance.put("/products/bulk-update", {
+          ids: ids.slice(i, i + 200),
+          updateData,
+        });
+        changed += data?.modifiedCount ?? 0;
+      }
+      toast.success(`${done} — ${changed.toLocaleString()}`);
       setPicked(new Set());
       await Promise.all([loadInDeals(), loadAudit()]);
       if (tab === "add") await runSearch();
@@ -785,6 +839,41 @@ const DealsManagerPage: React.FC = () => {
               </span>
             </label>
           )}
+        </div>
+      )}
+
+      {/* The header checkbox ticks the page, which is the honest thing for it to
+          do and the wrong thing for someone clearing a campaign. Offered only
+          once the page is fully ticked and there is more behind it, so it reads
+          as the answer to a question already being asked. */}
+      {allShown && rows.pages > 1 && picked.size < rows.total && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3 rounded-xl border border-sky-300 bg-sky-50 p-3">
+          <span className="text-sm text-sky-900">
+            {ar
+              ? `الـ ${rows.data.length} اللي في الصفحة دي متحددين.`
+              : `All ${rows.data.length} on this page are selected.`}
+          </span>
+          <button
+            onClick={selectAllMatching}
+            disabled={picking}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 text-white px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+          >
+            {picking && <ArrowPathIcon className="w-4 h-4 animate-spin" aria-hidden="true" />}
+            {ar ? `حدد الـ ${rows.total.toLocaleString()} كلهم` : `Select all ${rows.total.toLocaleString()}`}
+          </button>
+        </div>
+      )}
+
+      {picked.size > rows.data.length && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-3 rounded-xl border border-sky-300 bg-sky-50 p-3">
+          <span className="text-sm font-medium text-sky-900">
+            {ar
+              ? `${picked.size.toLocaleString()} منتج متحددين عبر كل الصفحات.`
+              : `${picked.size.toLocaleString()} products selected across every page.`}
+          </span>
+          <button onClick={() => setPicked(new Set())} className="text-sm text-sky-700 underline">
+            {ar ? "إلغاء التحديد" : "Clear selection"}
+          </button>
         </div>
       )}
 
