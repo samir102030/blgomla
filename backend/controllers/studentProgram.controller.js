@@ -516,7 +516,26 @@ export const normalizeMailDomain = (raw) => {
   value = value.split("/")[0].split("?")[0].split(":")[0];
 
   // A fully-qualified name ends in a dot; a fat-fingered one may too.
-  return value.replace(/^\.+|\.+$/g, "").trim();
+  value = value.replace(/^\.+|\.+$/g, "").trim();
+
+  /*
+    `www.` is a web host, never a mail domain.
+
+    This is the one paste the rest of the function invites and then does not
+    finish. Somebody looks up the faculty, copies what the address bar shows,
+    and lands `www.nu.edu.eg` on the list — which reads correct, passes the
+    format check, and matches no address anybody has, because the domain in
+    `s.mohamed@nu.edu.eg` is `nu.edu.eg`. Nothing then says no: the programme
+    accepts the entry, and every student who applies is turned away as being
+    from a faculty that is not on a list their faculty is on.
+
+    Only when something is left underneath. `www.com` is somebody's actual
+    domain, and eating the label would leave a bare `com`.
+  */
+  const bare = value.replace(/^www\./, "");
+  if (bare !== value && bare.includes(".")) value = bare;
+
+  return value;
 };
 
 export const addProgramDomain = controllerWrapper("addProgramDomain", async (req, res) => {
