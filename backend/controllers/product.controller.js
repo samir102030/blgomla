@@ -499,13 +499,86 @@ export const bulkUpdateProducts = controllerWrapper(
     }
 
     // Whitelist allowed bulk-update fields
+    //
+    // The sale window and the quantity ladder are here for the same reason the
+    // percentage is: they are set per product in the edit modal, and a campaign
+    // that spans a hundred products was a hundred modals. The whitelist is what
+    // keeps this endpoint from becoming "patch any field you like" — a field is
+    // added deliberately or not at all.
     const allowed = [
       "price", "stock", "isActive", "featured", "saleActive",
       "salePercentage", "category", "brand", "minOrderQty",
+      "saleStartsAt", "saleEndsAt", "bulkPricing",
     ];
     const sanitized = {};
     for (const key of allowed) {
       if (updateData[key] !== undefined) sanitized[key] = updateData[key];
+    }
+
+    // The three new ones carry structure, so they are checked before they are
+    // written. `updateMany` does not run the sub-schema validators the way a
+    // document save does, so a malformed ladder would otherwise land in the
+    // database and only surface at the checkout that tried to price with it.
+
+    if (sanitized.bulkPricing !== undefined) {
+      const ladder = sanitized.bulkPricing;
+      if (!Array.isArray(ladder) || ladder.length > 10) {
+        return res.status(400).json({
+          success: false,
+          message: "bulkPricing must be an array of at most 10 tiers.",
+        });
+      }
+      const clean = [];
+      for (const tier of ladder) {
+        const minQty = Number(tier?.minQty);
+        const unitPrice = Number(tier?.unitPrice);
+        if (!Number.isFinite(minQty) || minQty < 1 || !Number.isFinite(unitPrice) || unitPrice <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: "Every tier needs a minQty of at least 1 and a unitPrice above 0.",
+          });
+        }
+        clean.push({ minQty, unitPrice });
+      }
+      // Ascending by quantity, because that is the order the pricing code walks
+      // it in; an unsorted ladder silently prices at the wrong tier.
+      clean.sort((a, b) => a.minQty - b.minQty);
+      if (new Set(clean.map((t) => t.minQty)).size !== clean.length) {
+        return res.status(400).json({
+          success: false,
+          message: "Two tiers cannot start at the same quantity.",
+        });
+      }
+      sanitized.bulkPricing = clean;
+    }
+
+    for (const key of ["saleStartsAt", "saleEndsAt"]) {
+      if (sanitized[key] === undefined) continue;
+      // null is meaningful: it clears the window, which is how an open-ended
+      // sale is expressed.
+      if (sanitized[key] === null || sanitized[key] === "") {
+        sanitized[key] = null;
+        continue;
+      }
+      const when = new Date(sanitized[key]);
+      if (Number.isNaN(when.getTime())) {
+        return res.status(400).json({
+          success: false,
+          message: `${key} is not a date.`,
+        });
+      }
+      sanitized[key] = when;
+    }
+
+    if (
+      sanitized.saleStartsAt instanceof Date &&
+      sanitized.saleEndsAt instanceof Date &&
+      sanitized.saleEndsAt <= sanitized.saleStartsAt
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "The sale has to end after it starts.",
+      });
     }
 
     const result = await Product.updateMany(
