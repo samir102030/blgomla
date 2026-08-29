@@ -154,6 +154,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
       icon: ChartBarIcon,
       children: [
         { name: t("admin.salesOverview"), href: "/dashboard/sales", perm: "analytics.view" },
+        { name: t("admin.dealsManager", "Deals"), href: "/dashboard/deals", roles: ["admin"] },
         { name: t("admin.payments"), href: "/dashboard/payments", roles: ["admin"] },
         { name: t("admin.paymobChannels", "Paymob channels"), href: "/dashboard/paymob-channels", perm: "payments.channels" },
         { name: t("admin.customerAnalytics"), href: "/dashboard/customers", roles: ["admin"] },
