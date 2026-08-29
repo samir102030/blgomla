@@ -9,6 +9,7 @@ import UsersPage from "../pages/admin/UsersPage";
 import CategoriesPage from "../pages/admin/CategoriesPage";
 import BrandsPage from "../pages/admin/BrandsPage";
 import SalesPage from "../pages/admin/SalesPage";
+import DealsManagerPage from "../pages/admin/DealsManagerPage";
 import CustomerReviewsPage from "../pages/admin/CustomerReviewsPage";
 import CustomerSupportPage from "../pages/admin/CustomerSupportPage";
 import VendorManagement from "../pages/admin/vendors/VendorManagement";
@@ -197,6 +198,7 @@ const AdminRoutes: React.FC = () => {
 
         {/* Sales & Analytics */}
         <Route path="/sales" element={<SalesPage />} />
+        <Route path="/deals" element={<DealsManagerPage />} />
         <Route path="/payments" element={<PaymentManagementPage />} />
         <Route
           path="/paymob-channels"
