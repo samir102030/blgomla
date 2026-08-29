@@ -8,6 +8,12 @@ import { controllerWrapper } from "../utils/wrappers.js";
 import { reachesAllStores } from "../utils/permissions.js";
 import Notification from "../models/notification.model.js";
 import Coupon from "../models/coupon.model.js";
+import {
+  STUDENT_AUDIENCE,
+  allocateAcross,
+  studentDiscountOn,
+  studentTermsFor,
+} from "../utils/studentDiscount.js";
 import Collection from "../models/collection.model.js";
 import Address from "../models/address.model.js";
 import { getShippingSettings } from "../models/shippingSettings.model.js";
@@ -155,6 +161,7 @@ export const createOrder = controllerWrapper(
       let taxPrice = 0;
       let totalPrice = 0;
       let couponDiscount = 0;
+      let studentDiscount = 0;
       let installationPrice = 0;
 
       const validatedItems = [];
@@ -456,6 +463,43 @@ export const createOrder = controllerWrapper(
         }
       }
 
+      // Step 2a: The standing student discount.
+      //
+      // Applied for being a verified member, not for typing anything, which is
+      // the whole point — the member who never found the code was the reason
+      // this exists. It covers the student section only, and it stands down
+      // whenever a coupon was accepted above, so an invoice never carries two.
+      if (!appliedCoupon) {
+        const terms = await studentTermsFor(req.user._id, { session });
+        if (terms) {
+          const audience = new Map(
+            (
+              await Product.find({
+                _id: { $in: validatedItems.map((item) => item.product).filter(Boolean) },
+              })
+                .select("audience")
+                .session(session)
+                .lean()
+            ).map((p) => [String(p._id), p.audience]),
+          );
+
+          const eligible = [];
+          validatedItems.forEach((item, index) => {
+            if (audience.get(String(item.product)) !== STUDENT_AUDIENCE) return;
+            eligible.push({ index, amount: item.price * item.quantity });
+          });
+
+          const eligibleSubtotal = eligible.reduce((sum, l) => sum + l.amount, 0);
+          // The minimum is read against the whole goods total, the way the same
+          // setting has always read on the programme's coupon.
+          studentDiscount = studentDiscountOn(eligibleSubtotal, terms, itemsPrice);
+
+          for (const [index, share] of allocateAcross(eligible, studentDiscount)) {
+            validatedItems[index].studentDiscount = share;
+          }
+        }
+      }
+
       // Step 2c: Compute shipping authoritatively from the address governorate
       // (never trust a client-sent shipping price).
       const shippingSettings = await getShippingSettings();
@@ -521,7 +565,7 @@ export const createOrder = controllerWrapper(
       // Calculate final prices. Fitting is added after the discount because a
       // coupon discounts goods, not labour — folding it into itemsPrice would
       // quietly hand out a percentage off the fitter's day as well.
-      const discountPrice = couponDiscount; // Total discount applied
+      const discountPrice = couponDiscount + studentDiscount; // Total discount applied
       totalPrice =
         itemsPrice + shippingPrice + taxPrice + installationPrice - discountPrice;
 
@@ -557,6 +601,7 @@ export const createOrder = controllerWrapper(
         totalPrice,
         couponCode: appliedCoupon ? appliedCoupon.code : undefined,
         couponDiscount,
+        studentDiscount,
         discountPrice,
         pointsRedeemed,
         statusTimeline: [

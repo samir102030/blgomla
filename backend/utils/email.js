@@ -608,8 +608,8 @@ export const sendOrderConfirmationEmail = async (user, order) => {
   };
 
   const labels = lang === "ar"
-    ? { title: "تم تأكيد طلبك ✅", para: "شكرًا لك! تم استلام طلبك وسنبدأ تجهيزه فورًا.", orderNo: "رقم الطلب", coupon: "خصم الكوبون", shipping: "الشحن", total: "الإجمالي", payment: "طريقة الدفع", track: "تتبّع طلبك" }
-    : { title: "Order confirmed ✅", para: "Thanks! We've received your order and we'll get started on it right away.", orderNo: "Order number", coupon: "Coupon discount", shipping: "Shipping", total: "Total", payment: "Payment method", track: "Track Your Order" };
+    ? { title: "تم تأكيد طلبك ✅", para: "شكرًا لك! تم استلام طلبك وسنبدأ تجهيزه فورًا.", orderNo: "رقم الطلب", coupon: "خصم الكوبون", student: "خصم الطلاب", shipping: "الشحن", total: "الإجمالي", payment: "طريقة الدفع", track: "تتبّع طلبك" }
+    : { title: "Order confirmed ✅", para: "Thanks! We've received your order and we'll get started on it right away.", orderNo: "Order number", coupon: "Coupon discount", student: "Student discount", shipping: "Shipping", total: "Total", payment: "Payment method", track: "Track Your Order" };
 
   const body = `
     <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${labels.title}</h1>
@@ -633,6 +633,11 @@ export const sendOrderConfirmationEmail = async (user, order) => {
         <tr>
           <td style="padding:6px 0;color:${T.textMuted};">${labels.coupon}</td>
           <td style="padding:6px 0;text-align:${lang === "ar" ? "left" : "right"};color:${T.text};">−${fmt(order.couponDiscount)} EGP</td>
+        </tr>` : ""}
+      ${order.studentDiscount > 0 ? `
+        <tr>
+          <td style="padding:6px 0;color:${T.textMuted};">${labels.student}</td>
+          <td style="padding:6px 0;text-align:${lang === "ar" ? "left" : "right"};color:${T.text};">−${fmt(order.studentDiscount)} EGP</td>
         </tr>` : ""}
       <tr>
         <td style="padding:6px 0;color:${T.textMuted};">${labels.shipping}</td>

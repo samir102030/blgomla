@@ -96,6 +96,26 @@ export interface ProgramSettings {
   updatedAt?: string;
 }
 
+/**
+ * What the membership is worth on the basket currently in front of the member.
+ *
+ * `discount` is the server's own arithmetic over the lines the cart sent, so
+ * the figure the cart prints is the figure the order will charge rather than a
+ * second implementation of the same rules that drifts the first time the terms
+ * change.
+ */
+export interface StudentDiscountPreview {
+  active: boolean;
+  discount: number;
+  eligibleSubtotal: number;
+  terms: {
+    type: "percentage" | "fixed";
+    value: number;
+    maximumDiscount: number | null;
+    minimumPurchase: number;
+  } | null;
+}
+
 export interface MyStudentProfile {
   _id: string;
   universityEmail: string;
@@ -154,6 +174,7 @@ export interface StudentShelf {
 interface StudentStore {
   publicProgram: PublicProgram | undefined;
   myProfile: MyStudentProfile | null | undefined;
+  myDiscount: StudentDiscountPreview | null;
   settings: ProgramSettings | undefined;
   members: StudentMember[];
   membersTotal: number;
@@ -172,6 +193,9 @@ interface StudentStore {
 
   fetchPublicProgram: () => Promise<void>;
   fetchMyProfile: () => Promise<void>;
+  fetchMyDiscount: (
+    cartItems: { product: string; price: number; quantity: number }[],
+  ) => Promise<void>;
   apply: (universityEmail: string) => Promise<{ ok: boolean; message: string }>;
   verify: (token: string) => Promise<{ ok: boolean; message: string; code?: string }>;
 
@@ -200,6 +224,7 @@ interface StudentStore {
 export const useStudentStore = create<StudentStore>((set, get) => ({
   publicProgram: undefined,
   myProfile: undefined,
+  myDiscount: null,
   settings: undefined,
   members: [],
   membersTotal: 0,
@@ -331,6 +356,34 @@ export const useStudentStore = create<StudentStore>((set, get) => ({
       // A signed-out visitor is the normal case on this page, not an error to
       // put in front of them.
       set({ myProfile: null });
+    }
+  },
+
+  fetchMyDiscount: async (cartItems) => {
+    if (!cartItems.length) {
+      set({ myDiscount: null });
+      return;
+    }
+    try {
+      const { data } = await axiosInstance.post("/students/discount/preview", {
+        cartItems,
+      });
+      set({
+        myDiscount: data.active
+          ? {
+              active: true,
+              discount: Number(data.discount) || 0,
+              eligibleSubtotal: Number(data.eligibleSubtotal) || 0,
+              terms: data.terms ?? null,
+            }
+          : null,
+      });
+    } catch {
+      // Everyone who is not a member lands here, and so does a member whose
+      // connection dropped. Either way the cart shows the ordinary total,
+      // which is the safe way to be wrong: the order still applies the
+      // discount, so nobody is charged more than the page promised.
+      set({ myDiscount: null });
     }
   },
 

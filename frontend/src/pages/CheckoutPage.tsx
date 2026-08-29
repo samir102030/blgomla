@@ -9,6 +9,7 @@ import { useUserStore } from "../stores/user.store";
 import { useOrderStore } from "../stores/order.store";
 import { useAddressStore } from "../stores/address.store";
 import { useCouponStore } from "../stores/coupon.store";
+import { useStudentStore } from "../stores/student.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import type { Coupon } from "../types/coupon.type";
@@ -55,6 +56,8 @@ const CheckoutPage: React.FC = () => {
   const { createOrder } = useOrderStore();
   const { addresses, fetchUserAddresses, createAddress } = useAddressStore();
   const { appliedCoupon, validateCoupon, removeCoupon } = useCouponStore();
+  const myDiscount = useStudentStore((state) => state.myDiscount);
+  const fetchMyDiscount = useStudentStore((state) => state.fetchMyDiscount);
 
   const [billingData, setBillingData] = useState({
     firstName: user?.name?.split(" ")[0] || "",
@@ -215,6 +218,28 @@ const CheckoutPage: React.FC = () => {
   };
 
   const discountAmount = calculateCouponDiscount();
+
+  /*
+    The standing student discount, asked of the server for the same reason the
+    cart asks: which lines are in the student section is a fact about the
+    products, not something this page holds. Bundle lines are left out — their
+    parts are priced by an allocation the order endpoint performs — so a bundle
+    carrying a student-shelf part is discounted at the till rather than
+    promised here, and the total never rises between this page and the charge.
+  */
+  const studentLines = cartItems.flatMap((item) =>
+    item.type !== "collection" && item.product
+      ? [{ product: item.product, price: getItemPrice(item), quantity: item.quantity }]
+      : [],
+  );
+  const studentLinesKey = JSON.stringify(studentLines);
+
+  useEffect(() => {
+    fetchMyDiscount(JSON.parse(studentLinesKey));
+  }, [studentLinesKey, fetchMyDiscount]);
+
+  // A typed code replaces it rather than stacking on it, matching the charge.
+  const studentDiscount = appliedCoupon ? 0 : myDiscount?.discount ?? 0;
   // Fitting the customer opted into, per bundle. Added after the coupon, the
   // same order the server uses — a coupon discounts goods, not labour. If this
   // were left out, the page would quote one figure and the order would charge
@@ -227,7 +252,7 @@ const CheckoutPage: React.FC = () => {
   }, 0);
   const totalBeforePoints = Math.max(
     0,
-    subtotal + shippingFee + installationFee - discountAmount
+    subtotal + shippingFee + installationFee - discountAmount - studentDiscount
   );
   // Loyalty: 1 point = 1 EGP, capped by balance and the remaining total.
   const pointsBalance = Math.max(0, user?.loyaltyPoints || 0);
@@ -1118,6 +1143,12 @@ const CheckoutPage: React.FC = () => {
                       <div className="flex justify-between text-xs sm:text-sm text-green-600">
                         <span>{t("Coupon Discount")}</span>
                         <span>-{(discountAmount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
+                      </div>
+                    )}
+                    {studentDiscount > 0 && (
+                      <div className="flex justify-between text-xs sm:text-sm text-green-600">
+                        <span>{t("Student discount")}</span>
+                        <span>-{(studentDiscount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}</span>
                       </div>
                     )}
                     {pointsApplied > 0 && (

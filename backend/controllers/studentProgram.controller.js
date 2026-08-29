@@ -7,6 +7,12 @@ import StudentProgram from "../models/studentProgram.model.js";
 import User from "../models/user.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { sendStudentDiscountEmail, sendStudentVerificationEmail } from "../utils/email.js";
+import Product from "../models/product.model.js";
+import {
+  STUDENT_AUDIENCE,
+  studentDiscountOn,
+  studentTermsFor,
+} from "../utils/studentDiscount.js";
 
 /**
  * The university student programme.
@@ -215,6 +221,53 @@ export const getMyStudentProfile = controllerWrapper("getMyStudentProfile", asyn
       usesPerPeriod: program.renewal?.usesPerPeriod ?? 1,
       periodDays: program.renewal?.periodDays ?? 30,
     },
+  });
+});
+
+/**
+ * What the standing discount takes off the basket in front of the member.
+ *
+ * Advice, not a charge: the order endpoint works the whole thing out again
+ * from the products themselves and is the only thing that decides what is
+ * owed. This exists so the cart can show the member the number before they
+ * commit to it, instead of a total that quietly drops at the last step.
+ *
+ * The client sends its lines — the same shape it already sends to have a
+ * coupon checked — and the server decides which of them are in the section,
+ * because `audience` is the one part of the answer the browser has no way to
+ * know. Prices are taken as given here for the same reason they are in the
+ * coupon preview: nothing is charged on them.
+ */
+export const previewStudentDiscount = controllerWrapper("previewStudentDiscount", async (req, res) => {
+  const terms = await studentTermsFor(req.user?._id);
+  if (!terms) return ok(res, { active: false, discount: 0, eligibleSubtotal: 0, terms: null });
+
+  const lines = Array.isArray(req.body?.cartItems) ? req.body.cartItems : [];
+  const wanted = lines
+    .map((line) => line?.product ?? line?.productId ?? line?._id)
+    .filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+  const audience = new Map(
+    (await Product.find({ _id: { $in: wanted } }).select("audience").lean()).map((p) => [
+      String(p._id),
+      p.audience,
+    ]),
+  );
+
+  let eligibleSubtotal = 0;
+  let goodsSubtotal = 0;
+  for (const line of lines) {
+    const id = String(line?.product ?? line?.productId ?? line?._id ?? "");
+    const amount = Math.max(0, Number(line?.price) || 0) * Math.max(0, Number(line?.quantity) || 0);
+    goodsSubtotal += amount;
+    if (audience.get(id) === STUDENT_AUDIENCE) eligibleSubtotal += amount;
+  }
+
+  return ok(res, {
+    active: true,
+    terms,
+    eligibleSubtotal,
+    discount: studentDiscountOn(eligibleSubtotal, terms, goodsSubtotal),
   });
 });
 

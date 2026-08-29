@@ -50,7 +50,7 @@ const aggregatePayable = async (storeId, periodStart, periodEnd) => {
   }
 
   const orders = await Order.find(filter)
-    .select("_id itemsPrice shippingPrice totalPrice deliveredAt couponDiscount pointsRedeemed")
+    .select("_id itemsPrice shippingPrice totalPrice deliveredAt couponDiscount studentDiscount pointsRedeemed")
     .lean();
 
   const notLocked = orders.filter((o) => !locked.has(String(o._id)));
@@ -94,7 +94,10 @@ const aggregatePayable = async (storeId, periodStart, periodEnd) => {
     about how this business runs, not a bug to be quietly reversed in a payout
     calculation, so the figures are surfaced and the formula is left alone.
   */
-  const discountsAbsorbed = eligible.reduce((s, o) => s + (o.couponDiscount || 0), 0);
+  const discountsAbsorbed = eligible.reduce(
+    (s, o) => s + (o.couponDiscount || 0) + (o.studentDiscount || 0),
+    0,
+  );
   const pointsRedeemed = eligible.reduce((s, o) => s + (o.pointsRedeemed || 0), 0);
 
   return {

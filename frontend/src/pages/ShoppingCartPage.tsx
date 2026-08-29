@@ -9,6 +9,7 @@ import { useUserStore } from "../stores/user.store";
 import { useProductStore } from "../stores/product.store";
 import { useCouponStore } from "../stores/coupon.store";
 import { useCollectionStore } from "../stores/collection.store";
+import { useStudentStore } from "../stores/student.store";
 import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import PleaseLogin from "../components/PleaseLogin";
@@ -120,6 +121,8 @@ const ShoppingCartPage: React.FC = () => {
     appliedCoupon,
     loading: couponLoading,
   } = useCouponStore();
+  const myDiscount = useStudentStore((state) => state.myDiscount);
+  const fetchMyDiscount = useStudentStore((state) => state.fetchMyDiscount);
 
   const [shippingSettings, setShippingSettings] =
     useState<ShippingSettings | null>(null);
@@ -581,6 +584,32 @@ const ShoppingCartPage: React.FC = () => {
   };
 
   const couponDiscount = calculateCouponDiscount();
+
+  /*
+    The standing student discount on this basket.
+
+    Asked of the server rather than worked out here, because the part that
+    decides it — which lines are in the student section — is a fact about the
+    products that the cart was never sent. Bundles are left out of the question:
+    their lines are priced by an allocation only the order endpoint performs, so
+    a bundle holding a student-shelf part is discounted at the till and not
+    promised here. That is the safe direction to be wrong in — the total never
+    goes up between this page and the invoice.
+  */
+  const studentLines = cartItems.flatMap((item) =>
+    item.type !== "collection" && item.product
+      ? [{ product: item.product, price: getItemPrice(item), quantity: item.quantity }]
+      : [],
+  );
+  const studentLinesKey = JSON.stringify(studentLines);
+
+  useEffect(() => {
+    fetchMyDiscount(JSON.parse(studentLinesKey));
+  }, [studentLinesKey, fetchMyDiscount]);
+
+  // A typed code replaces it rather than stacking on it, the same rule the
+  // order endpoint applies when it charges.
+  const studentDiscount = appliedCoupon ? 0 : myDiscount?.discount ?? 0;
   // Fitting the customer ticked, per unit. Added after the coupon, matching
   // the server: a coupon discounts goods, not labour.
   const installationTotal = cartItems.reduce((sum, item) => {
@@ -600,7 +629,8 @@ const ShoppingCartPage: React.FC = () => {
   */
   const shippingUnknown = (shippingSettings?.zones?.length ?? 0) > 0;
 
-  const grandTotal = subtotal + shippingCost + installationTotal - couponDiscount;
+  const grandTotal =
+    subtotal + shippingCost + installationTotal - couponDiscount - studentDiscount;
 
   // if (loading)
   //   return (
@@ -1253,6 +1283,14 @@ const ShoppingCartPage: React.FC = () => {
                     <span>{t("Coupon Discount")} ({appliedCoupon?.code})</span>
                     <span className="font-medium">
                       -{(couponDiscount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
+                    </span>
+                  </div>
+                )}
+                {studentDiscount > 0 && (
+                  <div className="flex justify-between text-xs sm:text-sm text-green-500">
+                    <span>{t("Student discount")}</span>
+                    <span className="font-medium">
+                      -{(studentDiscount).toLocaleString("en-EG", { maximumFractionDigits: 2 })} {t("EGP")}
                     </span>
                   </div>
                 )}

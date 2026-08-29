@@ -17,6 +17,7 @@ const orderItemSchema = new mongoose.Schema(
     price: { type: Number, required: true }, // Price at time of purchase
     salePercentage: { type: Number, default: 0 }, // Sale percentage at time of purchase
     couponDiscount: { type: Number, default: 0 }, // Coupon discount applied to this item
+    studentDiscount: { type: Number, default: 0 }, // Student programme discount on this item
     variant: {
       label: { type: String },
       sku: { type: String },
@@ -110,7 +111,12 @@ const orderSchema = new mongoose.Schema(
     totalPrice: { type: Number, required: true },
     couponCode: { type: String }, // Applied coupon code
     couponDiscount: { type: Number, default: 0 }, // Total coupon discount
-    discountPrice: { type: Number, default: 0 }, // Total discount (coupon + sale)
+    // The standing student-programme discount. Its own field rather than more
+    // couponDiscount: no code was typed, nothing was counted against a usage
+    // limit, and an order report that calls it a coupon sends somebody looking
+    // for a code that does not exist.
+    studentDiscount: { type: Number, default: 0 },
+    discountPrice: { type: Number, default: 0 }, // Total discount (coupon + student + sale)
     // ── Loyalty points ──
     pointsRedeemed: { type: Number, default: 0 }, // points spent on this order
     pointsEarned: { type: Number, default: 0 }, // points awarded on delivery

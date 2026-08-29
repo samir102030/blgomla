@@ -6,6 +6,7 @@ import {
   getMyStudentProfile,
   getProgramSettings,
   getPublicProgram,
+  previewStudentDiscount,
   getStudentStats,
   listStudentMembers,
   removeProgramDomain,
@@ -76,6 +77,9 @@ router.post("/verify/:token", studentVerifyLimiter, verifyStudentEmail);
 
 /* ── The student's own membership ── */
 router.get("/me", protectRoute, getMyStudentProfile);
+// The basket asking what the membership is worth on it. A POST because the
+// lines go in the body, not because anything here changes.
+router.post("/discount/preview", protectRoute, previewStudentDiscount);
 
 /* Applying sends mail from the shop's own sending domain, so it is limited
    twice: once per account and once per network. The controller also holds a
