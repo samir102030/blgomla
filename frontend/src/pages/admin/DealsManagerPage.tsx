@@ -177,20 +177,36 @@ const DealsManagerPage: React.FC = () => {
     (async () => {
       try {
         const { data } = await axiosInstance.get("/categories/tree");
+        // This endpoint answers `{ success, tree }`, not the `{ data }` the
+        // paginated listings use. Read for the wrong key and the walk below
+        // gets an object instead of an array, throws, and the catch turns a
+        // shape mismatch into an empty dropdown that looks like a shop with no
+        // categories. The other spellings stay as fallbacks, not as guesses.
+        const roots = data?.tree ?? data?.data ?? (Array.isArray(data) ? data : []);
+        if (!Array.isArray(roots)) throw new Error("categories/tree did not return a list");
+
         const flat: any[] = [];
         const walk = (nodes: any[], depth: number) => {
           for (const n of nodes || []) {
-            flat.push({ _id: n._id, name: `${"— ".repeat(depth)}${n.name}` });
+            // The electronics branch is excluded from the search by
+            // `audience=public`, so listing it here would offer a filter that
+            // can only ever come back empty.
+            if (n.sectionKey === "electronics") continue;
+            const label = (ar && n.nameAr) || n.name;
+            flat.push({ _id: n._id, name: `${"— ".repeat(depth)}${label}` });
             if (n.children?.length) walk(n.children, depth + 1);
           }
         };
-        walk(data?.data ?? data ?? [], 0);
+        walk(roots, 0);
         setCategories(flat);
-      } catch {
-        // A missing list costs the filter, not the page.
+      } catch (e) {
+        // Losing the filter should not take the page down — but it should not
+        // be silent either. Silence is what let the wrong key ship.
+        console.error("Deals: could not build the category filter", e);
+        toast.error(ar ? "فلتر الأقسام مش متاح" : "The category filter is unavailable");
       }
     })();
-  }, []);
+  }, [ar]);
 
   // Typing is not a query. Without this every keystroke is a round trip and the
   // answers arrive out of order, so the list flickers between two searches.
