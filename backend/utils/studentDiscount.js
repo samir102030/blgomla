@@ -1,18 +1,20 @@
 import StudentProfile from "../models/studentProfile.model.js";
 import StudentProgram from "../models/studentProgram.model.js";
+import User from "../models/user.model.js";
 
 /**
  * The standing student discount.
  *
- * The programme already paid its members in a personal coupon, and a coupon is
- * a thing you have to remember, find and type. A member who signed in and put
- * three boards in a basket saw the ordinary price and no hint that a code
- * existed, so the discount the shop was advertising was, at the till, off.
+ * The programme paid its members in a personal coupon, and a coupon is a thing
+ * you have to remember, find and type — after applying at a portal and clicking
+ * a link in a university inbox. A student who signed in and put three boards in
+ * a basket saw the ordinary price and no hint that any of that existed, so the
+ * discount the shop advertises was, at the till, off.
  *
- * So it is applied because of who is buying, not because of what they typed.
- * The terms are still the ones on the Student discount page — rate, cap,
- * minimum — read live, so changing them there changes what the next order
- * charges, and turning the programme off turns this off with it.
+ * It is applied for who is buying. The terms are the ones on the Student
+ * discount page — rate, cap, minimum — read live, so changing them there
+ * changes what the next order charges, and turning the programme off turns
+ * this off with it.
  *
  * Two boundaries worth keeping:
  *
@@ -34,11 +36,38 @@ import StudentProgram from "../models/studentProgram.model.js";
 export const STUDENT_AUDIENCE = "electronics";
 
 /**
+ * Does this buyer qualify?
+ *
+ * The faculty address is the whole test. An account signed up with one is a
+ * student, and the shop would rather pay a discount to somebody who changed
+ * their address to a university one than make every real student find a
+ * portal, apply, and go and click a link in another inbox before they are
+ * allowed to buy anything. That trade is the shop's to make, and it made it.
+ *
+ * A verified membership still qualifies on its own. Somebody who applied with
+ * a faculty address while their account runs on a personal one has proved more
+ * than this asks for, not less, and the coupon they hold has to keep meaning
+ * something.
+ */
+const qualifies = async (userId, { session } = {}) => {
+  const program = await StudentProgram.load();
+
+  const user = await User.findById(userId).select("email");
+  if (user?.email && program.matchDomain(user.email)) return true;
+
+  const query = StudentProfile.findOne({ user: userId });
+  if (session) query.session(session);
+  const profile = await query;
+  // `isActive` is the model's own answer to "verified, and not run out".
+  return !!profile?.isActive;
+};
+
+/**
  * The live terms for one buyer, or null when nothing should come off.
  *
  * Null covers every "no" in one shape — programme switched off, rate set to
- * zero, no application, unverified, expired — because the caller does the same
- * thing for all of them, and a caller that had to tell them apart would end up
+ * zero, an address on nobody's list — because the caller does the same thing
+ * for all of them, and a caller that had to tell them apart would end up
  * deciding membership questions in the middle of a checkout.
  */
 export const studentTermsFor = async (userId, { session } = {}) => {
@@ -51,11 +80,7 @@ export const studentTermsFor = async (userId, { session } = {}) => {
   const value = Number(d.value);
   if (!Number.isFinite(value) || value <= 0) return null;
 
-  const query = StudentProfile.findOne({ user: userId });
-  if (session) query.session(session);
-  const profile = await query;
-  // `isActive` is the model's own answer to "verified, and not run out".
-  if (!profile?.isActive) return null;
+  if (!(await qualifies(userId, { session }))) return null;
 
   const cap = Number(d.maximumDiscount);
   return {

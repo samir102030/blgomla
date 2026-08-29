@@ -144,12 +144,28 @@ studentProgramSchema.statics.load = async function () {
   return this.create({});
 };
 
+/**
+ * The bare mail domain of an entry, for comparison.
+ *
+ * Entries added before the box learned to strip it can still carry the `www.`
+ * off a faculty's address bar, and such an entry matches no address anybody
+ * has. Reading it as the mail domain it was meant to be costs nothing and
+ * saves a list nobody knows is broken — the entry stays as typed, only the
+ * comparison is forgiving. The label is only dropped when a domain is left
+ * underneath, so somebody's real `www.com` keeps its name.
+ */
+const bareDomain = (value) => {
+  const d = String(value || "").toLowerCase().trim();
+  const stripped = d.replace(/^www\./, "");
+  return stripped !== d && stripped.includes(".") ? stripped : d;
+};
+
 /** The domain entry that admits this address, or null when none does. */
 studentProgramSchema.methods.matchDomain = function (email) {
   const at = String(email || "").toLowerCase().trim();
-  const domain = at.slice(at.lastIndexOf("@") + 1);
+  const domain = bareDomain(at.slice(at.lastIndexOf("@") + 1));
   if (!domain || !at.includes("@")) return null;
-  return this.domains.find((d) => d.active && d.domain === domain) || null;
+  return this.domains.find((d) => d.active && bareDomain(d.domain) === domain) || null;
 };
 
 const StudentProgram = mongoose.model("StudentProgram", studentProgramSchema);
