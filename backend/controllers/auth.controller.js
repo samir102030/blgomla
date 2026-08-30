@@ -3,6 +3,11 @@ import Category from "../models/category.model.js";
 import Role from "../models/role.model.js";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/user.model.js";
+import {
+  attemptBlockedFor,
+  recordFailedAttempt,
+  clearFailedAttempts,
+} from "../models/loginAttempt.model.js";
 import { paginateQuery } from "../utils/pagination.js";
 
 import {
@@ -334,6 +339,46 @@ export const verifyEmail = controllerWrapper(
 
 export const login = controllerWrapper("login", async (req, res) => {
   const { email, phone, password, totpCode } = req.body;
+
+  /*
+    Per-account throttling, checked before the account is even looked up.
+
+    The IP limiter above this handles one attacker on one connection. It does
+    nothing about the attack people actually run: a hundred cheap residential
+    proxies give a thousand guesses at one password in the same quarter hour,
+    every address comfortably inside its own budget. The address is what gets
+    spread out, so the address cannot be the only thing counted.
+
+    Refused rather than delayed — see the note on the model. Holding the
+    request for the wait would hold a Lambda open with it, and a few hundred
+    deliberately-throttled logins would then exhaust concurrency and take the
+    site down, which is the thing this is here to prevent.
+
+    The message is the same "Invalid credentials" as every other failure.
+    Saying "you are being throttled" would confirm the account exists, which
+    is a different thing to leak and no less useful to an attacker.
+  */
+  const identifier = email || phone;
+  if (identifier) {
+    const blockedFor = await attemptBlockedFor(identifier);
+    if (blockedFor > 0) {
+      logAudit(
+        req,
+        "auth.login_throttled",
+        "auth",
+        undefined,
+        { identifier, retryInMs: blockedFor },
+        { status: "failure", severity: "warning", category: "security" }
+      );
+      // Retry-After is in seconds and is the honest thing to send a client
+      // that is behaving; it tells a script nothing it could not measure.
+      res.set("Retry-After", String(Math.ceil(blockedFor / 1000)));
+      return res.status(429).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+  }
   // Email takes precedence when both are supplied. Previously the phone
   // lookup ran second and overwrote an email match, and only the email branch
   // populated `love`, so the same account came back with different shapes
@@ -357,6 +402,10 @@ export const login = controllerWrapper("login", async (req, res) => {
       { email, phone, reason: "user_not_found" },
       { status: "failure", severity: "warning", category: "security" }
     );
+    // Counted even though no account matched: an attacker walking a list of
+    // addresses must not be able to tell "no such account" from "wrong
+    // password" by watching which one starts costing time.
+    await recordFailedAttempt(identifier, req.ip);
     return res.status(400).json({
       success: false,
       message: "Invalid credentials",
@@ -391,10 +440,18 @@ export const login = controllerWrapper("login", async (req, res) => {
       { email: user.email, reason: "bad_password" },
       { status: "failure", severity: "warning", category: "security", actor: user }
     );
+    await recordFailedAttempt(identifier, req.ip);
     return res
       .status(400)
       .json({ success: false, message: "Invalid credentials" });
   }
+
+  // The password was right, so whatever the counter had accumulated was a
+  // customer who could not remember it, not an attack. Cleared here rather
+  // than after the second factor: somebody holding the correct password is
+  // not who the throttle is aimed at, and leaving it armed would keep
+  // punishing them through an unrelated TOTP retry.
+  await clearFailedAttempts(identifier);
 
   // Require verified email before issuing a session. Existing rows where
   // isVerified is undefined are treated as not-yet-verified.
