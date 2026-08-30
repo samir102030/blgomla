@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-08-27T00:23:13.730Z",
-  "catalogueImages": 25791,
-  "backedUp": 25673,
-  "bytes": 752093645,
-  "megabytes": 717.3,
-  "fetchedThisRun": 25673,
-  "goneAtSource": 112,
+  "generatedAt": "2026-08-30T09:08:42.295Z",
+  "catalogueImages": 40007,
+  "backedUp": 40001,
+  "bytes": 1651025290,
+  "megabytes": 1574.5,
+  "fetchedThisRun": 14328,
+  "goneAtSource": 0,
   "failedThisRun": 6
 }
