@@ -2,6 +2,8 @@ import express from "express";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
+import { uploadLimiter } from "../middleware/rateLimit.middleware.js";
+import { identifyUpload } from "../utils/fileSignature.js";
 import {
   getImageMigrationStatus,
   runImageMigrationBatch,
@@ -11,13 +13,32 @@ import {
 
 const router = express.Router();
 const storage = multer.memoryStorage();
+
+/*
+  Twenty megabytes, down from a hundred.
+
+  A hundred was never a considered number — it is what gets typed when the
+  question is "what is definitely big enough". Every file input in this
+  application, storefront and dashboard alike, is `accept="image/*"`, and the
+  largest thing any of them produces is a photograph straight off a phone,
+  which lands around ten. So four fifths of that ceiling existed only for
+  requests the product cannot make, and the storage is metered.
+
+  Configurable, because the person who needs it raised one day should not have
+  to wait for a deploy to raise it.
+*/
+const MAX_UPLOAD_MB = Number(process.env.UPLOAD_MAX_MB) || 20;
+
 const upload = multer({
   storage,
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit
+    fileSize: MAX_UPLOAD_MB * 1024 * 1024,
+    files: 1,
   },
   fileFilter: (req, file, cb) => {
-    // Accept images and videos
+    // A first pass on the client's claim, so an obviously wrong file is
+    // refused before its bytes are read into memory. The claim itself is
+    // checked against the bytes further down; this is not the real gate.
     if (
       file.mimetype.startsWith("image/") ||
       file.mimetype.startsWith("video/")
@@ -92,11 +113,19 @@ router.post(
   pushImageMigration
 );
 
-// Authenticated users only. Every caller in the app is already logged in —
-// customers uploading a profile picture, vendors uploading store/product
-// media, admins uploading banners. Leaving this open let anyone on the
-// internet burn the Cloudinary quota with 100MB uploads.
-router.post("/upload", protectRoute, upload.single("image"), async (req, res) => {
+/*
+  Authenticated users only, and no further than that. Every caller in the app
+  is already logged in — customers uploading a profile picture, vendors
+  uploading store and product media, administrators uploading banners — so an
+  admin gate here would break the first two. Leaving it open, as it once was,
+  let anyone on the internet burn the Cloudinary quota.
+
+  Being signed in was the whole of the ceiling, though, and signing up is
+  free. `uploadLimiter` is the part that was missing: a bound per account
+  rather than per address, so a shop's staff working from one office are not
+  counted as one uploader.
+*/
+router.post("/upload", protectRoute, uploadLimiter, upload.single("image"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -117,13 +146,42 @@ router.post("/upload", protectRoute, upload.single("image"), async (req, res) =>
       });
     }
 
+    /*
+      What was actually sent, as opposed to what the sender called it.
+
+      `req.file.mimetype` is the Content-Type the client wrote on the
+      multipart part. Up to here it has been taken at face value, which meant
+      the only thing standing between this route and an arbitrary file was
+      Cloudinary refusing to decode it — a guard we do not own and do not
+      control.
+    */
+    const { kind, format } = identifyUpload(req.file.buffer);
+    if (!kind) {
+      return res.status(400).json({
+        success: false,
+        message: "That file isn't an image or a video we recognise.",
+        code: "UNSUPPORTED_FILE_TYPE",
+      });
+    }
+
+    const claimed = req.file.mimetype.startsWith("video/") ? "video" : "image";
+    if (claimed !== kind) {
+      // Not a mistake a browser makes. Worth a line in the log with the
+      // account attached, because it is somebody posting by hand.
+      console.warn(
+        `Upload rejected: declared ${req.file.mimetype} but bytes are ${format} (user ${req.user?._id})`
+      );
+      return res.status(400).json({
+        success: false,
+        message: "That file doesn't match the type it was sent as.",
+        code: "FILE_TYPE_MISMATCH",
+      });
+    }
+
     console.log("Starting Cloudinary upload...");
 
-    // Determine resource type based on file MIME type
-    const resourceType = req.file.mimetype.startsWith("video/")
-      ? "video"
-      : "image";
-    console.log("Resource type determined:", resourceType);
+    const resourceType = kind;
+    console.log("Resource type determined:", resourceType, `(${format})`);
 
     const result = await new Promise((resolve, reject) => {
       cloudinary.uploader
@@ -154,7 +212,7 @@ router.post("/upload", protectRoute, upload.single("image"), async (req, res) =>
     if (error.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
         success: false,
-        message: "File too large. Maximum size is 100MB.",
+        message: `File too large. Maximum size is ${MAX_UPLOAD_MB}MB.`,
       });
     }
 

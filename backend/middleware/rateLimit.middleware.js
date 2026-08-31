@@ -162,3 +162,45 @@ export const supportAssistantLimiter = rateLimit({
   legacyHeaders: false,
   store: new MongoRateLimitStore({ prefix: "rl:support-assistant" }),
 });
+
+/**
+ * Handing a file to Cloudinary.
+ *
+ * `POST /upload/upload` is behind `protectRoute` and nothing more, and that
+ * is the right shape: the callers are a customer setting a profile picture, a
+ * vendor adding store and product media, and an administrator uploading
+ * banners. Requiring an admin here would break the first two.
+ *
+ * What it lacked was a ceiling. The global limiter allows a thousand requests
+ * a quarter hour, so a single signed-up customer could spend that budget
+ * entirely on uploads and repeat it from the next address. Nothing about that
+ * is an intrusion — it is a bill, paid to Cloudinary for storage and
+ * bandwidth, arriving without anyone having decided to spend it.
+ *
+ * Keyed by account rather than by IP. A shop's staff add products from one
+ * office behind one address, and counting them as one uploader would throttle
+ * the working day; the account is also the thing being abused when this is
+ * abused. Anonymous callers cannot reach here at all — `protectRoute` answers
+ * first — so the IP fallback only ever applies if that order is changed.
+ *
+ * Successes count, unlike the auth limiter. There a success is a person
+ * proving who they are and refunding it costs nothing; here a success is a
+ * file that now sits on the account and is billed for, which is precisely the
+ * thing being counted.
+ *
+ * A hundred and twenty in a quarter hour is eight a minute sustained. A person
+ * filling in product forms and picking photographs does not approach it; a
+ * loop does so in under a minute.
+ */
+export const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 120,
+  keyGenerator: (req) => (req.user?._id ? `u:${req.user._id}` : `ip:${req.ip}`),
+  message: {
+    success: false,
+    message: "Too many uploads. Please wait a few minutes and try again.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new MongoRateLimitStore({ prefix: "rl:upload" }),
+});
