@@ -161,6 +161,28 @@ const userSchema = new mongoose.Schema(
     // the secret stays so we can verify codes on future logins.
     twoFactorEnabled: { type: Boolean, default: false },
     totpSecret: { type: String, select: false },
+    /*
+      Single-use codes for getting back in when the authenticator app is gone.
+
+      Stored hashed, never as plaintext — a leaked database should not hand
+      over ten working second factors. `usedAt` rather than deleting the row,
+      so "you have three codes left" is answerable and a support conversation
+      can tell "never had any" apart from "spent them all".
+
+      Deliberately `select: false`: nothing outside the 2FA handlers should be
+      able to pull these back by accident in a user listing.
+    */
+    twoFactorRecoveryCodes: {
+      type: [
+        {
+          _id: false,
+          codeHash: { type: String, required: true },
+          usedAt: { type: Date, default: null },
+        },
+      ],
+      default: [],
+      select: false,
+    },
     pushSubscriptions: {
       type: [
         {
@@ -204,7 +226,7 @@ const userSchema = new mongoose.Schema(
  * `.lean()` skips this, as it skips every schema feature, so a lean query
  * that populates a user still has to name its fields.
  */
-const STRIP = ["password", "resetPasswordToken", "verificationToken", "totpSecret"];
+const STRIP = ["password", "resetPasswordToken", "verificationToken", "totpSecret", "twoFactorRecoveryCodes"];
 const withoutSecrets = (_doc, ret) => {
   for (const field of STRIP) delete ret[field];
   return ret;

@@ -46,6 +46,7 @@ import {
   setup2FA,
   enable2FA,
   disable2FA,
+  regenerateRecoveryCodes,
   exportMyData,
   deleteMyAccount,
 } from "../controllers/auth.controller.js";
@@ -85,6 +86,9 @@ router.put("/changePassword", protectRoute, changePassword);
 router.post("/2fa/setup", protectRoute, setup2FA);
 router.post("/2fa/enable", protectRoute, enable2FA);
 router.post("/2fa/disable", protectRoute, disable2FA);
+// Behind authLimiter as well as protectRoute: it costs a password and a live
+// code to call, so it is a credential-checking endpoint like the rest of them.
+router.post("/2fa/recovery-codes", authLimiter, protectRoute, regenerateRecoveryCodes);
 
 // GDPR
 router.get("/me/data-export", protectRoute, exportMyData);
