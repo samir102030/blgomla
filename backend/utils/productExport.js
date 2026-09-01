@@ -1,4 +1,4 @@
-import XLSX from "xlsx";
+import XLSX from "./xlsxCompat.js";
 
 /**
  * Export products as a sheet in exactly the shape the bulk template expects, so
@@ -42,7 +42,7 @@ const nameOf = (ref) => {
   return typeof ref === "object" ? ref.name ?? "" : "";
 };
 
-export const buildProductExport = (products) => {
+export const buildProductExport = async (products) => {
   const rows = products.map((p) => {
     const images = (p.images || []).map((i) => i?.url).filter(Boolean);
     return {

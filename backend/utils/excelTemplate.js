@@ -1,10 +1,10 @@
-import XLSX from 'xlsx';
+import XLSX from "./xlsxCompat.js";
 
 /**
  * Generate Excel template for bulk product upload
  * @returns {Buffer} Excel file buffer
  */
-export const generateProductTemplate = (variant = 'full') => {
+export const generateProductTemplate = async (variant = 'full') => {
   if (variant === 'simple') {
     return generateSimpleProductTemplate();
   }
@@ -145,7 +145,7 @@ export const generateProductTemplate = (variant = 'full') => {
   XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instructions');
 
   // Generate buffer
-  const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+  const buffer = await XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   
   return buffer;
 };
@@ -195,8 +195,8 @@ const generateSimpleProductTemplate = () => {
  * @param {Buffer} fileBuffer - Excel file buffer
  * @returns {Array} Array of product objects
  */
-export const parseProductExcel = (fileBuffer, templateType = 'full') => {
-  const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+export const parseProductExcel = async (fileBuffer, templateType = 'full') => {
+  const workbook = await XLSX.read(fileBuffer, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   

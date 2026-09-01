@@ -1,4 +1,4 @@
-import XLSX from "xlsx";
+import XLSX from "./xlsxCompat.js";
 
 /**
  * Templates and parsers for bulk-loading the student section's catalogue.
@@ -265,7 +265,7 @@ const CATEGORY_GUIDE = [
   },
 ];
 
-export const generateStudentCategoryTemplate = () => {
+export const generateStudentCategoryTemplate = async () => {
   const workbook = XLSX.utils.book_new();
 
   const sheet = XLSX.utils.json_to_sheet(CATEGORY_EXAMPLES, { header: CATEGORY_COLUMNS });
@@ -281,8 +281,8 @@ export const generateStudentCategoryTemplate = () => {
   return write(workbook);
 };
 
-export const parseStudentCategoryExcel = (fileBuffer) => {
-  const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+export const parseStudentCategoryExcel = async (fileBuffer) => {
+  const workbook = await XLSX.read(fileBuffer, { type: "buffer" });
   const { rows, columns, index: cols } = findDataSheet(workbook, CATEGORY_ALIASES.name);
 
   return {
@@ -387,7 +387,7 @@ const PRODUCT_GUIDE = [
   },
 ];
 
-export const generateStudentProductTemplate = () => {
+export const generateStudentProductTemplate = async () => {
   const workbook = XLSX.utils.book_new();
 
   const sheet = XLSX.utils.json_to_sheet(PRODUCT_EXAMPLES, { header: PRODUCT_COLUMNS });
@@ -412,8 +412,8 @@ const splitList = (value, separator = ",") =>
     .map((part) => part.trim())
     .filter(Boolean);
 
-export const parseStudentProductExcel = (fileBuffer) => {
-  const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+export const parseStudentProductExcel = async (fileBuffer) => {
+  const workbook = await XLSX.read(fileBuffer, { type: "buffer" });
   const { rows, columns, index: cols } = findDataSheet(workbook, PRODUCT_ALIASES.name);
 
   return {
@@ -470,7 +470,7 @@ export const parseStudentProductExcel = (fileBuffer) => {
 };
 
 /** The section's products, in the shape its own template reads back. */
-export const exportStudentProductsToExcel = (products, departmentName) => {
+export const exportStudentProductsToExcel = async (products, departmentName) => {
   const workbook = XLSX.utils.book_new();
 
   const rows = products.map((p) => ({

@@ -5,7 +5,7 @@ import { clearStorefrontCaches } from "../utils/storefrontCache.js";
 /** Download the category upload template. */
 export const downloadCategoryTemplate = async (req, res) => {
   try {
-    const buffer = generateCategoryTemplate();
+    const buffer = await generateCategoryTemplate();
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -53,7 +53,7 @@ export const bulkUploadCategories = async (req, res) => {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
-    const rows = parseCategoryExcel(req.file.buffer);
+    const rows = await parseCategoryExcel(req.file.buffer);
     if (!rows.length) {
       return res.status(400).json({
         success: false,

@@ -36,7 +36,7 @@ export const exportProducts = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const buffer = buildProductExport(products);
+    const buffer = await buildProductExport(products);
     const stamp = new Date().toISOString().slice(0, 10);
 
     res.setHeader(
@@ -63,7 +63,7 @@ export const downloadTemplate = async (req, res) => {
   try {
     const templateType = req.query.templateType === 'simple' ? 'simple' : 'full';
     console.log('Generating template for user:', req.user?.email, 'type:', templateType);
-    const buffer = generateProductTemplate(templateType);
+    const buffer = await generateProductTemplate(templateType);
     console.log('Template generated, buffer size:', buffer.length);
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -183,7 +183,7 @@ export const bulkUploadProducts = async (req, res) => {
     }
 
     // Parse Excel file
-    const products = parseProductExcel(req.file.buffer, templateType);
+    const products = await parseProductExcel(req.file.buffer, templateType);
 
     /*
       Which product fields this particular sheet is entitled to change.

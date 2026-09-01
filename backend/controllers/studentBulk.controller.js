@@ -47,7 +47,7 @@ const fail = (res, error, message) => {
 
 export const downloadStudentCategoryTemplate = async (req, res) => {
   try {
-    sendWorkbook(res, generateStudentCategoryTemplate(), "student-departments-template.xlsx");
+    sendWorkbook(res, await generateStudentCategoryTemplate(), "student-departments-template.xlsx");
   } catch (error) {
     fail(res, error, "Failed to generate the template");
   }
@@ -58,7 +58,7 @@ export const bulkUploadStudentCategories = async (req, res) => {
     const dryRun = req.query.dryRun === "true" || req.body.dryRun === "true";
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-    const { rows, columns } = parseStudentCategoryExcel(req.file.buffer);
+    const { rows, columns } = await parseStudentCategoryExcel(req.file.buffer);
     if (!rows.length) {
       return res
         .status(400)
@@ -259,7 +259,7 @@ export const bulkUploadStudentCategories = async (req, res) => {
 
 export const downloadStudentProductTemplate = async (req, res) => {
   try {
-    sendWorkbook(res, generateStudentProductTemplate(), "student-products-template.xlsx");
+    sendWorkbook(res, await generateStudentProductTemplate(), "student-products-template.xlsx");
   } catch (error) {
     fail(res, error, "Failed to generate the template");
   }
@@ -276,7 +276,7 @@ export const exportStudentProducts = async (req, res) => {
     ]);
 
     const nameById = new Map(categories.map((c) => [String(c._id), c.name]));
-    const buffer = exportStudentProductsToExcel(products, (id) =>
+    const buffer = await exportStudentProductsToExcel(products, (id) =>
       id ? nameById.get(String(id)) : "",
     );
     sendWorkbook(res, buffer, "student-products.xlsx");
@@ -290,7 +290,7 @@ export const bulkUploadStudentProducts = async (req, res) => {
     const dryRun = req.query.dryRun === "true" || req.body.dryRun === "true";
     if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-    const { rows, columns } = parseStudentProductExcel(req.file.buffer);
+    const { rows, columns } = await parseStudentProductExcel(req.file.buffer);
     if (!rows.length) {
       return res.status(400).json({ success: false, message: "The sheet has no rows in it." });
     }
