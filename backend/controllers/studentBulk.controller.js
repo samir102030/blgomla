@@ -1,5 +1,5 @@
 import Product from "../models/product.model.js";
-import Category from "../models/category.model.js";
+import StudentCategory from '../models/studentCategory.model.js';
 import { resolveProductStore } from "../utils/houseStore.js";
 import {
   describeUnreadableSheet,
@@ -76,35 +76,23 @@ export const bulkUploadStudentCategories = async (req, res) => {
 
     const results = { created: [], updated: [], linked: [], failed: [], totalRows: rows.length };
 
-    // Retired departments are included: naming one in a sheet brings it back
-    // with the products it still holds, rather than creating a second
-    // department with the same name beside it.
-    const sectionRoot = await Category.findOne({ sectionKey: "electronics" }).select("_id name");
-    if (!sectionRoot) {
-      return res.status(409).json({
-        success: false,
-        message: "The electronics section has no root category yet.",
-      });
-    }
+    /*
+      Departments live in `StudentCategory` — see the note on the products
+      upload below, and the model's own comment.
 
-    // Only this branch. Category names are unique shop-wide, but a sheet that
-    // says "Switches" means the one in this section, and matching against the
-    // whole catalogue would hand it the networking one instead.
-    const everyCategory = await Category.find({});
-    const childrenOf = new Map();
-    for (const c of everyCategory) {
-      const key = String(c.parentCategory || "");
-      if (!childrenOf.has(key)) childrenOf.set(key, []);
-      childrenOf.get(key).push(c);
-    }
-    const existing = [];
-    const pending = [String(sectionRoot._id)];
-    while (pending.length) {
-      for (const child of childrenOf.get(pending.pop()) || []) {
-        existing.push(child);
-        pending.push(String(child._id));
-      }
-    }
+      This walked the `Category` branch under `sectionKey: "electronics"` and
+      created rows there, which the student shelf and the admin department
+      screens never read: both go through `studentCatalog.controller.js`,
+      which is `StudentCategory` throughout. So a departments sheet appeared
+      to upload — rows created, no errors — and the section's own department
+      list did not change.
+
+      No branch walk is needed any more. The collection is the section's, so
+      every row in it is a department of this section; nothing has to be
+      filtered out by ancestry, and a name here cannot collide with the
+      storefront's.
+    */
+    const existing = await StudentCategory.find({});
     const byName = new Map();
     for (const c of existing.filter((c) => c.deleted)) byName.set(norm(c.name), c);
     for (const c of existing.filter((c) => !c.deleted)) byName.set(norm(c.name), c);
@@ -130,14 +118,16 @@ export const bulkUploadStudentCategories = async (req, res) => {
       }
       inSheet.set(norm(row.name), row);
 
-      // The sheet keeps the section's vocabulary; the catalogue has its own
-      // names for the same two things.
+      // `StudentCategory` calls these `order` and `active`; the storefront's
+      // `Category` calls them `sortOrder` and `isActive`. Writing the wrong
+      // pair is silent — Mongoose drops unknown paths — so the sheet's two
+      // columns would simply have had no effect.
       const fields = {
         nameAr: row.nameAr,
         description: row.description,
         descriptionAr: row.descriptionAr,
-        sortOrder: row.order,
-        isActive: row.active,
+        order: row.order,
+        active: row.active,
         ...(row.image ? { image: row.image } : {}),
       };
 
@@ -153,12 +143,13 @@ export const bulkUploadStudentCategories = async (req, res) => {
           if (!dryRun) await found.save();
           results.updated.push({ row: row.rowNumber, name: found.name });
         } else {
-          const doc = new Category({
+          const doc = new StudentCategory({
             name: row.name,
             ...fields,
-            // A row with no parent named hangs off the branch root, never off
-            // the catalogue itself — the section owns everything under it.
-            parentCategory: sectionRoot._id,
+            // A row with no parent named is a top-level department of the
+            // section. There is no branch root to hang it off — the whole
+            // collection is the section.
+            parentCategory: null,
             createdBy: req.user._id,
           });
           if (!dryRun) await doc.save();
@@ -272,7 +263,7 @@ export const exportStudentProducts = async (req, res) => {
       Product.find({ audience: "electronics", deleted: { $ne: true } })
         .sort({ createdAt: -1 })
         .lean(),
-      Category.find({}).select("_id name").lean(),
+      StudentCategory.find({}).select("_id name").lean(),
     ]);
 
     const nameById = new Map(categories.map((c) => [String(c._id), c.name]));
@@ -312,42 +303,41 @@ export const bulkUploadStudentProducts = async (req, res) => {
       totalRows: rows.length,
     };
 
-    // The section is a branch of the catalogue now, so its departments are
-    // ordinary categories. They are collected by walking down from the branch
-    // root rather than by name: names are unique shop-wide, but a sheet naming
-    // "Switches" must never file a product into the networking one on the
-    // other side of the tree.
-    const sectionRoot = await Category.findOne({ sectionKey: "electronics" })
-      .select("_id name")
-      .lean();
-    if (!sectionRoot) {
-      return res.status(409).json({
-        success: false,
-        message: "The electronics section has no root category yet.",
-      });
-    }
+    /*
+      Departments come from `StudentCategory`, which is where the shelf reads
+      them.
 
-    const [everyCategory, existing] = await Promise.all([
-      Category.find({ deleted: { $ne: true } }).select("_id name parentCategory").lean(),
+      This used to walk the `Category` branch under `sectionKey: "electronics"`
+      and write the result to `Product.category`. Two things were wrong with
+      that, and the second is the one a person noticed.
+
+      The shelf — `studentCatalog.controller.js`, which serves both the student
+      page and the admin department screens — filters on
+      `Product.studentCategory`, a ref into a separate `StudentCategory`
+      collection. The uploader never touched that field, so every product it
+      created kept the schema default of `null`, and `null` never matches the
+      shelf's `$in`. **Products uploaded by spreadsheet did not appear on the
+      student page at all.** They saved, they carried the right audience, and
+      they were invisible to the only page that lists them.
+
+      And `StudentCategory`'s own doc comment says why it is a separate
+      collection rather than a branch: a student department living in the
+      storefront's category tree would surface in its menu, search, home feed
+      and sitemap, each of which would then have to be taught to skip it.
+      Creating those rows was doing exactly the thing the model exists to
+      prevent.
+
+      Nothing else depended on the branch write. `electronicsPurge` deletes on
+      `$or: [{category: {$in: branch}}, {audience: "electronics"}]` and
+      `electronicsVisibility` hides on `audience` alone — and the uploader
+      already sets `audience: "electronics"` on every row.
+    */
+    const [everyDepartment, existing] = await Promise.all([
+      StudentCategory.find({}).select("_id name").lean(),
       Product.find({ audience: "electronics" }).select("_id name"),
     ]);
 
-    const childrenOf = new Map();
-    for (const c of everyCategory) {
-      const key = String(c.parentCategory || "");
-      if (!childrenOf.has(key)) childrenOf.set(key, []);
-      childrenOf.get(key).push(c);
-    }
-    const categories = [];
-    const pending = [String(sectionRoot._id)];
-    while (pending.length) {
-      for (const child of childrenOf.get(pending.pop()) || []) {
-        categories.push(child);
-        pending.push(String(child._id));
-      }
-    }
-
-    const categoryByName = new Map(categories.map((c) => [norm(c.name), c._id]));
+    const categoryByName = new Map(everyDepartment.map((c) => [norm(c.name), c._id]));
     const productByName = new Map(existing.map((p) => [norm(p.name), p]));
     const inSheet = new Set();
 
@@ -374,16 +364,12 @@ export const bulkUploadStudentProducts = async (req, res) => {
         if (row.departmentName) {
           categoryId = categoryByName.get(norm(row.departmentName)) ?? null;
           if (!categoryId && !dryRun) {
-            // Category names are unique across the whole shop, so a department
-            // whose name is already taken elsewhere is suffixed instead of
-            // failing the row.
-            let deptName = row.departmentName;
-            if (await Category.exists({ name: deptName })) {
-              deptName = row.departmentName + " (" + sectionRoot.name + ")";
-            }
-            const made = await Category.create({
-              name: deptName,
-              parentCategory: sectionRoot._id,
+            // No name suffixing any more: `StudentCategory` names only have to
+            // be unique within the student shelf, so "Switches" here cannot
+            // collide with the storefront's "Switches" the way a shared
+            // `Category` name did.
+            const made = await StudentCategory.create({
+              name: row.departmentName,
               createdBy: req.user._id,
             });
             categoryId = made._id;
@@ -410,7 +396,7 @@ export const bulkUploadStudentProducts = async (req, res) => {
           // below writes whatever it is given, so passing null here would move
           // every product in a partial sheet out of its department without
           // saying so.
-          ...(row.departmentName ? { category: categoryId } : {}),
+          ...(row.departmentName ? { studentCategory: categoryId } : {}),
           ...(row.sku ? { sku: row.sku } : {}),
           ...(row.images.length ? { images: row.images } : {}),
 

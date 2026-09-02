@@ -476,7 +476,12 @@ export const exportStudentProductsToExcel = async (products, departmentName) => 
   const rows = products.map((p) => ({
     "Product Name": p.name || "",
     "Arabic Name": p.nameAr || "",
-    Department: departmentName(p.category) || "",
+    // `studentCategory`, not `category`. The section files products in its own
+    // department collection; `category` is the storefront's tree and is empty
+    // on everything the admin screens created, so this column came out blank
+    // for every hand-added product — and a re-upload of that sheet then read
+    // the blank as "leave it where it is", which quietly kept them unfiled.
+    Department: departmentName(p.studentCategory) || "",
     Price: p.price ?? 0,
     Stock: p.stock ?? 0,
     SKU: p.sku || "",
