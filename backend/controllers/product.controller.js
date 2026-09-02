@@ -338,6 +338,27 @@ export const getAllProducts = controllerWrapper(
       if (filters.maxPrice) filter.price.$lte = Number(filters.maxPrice);
     }
 
+    /*
+      A shopper sees what is for sale, and cannot ask for anything else.
+
+      `isActive`, `deleted` and `approvalStatus` are all readable from the
+      query string above, and this handler serves the public listing at
+      `GET /api/products` as well as the dashboard's `/manage`. So
+      `?deleted=true` listed the archive, `?approvalStatus=pending` listed
+      every vendor's product still awaiting review, and both answers were
+      cached at the edge for five minutes for whoever asked next.
+
+      Forced after the filters rather than defaulted before them, because a
+      default is something the caller can override and this is not. The
+      dashboard is unaffected: `/manage` is the only route here with
+      `protectRoute`, so `req.user` is exactly the signal for "this is staff".
+    */
+    if (!req.user) {
+      filter.isActive = true;
+      filter.deleted = { $ne: true };
+      filter.approvalStatus = "approved";
+    }
+
     const result = await paginateProducts({
       filter,
       // For searches, rank by popularity/quality; otherwise newest first.
@@ -451,7 +472,22 @@ export const getProductById = controllerWrapper(
   "getProductById",
   async (req, res) => {
     const { productId } = req.params;
-    const product = await Product.findById(productId)
+    /*
+      A product page for something that is not on sale is a page that should
+      not exist. This was a bare `findById`, so an archived or rejected
+      product kept a working, edge-cached URL — and `getProductBySlug` beside
+      it already excluded deleted rows, so the two disagreed about the same
+      product depending on which link you followed.
+
+      Staff reach unpublished products through the dashboard, which uses
+      `/manage` and its own handlers.
+    */
+    const product = await Product.findOne({
+      _id: productId,
+      isActive: true,
+      deleted: { $ne: true },
+      approvalStatus: "approved",
+    })
       .populate("brand", "name slug logo")
       .populate("category", "name nameAr slug")
       .populate("store", "storeName logo")
@@ -469,7 +505,14 @@ export const getProductBySlug = controllerWrapper(
   "getProductBySlug",
   async (req, res) => {
     const { slug } = req.params;
-    const product = await Product.findOne({ slug, deleted: { $ne: true } })
+    // `deleted` alone was not enough — a deactivated or unapproved product
+    // still rendered its own page. Matches getProductById above.
+    const product = await Product.findOne({
+      slug,
+      isActive: true,
+      deleted: { $ne: true },
+      approvalStatus: "approved",
+    })
       .populate("brand", "name slug logo")
       .populate("category", "name nameAr slug")
       .populate("store", "storeName logo")
@@ -1120,7 +1163,12 @@ export const filterProducts = controllerWrapper(
       page = 1,
       limit = 20,
     } = req.query;
-    let query = {};
+    /*
+      Public, so it starts from what is for sale rather than from everything.
+      This was `{}` — the filter page listed archived products, deactivated
+      ones, and vendors' products still waiting on approval.
+    */
+    let query = { isActive: true, deleted: { $ne: true }, approvalStatus: "approved" };
     if (category) query.category = await categoryFilterValue(category);
     if (brand) query.brand = brand;
     if (store) query.store = store;

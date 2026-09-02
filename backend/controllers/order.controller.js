@@ -37,6 +37,7 @@ import {
   sendNewOrderEmail,
 } from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
+import { paginateQuery } from "../utils/pagination.js";
 
 /** What the account pages print: the last eight characters, in capitals. */
 const shortOrderId = (id) => String(id).slice(-8).toUpperCase();
@@ -859,11 +860,42 @@ export const getOrders = controllerWrapper("getOrders", async (req, res) => {
     query = { user: req.user._id };
   }
 
-  const orders = await Order.find(query)
-    .populate(populateOptions)
-    .sort({ createdAt: -1 });
+  /*
+    Paginated, which it was not.
 
-  res.status(200).json({ success: true, orders });
+    This returned every order the caller could see, with `orderItems.product`
+    populated in full, on every load of the dashboard's orders page. It grows
+    without bound and degrades quietly rather than failing — the request that
+    eventually exhausts a Lambda's memory looks exactly like the one before
+    it. `paginateQuery` also caps `limit`, so `?limit=99999` is no longer a
+    way round it.
+
+    The status, date and user filters the validator already accepts are read
+    here too; they were validated and then ignored, so the dashboard's status
+    tabs had no effect on the server at all.
+  */
+  const { page, limit, status, dateFrom, dateTo, userId } = req.query;
+  if (status) query.status = status;
+  if (userId && (await reachesAllStores(req.user))) query.user = userId;
+  if (dateFrom || dateTo) {
+    query.createdAt = {};
+    if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+    // The "to" date names a day, and a day includes the whole of itself.
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = end;
+    }
+  }
+
+  const result = await paginateQuery(
+    page,
+    limit,
+    Order.find(query).populate(populateOptions).sort({ createdAt: -1 })
+  );
+  if (!result.success) return res.status(400).json(result);
+
+  res.status(200).json({ success: true, orders: result.data, ...result });
 });
 
 /**
