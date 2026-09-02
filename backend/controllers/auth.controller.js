@@ -376,7 +376,7 @@ export const verifyEmail = controllerWrapper(
     // 2FA is enabled — those users must complete the second factor flow
     // through /login, not via this endpoint.
     if (!user.twoFactorEnabled) {
-      generateTokensAndSetCookies(res, user._id);
+      generateTokensAndSetCookies(res, user._id, user.tokenVersion ?? 0);
     }
 
     res.status(200).json({
@@ -554,7 +554,7 @@ export const login = controllerWrapper("login", async (req, res) => {
     });
   }
 
-  generateTokensAndSetCookies(res, user._id);
+  generateTokensAndSetCookies(res, user._id, user.tokenVersion ?? 0);
 
   user.lastLogin = new Date();
   await user.save();
@@ -623,14 +623,45 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
   const acceptLang = String(req.headers["accept-language"] || "").toLowerCase();
   const lang = acceptLang.startsWith("ar") ? "ar" : "en";
 
+  // Deleted rows are excluded: a soft-deleted account keeps its row, and
+  // before the deletion fix above it kept its `googleId` too — so this found
+  // the dead account, issued cookies for it, and every request afterwards
+  // answered "Account is inactive or deleted".
   let user = await User.findOne({
     $or: [{ googleId }, { email: emailMatch(email) }],
+    deleted: { $ne: true },
   });
 
   if (user) {
     let dirty = false;
+    /*
+      Linking to an account that was never verified retires its password.
+
+      The pre-hijack: somebody registers with your address and a password of
+      their choosing. They cannot use it — the account is unverified — so it
+      sits there. You later sign in with Google, this matches you by email,
+      flips `isVerified` to true, and hands you the account. It is now a
+      working account with their password still on it, and they can sign in
+      beside you and read every order and address you add.
+
+      Nothing is lost by clearing it: an unverified password has never been
+      used to sign in, and its owner — if they were genuine — can set one
+      through the reset flow, which does prove the address.
+    */
     if (!user.googleId) { user.googleId = googleId; dirty = true; }
-    if (!user.isVerified) { user.isVerified = true; dirty = true; }
+    if (!user.isVerified) {
+      if (user.password) {
+        user.password = undefined;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpiresAt = undefined;
+        user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+        logAudit(req, "auth.unverified_password_cleared", "user", user._id,
+          { email: user.email, reason: "google_link_to_unverified_account" },
+          { target: user, severity: "warning", category: "security" });
+      }
+      user.isVerified = true;
+      dirty = true;
+    }
     if (!user.profilePicture && picture) { user.profilePicture = picture; dirty = true; }
     if (!user.name && name) { user.name = name; dirty = true; }
     user.lastLogin = new Date();
@@ -721,7 +752,7 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
     });
   }
 
-  generateTokensAndSetCookies(res, user._id);
+  generateTokensAndSetCookies(res, user._id, user.tokenVersion ?? 0);
 
   logAudit(req, "auth.login", "auth", user._id, { method: "google" }, {
     actor: user,
@@ -767,7 +798,7 @@ export const refreshToken = controllerWrapper(
     // days, so without this check a deleted or deactivated account could keep
     // minting fresh sessions for a week after being locked out. (Admin-window
     // expiry is enforced per-request by protectRoute.)
-    const user = await User.findById(userId).select("active deleted");
+    const user = await User.findById(userId).select("active deleted tokenVersion");
     if (!user || user.deleted || !user.active) {
       clearAuthCookies(res);
       return res.status(401).json({
@@ -777,7 +808,21 @@ export const refreshToken = controllerWrapper(
     }
 
     // Generate new access token
-    const newAccessToken = generateToken(userId, "5h");
+    /*
+      The refresh cookie is the long-lived one — seven days — so this is the
+      endpoint a stolen session actually lives on. A refresh token minted
+      before the account's last revocation is refused here rather than being
+      exchanged for another five hours of access.
+    */
+    if ((req.refreshTokenPayload?.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
+      return res.status(401).json({
+        success: false,
+        code: "SESSION_REVOKED",
+        message: "This session has ended. Please sign in again.",
+      });
+    }
+
+    const newAccessToken = generateToken(userId, "5h", user.tokenVersion ?? 0);
 
     res.cookie("accessToken", newAccessToken, {
       ...authCookieOptions(),
@@ -843,6 +888,16 @@ export const resetPassword = controllerWrapper(
     }
 
     user.password = password;
+    /*
+      Every session this account had stops here.
+
+      This is the endpoint somebody reaches when they believe their password
+      is in the wrong hands, and until now it changed the password and left
+      the attacker's refresh cookie working for the rest of its seven days.
+      Resetting a password that has been used against you has to end the
+      sessions it opened, or it is not a remedy.
+    */
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiresAt = undefined;
     await user.save();
@@ -1602,6 +1657,9 @@ export const changePassword = controllerWrapper(
 
     // Update password
     user.password = newPassword;
+    // Same as the reset above: changing a password ends the sessions the old
+    // one opened, including on any device the person no longer has.
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1;
     await user.save();
 
     logAudit(req, "user.password_changed", "user", user._id, {}, {
@@ -1863,6 +1921,9 @@ export const disable2FA = controllerWrapper("disable2FA", async (req, res) => {
   }
   user.twoFactorEnabled = false;
   user.totpSecret = undefined;
+  // Turning the second factor off is a downgrade in how well this account is
+  // protected, so the sessions opened while it was on do not carry over.
+  user.tokenVersion = (user.tokenVersion ?? 0) + 1;
   // The codes exist to stand in for the secret, so they die with it. Leaving
   // them behind would mean a printout still opened an account whose owner
   // believes they have turned the second factor off.
@@ -1926,19 +1987,40 @@ export const deleteMyAccount = controllerWrapper("deleteMyAccount", async (req, 
   }
 
   const ts = Date.now();
-  // Anonymise all PII — keep the document so relational data stays intact.
+  /*
+    Anonymise all PII — keep the document so relational data stays intact.
+
+    `$unset` rather than `undefined`. Mongoose drops undefined keys when it
+    casts an update, so the previous version of this sent Mongo nothing but
+    `{email, name, cart, love, pushSubscriptions, deleted, active}` and the
+    phone number, profile picture, Google id and referral code all survived a
+    deletion whose own comment says it removes them.
+
+    The Google id mattered twice over: it stayed matchable, so the person's
+    next "Sign in with Google" found the dead row, was issued cookies, and
+    then got 403 on every request — with no way to make a fresh account for
+    that identity either.
+  */
   await User.findByIdAndUpdate(req.user._id, {
-    email: `deleted_${ts}@deleted.invalid`,
-    name: "Deleted User",
-    phoneNumber: undefined,
-    profilePicture: undefined,
-    googleId: undefined,
-    cart: [],
-    love: [],
-    pushSubscriptions: [],
-    referralCode: undefined,
-    deleted: true,
-    active: false,
+    $set: {
+      email: `deleted_${ts}@deleted.invalid`,
+      name: "Deleted User",
+      cart: [],
+      love: [],
+      pushSubscriptions: [],
+      deleted: true,
+      active: false,
+      // Ends every session this account had open.
+      tokenVersion: (user.tokenVersion ?? 0) + 1,
+    },
+    $unset: {
+      phoneNumber: 1,
+      profilePicture: 1,
+      googleId: 1,
+      referralCode: 1,
+      totpSecret: 1,
+      twoFactorRecoveryCodes: 1,
+    },
   });
 
   // Cancel any open orders so stock is not held indefinitely.

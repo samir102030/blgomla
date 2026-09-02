@@ -39,6 +39,9 @@ export const verifyRefreshToken = (req, res, next) => {
       });
 
     req.userId = decoded.userId;
+    // The whole payload, so the refresh handler can compare `tokenVersion`
+    // against the account without verifying the token a second time.
+    req.refreshTokenPayload = decoded;
     next();
   } catch (error) {
     console.log("Error in verifyRefreshToken ", error);
@@ -48,15 +51,23 @@ export const verifyRefreshToken = (req, res, next) => {
   }
 };
 
-export const generateToken = (userId, time = "5h") => {
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET, {
+/*
+  `tokenVersion` rides in both tokens so a password reset can retire them.
+
+  It is optional on the way in and defaults to 0, which matters for the
+  deploy: every token already in a customer's browser was minted without the
+  claim, and treating a missing claim as 0 means they keep working instead of
+  the release signing the whole shop out at once.
+*/
+export const generateToken = (userId, time = "5h", tokenVersion = 0) => {
+  const token = jwt.sign({ userId, tokenVersion }, process.env.JWT_SECRET, {
     expiresIn: time,
   });
   return token;
 };
 
-export const generateRefreshToken = (userId) => {
-  const token = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET, {
+export const generateRefreshToken = (userId, tokenVersion = 0) => {
+  const token = jwt.sign({ userId, tokenVersion }, process.env.JWT_REFRESH_SECRET, {
     expiresIn: "7d", // 7 days
   });
   return token;
@@ -81,8 +92,8 @@ export const clearAuthCookies = (res) => {
   res.clearCookie("refreshToken", authCookieOptions());
 };
 
-export const generateTokenAndSetCookie = (res, userId) => {
-  const token = generateToken(userId, "5h");
+export const generateTokenAndSetCookie = (res, userId, tokenVersion = 0) => {
+  const token = generateToken(userId, "5h", tokenVersion);
 
   res.cookie("accessToken", token, {
     ...authCookieOptions(),
@@ -92,9 +103,9 @@ export const generateTokenAndSetCookie = (res, userId) => {
   return token;
 };
 
-export const generateTokensAndSetCookies = (res, userId) => {
-  const accessToken = generateToken(userId, "5h");
-  const refreshToken = generateRefreshToken(userId);
+export const generateTokensAndSetCookies = (res, userId, tokenVersion = 0) => {
+  const accessToken = generateToken(userId, "5h", tokenVersion);
+  const refreshToken = generateRefreshToken(userId, tokenVersion);
 
   res.cookie("accessToken", accessToken, {
     ...authCookieOptions(),
