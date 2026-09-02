@@ -122,15 +122,26 @@ router.get("/brand-facets", publicListCache, getBrandFacets);
 /*
   Priced products with no stock, and the button that fills them.
 
-  Admin-only and behind the same permission as the other bulk writes. Static
-  paths, so they sit above the `/:productId` routes below and are never
+  Admin-only — which this comment already claimed and the guards did not
+  deliver. `products.bulk` is in STORE_PERMISSIONS, because a vendor needs it
+  for their own spreadsheet upload; these five endpoints are a different kind
+  of thing entirely. They do not take a list of ids: `restockEmpty` runs an
+  `updateMany` over every priced out-of-stock product in the shop, and
+  `applyReprice` a `bulkWrite` over a whole category branch, regardless of who
+  owns what. One vendor could reprice a competitor's catalogue to 1% of list,
+  or undo an administrator's reprice.
+
+  `adminRoute` on top of the permission, matching `/bulk-update` below. The
+  permission stays where it is so the vendor upload keeps working.
+
+  Static paths, so they sit above the `/:productId` routes below and are never
   swallowed by them.
 */
-router.get("/audit/stock-gaps", protectRoute, requirePermission("products.bulk"), getStockGaps);
-router.post("/audit/restock", protectRoute, requirePermission("products.bulk"), restockEmpty);
-router.get("/audit/reprice", protectRoute, requirePermission("products.bulk"), getRepricePreview);
-router.post("/audit/reprice", protectRoute, requirePermission("products.bulk"), applyReprice);
-router.post("/audit/reprice/undo", protectRoute, requirePermission("products.bulk"), undoReprice);
+router.get("/audit/stock-gaps", protectRoute, adminRoute, requirePermission("products.bulk"), getStockGaps);
+router.post("/audit/restock", protectRoute, adminRoute, requirePermission("products.bulk"), restockEmpty);
+router.get("/audit/reprice", protectRoute, adminRoute, requirePermission("products.bulk"), getRepricePreview);
+router.post("/audit/reprice", protectRoute, adminRoute, requirePermission("products.bulk"), applyReprice);
+router.post("/audit/reprice/undo", protectRoute, adminRoute, requirePermission("products.bulk"), undoReprice);
 router.get("/featured", publicListCache, translateResponse, getFeaturedProducts);
 router.get("/newest", publicListCache, translateResponse, getNewestProducts);
 router.get("/bestSellers", publicListCache, translateResponse, getBestSellers);

@@ -48,7 +48,9 @@ export const getAddressById = controllerWrapper(
       return res
         .status(404)
         .json({ success: false, message: "Address not found" });
-    if (address.user._id !== req.user._id)
+    // `!==` on two ObjectId instances compares references, so this was true
+    // for the owner as well and the endpoint answered 403 to everybody.
+    if (String(address.user._id) !== String(req.user._id))
       return res.status(403).json({
         success: false,
         message: "Access denied - You are not authorized to view this address",
@@ -100,7 +102,23 @@ export const updateAddress = controllerWrapper(
 export const deleteAddress = controllerWrapper(
   "deleteAddress",
   async (req, res) => {
-    const address = await Address.findByIdAndDelete(req.params.id);
+    /*
+      Scoped to the caller, which it was not.
+
+      `findByIdAndDelete(req.params.id)` deleted whatever id it was handed:
+      any signed-in account could remove any other customer's address by id,
+      and an address id travels — it is on every order that ships to it. The
+      orders then populate `shippingAddress` as null, so a live order loses
+      the address it was meant to be delivered to, on the courier's screen and
+      the customer's alike.
+
+      404 rather than 403 when the row belongs to somebody else: a distinct
+      "not yours" would confirm that the id exists.
+    */
+    const address = await Address.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id,
+    });
     if (!address)
       return res
         .status(404)
@@ -112,7 +130,13 @@ export const deleteAddress = controllerWrapper(
 export const setDefaultAddress = controllerWrapper(
   "setDefaultAddress",
   async (req, res) => {
-    const address = await Address.findById(req.params.id);
+    // Same gap as the delete above: this loaded by id alone and then wrote
+    // against `address.user`, so one account could switch another account's
+    // default delivery address and have their next order go to it.
+    const address = await Address.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
     if (!address)
       return res
         .status(404)

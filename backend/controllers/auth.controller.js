@@ -58,6 +58,31 @@ const secretsMatch = (a, b) => {
 const PRIVILEGED_ROLES = ["admin", "super_admin"];
 
 /*
+  The only roles a person may put on their own account at registration.
+
+  The old test was `role !== "admin"`, which reads like a guard and is not
+  one: it blocks exactly one string. `validateSignup` never looks at `role`,
+  the schema has no enum so any custom role key is accepted, and the schema's
+  `lowercase` setter means even "Admin" would have landed as `admin` had the
+  comparison been case-sensitive the other way. So the registration form —
+  open to anyone on the internet — would mint a `super_admin` for whoever
+  typed it into the request body, and email them the code to verify it.
+
+  A whitelist rather than a blacklist, because the set of roles that are safe
+  to self-assign is two and the set that is not is open-ended: every role
+  Roles & Access will ever create belongs on the other side of this line.
+*/
+const SELF_ASSIGNABLE_ROLES = ["customer", "store"];
+
+/*
+  The schema stores `role` trimmed and lower-cased. A guard that compares the
+  raw value is therefore checking a different string from the one that gets
+  written: `"super_admin "` is not in PRIVILEGED_ROLES, passes, and is saved
+  as `super_admin`. Normalise on the way in so the guard and the write agree.
+*/
+const normaliseRole = (value) => String(value ?? "").trim().toLowerCase();
+
+/*
   Whether this account is one the shop cannot afford to lose.
 
   Both privileged roles plus vendors: a compromised `store` account can alter
@@ -100,6 +125,18 @@ export const signup = controllerWrapper("signup", async (req, res) => {
   const { email, password, name, phoneNumber, role, storeDescription, referralCode, deliveryAddress } =
     req.body;
 
+  // Anything outside the whitelist silently becomes a customer rather than a
+  // 400: the field is not on any form we ship, so a request carrying one is
+  // either a mistake or an attempt, and neither deserves an error message
+  // that confirms which roles exist.
+  // `typeof` first: an array coerces to its joined contents, so `["store"]`
+  // would otherwise pass the whitelist. It happens to be harmless here, but a
+  // guard that depends on which shapes coerce favourably is not a guard.
+  const requestedRole = typeof role === "string" ? normaliseRole(role) : "";
+  const signupRole = SELF_ASSIGNABLE_ROLES.includes(requestedRole)
+    ? requestedRole
+    : "customer";
+
   if (await User.findOne({ email: emailMatch(email) }))
     return res
       .status(400)
@@ -131,7 +168,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     lang,
     verificationToken,
     verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-    role: role !== "admin" ? role || "customer" : "customer", // default to customer
+    role: signupRole,
     referredBy,
     lastLogin: new Date(),
     active: true, // Set active to true by default
@@ -168,7 +205,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
   }
 
   let store;
-  if (role === "store") {
+  if (signupRole === "store") {
     store = new Store({
       name: user.name,
       owner: user._id,
@@ -909,12 +946,15 @@ export const updateUser = controllerWrapper("updateUser", async (req, res) => {
         message: "Access denied - changing a role requires the users.role permission",
       });
     }
-    if (PRIVILEGED_ROLES.includes(String(filteredData.role).toLowerCase())) {
+    const wantedRole = normaliseRole(filteredData.role);
+    if (PRIVILEGED_ROLES.includes(wantedRole)) {
       return res.status(400).json({
         success: false,
         message: `Cannot change role to ${filteredData.role}`,
       });
     }
+    // Write what was checked, not what was sent.
+    filteredData.role = wantedRole;
   }
 
   const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
@@ -1171,7 +1211,8 @@ export const changeUserRole = controllerWrapper(
   async (req, res) => {
   const { userId } = req.params;
   const { role } = req.body;
-  if (PRIVILEGED_ROLES.includes(String(role).toLowerCase()))
+  const wantedRole = normaliseRole(role);
+  if (PRIVILEGED_ROLES.includes(wantedRole))
     return res.status(400).json({ message: `Cannot change role to ${role}` });
   if (!userId || !role)
       return res.status(400).json({ message: "User ID and role are required" });
@@ -1182,7 +1223,7 @@ export const changeUserRole = controllerWrapper(
   const user = guard.targetUser;
 
   const previousRole = user.role;
-  user.role = role;
+  user.role = wantedRole;
   await user.save();
 
     logAudit(req, "user.role_changed", "user", user._id, {}, {

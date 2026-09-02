@@ -1203,10 +1203,52 @@ const reconcileDelivery = async (order) => {
   return unwind;
 };
 
+/*
+  Whether this account may act on this order at all.
+
+  `orders.edit` and `orders.cancel` are both in STORE_PERMISSIONS — a vendor
+  has to be able to move their own orders along — and the four handlers below
+  took `req.params.id` straight to `findByIdAndUpdate`. So the permission was
+  the entire check, and it does not say *whose* order. Any approved vendor
+  could cancel a competitor's order, which runs `releaseOrderHolds` and puts
+  the goods back on that competitor's shelf while refunding the buyer's coupon
+  and points; or mark it delivered, which flags a COD order paid and awards
+  loyalty and referral points against a sale that never happened.
+
+  Returns null when the caller may proceed, or the response body to send.
+  404 rather than 403 for another store's order: "not yours" confirms the id
+  is real, and order ids travel — they are in confirmation emails and URLs.
+*/
+const orderAccessDenied = async (req, order) => {
+  if (!order) return { status: 404, body: { success: false, message: "Order not found" } };
+  if (await reachesAllStores(req.user)) return null;
+  const store = await Store.findOne({ owner: req.user._id }).select("_id");
+  if (!store || String(order.store) !== String(store._id)) {
+    return { status: 404, body: { success: false, message: "Order not found" } };
+  }
+  return null;
+};
+
+/*
+  Read the order, check it, then write — rather than writing and checking the
+  result. `findByIdAndUpdate` had already applied the change by the time
+  anything could have objected to it.
+*/
+const loadOrderForMutation = async (req, res) => {
+  const existing = await Order.findById(req.params.id).select("_id store");
+  const denied = await orderAccessDenied(req, existing);
+  if (denied) {
+    res.status(denied.status).json(denied.body);
+    return null;
+  }
+  return existing;
+};
+
 export const updateOrderStatus = controllerWrapper(
   "updateOrderStatus",
   async (req, res) => {
     const { status, note } = req.body;
+    if (!(await loadOrderForMutation(req, res))) return;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {
@@ -1340,6 +1382,7 @@ export const markOrderPaid = controllerWrapper(
       does not match, so nothing is written and `paidAt` keeps the hour it
       earned. Same shape as reconcileDelivery, for the same reason.
     */
+    if (!(await loadOrderForMutation(req, res))) return;
     const claimed = await Order.findOneAndUpdate(
       { _id: req.params.id, isPaid: { $ne: true } },
       {
@@ -1387,6 +1430,7 @@ export const markOrderDelivered = controllerWrapper(
       instead — and two doors to the same act that disagree about what the act
       means is how the next person wires this one up and gets different books.
     */
+    if (!(await loadOrderForMutation(req, res))) return;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {
@@ -1416,6 +1460,7 @@ export const markOrderDelivered = controllerWrapper(
 export const cancelOrder = controllerWrapper(
   "cancelOrder",
   async (req, res) => {
+    if (!(await loadOrderForMutation(req, res))) return;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {
