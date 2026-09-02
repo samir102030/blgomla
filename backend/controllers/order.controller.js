@@ -1283,7 +1283,7 @@ const orderAccessDenied = async (req, order) => {
   anything could have objected to it.
 */
 const loadOrderForMutation = async (req, res) => {
-  const existing = await Order.findById(req.params.id).select("_id store");
+  const existing = await Order.findById(req.params.id).select("_id store status");
   const denied = await orderAccessDenied(req, existing);
   if (denied) {
     res.status(denied.status).json(denied.body);
@@ -1296,7 +1296,39 @@ export const updateOrderStatus = controllerWrapper(
   "updateOrderStatus",
   async (req, res) => {
     const { status, note } = req.body;
-    if (!(await loadOrderForMutation(req, res))) return;
+    const existing = await loadOrderForMutation(req, res);
+    if (!existing) return;
+
+    /*
+      An order cannot come back from cancelled.
+
+      There is no transition graph here, deliberately — staff correct their
+      own mistakes by moving an order forwards and backwards through the flow,
+      and that is fine for every state but one. Cancelling runs
+      `releaseOrderHolds`: the stock goes back on the shelf, the coupon use is
+      refunded, the buyer's redeemed points are returned, and `holdsReleased`
+      is set so it cannot run twice.
+
+      Nothing takes any of that back. So a mis-click on "cancelled" followed
+      by a correction to "processing" left the shop believing it had stock it
+      had already sold, the customer holding both the points-paid discount and
+      the refunded points, and the coupon free to use again — and because
+      `holdsReleased` is now true, cancelling it properly later would do
+      nothing at all.
+
+      Re-taking the holds is the other way to fix this, and it is a larger
+      change than the fault warrants: the products may have sold out in the
+      meantime, and there is no sensible answer to a re-take that fails. A
+      refusal costs an operator one new order and is always correct.
+    */
+    if (existing.status === "cancelled" && status && status !== "cancelled") {
+      return res.status(409).json({
+        success: false,
+        code: "ORDER_ALREADY_CANCELLED",
+        message:
+          "This order was cancelled — its stock, coupon and points have already gone back. Place a new order rather than reopening this one.",
+      });
+    }
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {

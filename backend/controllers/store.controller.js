@@ -605,6 +605,28 @@ export const updateVendorStatus = controllerWrapper(
 
     await vendor.save();
 
+    /*
+      The owner's account has to move with the store.
+
+      This endpoint is the one the dashboard's vendor pages actually call, and
+      it only ever wrote Store fields. `registerVendor` creates the owner with
+      `isVerified: false, active: false`, and `suspendVendor` sets
+      `active: false` — so approving a vendor from the status dropdown left
+      their account exactly as it was. The vendor signed in, got
+      EMAIL_NOT_VERIFIED with no code ever sent, and after a manual resend hit
+      "Account is inactive" on every protected route. Nothing on either screen
+      explained why, and suspended → approved left the account dead for good.
+
+      `approveVendor` beside this has done it correctly all along; the two had
+      simply drifted, and the UI calls this one.
+    */
+    await User.findByIdAndUpdate(
+      vendor.owner,
+      status === "approved" || status === "active"
+        ? { isVerified: true, active: true }
+        : { active: false }
+    );
+
     res.status(200).json({
       success: true,
       message: `Vendor status updated to ${status}`,
