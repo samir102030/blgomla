@@ -1,5 +1,15 @@
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
+/*
+  A ceiling, because `limit` comes from the query string and had only a floor.
+
+  `?limit=100000` returned the whole 13,000-product catalogue — with its
+  populates — in a single Lambda response, and every distinct URL is a cache
+  miss at the edge, so one crafted link was a denial of service anyone could
+  send. 100 is above anything a page renders and below anything worth doing
+  with it.
+*/
+const MAX_LIMIT = 100;
 
 // Core pagination function
 
@@ -22,7 +32,7 @@ const DEFAULT_LIMIT = 10;
 export async function paginateQuery(page, limit, query, useLean = true) {
   try {
     page = Math.max(Number(page) || DEFAULT_PAGE, 1);
-    limit = Math.max(Number(limit) || DEFAULT_LIMIT, 1);
+    limit = Math.min(Math.max(Number(limit) || DEFAULT_LIMIT, 1), MAX_LIMIT);
 
     // Clone the query to count the total number of documents
     const countQuery = query.model.find(query.getFilter());

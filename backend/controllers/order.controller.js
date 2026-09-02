@@ -207,21 +207,37 @@ export const createOrder = controllerWrapper(
       };
 
       const addRequiredProduct = (product, quantity) => {
+        // Coerced here as well as in the validator: `+=` on two strings
+        // concatenates, and this is the line that would have done it.
+        const qty = Number(quantity) || 0;
         const key = product._id.toString();
         if (requiredProducts.has(key)) {
-          requiredProducts.get(key).quantity += quantity;
+          requiredProducts.get(key).quantity += qty;
           return;
         }
-        requiredProducts.set(key, { product, quantity });
+        requiredProducts.set(key, { product, quantity: qty });
       };
 
       for (const item of orderItems) {
-        const product = await Product.findById(item.product).session(session);
+        /*
+          Scoped to products that are actually for sale.
+
+          This was a bare `findById`, so an id in a stale cart — a product
+          since archived, deactivated, or a vendor's still awaiting approval —
+          went through checkout, decremented its stock and notified the vendor
+          of an order for something that is not on the storefront.
+        */
+        const product = await Product.findOne({
+          _id: item.product,
+          isActive: true,
+          deleted: { $ne: true },
+          approvalStatus: "approved",
+        }).session(session);
         if (!product) {
           await session.abortTransaction();
           return res.status(404).json({
             success: false,
-            message: `Product ${item.product} not found`,
+            message: `Product ${item.product} is no longer available`,
           });
         }
 

@@ -168,9 +168,10 @@ couponSchema.methods.canApplyToProduct = function (productId, categoryId, audien
   // Check if product's category is in applicable categories
   if (
     this.applicableCategories &&
+    categoryId &&
     this.applicableCategories.some((category) => {
       const id = category._id || category;
-      return id.toString() === categoryId.toString();
+      return id.toString() === String(categoryId);
     })
   ) {
     return true;

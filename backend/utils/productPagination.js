@@ -2,6 +2,7 @@ import Product from "../models/product.model.js";
 import { HIDE_ELECTRONICS } from "./electronicsVisibility.js";
 
 const DEFAULT_PAGE = 1;
+const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 10;
 
 // Fields excluded from list responses — heavy arrays we never render on cards.
@@ -66,7 +67,8 @@ export async function paginateProducts({
   limit = DEFAULT_LIMIT,
 } = {}) {
   page = Math.max(Number(page) || DEFAULT_PAGE, 1);
-  limit = Math.max(Number(limit) || DEFAULT_LIMIT, 1);
+  // Capped for the same reason as utils/pagination.js — see the note there.
+  limit = Math.min(Math.max(Number(limit) || DEFAULT_LIMIT, 1), MAX_LIMIT);
   const skip = (page - 1) * limit;
 
   // The schema hook cannot reach an aggregation, and this function is behind

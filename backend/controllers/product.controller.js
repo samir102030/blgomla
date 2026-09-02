@@ -581,6 +581,65 @@ export const bulkUpdateProducts = controllerWrapper(
       });
     }
 
+    /*
+      The plain numbers need checking too, for the same reason the structured
+      fields above do: `updateMany` runs no validators, so the schema's own
+      `min: 0, max: 100` on salePercentage and `min: 0` on price and stock are
+      not enforced on this path at all.
+
+      A negative percentage is the one that costs money rather than merely
+      looking wrong. `salePrice` is `price * (1 - salePercentage / 100)`, so
+      `salePercentage: -50` prices the product at 150% of list — and the
+      checkout reads that same virtual, so the customer is charged it. Above
+      100 gives a negative price; a negative `stock` puts a product below zero
+      with nothing to sell; `minOrderQty: 0` is a minimum that cannot be met.
+    */
+    const NUMERIC_BOUNDS = {
+      price: { min: 0, integer: false, label: "Price cannot be negative." },
+      stock: { min: 0, integer: true, label: "Stock cannot be negative." },
+      salePercentage: {
+        min: 0,
+        max: 100,
+        integer: false,
+        label: "Sale percentage has to be between 0 and 100.",
+      },
+      minOrderQty: {
+        min: 1,
+        integer: true,
+        label: "Minimum order quantity has to be at least 1.",
+      },
+    };
+    for (const [key, rule] of Object.entries(NUMERIC_BOUNDS)) {
+      if (sanitized[key] === undefined) continue;
+      const value = Number(sanitized[key]);
+      if (
+        !Number.isFinite(value) ||
+        value < rule.min ||
+        (rule.max !== undefined && value > rule.max) ||
+        (rule.integer && !Number.isInteger(value))
+      ) {
+        return res.status(400).json({ success: false, message: rule.label });
+      }
+      sanitized[key] = value;
+    }
+
+    /*
+      And a sale that is switched on has to discount something. `saleActive`
+      with a zero percentage puts a "Sale" badge on a product and strikes
+      through a price identical to the one beside it — the shop advertising a
+      saving of nothing.
+    */
+    if (sanitized.saleActive === true) {
+      const pct =
+        sanitized.salePercentage !== undefined ? Number(sanitized.salePercentage) : undefined;
+      if (pct !== undefined && pct <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "A sale needs a percentage above 0. Leave it off instead.",
+        });
+      }
+    }
+
     const result = await Product.updateMany(
       { _id: { $in: ids } },
       { $set: sanitized }
