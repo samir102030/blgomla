@@ -44,8 +44,14 @@ export const getAllReviews = controllerWrapper(
       query.store = userStore._id;
     }
 
-    // Additional filters
-    if (storeId) query.store = storeId;
+    /*
+      Additional filters — but `storeId` may not widen the scope set above.
+
+      For a vendor, `query.store` has just been pinned to their own store; an
+      unconditional assignment here let `?storeId=<someone else>` replace it,
+      and the reviews come back with each reviewer's name and email address.
+    */
+    if (storeId && (await reachesAllStores(req.user))) query.store = storeId;
     if (productId) query._id = productId;
 
     // First, find products that match the criteria and have reviews

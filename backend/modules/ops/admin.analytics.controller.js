@@ -127,6 +127,19 @@ export const getPaymentAnalytics = controllerWrapper(
 //  INVENTORY ALERTS
 // ──────────────────────────────────────────────
 
+/*
+  The stock field on Product is `stock`. This asked for `quantity`, which the
+  schema has never had, and the page was wrong in both directions at once: the
+  two `find` queries type-bracket against a missing field so both lists read
+  "nothing is out of stock", while the aggregation's `$lte: ["$quantity", 0]`
+  did not — a missing field sorts below numbers — so the summary reported
+  every product in the shop as out of stock and the catalogue as worth
+  nothing. The dashboard's own backlog tile, which uses `stock`, links here
+  and disagreed with it.
+
+  `$orderItems.quantity` below is a different field — an order line's
+  quantity — and is left alone.
+*/
 export const getInventoryAlerts = controllerWrapper(
   "getInventoryAlerts",
   async (req, res) => {
@@ -149,10 +162,10 @@ export const getInventoryAlerts = controllerWrapper(
     // Out-of-stock products
     const outOfStock = await Product.find({
       ...baseMatch,
-      quantity: { $lte: 0 },
+      stock: { $lte: 0 },
     })
       .populate("store", "name")
-      .select("name quantity images store price sku")
+      .select("name stock images store price sku")
       .sort({ updatedAt: -1 })
       .limit(50);
 
@@ -161,11 +174,11 @@ export const getInventoryAlerts = controllerWrapper(
       ? []
       : await Product.find({
           ...baseMatch,
-          quantity: { $gt: 0, $lte: threshold },
+          stock: { $gt: 0, $lte: threshold },
         })
           .populate("store", "name")
-          .select("name quantity images store price sku")
-          .sort({ quantity: 1 })
+          .select("name stock images store price sku")
+          .sort({ stock: 1 })
           .limit(50);
 
     // Stock distribution summary
@@ -175,15 +188,15 @@ export const getInventoryAlerts = controllerWrapper(
         $group: {
           _id: null,
           totalProducts: { $sum: 1 },
-          outOfStock: { $sum: { $cond: [{ $lte: ["$quantity", 0] }, 1, 0] } },
+          outOfStock: { $sum: { $cond: [{ $lte: ["$stock", 0] }, 1, 0] } },
           lowStock: {
             $sum: {
-              $cond: [{ $and: [{ $gt: ["$quantity", 0] }, { $lte: ["$quantity", threshold] }] }, 1, 0],
+              $cond: [{ $and: [{ $gt: ["$stock", 0] }, { $lte: ["$stock", threshold] }] }, 1, 0],
             },
           },
-          healthyStock: { $sum: { $cond: [{ $gt: ["$quantity", threshold] }, 1, 0] } },
-          totalUnits: { $sum: "$quantity" },
-          totalValue: { $sum: { $multiply: ["$quantity", "$price"] } },
+          healthyStock: { $sum: { $cond: [{ $gt: ["$stock", threshold] }, 1, 0] } },
+          totalUnits: { $sum: "$stock" },
+          totalValue: { $sum: { $multiply: ["$stock", "$price"] } },
         },
       },
     ]);
@@ -216,7 +229,7 @@ export const getInventoryAlerts = controllerWrapper(
       { $unwind: "$product" },
       {
         $match: {
-          "product.quantity": { $lte: threshold },
+          "product.stock": { $lte: threshold },
           "product.isActive": true,
           "product.deleted": { $ne: true },
         },
@@ -224,7 +237,7 @@ export const getInventoryAlerts = controllerWrapper(
       {
         $project: {
           name: "$product.name",
-          currentStock: "$product.quantity",
+          currentStock: "$product.stock",
           unitsSold: 1,
           price: "$product.price",
           storeName: "$product.store",
@@ -256,7 +269,7 @@ export const getInventoryAlerts = controllerWrapper(
         outOfStockProducts: outOfStock.map((p) => ({
           id: p._id,
           name: p.name,
-          quantity: p.quantity,
+          quantity: p.stock,
           price: p.price,
           sku: p.sku || null,
           store: p.store?.name || "Unknown",
@@ -265,7 +278,7 @@ export const getInventoryAlerts = controllerWrapper(
         lowStockProducts: lowStock.map((p) => ({
           id: p._id,
           name: p.name,
-          quantity: p.quantity,
+          quantity: p.stock,
           price: p.price,
           sku: p.sku || null,
           store: p.store?.name || "Unknown",
@@ -287,6 +300,11 @@ export const getInventoryAlerts = controllerWrapper(
 //  CUSTOMER ANALYTICS
 // ──────────────────────────────────────────────
 
+/*
+  Roles are customer/store/admin/super_admin. This counted `role: "user"`,
+  which nothing in this database has ever been, so every tile on the Customer
+  Analytics page read zero and the registration chart came back empty.
+*/
 export const getCustomerAnalytics = controllerWrapper(
   "getCustomerAnalytics",
   async (req, res) => {
