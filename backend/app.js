@@ -131,7 +131,23 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "10mb" }));
+/*
+  Keep the raw bytes for the Meta webhook, and only for it.
+
+  Meta signs the body it sent, so the HMAC has to run over exactly those bytes
+  — re-serialising `req.body` reorders keys and changes whitespace, and the
+  signature stops matching for reasons that look like a Meta bug and are not.
+  Scoped to the one path so the other routes do not each hold a second copy of
+  a ten-megabyte upload in memory.
+*/
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, res, buf) => {
+      if (req.originalUrl?.startsWith("/api/social/")) req.rawBody = buf;
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
