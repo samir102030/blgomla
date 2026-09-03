@@ -72,6 +72,23 @@ export const createOrGetConversation = async (req, res) => {
 };
 
 // Get user conversations
+/*
+  Who counts as shop staff in the support inbox.
+
+  Every branch below tested `userRole === "admin"` literally, and the account
+  this shop is seeded with — admin@belgomla.com — is `super_admin`. So the
+  owner's own support inbox was empty: `getUserConversations` fell through to
+  the participant filter and they are a participant in nothing. Opening a
+  conversation by id answered "Access denied". Customer messages sat there
+  with no error to explain why nobody replied.
+
+  `super_admin` is a superset of `admin` everywhere else in this codebase —
+  `adminRoute` is `mixRoute(["admin", "super_admin"])` — and this file was the
+  one place that forgot.
+*/
+const SUPPORT_STAFF_ROLES = ["admin", "super_admin"];
+const isSupportStaff = (role) => SUPPORT_STAFF_ROLES.includes(role);
+
 export const getUserConversations = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -80,7 +97,7 @@ export const getUserConversations = async (req, res) => {
 
     let query;
 
-    if (userRole === "admin") {
+    if (isSupportStaff(userRole)) {
       // Admins can see all conversations
       query = { isActive: true };
       if (type) {
@@ -97,12 +114,16 @@ export const getUserConversations = async (req, res) => {
       }
     }
 
+    // Capped. For staff this is every conversation the shop has ever had,
+    // with four populates on each, and the inbox renders the newest first
+    // anyway.
     const conversations = await Conversation.find(query)
       .populate("participants.user", "name email role profilePicture")
       .populate("product", "name images")
       .populate("store", "name")
       .populate("lastMessage")
-      .sort({ lastMessageAt: -1 });
+      .sort({ lastMessageAt: -1 })
+      .limit(Math.min(Number(req.query.limit) || 100, 200));
 
     res.status(200).json(conversations);
   } catch (error) {
@@ -121,7 +142,7 @@ export const getConversationMessages = async (req, res) => {
 
     // Check if user is participant in conversation or is an admin
     let conversation;
-    if (userRole === "admin") {
+    if (isSupportStaff(userRole)) {
       conversation = await Conversation.findById(conversationId);
     } else {
       conversation = await Conversation.findOne({
@@ -163,7 +184,7 @@ export const sendMessage = async (req, res) => {
 
     // Check if user is participant in conversation or is an admin
     let conversation;
-    if (userRole === "admin") {
+    if (isSupportStaff(userRole)) {
       // Admins can send messages to any conversation
       conversation = await Conversation.findById(conversationId);
     } else {
@@ -180,9 +201,12 @@ export const sendMessage = async (req, res) => {
 
     // If admin is sending to a conversation they're not a participant in, add them as a participant
     if (
-      userRole === "admin" &&
-      !conversation.participants.some((p) => p.user.toString() === userId)
+      isSupportStaff(userRole) &&
+      !conversation.participants.some((p) => p.user.toString() === String(userId))
     ) {
+      // Stored as "admin" whatever the exact staff role is: the participant
+      // role is what marks a thread as having been picked up by the shop, and
+      // `getOrCreateGeneralConversation` looks for that mark.
       conversation.participants.push({ user: userId, role: "admin" });
       await conversation.save();
     }
@@ -222,7 +246,7 @@ export const markMessagesAsRead = async (req, res) => {
 
     // Check if user is participant in conversation or is an admin
     let conversation;
-    if (userRole === "admin") {
+    if (isSupportStaff(userRole)) {
       conversation = await Conversation.findById(conversationId);
     } else {
       conversation = await Conversation.findOne({
