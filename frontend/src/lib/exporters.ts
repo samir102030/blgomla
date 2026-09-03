@@ -11,13 +11,87 @@ export interface ExportPage {
   fetcher: () => Promise<{ filename: string; rows: ExportRows }>;
 }
 
-const escapeCell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+/**
+ * A cell whose first character would make a spreadsheet run it.
+ *
+ * Excel, LibreOffice and Sheets all read a cell beginning with =, +, - or @
+ * (and a leading tab or carriage return) as a formula, and quoting does not
+ * stop them — CSV quotes are stripped on import, then the contents are
+ * parsed. Every text column in these exports is written by somebody else: a
+ * vendor names their own products, a customer writes their own review. A
+ * product called `=HYPERLINK("https://…"&A1,"Invoice")` becomes a live link
+ * in whatever the operator opens the file with, carrying a cell of this
+ * export out to whoever wrote the name.
+ *
+ * A plain number is not risky, and negatives are ordinary here — a discount,
+ * a change in sales — so they are left alone rather than turned into text
+ * that will not add up.
+ */
+const NUMERIC = /^[+-]?\d+(\.\d+)?$/;
+const neutralise = (text: string) =>
+  /^[=+\-@\t\r]/.test(text) && !NUMERIC.test(text) ? `'${text}` : text;
+
+const escapeCell = (value: string) =>
+  `"${neutralise(value).replace(/"/g, '""')}"`;
 
 const toCsv = (rows: ExportRows) =>
-  rows.map((row) => row.map((cell) => escapeCell(String(cell))).join(",")).join("\n");
+  rows
+    .map((row) => row.map((cell) => escapeCell(String(cell ?? ""))).join(","))
+    // CRLF, because Excel treats a bare LF inside a quoted cell as the end of
+    // the row on some platforms and a multi-line address then splits in two.
+    .join("\r\n");
+
+/**
+ * How many rows one request may return.
+ *
+ * The server caps `limit` at 100 — a ceiling put there so a crafted
+ * `?limit=100000` could not pull the whole catalogue through one Lambda. Every
+ * fetcher below used to ask for 10,000 and take what came back, which after
+ * that cap meant an export of a 13,000-product catalogue was the first
+ * hundred products, with nothing on screen or in the file to say so. The
+ * answer is to ask for each page in turn rather than to raise the ceiling.
+ */
+const PAGE_SIZE = 100;
+// 50,000 rows. A stop, so a server that reports its page count wrongly cannot
+// turn an export into an endless loop of requests.
+const MAX_PAGES = 500;
+
+/**
+ * Read every page of a paginated endpoint and return the rows from all of them.
+ *
+ * Stops on the page count the server reports, and again on any page that comes
+ * back short — either is enough on its own, and a listing that changes while
+ * this runs will trip one of them.
+ */
+const fetchAllPages = async (
+  url: string,
+  pick: (body: any) => any[] | undefined,
+  params: Record<string, any> = {}
+): Promise<any[]> => {
+  const all: any[] = [];
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const { data } = await axiosInstance.get(url, {
+      params: { ...params, page, limit: PAGE_SIZE },
+    });
+    const batch = pick(data) || [];
+    all.push(...batch);
+    const pages = Number(data?.pages) || 1;
+    if (batch.length < PAGE_SIZE || page >= pages) break;
+  }
+  return all;
+};
 
 export const downloadCsv = (filename: string, rows: ExportRows) => {
-  const csvContent = toCsv(rows);
+  /*
+    A byte-order mark, because this shop's catalogue is in Arabic.
+
+    Excel does not read a CSV as UTF-8 unless the file says so, and a CSV has
+    nowhere to say it except these three bytes. Without them every Arabic
+    product name, category and customer name in the file opens as mojibake —
+    the Content-Type on the Blob is not consulted, because by the time Excel
+    sees the file it is a file on disk.
+  */
+  const csvContent = "\uFEFF" + toCsv(rows);
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
@@ -44,11 +118,13 @@ export const downloadCombinedCsv = (
 };
 
 const fetchOrders = async () => {
-  const { data } = await axiosInstance.get("/orders");
+  // No page or limit was sent at all, and the server's default page is ten
+  // rows — so "export orders" produced the ten most recent, every time.
+  const orders = await fetchAllPages("/orders", (d) => d.orders);
   const rows: ExportRows = [
     ["Order ID", "Customer", "Store", "Status", "Total", "Created At"],
   ];
-  (data.orders || []).forEach((order: any) => {
+  orders.forEach((order: any) => {
     rows.push([
       order._id,
       order.user?.name || "",
@@ -62,13 +138,11 @@ const fetchOrders = async () => {
 };
 
 const fetchProducts = async () => {
-  const { data } = await axiosInstance.get("/products", {
-    params: { page: 1, limit: 10000 },
-  });
+  const products = await fetchAllPages("/products", (d) => d.data);
   const rows: ExportRows = [
     ["Product ID", "Name", "Price", "Stock", "Store", "Active", "Deleted"],
   ];
-  (data.data || []).forEach((product: any) => {
+  products.forEach((product: any) => {
     rows.push([
       product._id,
       product.name,
@@ -83,13 +157,11 @@ const fetchProducts = async () => {
 };
 
 const fetchCoupons = async () => {
-  const { data } = await axiosInstance.get("/coupons", {
-    params: { page: 1, limit: 10000 },
-  });
+  const coupons = await fetchAllPages("/coupons", (d) => d.data);
   const rows: ExportRows = [
     ["Coupon ID", "Code", "Discount Type", "Value", "Active", "Store"],
   ];
-  (data.data || []).forEach((coupon: any) => {
+  coupons.forEach((coupon: any) => {
     rows.push([
       coupon._id,
       coupon.code,
@@ -142,13 +214,11 @@ const fetchCollections = async () => {
 };
 
 const fetchUsers = async () => {
-  const { data } = await axiosInstance.get("/users", {
-    params: { page: 1, limit: 10000 },
-  });
+  const users = await fetchAllPages("/users", (d) => d.data);
   const rows: ExportRows = [
     ["User ID", "Name", "Email", "Role", "Active", "Deleted"],
   ];
-  (data.data || []).forEach((user: any) => {
+  users.forEach((user: any) => {
     rows.push([
       user._id,
       user.name || "",
@@ -162,13 +232,11 @@ const fetchUsers = async () => {
 };
 
 const fetchVendors = async () => {
-  const { data } = await axiosInstance.get("/stores/vendors", {
-    params: { page: 1, limit: 10000 },
-  });
+  const vendors = await fetchAllPages("/stores/vendors", (d) => d.data);
   const rows: ExportRows = [
     ["Vendor ID", "Store Name", "Owner", "Status", "Email"],
   ];
-  (data.data || []).forEach((vendor: any) => {
+  vendors.forEach((vendor: any) => {
     rows.push([
       vendor._id,
       vendor.name || "",
@@ -181,8 +249,9 @@ const fetchVendors = async () => {
 };
 
 const fetchCategories = async () => {
+  // Not paginated server-side: getAllCategories answers with the whole tree.
   const { data } = await axiosInstance.get("/categories", {
-    params: { page: 1, limit: 10000 },
+    params: { includeHidden: true },
   });
   const rows: ExportRows = [["Category ID", "Name", "Active", "Deleted"]];
   (data.categories || data.data || []).forEach((cat: any) => {
@@ -192,9 +261,8 @@ const fetchCategories = async () => {
 };
 
 const fetchBrands = async () => {
-  const { data } = await axiosInstance.get("/brands", {
-    params: { page: 1, limit: 10000 },
-  });
+  // Not paginated server-side either: getAllBrands answers with all of them.
+  const { data } = await axiosInstance.get("/brands");
   const rows: ExportRows = [["Brand ID", "Name", "Active", "Deleted"]];
   (data.brands || data.data || []).forEach((brand: any) => {
     rows.push([brand._id, brand.name, brand.isActive ? "Yes" : "No", brand.deleted ? "Yes" : "No"]);
@@ -203,14 +271,14 @@ const fetchBrands = async () => {
 };
 
 const fetchRequests = async () => {
-  const [brandRes, categoryRes] = await Promise.all([
-    axiosInstance.get("/brand-requests", { params: { page: 1, limit: 10000 } }),
-    axiosInstance.get("/category-requests", { params: { page: 1, limit: 10000 } }),
+  const [brandRequests, categoryRequests] = await Promise.all([
+    fetchAllPages("/brand-requests", (d) => d.data),
+    fetchAllPages("/category-requests", (d) => d.data),
   ]);
   const rows: ExportRows = [
     ["Type", "Request ID", "Name", "Status", "Requested By", "Created At"],
   ];
-  (brandRes.data.data || []).forEach((req: any) => {
+  brandRequests.forEach((req: any) => {
     rows.push([
       "Brand",
       req._id,
@@ -220,7 +288,7 @@ const fetchRequests = async () => {
       req.createdAt,
     ]);
   });
-  (categoryRes.data.data || []).forEach((req: any) => {
+  categoryRequests.forEach((req: any) => {
     rows.push([
       "Category",
       req._id,
@@ -234,13 +302,11 @@ const fetchRequests = async () => {
 };
 
 const fetchReviews = async () => {
-  const { data } = await axiosInstance.get("/reviews", {
-    params: { page: 1, limit: 10000 },
-  });
+  const reviews = await fetchAllPages("/reviews", (d) => d.data);
   const rows: ExportRows = [
     ["Review ID", "Product", "User", "Rating", "Comment", "Visible"],
   ];
-  (data.data || []).forEach((review: any) => {
+  reviews.forEach((review: any) => {
     rows.push([
       review._id,
       review.product?.name || "",
