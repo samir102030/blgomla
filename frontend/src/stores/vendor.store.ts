@@ -53,6 +53,19 @@ interface VendorStore {
   reset: () => void;
 }
 
+/*
+  Mutating actions in this store record the error AND rethrow it.
+
+  They used to only record it, and resolve. Every page that calls one does so
+  inside a try/catch and shows a success toast after the await — so the catch
+  could never run and the toast always fired. An administrator whose session
+  had expired pressed "Approve" on a pending vendor, got a 403 the store
+  swallowed, was told "Vendor approved successfully", and watched the row keep
+  its Pending badge. They moved on believing the vendor was live.
+
+  Reads (`fetch*`) deliberately still swallow: their failure is what the
+  `error` field is for, and their callers do not wrap them.
+*/
 export const useVendorStore = create<VendorStore>()(
   persist(
     (set, get) => ({
@@ -197,6 +210,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -224,6 +242,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -251,6 +274,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -278,6 +306,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -305,6 +338,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -332,6 +370,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -350,6 +393,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -370,6 +418,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -390,6 +443,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -446,6 +504,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 
@@ -460,6 +523,11 @@ export const useVendorStore = create<VendorStore>()(
             error: error?.response?.data?.message || error.message,
             loading: false,
           });
+          // Rethrown so the caller's catch can run. Without this the action
+          // resolved on failure, every page `await`ed it inside a try/catch
+          // whose catch could never fire, and the success toast showed on a
+          // 403 — see the note at the top of this file.
+          throw error;
         }
       },
 

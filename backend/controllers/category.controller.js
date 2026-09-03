@@ -241,9 +241,50 @@ export const safeDeleteCategory = controllerWrapper(
   "safeDeleteCategory",
   async (req, res) => {
     const { categoryId } = req.params;
-    const category = await Category.findByIdAndUpdate(categoryId, { deleted: true }, { new: true });
+    const category = await Category.findById(categoryId);
     if (!category)
       return res.status(404).json({ success: false, message: "Category not found" });
+
+    /*
+      Refusing beats orphaning.
+
+      This flipped `deleted` with no thought for what sat under it. Delete a
+      parent with six subcategories and four hundred products and the parent
+      leaves the tree — but the children keep a `parentCategory` id that is no
+      longer in any list, so `CategoriesPage` walks down from the roots and
+      never reaches them: the whole branch vanishes from the dashboard and can
+      only be found through the search box, which flattens.
+
+      On the storefront it is the other way round. `getAllCategories` decides
+      what is buried by walking up through parents it can see, and it cannot
+      see a deleted one — so the branch stays live and keeps selling, from a
+      menu the operator believes they have taken down.
+
+      The student module already refuses exactly this, in
+      `deleteStudentCategory`, and says why in the same words. The main
+      catalogue simply never learned it.
+    */
+    const [children, products] = await Promise.all([
+      Category.countDocuments({ parentCategory: category._id, deleted: { $ne: true } }),
+      Product.countDocuments({ category: category._id, deleted: { $ne: true } }),
+    ]);
+    if (children) {
+      return res.status(409).json({
+        success: false,
+        code: "CATEGORY_HAS_CHILDREN",
+        message: `Move or remove the ${children} categor${children === 1 ? "y" : "ies"} under this one first.`,
+      });
+    }
+    if (products) {
+      return res.status(409).json({
+        success: false,
+        code: "CATEGORY_HAS_PRODUCTS",
+        message: `Move the ${products} product${products === 1 ? "" : "s"} in this category first.`,
+      });
+    }
+
+    category.deleted = true;
+    await category.save();
     res.status(200).json({ success: true, message: "Category soft deleted" });
   }
 );

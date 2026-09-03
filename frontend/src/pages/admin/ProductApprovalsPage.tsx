@@ -62,7 +62,16 @@ const ProductApprovalsPage: React.FC = () => {
   };
 
   const handleReject = async (productId: string) => {
-    const reason = prompt(t("productApprovals.rejectionReasonPrompt")) ?? "";
+    /*
+      `prompt` answers null when the person presses Cancel or Escape, and
+      `?? ""` turned that into an empty string — so backing out of the dialog
+      sent the rejection anyway. Clicking Reject on the wrong row and
+      immediately hitting Escape still set the product to `rejected`,
+      `isActive: false`, noted "No reason provided", and emailed the vendor
+      that their live product had been turned down.
+    */
+    const reason = prompt(t("productApprovals.rejectionReasonPrompt"));
+    if (reason === null) return;
     try {
       await axiosInstance.post(`/products/${productId}/reject`, { reason });
       toast.success(t("productApprovals.rejectedSuccess"));

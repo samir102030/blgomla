@@ -1567,6 +1567,7 @@
   "categories.activate": "تفعيل",
   "categories.deactivate": "إلغاء التفعيل",
   "categories.confirmDelete": "هل أنت متأكد من رغبتك في حذف هذه الفئة؟",
+  "categories.deleteFailed": "مش قادر يشيل القسم ده.",
   "categories.loading": "جارٍ التحميل...",
   "categories.showing": "عرض",
   "categories.to": "إلى",

@@ -7,6 +7,7 @@ import CategoryModal from "../../components/CategoryModal";
 import ViewCategoryModal from "../../components/ViewCategoryModal";
 import BulkCategoryUpload from "../../components/admin/BulkCategoryUpload";
 import CategoryGapsCard from "../../components/admin/CategoryGapsCard";
+import toast from "react-hot-toast";
 
 const parentIdOf = (c: Category): string | null => {
   const parent = c.parentCategory;
@@ -110,7 +111,19 @@ const CategoriesPage: React.FC = () => {
 
   const handleDelete = async (categoryId: string) => {
     if (window.confirm(t("categories.confirmDelete"))) {
-      await safeDeleteCategory(categoryId);
+      /*
+        The store returns false and records why. This ignored the answer, so
+        the server refusing — which it now does for a category that still has
+        children or products under it — left the row exactly where it was with
+        nothing on screen to explain it.
+      */
+      const ok = await safeDeleteCategory(categoryId);
+      if (!ok) {
+        toast.error(
+          useCategoryStore.getState().error || t("categories.deleteFailed"),
+        );
+        return;
+      }
       fetchCategories({ includeHidden: true }); // Refresh the list
     }
   };

@@ -1567,6 +1567,7 @@
   "categories.activate": "Activate",
   "categories.deactivate": "Deactivate",
   "categories.confirmDelete": "Are you sure you want to delete this category?",
+  "categories.deleteFailed": "Could not remove that category.",
   "categories.loading": "Loading...",
   "categories.showing": "Showing",
   "categories.to": "to",
