@@ -642,6 +642,46 @@ export const useUserStore = create<UserStore>()(
         ...current,
         user: (persisted as { user?: User } | undefined)?.user,
       }),
+      /*
+        And the copy already on disk is removed, rather than waited out.
+
+        `partialize` governs what gets written from now on, and `merge` keeps a
+        stale copy from being read back into memory — but neither touches the
+        entry that is already there. It is only rewritten when that browser
+        next changes user-store state, so on a machine where an admin opened
+        the Users page and walked away, the roster sits in localStorage
+        indefinitely: exactly the case the fix exists for, and the one it did
+        not reach.
+
+        So: after hydrating, look at what is actually stored. If it carries
+        anything but `user`, force one write, which goes through `partialize`
+        and leaves only `user` behind. `setState` notifies persist's subscriber
+        whether or not the value changed, which is what makes a no-op write a
+        real one.
+
+        Guarded on finding something stale so an ordinary page load does not
+        write for no reason, and wrapped in try/catch because reading
+        localStorage throws outright in a browser set to block site data.
+      */
+      onRehydrateStorage: () => () => {
+        try {
+          const raw = localStorage.getItem("user-store");
+          if (!raw) return;
+          const stored = JSON.parse(raw)?.state;
+          if (!stored || typeof stored !== "object") return;
+          const stale = Object.keys(stored).filter((key) => key !== "user");
+          if (!stale.length) return;
+          queueMicrotask(() => {
+            try {
+              useUserStore.setState({ user: useUserStore.getState().user });
+            } catch {
+              // A failed cleanup is not worth breaking a page load over.
+            }
+          });
+        } catch {
+          // Unreadable storage is the same as nothing to clean up.
+        }
+      },
     }
   )
 );
