@@ -16,16 +16,23 @@ import {
  * public by necessity, and an unsigned POST that reached `handleInbound`
  * would let a stranger make our assistant say things on our number.
  *
- * Time: Meta wants a 200 quickly and redelivers what it did not get one for.
- * A model call plus two tool round-trips does not fit in that budget, so the
- * 200 goes out first and the thinking happens after it — which on Vercel
- * means telling the platform to keep the function alive, hence
- * `runAfterResponse`.
+ * Time: Meta wants a 200 within twenty seconds and redelivers what it did not
+ * get one for. Answering inside that window is comfortable — a catalogue
+ * search and a send take two or three seconds — so the Meta path finishes the
+ * work and then acknowledges. Deferring it past the response, which is what
+ * `runAfterResponse` is for, only holds on a host that keeps running after the
+ * body is flushed; see the note on `receiveMeta` for what that cost us.
  *
  * And order: one webhook can carry several messages from several people.
  * They are handled one at a time, because two replies to the same person
  * written concurrently race each other into the same thread document.
  */
+
+/**
+ * How long we are willing to spend answering before acknowledging anyway.
+ * Meta's ceiling is twenty seconds; this leaves room for the round trip.
+ */
+const ACK_DEADLINE_MS = 15000;
 
 /* ─────────────────────────────── verification ─────────────────────────────── */
 
@@ -171,11 +178,37 @@ export const receiveMeta = async (req, res) => {
 
   const events = parseMeta(req.body);
 
-  // Acknowledge first, always. Even an empty batch — a receipt-only webhook
-  // left unacknowledged is redelivered for hours.
-  res.sendStatus(200);
+  // A receipt-only webhook left unacknowledged is redelivered for hours, and
+  // there is nothing to answer, so acknowledge it and stop.
+  if (!events.length) return res.sendStatus(200);
 
-  if (events.length) runAfterResponse(() => drain(events));
+  /*
+    Answer first, acknowledge second — the reverse of the usual advice, and
+    deliberate.
+
+    Acknowledging first is right on a host that keeps running after the body
+    is flushed. Vercel only does that when the request-context hook is present
+    to hand `waitUntil` a promise, and when it is absent the function is frozen
+    the moment the 200 goes out. What that looked like in the inbox was worse
+    than a crash: the cheap replies — a greeting, the "I did not follow that"
+    fallback — made it out, and every question that needed a catalogue search
+    died mid-flight. The assistant appeared to be working and then went silent
+    on exactly the questions worth answering.
+
+    The budget is not tight. Meta allows twenty seconds; a search and a send
+    take two or three. And a webhook we do run long on is redelivered, where
+    the `seenMessageIds` check in `handleInbound` drops it — so the customer is
+    never answered twice. The race is the backstop: if something downstream
+    hangs, Meta still gets its 200 inside the window.
+  */
+  await Promise.race([
+    drain(events).catch((error) =>
+      console.error("[social] drain failed:", error.message)
+    ),
+    new Promise((resolve) => setTimeout(resolve, ACK_DEADLINE_MS)),
+  ]);
+
+  res.sendStatus(200);
 };
 
 /**
