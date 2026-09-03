@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { StarIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-hot-toast";
+// For the reader's language only — the rest of this page is still hardcoded
+// English, which is a separate job from making its category list real.
+import { useTranslation } from "react-i18next";
 import { useProductStore } from "../../stores/product.store";
 import { useBrandStore } from "../../stores/brand.store";
+import { useCategoryStore } from "../../stores/category.store";
 import { useVendorStore } from "../../stores/vendor.store";
 import type { Product, ProductImage } from "../../types/product.type";
+import type { Category } from "../../types/category.type";
 import BulkProductUpload from "../../components/vendor/BulkProductUpload";
 import { useMoney } from "../../lib/money";
 
 const VendorProductManagement: React.FC = () => {
   const money = useMoney();
+  const { i18n } = useTranslation();
   const {
     products,
     loading,
@@ -20,6 +26,7 @@ const VendorProductManagement: React.FC = () => {
   } = useProductStore();
 
   const { brands, fetchBrands } = useBrandStore();
+  const { categories: allCategories, fetchCategories } = useCategoryStore();
   const { vendorStore, fetchVendorStore } = useVendorStore();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -46,7 +53,8 @@ const VendorProductManagement: React.FC = () => {
   useEffect(() => {
     fetchVendorStore();
     fetchBrands();
-  }, [fetchVendorStore, fetchBrands]);
+    fetchCategories();
+  }, [fetchVendorStore, fetchBrands, fetchCategories]);
 
   useEffect(() => {
     if (vendorStore?._id) {
@@ -136,8 +144,14 @@ const VendorProductManagement: React.FC = () => {
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (product.description &&
         product.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    // `product.category` arrives as an id or as a populated category, and the
+    // filter holds an id. Comparing the raw field to it was never true.
+    const productCategoryId =
+      typeof product.category === "string"
+        ? product.category
+        : product.category?._id || "";
     const matchesCategory =
-      !categoryFilter || product.category === categoryFilter;
+      !categoryFilter || productCategoryId === categoryFilter;
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "pending" && (product as any).hasPendingRequests === true);
@@ -148,14 +162,63 @@ const VendorProductManagement: React.FC = () => {
     (p) => (p as any).hasPendingRequests === true
   ).length;
 
-  const categories = [
-    "Electronics",
-    "Fashion",
-    "Home & Garden",
-    "Sports",
-    "Books",
-    "Toys",
-  ];
+  /*
+    The shop's actual categories, indented as the tree reads.
+
+    What stood here was a literal array of six English words — Electronics,
+    Fashion, Home & Garden, Sports, Books, Toys — that name nothing in this
+    catalogue. Everything downstream of it was broken as a result, in three
+    separate ways at once:
+
+      • `category` on a product is an ObjectId. The form put the *word* in it,
+        so every save from this screen sent `category: "Fashion"`, which is
+        not an id and cannot be cast to one. A vendor could not create a
+        product here at all.
+      • Editing loaded the product's real category id into the select, and no
+        <option> had that value, so the field rendered blank — while being
+        marked required. The only way to submit was to pick one of the six
+        fictional categories, which then failed as above.
+      • The filter compared `product.category`, an id or a populated object,
+        against the chosen word. Never equal, so picking any category emptied
+        the grid.
+
+    The options carry ids now, and the label is the category's own name in the
+    reader's language, prefixed by its depth so a third-level entry is
+    distinguishable from the similarly named one two branches over.
+  */
+  const categoryOptions = useMemo(() => {
+    const parentIdOf = (c: Category): string | null => {
+      const parent = c.parentCategory;
+      if (!parent) return null;
+      return typeof parent === "string" ? parent : parent._id || null;
+    };
+    const label = (c: Category) =>
+      (i18n.language === "ar" && c.nameAr ? c.nameAr : c.name) || "";
+
+    const childrenOf = new Map<string | null, Category[]>();
+    for (const c of allCategories || []) {
+      if (!c || c.deleted) continue;
+      const key = parentIdOf(c);
+      childrenOf.set(key, [...(childrenOf.get(key) || []), c]);
+    }
+    for (const list of childrenOf.values()) {
+      list.sort(
+        (a, b) =>
+          (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
+          label(a).localeCompare(label(b))
+      );
+    }
+
+    const options: Array<{ id: string; label: string }> = [];
+    const walk = (parentId: string | null, depth: number) => {
+      for (const c of childrenOf.get(parentId) || []) {
+        options.push({ id: c._id, label: `${"— ".repeat(depth)}${label(c)}` });
+        walk(c._id, depth + 1);
+      }
+    };
+    walk(null, 0);
+    return options;
+  }, [allCategories, i18n.language]);
 
   return (
     <div className="space-y-6">
@@ -242,9 +305,9 @@ const VendorProductManagement: React.FC = () => {
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-yellow-500"
             >
               <option value="">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+              {categoryOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
                 </option>
               ))}
             </select>
@@ -413,9 +476,9 @@ const VendorProductManagement: React.FC = () => {
                       required
                     >
                       <option value="">Select Category</option>
-                      {categories.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
+                      {categoryOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.label}
                         </option>
                       ))}
                     </select>
