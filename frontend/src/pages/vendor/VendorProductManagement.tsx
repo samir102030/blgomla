@@ -19,7 +19,24 @@ const VendorProductManagement: React.FC = () => {
   const {
     products,
     loading,
-    fetchProducts,
+    /*
+      The dashboard listing, not the storefront's.
+
+      `fetchProducts` reads `/products`, which is the public route: no session
+      is attached to it, so the handler applies the visitor's filter —
+      isActive, not deleted, approvalStatus "approved". A vendor's own screen
+      was therefore showing them only their published products. Everything
+      they had just submitted was missing from it, which is the state a vendor
+      most wants to look at, and the "Pending" tab beside the search box could
+      never match anything at all: a product with requests waiting on it is
+      inactive and unapproved by definition, so the filter had already removed
+      every row that tab exists to show.
+
+      `/products/manage` is the same listing behind a session, which is what
+      lets the handler answer with the account's own products whatever state
+      they are in. It is gated on products.view, which the Store role holds.
+    */
+    fetchManagedProducts: fetchProducts,
     createProduct,
     updateProduct,
     deleteProduct,

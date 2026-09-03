@@ -138,7 +138,18 @@ const fetchOrders = async () => {
 };
 
 const fetchProducts = async () => {
-  const products = await fetchAllPages("/products", (d) => d.data);
+  /*
+    The dashboard listing, because an export is not a shop window.
+
+    `/products` is the public route and no session is attached to it, so it
+    answers with the visitor's filter: active, undeleted, approved, and no
+    electronics. An export taken from it silently omitted every unpublished
+    product, everything awaiting approval, everything soft-deleted, and the
+    whole electronics branch — while the file's "Active" and "Deleted"
+    columns implied all four were in scope. `/products/manage` carries the
+    session, so the answer is the catalogue.
+  */
+  const products = await fetchAllPages("/products/manage", (d) => d.data);
   const rows: ExportRows = [
     ["Product ID", "Name", "Price", "Stock", "Store", "Active", "Deleted"],
   ];

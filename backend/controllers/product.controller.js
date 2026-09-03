@@ -5,10 +5,12 @@ import {
   isElectronicsCategory,
 } from "../utils/electronicsVisibility.js";
 import { scopedCategoryIds } from "../utils/categoryScope.js";
+import { reachesAllStores } from "../utils/permissions.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { paginateProducts } from "../utils/productPagination.js";
 import User from "../models/user.model.js";
+import Store from "../models/store.model.js";
 import Brand from "../models/brand.model.js";
 import Category from "../models/category.model.js";
 import PriceSnapshot from "../models/priceSnapshot.model.js";
@@ -324,6 +326,34 @@ export const getAllProducts = controllerWrapper(
     }
     if (filters.brandId) filter.brand = asId(filters.brandId);
     if (filters.storeId) filter.store = asId(filters.storeId);
+
+    /*
+      A vendor's dashboard listing is their own store's, whatever `storeId`
+      says.
+
+      `/products/manage` is gated on `products.view`, which the Store role
+      holds — that is how a vendor lists their own products. But `storeId`
+      came straight off the query string and nothing asked whose store it
+      named, so any vendor could pass a competitor's id and be handed that
+      store's catalogue in dashboard view: unpublished products, submissions
+      still awaiting approval, soft-deleted rows, prices and stock. With no
+      `storeId` at all they got every product in the shop, from every store,
+      in every state.
+
+      Forced after the query filters, for the same reason the visibility gate
+      below is: this is not a default the caller may override. Platform staff
+      are unaffected — `reachesAllStores` is what separates them — and a
+      vendor with no store matches an empty `$in`, which is nothing, rather
+      than everything.
+    */
+    if (req.user && !(await reachesAllStores(req.user))) {
+      const ownStores = await Store.find({ owner: req.user._id })
+        .select("_id")
+        .lean();
+      const ownIds = ownStores.map((store) => store._id);
+      filter.store =
+        ownIds.length === 1 ? ownIds[0] : { $in: ownIds };
+    }
     // Booleans arrive as the strings "true"/"false" via query params; coerce
     // so Mongo matches the actual Boolean field type.
     const toBool = (v) => (v === true || v === "true");
