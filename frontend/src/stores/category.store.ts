@@ -2,29 +2,32 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { axiosInstance } from "../lib/axios";
 import { keepIfSameLang, uiLang } from "../lib/langCache";
-import type {
-  Category,
-  CategoryTree,
-  CategoryStats,
-} from "../types/category.type";
+import type { Category, CategoryTree } from "../types/category.type";
 
-interface PaginatedResult<T> {
-  data: T[];
-  total: number;
-  limit: number;
-  page: number;
-  pages: number;
-  success: boolean;
-}
+/*
+  Four methods used to live here that could not have worked.
 
+  `fetchDeletedCategories`, `fetchCategoryStats` and `reorderCategories` called
+  `/categories/deleted`, `/categories/stats` and `PUT /categories/reorder`.
+  None of those routes exists. The first two would have fallen through to
+  `GET /:categoryId` and asked the database for a category whose id is the
+  word "deleted"; the third would have fallen through to `PUT /:categoryId`
+  and tried to update one called "reorder". `getProductsByCategory` did reach
+  a real route and then threw the response away without storing it.
+
+  No component called any of them, which is the only reason nobody ever saw
+  the errors. They are gone rather than fixed: an endpoint written to satisfy
+  a caller that does not exist is a second thing to keep working.
+
+  `fetchCategoryById` and `fetchCategoryTree` stay, because they name real
+  routes — but both were reading the wrong key off the response, so both
+  stored `undefined`. Fixed below.
+*/
 interface CategoryStore {
   // State
   categories: Category[];
   category: Category | undefined;
   categoryTree: CategoryTree[];
-  deletedCategories: Category[];
-  categoryStats: CategoryStats | undefined;
-  paginated: PaginatedResult<Category> | undefined;
   loading: boolean;
   error: string | undefined;
 
@@ -32,7 +35,6 @@ interface CategoryStore {
   fetchCategories: (params?: Record<string, any>) => Promise<void>;
   fetchCategoryById: (categoryId: string) => Promise<void>;
   fetchCategoryTree: () => Promise<void>;
-  fetchDeletedCategories: () => Promise<void>;
   createCategory: (data: Partial<Category>) => Promise<Category | undefined>;
   updateCategory: (
     categoryId: string,
@@ -47,12 +49,6 @@ interface CategoryStore {
     productId: string,
     categoryId: string
   ) => Promise<boolean>;
-  getProductsByCategory: (
-    categoryId: string,
-    params?: Record<string, any>
-  ) => Promise<void>;
-  fetchCategoryStats: () => Promise<void>;
-  reorderCategories: (categoryIds: string[]) => Promise<boolean>;
 
   // Utility
   clearError: () => void;
@@ -66,9 +62,6 @@ export const useCategoryStore = create<CategoryStore>()(
       categories: [],
       category: undefined,
       categoryTree: [],
-      deletedCategories: [],
-      categoryStats: undefined,
-      paginated: undefined,
       loading: false,
       error: undefined,
 
@@ -97,11 +90,13 @@ export const useCategoryStore = create<CategoryStore>()(
       fetchCategoryById: async (categoryId: string) => {
         set({ loading: true, error: undefined });
         try {
+          // `getCategoryById` answers `{ success, data }`. Reading `.category`
+          // stored undefined on every successful fetch.
           const { data } = await axiosInstance.get<{
             success: boolean;
-            category: Category;
+            data: Category;
           }>(`/categories/${categoryId}`);
-          set({ category: data.category, loading: false });
+          set({ category: data.data, loading: false });
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,
@@ -114,28 +109,12 @@ export const useCategoryStore = create<CategoryStore>()(
       fetchCategoryTree: async () => {
         set({ loading: true, error: undefined });
         try {
+          // `getCategoryTree` answers `{ success, tree }`, not `categoryTree`.
           const { data } = await axiosInstance.get<{
             success: boolean;
-            categoryTree: CategoryTree[];
+            tree: CategoryTree[];
           }>("/categories/tree");
-          set({ categoryTree: data.categoryTree, loading: false });
-        } catch (error: any) {
-          set({
-            error: error?.response?.data?.message || error.message,
-            loading: false,
-          });
-        }
-      },
-
-      // Fetch Deleted Categories
-      fetchDeletedCategories: async () => {
-        set({ loading: true, error: undefined });
-        try {
-          const { data } = await axiosInstance.get<{
-            success: boolean;
-            categories: Category[];
-          }>("/categories/deleted");
-          set({ deletedCategories: data.categories, loading: false });
+          set({ categoryTree: data.tree || [], loading: false });
         } catch (error: any) {
           set({
             error: error?.response?.data?.message || error.message,
@@ -224,18 +203,14 @@ export const useCategoryStore = create<CategoryStore>()(
       safeDeleteCategory: async (categoryId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.put<{
-            success: boolean;
-            category: Category;
-          }>(`/categories/safeDelete/${categoryId}`);
-          const deletedCategory = data.category;
+          // The server answers `{ success, message }`. It never sent the
+          // category back, so the copy this used to file under
+          // `deletedCategories` was always undefined.
+          await axiosInstance.put(`/categories/safeDelete/${categoryId}`);
           set((state) => ({
             categories: state.categories.filter(
               (cat) => cat._id !== categoryId
             ),
-            deletedCategories: deletedCategory
-              ? [...state.deletedCategories, deletedCategory]
-              : state.deletedCategories,
             loading: false,
           }));
           return true;
@@ -252,20 +227,11 @@ export const useCategoryStore = create<CategoryStore>()(
       restoreCategory: async (categoryId: string) => {
         set({ loading: true, error: undefined });
         try {
-          const { data } = await axiosInstance.put<{
-            success: boolean;
-            category: Category;
-          }>(`/categories/restore/${categoryId}`);
-          const restoredCategory = data.category;
-          set((state) => ({
-            categories: restoredCategory
-              ? [...state.categories, restoredCategory]
-              : state.categories,
-            deletedCategories: state.deletedCategories.filter(
-              (cat) => cat._id !== categoryId
-            ),
-            loading: false,
-          }));
+          // Same shape as safeDelete: a message, not a record. The caller
+          // refetches, which is the only way the restored row comes back with
+          // its parent and counts attached anyway.
+          await axiosInstance.put(`/categories/restore/${categoryId}`);
+          set({ loading: false });
           return true;
         } catch (error: any) {
           set({
@@ -295,55 +261,6 @@ export const useCategoryStore = create<CategoryStore>()(
         }
       },
 
-      // Get Products by Category
-      getProductsByCategory: async (categoryId: string, params = {}) => {
-        set({ loading: true, error: undefined });
-        try {
-          await axiosInstance.get(`/categories/products/${categoryId}`, {
-            params,
-          });
-          set({ loading: false });
-        } catch (error: any) {
-          set({
-            error: error?.response?.data?.message || error.message,
-            loading: false,
-          });
-        }
-      },
-
-      // Fetch Category Stats
-      fetchCategoryStats: async () => {
-        set({ loading: true, error: undefined });
-        try {
-          const { data } = await axiosInstance.get<{
-            success: boolean;
-            stats: CategoryStats;
-          }>("/categories/stats");
-          set({ categoryStats: data.stats, loading: false });
-        } catch (error: any) {
-          set({
-            error: error?.response?.data?.message || error.message,
-            loading: false,
-          });
-        }
-      },
-
-      // Reorder Categories
-      reorderCategories: async (categoryIds: string[]) => {
-        set({ loading: true, error: undefined });
-        try {
-          await axiosInstance.put("/categories/reorder", { categoryIds });
-          set({ loading: false });
-          return true;
-        } catch (error: any) {
-          set({
-            error: error?.response?.data?.message || error.message,
-            loading: false,
-          });
-          return false;
-        }
-      },
-
       // Clear Error
       clearError: () => set({ error: undefined }),
 
@@ -353,9 +270,6 @@ export const useCategoryStore = create<CategoryStore>()(
           categories: [],
           category: undefined,
           categoryTree: [],
-          deletedCategories: [],
-          categoryStats: undefined,
-          paginated: undefined,
           loading: false,
           error: undefined,
         }),

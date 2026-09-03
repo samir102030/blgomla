@@ -2,15 +2,28 @@ import Product from "../models/product.model.js";
 import { HIDE_ELECTRONICS } from "./electronicsVisibility.js";
 
 const DEFAULT_PAGE = 1;
+const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 10;
 
-// Fields excluded from list responses — heavy arrays we never render on cards.
+/*
+  Fields excluded from list responses — heavy arrays we never render on cards.
+
+  `bulkPricing` is deliberately NOT among them any more. It is at most ten
+  tiers of two numbers, far smaller than the `images` array that stays, and
+  dropping it had a cost nobody had counted: the dashboard's edit modal is
+  handed a row straight from this list, saw no tiers, and submitted an empty
+  array — which the update endpoint wrote. Editing a wholesale product's name
+  deleted its quantity breaks.
+
+  The modal now also refuses to send the field when it did not receive one, so
+  the two guards are independent: this keeps the tiers visible and editable,
+  and that one keeps them safe if the projection ever changes again.
+*/
 const LIST_PROJECTION = {
   reviews: 0,
   reviewRequests: 0,
   suggestedPrices: 0,
   competitorPrices: 0,
-  bulkPricing: 0,
 };
 
 // Build $lookup stages that flatten brand/category/store into the same shape
@@ -66,7 +79,8 @@ export async function paginateProducts({
   limit = DEFAULT_LIMIT,
 } = {}) {
   page = Math.max(Number(page) || DEFAULT_PAGE, 1);
-  limit = Math.max(Number(limit) || DEFAULT_LIMIT, 1);
+  // Capped for the same reason as utils/pagination.js — see the note there.
+  limit = Math.min(Math.max(Number(limit) || DEFAULT_LIMIT, 1), MAX_LIMIT);
   const skip = (page - 1) * limit;
 
   // The schema hook cannot reach an aggregation, and this function is behind

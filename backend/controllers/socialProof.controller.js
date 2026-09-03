@@ -4,7 +4,19 @@ import Order from "../models/order.model.js";
 // city + product only. No emails, no full names, no order totals.
 export const getRecentPurchases = async (req, res) => {
   try {
-    const orders = await Order.find({ cancelled: { $ne: true } })
+    /*
+      Filtered on `status`, not on the `cancelled` flag.
+
+      Only the customer's own cancel path sets both; the admin status dropdown
+      — which is how a cancellation actually happens, per the note in
+      `updateOrderStatus` — sets `status` alone. So an order an administrator
+      cancelled as fraudulent or duplicate kept appearing on the storefront as
+      "<Name> from <City> just bought <Product>".
+    */
+    const orders = await Order.find({
+      status: { $nin: ["cancelled", "refunded"] },
+      cancelled: { $ne: true },
+    })
       .sort({ createdAt: -1 })
       .limit(20)
       .populate("user", "name")

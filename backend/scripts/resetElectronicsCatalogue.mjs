@@ -33,7 +33,11 @@
  */
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import XLSX from "xlsx";
+/*
+  The ExcelJS shim, not the `xlsx` package — commit 6 took that off
+  package.json. Its readers are async, so the calls below gained an `await`.
+*/
+import XLSX from "../utils/xlsxCompat.js";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -73,8 +77,8 @@ const norm = (value) =>
 const truthy = (value) => String(value ?? "").trim().toUpperCase() === "TRUE";
 const say = (label, value) => console.log(`  ${String(label).padEnd(44)} ${value}`);
 
-const sheetRows = (file, name) => {
-  const wb = XLSX.readFile(file);
+const sheetRows = async (file, name) => {
+  const wb = await XLSX.readFile(file);
   const sheet = wb.Sheets[name] || wb.Sheets[wb.SheetNames[0]];
   return XLSX.utils.sheet_to_json(sheet, { defval: "" });
 };
@@ -86,8 +90,8 @@ const sheetRows = (file, name) => {
   been deleted, and none of them needs a database to spot: a product naming a
   category the sheet does not define, a parent that resolves to nothing, a loop.
 */
-const categoryRowsEarly = sheetRows(CATEGORIES_FILE, "Categories");
-const productRowsEarly = sheetRows(PRODUCTS_FILE, "Products");
+const categoryRowsEarly = await sheetRows(CATEGORIES_FILE, "Categories");
+const productRowsEarly = await sheetRows(PRODUCTS_FILE, "Products");
 const definedNames = new Set(categoryRowsEarly.map((r) => norm(r["Category Name"])));
 
 const problems = [];
@@ -221,8 +225,8 @@ say("carts holding one (line removed)", cartsTouching);
 say("wishlists holding one (line removed)", wishlistsTouching);
 
 // ── 2. What the sheets hold ───────────────────────────────────────────
-const categoryRows = sheetRows(CATEGORIES_FILE, "Categories");
-const productRows = sheetRows(PRODUCTS_FILE, "Products");
+const categoryRows = await sheetRows(CATEGORIES_FILE, "Categories");
+const productRows = await sheetRows(PRODUCTS_FILE, "Products");
 
 console.log("\n=== what the sheets hold ===");
 say("categories in the sheet", categoryRows.length);

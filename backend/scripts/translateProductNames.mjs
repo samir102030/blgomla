@@ -1,7 +1,7 @@
 /**
  * Write Arabic names into a product export sheet.
  *
- *   node scripts/translateProductNames.cjs <in.xlsx> <out.xlsx> [--sample N]
+ *   node scripts/translateProductNames.mjs <in.xlsx> <out.xlsx> [--sample N]
  *
  * A product name here is brand + model + type + specs + colour:
  *
@@ -30,8 +30,18 @@
  * Nothing is invented. Whatever is not the category, the colour or a known
  * English duplicate of the category is copied through untouched.
  */
-const XLSX = require("xlsx");
-const fs = require("fs");
+/*
+  ESM, and `.mjs` rather than `.cjs`.
+
+  This was the one script here written as CommonJS, and CommonJS cannot
+  `require` an ES module — which the ExcelJS shim is. Nothing in the file
+  needed CJS: it required exactly two modules and used no `module.exports`,
+  `__dirname` or conditional require. Renaming it is a smaller change than
+  wrapping the whole script in an async IIFE to reach `await import`, and it
+  puts it with the other four scripts rather than beside them.
+*/
+import XLSX from "../utils/xlsxCompat.js";
+import fs from "node:fs";
 
 /**
  * Category names are plural — they label a shelf. A single product wants the
@@ -166,7 +176,7 @@ const translateName = (name, categoryEn, categoryAr) => {
 /* ── Run ─────────────────────────────────────────────────────────────── */
 const [, , inPath, outPath, ...flags] = process.argv;
 if (!inPath) {
-  console.error("usage: node scripts/translateProductNames.cjs <in.xlsx> <out.xlsx> [--sample N]");
+  console.error("usage: node scripts/translateProductNames.mjs <in.xlsx> <out.xlsx> [--sample N]");
   process.exit(1);
 }
 const sampleAt = flags.indexOf("--sample");
@@ -175,7 +185,8 @@ const sampleN = sampleAt >= 0 ? Number(flags[sampleAt + 1] || 25) : 0;
 const CATEGORIES = "C:/Users/Crafted/Downloads/belgomla/categories-recategorized.xlsx";
 const catAr = new Map();
 if (fs.existsSync(CATEGORIES)) {
-  for (const r of XLSX.utils.sheet_to_json(XLSX.readFile(CATEGORIES).Sheets.Categories, { defval: "" })) {
+  const catBook = await XLSX.readFile(CATEGORIES);
+  for (const r of XLSX.utils.sheet_to_json(catBook.Sheets.Categories, { defval: "" })) {
     const en = String(r["Category Name"] || "").trim().toLowerCase();
     const ar = String(r["Arabic Name"] || "").trim();
     if (en && ar) catAr.set(en, ar);
@@ -186,7 +197,7 @@ if (!catAr.size) {
   process.exit(1);
 }
 
-const wb = XLSX.readFile(inPath);
+const wb = await XLSX.readFile(inPath);
 const header = XLSX.utils.sheet_to_json(wb.Sheets.Products, { header: 1 })[0];
 const rows = XLSX.utils.sheet_to_json(wb.Sheets.Products, { defval: "" });
 
@@ -219,6 +230,6 @@ console.log(`skipped, category unmatched : ${noCategory}`);
 
 if (outPath) {
   wb.Sheets.Products = XLSX.utils.json_to_sheet(rows, { header });
-  XLSX.writeFile(wb, outPath);
+  await XLSX.writeFile(wb, outPath);
   console.log(`\nwritten: ${outPath}`);
 }

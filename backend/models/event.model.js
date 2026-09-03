@@ -24,6 +24,14 @@ const eventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+/*
+  Behavioural events are read as trends over weeks, never as history, and this
+  is the shop's highest-volume write — one row per view, search and
+  add-to-cart, from an endpoint open to anonymous callers. Without an expiry
+  it grows for ever. Ninety days is longer than any report here looks back.
+*/
+eventSchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });
+
 eventSchema.index({ type: 1, createdAt: -1 });
 eventSchema.index({ type: 1, query: 1 });
 eventSchema.index({ type: 1, product: 1 });

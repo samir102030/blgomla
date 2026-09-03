@@ -10,6 +10,7 @@ import DeleteOrderModal from "../../components/DeleteOrderModal";
 import OrderFiltersModal from "../../components/OrderFiltersModal";
 import { useMoney } from "../../lib/money";
 import { ORDER_STATUSES } from "../../lib/orderStatus";
+import toast from "react-hot-toast";
 
 interface Order {
   _id: string;
@@ -67,6 +68,11 @@ const OrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // What the server says it holds, and whether the ceiling below cut us off.
+  // Both exist so the page can state what its figures cover instead of
+  // presenting one page of orders as the whole shop.
+  const [serverTotal, setServerTotal] = useState(0);
+  const [truncated, setTruncated] = useState(false);
   const user = useUserStore((state) => state.user);
   // Staff — admin, super_admin, or a custom back-office role. Not `role ===
   // "admin"`, which left super_admins out of every branch on this page.
@@ -94,7 +100,27 @@ const OrdersPage: React.FC = () => {
     maxAmount: "",
   });
 
+  /*
+    Every order this account can see, not the first ten.
+
+    The request carried no page and no limit, and the server's default page is
+    ten rows. So this screen listed the ten most recent orders — and, worse,
+    the four cards above the table are computed from whatever is in `orders`.
+    "Total Revenue" was the sum of ten orders, presented as the shop's
+    revenue: a plausible number, wrong, on the screen an operator reads it
+    off. The client-side filters below had the same ten rows to work with, so
+    filtering by a status not among them returned nothing at all.
+
+    It pages through instead, in hundreds — the server's cap — and stops on
+    the page count it reports or on a short page. `MAX_PAGES` is a real
+    ceiling rather than a formality, and when it is reached the page says the
+    figures cover the most recent N rather than quietly showing a smaller
+    number. That is the whole point: a total that is not the total has to
+    say so.
+  */
   const fetchOrders = useCallback(async () => {
+    const PAGE_SIZE = 100;
+    const MAX_PAGES = 50; // 5,000 orders
     try {
       setLoading(true);
       setError(null);
@@ -103,19 +129,35 @@ const OrdersPage: React.FC = () => {
       // by who is asking — but a super_admin matched neither, so `response`
       // stayed undefined and the page reported a failure for a request it
       // never made. There is nothing to branch on here.
-      const response = await axiosInstance.get("/orders");
+      const all: Order[] = [];
+      let total = 0;
+      let stoppedShort = false;
 
-      if (response?.data?.success) {
-        setOrders(response.data.orders);
-      } else {
-        setError("Failed to fetch orders");
+      for (let page = 1; page <= MAX_PAGES; page++) {
+        const response = await axiosInstance.get("/orders", {
+          params: { page, limit: PAGE_SIZE },
+        });
+        if (!response?.data?.success) {
+          setError("Failed to fetch orders");
+          return;
+        }
+        const batch: Order[] = response.data.orders || [];
+        all.push(...batch);
+        total = Number(response.data.total) || all.length;
+        const pages = Number(response.data.pages) || 1;
+        if (batch.length < PAGE_SIZE || page >= pages) break;
+        if (page === MAX_PAGES) stoppedShort = true;
       }
+
+      setOrders(all);
+      setServerTotal(total);
+      setTruncated(stoppedShort || all.length < total);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch orders");
     } finally {
       setLoading(false);
     }
-  }, [user?.role]);
+  }, []);
 
   useEffect(() => {
     fetchOrders();
@@ -158,23 +200,32 @@ const OrdersPage: React.FC = () => {
     setIsFiltersModalOpen(true);
   };
 
+  /*
+    A refusal is shown, not logged.
+
+    Both of these caught the error, wrote it to the console and refreshed the
+    list. The modal closed either way and the row came back exactly as it
+    was — so a status change the server rejected (an expired session, or a
+    cancelled order, which is terminal and answers 409) looked like a click
+    that did not register. Pressed again, it did the same thing again.
+  */
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     try {
       await axiosInstance.put(`/orders/${orderId}/status`, { status });
-      // Refresh orders after update
       fetchOrders();
-    } catch (error) {
-      console.error("Failed to update order status:", error);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || t("order.statusUpdateFailed")
+      );
     }
   };
 
   const handleDeleteOrderConfirm = async (orderId: string) => {
     try {
       await axiosInstance.delete(`/orders/${orderId}`);
-      // Refresh orders after deletion
       fetchOrders();
-    } catch (error) {
-      console.error("Failed to delete order:", error);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || t("order.deleteFailed"));
     }
   };
 
@@ -530,27 +581,24 @@ const OrdersPage: React.FC = () => {
 
       {/* Pagination */}
       <div className="bg-white px-4 sm:px-6 py-3 rounded-lg shadow-sm border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        {/*
+          It said "Showing 1 to N of N" with N the same number twice, beside a
+          Previous and a Next that were hard-coded disabled and a page button
+          that always read 1 — furniture, not a control. Every order the
+          account can see is loaded now, so what is worth saying is how many
+          of them the filters are showing, and — when the ceiling above cut
+          the load short — that the figures do not cover everything.
+        */}
         <div className="text-sm text-gray-700">
-          Showing <span className="font-medium">1</span> to{" "}
-          <span className="font-medium">{filteredOrders.length}</span> of{" "}
-          <span className="font-medium">{filteredOrders.length}</span> results
-        </div>
-        <div className="flex space-x-2">
-          <button
-            className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
-            disabled
-          >
-            Previous
-          </button>
-          <button className="px-3 py-1 bg-[var(--brand-accent)] text-white rounded text-sm">
-            1
-          </button>
-          <button
-            className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
-            disabled
-          >
-            Next
-          </button>
+          {t("order.showingCount", {
+            shown: filteredOrders.length,
+            loaded: orders.length,
+          })}
+          {truncated && (
+            <span className="ms-2 text-amber-700">
+              {t("order.truncatedNotice", { total: serverTotal })}
+            </span>
+          )}
         </div>
       </div>
 

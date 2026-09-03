@@ -73,7 +73,11 @@ const RequestsPage: React.FC = () => {
   };
 
   const handleRejectBrand = async (requestId: string) => {
+    // Null means Cancel or Escape. `reason || t("requests.notSpecified")`
+    // below treated that identically to an empty answer, so dismissing the
+    // dialog rejected the request regardless.
     const reason = prompt(t("requests.rejectionReasonPrompt"));
+    if (reason === null) return;
     try {
       await axiosInstance.post(`/brand-requests/${requestId}/reject`, {
         reason: reason || t("requests.notSpecified"),
@@ -96,7 +100,11 @@ const RequestsPage: React.FC = () => {
   };
 
   const handleRejectCategory = async (requestId: string) => {
+    // Null means Cancel or Escape. `reason || t("requests.notSpecified")`
+    // below treated that identically to an empty answer, so dismissing the
+    // dialog rejected the request regardless.
     const reason = prompt(t("requests.rejectionReasonPrompt"));
+    if (reason === null) return;
     try {
       await axiosInstance.post(`/category-requests/${requestId}/reject`, {
         reason: reason || t("requests.notSpecified"),

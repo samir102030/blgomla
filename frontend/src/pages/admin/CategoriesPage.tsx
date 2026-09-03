@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowUpTrayIcon, ChevronDownIcon, ChevronRightIcon, EyeIcon, FolderIcon, MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArrowsRightLeftIcon, ArrowUpTrayIcon, CheckCircleIcon, ChevronDownIcon, ChevronRightIcon, EyeIcon, FolderIcon, MagnifyingGlassIcon, NoSymbolIcon, PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { useCategoryStore } from "../../stores/category.store";
 import type { Category } from "../../types/category.type";
 import CategoryModal from "../../components/CategoryModal";
 import ViewCategoryModal from "../../components/ViewCategoryModal";
 import BulkCategoryUpload from "../../components/admin/BulkCategoryUpload";
+import MoveCategoryProductsModal from "../../components/admin/MoveCategoryProductsModal";
 import CategoryGapsCard from "../../components/admin/CategoryGapsCard";
+import toast from "react-hot-toast";
 
 const parentIdOf = (c: Category): string | null => {
   const parent = c.parentCategory;
@@ -29,6 +31,10 @@ const CategoriesPage: React.FC = () => {
   // parent already chosen instead of leaving it to be found in a long list.
   const [addingUnder, setAddingUnder] = useState<string>("");
   const [bulkOpen, setBulkOpen] = useState(false);
+  // The category whose products are being moved, or null when the move modal
+  // is closed. Holding the row rather than a boolean keeps the modal's source
+  // and its open state from ever disagreeing.
+  const [movingFrom, setMovingFrom] = useState<Category | null>(null);
   const {
     categories,
     loading,
@@ -110,7 +116,19 @@ const CategoriesPage: React.FC = () => {
 
   const handleDelete = async (categoryId: string) => {
     if (window.confirm(t("categories.confirmDelete"))) {
-      await safeDeleteCategory(categoryId);
+      /*
+        The store returns false and records why. This ignored the answer, so
+        the server refusing — which it now does for a category that still has
+        children or products under it — left the row exactly where it was with
+        nothing on screen to explain it.
+      */
+      const ok = await safeDeleteCategory(categoryId);
+      if (!ok) {
+        toast.error(
+          useCategoryStore.getState().error || t("categories.deleteFailed"),
+        );
+        return;
+      }
       fetchCategories({ includeHidden: true }); // Refresh the list
     }
   };
@@ -419,13 +437,31 @@ const CategoriesPage: React.FC = () => {
                       >
                         <EyeIcon className="h-4 w-4" />
                       </button>
+                      {/*
+                        This button had no content at all — both arms of its
+                        ternary were empty strings, so the only clickable thing
+                        between View and Edit was a zero-width gap with a
+                        tooltip. An icon each way, matching every other action
+                        in the row.
+                      */}
                       <button
                         onClick={() => handleToggleStatus(category)}
                         className={`hover:text-gray-900 ${category.isActive ? "text-green-600" : "text-gray-600"
                           }`}
                         title={category.isActive ? t("categories.deactivate") : t("categories.activate")}
                       >
- {category.isActive ? "" : ""}
+                        {category.isActive ? (
+                          <CheckCircleIcon className="h-4 w-4" />
+                        ) : (
+                          <NoSymbolIcon className="h-4 w-4" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setMovingFrom(category)}
+                        className="text-gray-500 hover:text-gray-900"
+                        title={t("categories.moveProducts")}
+                      >
+                        <ArrowsRightLeftIcon className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleEditCategory(category)}
@@ -491,6 +527,24 @@ const CategoriesPage: React.FC = () => {
         onClose={handleViewModalClose}
         category={viewingCategory}
       />
+
+      {/*
+        Move a category's products into another category.
+
+        The component has been in the tree the whole time without a single
+        import — built, translated, and unreachable. It is the only screen in
+        the dashboard that can refile more than one product at a time, which
+        is the operation a catalogue reorganisation is made of.
+      */}
+      {movingFrom && (
+        <MoveCategoryProductsModal
+          isOpen={true}
+          onClose={() => setMovingFrom(null)}
+          source={movingFrom}
+          categories={categories}
+          onMoved={() => fetchCategories({ includeHidden: true })}
+        />
+      )}
     </div>
   );
 };

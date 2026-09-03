@@ -37,7 +37,7 @@ import {
   exportStudentProducts,
 } from "../controllers/studentBulk.controller.js";
 import { purgeElectronicsCatalogue } from "../controllers/electronicsPurge.controller.js";
-import { protectRoute, requirePermission } from "../middleware/auth.middleware.js";
+import { protectRoute, superAdminRoute, requirePermission } from "../middleware/auth.middleware.js";
 import {
   studentMailIpLimiter,
   studentMailLimiter,
@@ -160,9 +160,23 @@ router.post(
 
 /* Emptying the branch before reloading it. Registered beside the uploads it
    pairs with, and before "/:id" for the same reason they are. */
+/*
+  Super-admin only, and it was not.
+
+  `students.configure` is in ADMIN_PERMISSIONS — every administrator has it,
+  including the time-boxed ones and any custom role granted the student keys.
+  This endpoint hard-deletes the entire Electronics branch: thousands of
+  products and their categories, through the raw driver, with no confirmation
+  in the body and nothing to undo it with.
+
+  `resetSection`, which does a comparable thing, is super-admin only and
+  demands a typed confirmation token. This is the same class of act and now
+  costs the same.
+*/
 router.post(
   "/admin/catalog/purge",
   protectRoute,
+  superAdminRoute,
   requirePermission("students.configure"),
   purgeElectronicsCatalogue,
 );

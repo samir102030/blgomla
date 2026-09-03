@@ -26,7 +26,21 @@ export const createEvent = controllerWrapper("createEvent", async (req, res) => 
   if (product && mongoose.Types.ObjectId.isValid(product)) doc.product = product;
   if (typeof query === "string") doc.query = query.slice(0, 200);
   if (typeof sessionId === "string") doc.sessionId = sessionId.slice(0, 100);
-  if (meta && typeof meta === "object") doc.meta = meta;
+  /*
+    `meta` is Mixed with no cap, on a public endpoint that anyone can post to.
+    The body limit is 10 MB and the global limiter allows a thousand requests a
+    quarter hour, so one address could store roughly nine gigabytes an hour in
+    a collection that had no expiry either. Every other field here is already
+    truncated; this one was not.
+  */
+  if (meta && typeof meta === "object" && !Array.isArray(meta)) {
+    try {
+      const encoded = JSON.stringify(meta);
+      if (encoded.length <= 2048) doc.meta = meta;
+    } catch {
+      // Circular or otherwise unserialisable — drop it rather than store it.
+    }
+  }
   if (req.user?._id) doc.user = req.user._id;
 
   logEventSafe(doc);

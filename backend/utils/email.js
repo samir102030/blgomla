@@ -8,7 +8,19 @@ const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "support@belgmla.com";
 // verification link most of all, which is the only way a new account can be
 // used. Set CLIENT_URL on every deployment: the fallback exists so a missing
 // variable doesn't produce `undefined/verify/...`, not because it is right.
-const CLIENT_URL = process.env.CLIENT_URL || "https://blgomla.vercel.app";
+/*
+  The first entry, because `app.js` reads this same variable as a
+  comma-separated CORS allow-list and splits it. Setting it to
+  "https://belgmla.com,https://www.belgmla.com" — the shape app.js invites —
+  made every link in every email
+  "https://belgmla.com,https://www.belgmla.com/reset-password/..." : the
+  verification link, the reset link, the order links, the logo. All broken,
+  silently, in the one channel where nobody sees the failure.
+*/
+const CLIENT_URL =
+  String(process.env.CLIENT_URL || "")
+    .split(",")[0]
+    .trim() || "https://blgomla.vercel.app";
 const API_URL =
   process.env.API_URL ||
   process.env.PUBLIC_API_URL ||
@@ -307,7 +319,7 @@ const renderEmailLayout = ({ lang = "en", previewText = "", body = "", unsubscri
 </head>
 <body class="bg-page" style="margin:0;padding:0;background:${T.bg};font-family:${FONT_STACK};-webkit-font-smoothing:antialiased;">
 <!-- preview text (hidden, shows in inbox preview) -->
-<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:${T.bg};opacity:0;">${previewText}</div>
+<div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:${T.bg};opacity:0;">${escapeEmailHtml(previewText)}</div>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${T.bg};">
   <tr>
     <td align="center" style="padding:24px 12px;">
@@ -418,10 +430,50 @@ const noticeBlock = (kind, content) => {
    TEMPLATES
    ───────────────────────────────────────────────── */
 
+/*
+  Everything written by somebody else, before it goes into HTML.
+
+  These templates interpolate values the shop does not control — a customer's
+  name, a product's name, a product image URL a vendor supplied — straight
+  into markup with template literals. Two functions in this file already
+  defined their own local escaper (`sendContactEnquiry`, `sendNewOrderEmail`),
+  so the hazard was understood; it just never reached the helpers everything
+  else goes through, or the two item tables, or the preview line.
+
+  The concrete case is not script execution — mail clients strip that. It is a
+  product named
+
+      </p><a href="https://not-us.example/confirm">Confirm your order</a><p>
+
+  which turns the order-confirmation email into a link the customer has every
+  reason to trust: it arrives from this shop's domain, signed with this shop's
+  DKIM, in reply to an order they really placed. Anyone who can name a product
+  or an account can write that.
+
+  Quotes are escaped as well as angle brackets, which the two local copies did
+  not do, because one of these values lands inside an attribute:
+  `<img src="${itemImage(item)}">` in the abandoned-cart mail takes a URL off
+  the product, and a `"` in it ends the attribute and starts a new one.
+
+  Plain-text bodies are left alone — `&amp;` in a text/plain part is a bug of
+  its own — which is why `greeting` stays unescaped and `greetingHtml` exists
+  beside it.
+*/
+export const escapeEmailHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
 const greeting = (lang, name) => {
   const safeName = (name || "").trim() || (lang === "ar" ? "صديقنا" : "there");
   return lang === "ar" ? `أهلًا ${safeName}،` : `Hi ${safeName},`;
 };
+
+/** The same greeting, for the HTML part. */
+const greetingHtml = (lang, name) => escapeEmailHtml(greeting(lang, name));
 
 /**
  * Welcome email — sent right after signup. Includes verification code.
@@ -442,7 +494,7 @@ export const sendWelcomeEmail = async (user) => {
 
   const bodyEN = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">Welcome aboard 🎉</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("en", name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("en", name)}</p>
     <p class="text" style="margin:0 0 14px;">Your Belgomla account is ready. You're now part of Egypt's premier IT & networking marketplace — from routers and switches to servers, security gear, and more.</p>
     ${code ? `
       <p class="text" style="margin:18px 0 8px;font-weight:600;">One last step — verify your email with this code:</p>
@@ -455,7 +507,7 @@ export const sendWelcomeEmail = async (user) => {
 
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">أهلًا بك معنا 🎉</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("ar", name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("ar", name)}</p>
     <p class="text" style="margin:0 0 14px;">حسابك في بالجملة جاهز. أصبحت الآن جزءًا من السوق الأول في مصر لتكنولوجيا المعلومات والشبكات — من الراوترات والسويتشات إلى السيرفرات وأنظمة الأمن وأكثر.</p>
     ${code ? `
       <p class="text" style="margin:18px 0 8px;font-weight:600;">خطوة أخيرة — يرجى تأكيد بريدك الإلكتروني بهذا الرمز:</p>
@@ -497,7 +549,7 @@ export const sendVerificationEmail = async (user) => {
 
   const bodyEN = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">Your verification code</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("en", user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("en", user.name)}</p>
     <p class="text" style="margin:0 0 8px;">Use the code below to verify your email and finish signing in:</p>
     ${codeBox(code)}
     ${noticeBlock("warning", "This code expires in 24 hours. Never share it with anyone — Belgomla staff will never ask for it.")}
@@ -506,7 +558,7 @@ export const sendVerificationEmail = async (user) => {
 
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">رمز التحقق</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("ar", user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("ar", user.name)}</p>
     <p class="text" style="margin:0 0 8px;">استخدم الرمز أدناه لتأكيد بريدك وإتمام تسجيل الدخول:</p>
     ${codeBox(code)}
     ${noticeBlock("warning", "صلاحية هذا الرمز 24 ساعة. لا تشاركه مع أي شخص — موظفو بالجملة لن يطلبوا منك هذا الرمز أبدًا.")}
@@ -545,7 +597,7 @@ export const sendPasswordResetEmail = async (user, resetToken, clientUrl) => {
 
   const bodyEN = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">Reset your password</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("en", user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("en", user.name)}</p>
     <p class="text" style="margin:0 0 14px;">We received a request to reset the password for your Belgomla account. Click the button below to choose a new one.</p>
     ${ctaButton(resetLink, "Reset Password")}
     <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">Button not working? Paste this link into your browser:</p>
@@ -555,7 +607,7 @@ export const sendPasswordResetEmail = async (user, resetToken, clientUrl) => {
 
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">إعادة تعيين كلمة المرور</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("ar", user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("ar", user.name)}</p>
     <p class="text" style="margin:0 0 14px;">تلقّينا طلبًا لإعادة تعيين كلمة المرور لحسابك في بالجملة. اضغط الزر بالأسفل لاختيار كلمة مرور جديدة.</p>
     ${ctaButton(resetLink, "إعادة تعيين كلمة المرور")}
     <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">لا يعمل الزر؟ انسخ هذا الرابط إلى المتصفح:</p>
@@ -592,7 +644,7 @@ export const sendOrderConfirmationEmail = async (user, order) => {
   const rows = (order.orderItems || [])
     .map((item) => `
       <tr>
-        <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};">${item.product?.name || (lang === "ar" ? "منتج" : "Product")}</td>
+        <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};">${escapeEmailHtml(item.product?.name || (lang === "ar" ? "منتج" : "Product"))}</td>
         <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};text-align:center;">${item.quantity}</td>
         <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};text-align:${lang === "ar" ? "left" : "right"};">${fmt(item.price)} EGP</td>
       </tr>`)
@@ -613,7 +665,7 @@ export const sendOrderConfirmationEmail = async (user, order) => {
 
   const body = `
     <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${labels.title}</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting(lang, user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml(lang, user.name)}</p>
     <p class="text" style="margin:0 0 18px;">${labels.para}</p>
     <div style="margin:18px 0;padding:10px 14px;background:${T.borderSoft};border-radius:8px;color:${T.text};font-size:13px;text-align:${align};">
       <strong>${labels.orderNo}:</strong> #${orderNum}
@@ -695,7 +747,7 @@ export const sendOrderStatusEmail = async (user, order, status) => {
 
   const body = `
     <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${labels.title}</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting(lang, user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml(lang, user.name)}</p>
     <p class="text" style="margin:0 0 14px;">${labels.line(orderNum)}</p>
     ${noticeBlock(meta.kind, `<strong style="text-transform:uppercase;letter-spacing:0.08em;font-size:12px;">${lang === "ar" ? meta.ar : status}</strong>`)}
     ${ctaButton(`${CLIENT_URL}/orders`, labels.track)}
@@ -743,7 +795,7 @@ export const sendReviewRequestEmail = async (user, order) => {
 
   const body = `
     <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${labels.title}</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting(lang, user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml(lang, user.name)}</p>
     <p class="text" style="margin:0 0 14px;">${labels.line}</p>
     ${ctaButton(`${CLIENT_URL}/orders`, labels.cta)}
     <p class="text" style="margin:18px 0 0;font-size:14px;"><a href="${CLIENT_URL}/products" style="color:${T.navy};">${labels.browse} →</a></p>
@@ -786,12 +838,6 @@ export const sendContactEnquiryEmail = async (enquiry) => {
     ["Subject", enquiry.subject],
   ].filter(([, value]) => value);
 
-  const escapeHtml = (value) =>
-    String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-
   const body = `
     <h1 class="h1 text" style="margin:0 0 12px;font-size:22px;font-weight:800;color:${T.navy};">New message from the contact page</h1>
     <table role="presentation" style="width:100%;border-collapse:collapse;margin:0 0 16px;">
@@ -799,11 +845,11 @@ export const sendContactEnquiryEmail = async (enquiry) => {
         .map(
           ([label, value]) =>
             `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;font-size:13px;white-space:nowrap;">${label}</td>` +
-            `<td style="padding:4px 0;font-size:14px;">${escapeHtml(value)}</td></tr>`
+            `<td style="padding:4px 0;font-size:14px;">${escapeEmailHtml(value)}</td></tr>`
         )
         .join("")}
     </table>
-    <div style="padding:14px 16px;background:#f3f4f6;border-radius:10px;white-space:pre-wrap;font-size:14px;line-height:1.7;">${escapeHtml(
+    <div style="padding:14px 16px;background:#f3f4f6;border-radius:10px;white-space:pre-wrap;font-size:14px;line-height:1.7;">${escapeEmailHtml(
       enquiry.message
     )}</div>
   `;
@@ -851,9 +897,6 @@ export const sendNewOrderEmail = async (order, customer, itemCount) => {
 
   const short = String(order._id).slice(-8).toUpperCase();
   const money = (n) => `EGP ${Number(n || 0).toLocaleString("en-EG")}`;
-  const esc = (v) =>
-    String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
   const rows = [
     ["Order", `#${short}`],
     ["Total", money(order.totalPrice)],
@@ -871,7 +914,7 @@ export const sendNewOrderEmail = async (order, customer, itemCount) => {
         .map(
           ([label, value]) =>
             `<tr><td style="padding:4px 12px 4px 0;color:#6b7280;font-size:13px;white-space:nowrap;">${label}</td>` +
-            `<td style="padding:4px 0;font-size:14px;font-weight:600;">${esc(value)}</td></tr>`
+            `<td style="padding:4px 0;font-size:14px;font-weight:600;">${escapeEmailHtml(value)}</td></tr>`
         )
         .join("")}
     </table>
@@ -901,15 +944,15 @@ export const sendStockAlertEmail = async (email, product, type, lang = "en") => 
       ? {
           title: isDrop ? "انخفض السعر 🎉" : "عاد المنتج للمخزون ✅",
           line: isDrop
-            ? `انخفض سعر <strong>${product.name}</strong> الذي كنت تتابعه.`
-            : `<strong>${product.name}</strong> متوفر الآن. اطلبه قبل نفاد الكمية.`,
+            ? `انخفض سعر <strong>${escapeEmailHtml(product.name)}</strong> الذي كنت تتابعه.`
+            : `<strong>${escapeEmailHtml(product.name)}</strong> متوفر الآن. اطلبه قبل نفاد الكمية.`,
           cta: isDrop ? "اشترِ الآن" : "اطلب الآن",
         }
       : {
           title: isDrop ? "Price drop 🎉" : "Back in stock ✅",
           line: isDrop
-            ? `The price of <strong>${product.name}</strong> just dropped.`
-            : `<strong>${product.name}</strong> is available again. Grab it before it's gone.`,
+            ? `The price of <strong>${escapeEmailHtml(product.name)}</strong> just dropped.`
+            : `<strong>${escapeEmailHtml(product.name)}</strong> is available again. Grab it before it's gone.`,
           cta: isDrop ? "Buy now" : "Order now",
         };
 
@@ -962,8 +1005,8 @@ export const sendAbandonedCartEmail = async (user, cartItems = [], stage = 1) =>
     .map((item) => `
       <tr>
         <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};">
-          ${itemImage(item) ? `<img src="${itemImage(item)}" alt="" width="40" height="40" style="border-radius:6px;vertical-align:middle;margin-${lang === "ar" ? "left" : "right"}:10px;object-fit:cover;" />` : ""}
-          ${itemName(item)}
+          ${itemImage(item) ? `<img src="${escapeEmailHtml(itemImage(item))}" alt="" width="40" height="40" style="border-radius:6px;vertical-align:middle;margin-${lang === "ar" ? "left" : "right"}:10px;object-fit:cover;" />` : ""}
+          ${escapeEmailHtml(itemName(item))}
         </td>
         <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};text-align:center;">${item.quantity || 1}</td>
         <td style="padding:12px 14px;border-bottom:1px solid ${T.border};color:${T.text};text-align:${lang === "ar" ? "left" : "right"};">${fmt(itemPrice(item))} EGP</td>
@@ -1004,7 +1047,7 @@ export const sendAbandonedCartEmail = async (user, cartItems = [], stage = 1) =>
 
   const body = `
     <h1 class="h1 text" style="margin:0 0 12px;font-size:24px;font-weight:800;color:${T.navy};">${copy.title}</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting(lang, user.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml(lang, user.name)}</p>
     <p class="text" style="margin:0 0 18px;">${copy.para}</p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border:1px solid ${T.border};border-radius:10px;border-collapse:separate;border-spacing:0;overflow:hidden;font-family:${FONT_STACK};font-size:14px;margin:10px 0;">
       <thead>
@@ -1058,7 +1101,7 @@ export const sendStudentVerificationEmail = async (user, profile, token, clientU
 
   const bodyEN = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">Confirm your university email</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("en", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("en", user?.name)}</p>
     <p class="text" style="margin:0 0 14px;">You asked to join the Belgomla student programme with <strong>${profile.universityEmail}</strong>. Confirm the address to unlock your personal discount code on electronics.</p>
     ${ctaButton(link, "Confirm my email")}
     <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">Button not working? Paste this link into your browser:</p>
@@ -1068,7 +1111,7 @@ export const sendStudentVerificationEmail = async (user, profile, token, clientU
 
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">أكّد بريدك الجامعي</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("ar", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("ar", user?.name)}</p>
     <p class="text" style="margin:0 0 14px;">طلبت الانضمام لبرنامج طلاب بالجملة باستخدام <strong>${profile.universityEmail}</strong>. أكّد البريد لتحصل على كود الخصم الشخصي على الإلكترونيات.</p>
     ${ctaButton(link, "تأكيد البريد")}
     <p class="text-muted" style="margin:0 0 6px;color:${T.textMuted};font-size:13px;">لا يعمل الزر؟ انسخ هذا الرابط إلى المتصفح:</p>
@@ -1113,7 +1156,7 @@ export const sendStudentDiscountEmail = async (user, profile, coupon, terms = {}
 
   const bodyEN = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">Your student code is ready</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("en", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("en", user?.name)}</p>
     <p class="text" style="margin:0 0 14px;">Your faculty address is confirmed. This code is yours alone — it is tied to your account and will not work for anyone else.</p>
     ${codeBox(coupon.code)}
     <ul class="text" style="margin:0 0 18px;padding-inline-start:18px;font-size:14px;">
@@ -1128,7 +1171,7 @@ export const sendStudentDiscountEmail = async (user, profile, coupon, terms = {}
 
   const bodyAR = `
     <h1 class="h1 text" style="margin:0 0 16px;font-size:24px;font-weight:800;color:${T.navy};">كودك الطلابي جاهز</h1>
-    <p class="text" style="margin:0 0 14px;">${greeting("ar", user?.name)}</p>
+    <p class="text" style="margin:0 0 14px;">${greetingHtml("ar", user?.name)}</p>
     <p class="text" style="margin:0 0 14px;">تم تأكيد بريد كليتك. الكود ده ليك وحدك — مربوط بحسابك ولن يعمل مع أي شخص آخر.</p>
     ${codeBox(coupon.code)}
     <ul class="text" style="margin:0 0 18px;padding-inline-start:18px;font-size:14px;">

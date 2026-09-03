@@ -11,8 +11,25 @@ import { trackVisitor } from "./middleware/analytics.middleware.js";
 import { comingSoonGate } from "./middleware/comingSoon.middleware.js";
 import { captureException } from "./utils/sentry.js";
 import { MongoRateLimitStore } from "./utils/rateLimitStore.js";
+import { initSentry } from "./utils/sentry.js";
 
 dotenv.config();
+
+/*
+  Initialised here rather than only in `index.js`.
+
+  `index.js` is the local HTTP server. Vercel loads `api/index.js`, which
+  imports this file and never touches that one — so in production `initSentry`
+  was never called, `enabled` stayed false, and every `captureException` in
+  this file and in `wrappers.js` was a no-op. The comment in `wrappers.js`
+  says "Sentry gets the full stack" while the client gets a generic message;
+  in production nobody got either, and the only trace of a 500 was a line in
+  the Vercel log.
+
+  Idempotent, and it reads `SENTRY_DSN` itself, so calling it from both entry
+  points is safe and a deployment without the variable is unaffected.
+*/
+initSentry();
 
 // Cache the bootstrap promise (DB connect + role seed) so consecutive
 // requests on the same warm Lambda share the same handshake. Reset on
@@ -261,12 +278,32 @@ app.use((err, req, res, next) => {
   if (!err.status || err.status >= 500) {
     captureException(err, { path: req.originalUrl, method: req.method });
   }
-  res.status(err.status || 500).json({
+  /*
+    Mask the message only when nobody chose it.
+
+    This replaced *every* message in production, including the ones the
+    application had just written on purpose. The DB middleware above sets
+    `err.status = 503` and "Database temporarily unavailable. Please retry
+    shortly." precisely so a monitor can page on it and the client can offer a
+    retry — and the client got "Internal Server Error" instead. A malformed
+    JSON body or an over-size payload gave 400 or 413 with the same text, so
+    the storefront's validation copy never fired.
+
+    The test is whether `err.status` was set, not whether it is below 500. An
+    error the application classified carries a message the application wrote;
+    an unclassified one is an uncaught throw, and its message is the only kind
+    that can leak an internal detail. That is why 503 keeps its text here.
+
+    `wrappers.js` masks on `status >= 500` instead, and that is right there:
+    it wraps controller bodies, where the common case is a genuine throw that
+    it assigns 500 to itself. This handler sees what middleware deliberately
+    classified on the way past.
+  */
+  const status = err.status || 500;
+  const hide = process.env.NODE_ENV === "production" && !err.status;
+  res.status(status).json({
     success: false,
-    message:
-      process.env.NODE_ENV === "production"
-        ? "Internal Server Error"
-        : err.message,
+    message: hide ? "Internal Server Error" : err.message,
   });
 });
 

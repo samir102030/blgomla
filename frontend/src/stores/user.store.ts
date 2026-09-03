@@ -212,15 +212,41 @@ export const useUserStore = create<UserStore>()(
         }
       },
 
+      /*
+        Signing out ends the session here whatever the server says.
+
+        This used to clear `user` inside the try, after the POST resolved —
+        so any failure left the account signed in. Offline, server down, or a
+        session already expired and answering 401: the request rejects, the
+        catch writes a message nobody displays, and the app carries on as the
+        signed-in user with everything still in localStorage. On a shared
+        machine that is the whole point of the button not happening.
+
+        The path that matters most is the one in lib/axios.ts: when a token
+        refresh fails it calls this to end the dead session — and if the
+        refresh failed because the server is unreachable, so does this POST,
+        so the session it was meant to clear survived.
+
+        Telling the server is best effort and worth doing, since it is what
+        revokes the refresh token. Ending the session locally is not
+        optional, so it happens either way, and takes the cached roster with
+        it rather than leaving it for the next person at this browser.
+      */
       logout: async () => {
         set({ loading: true, error: undefined });
         try {
           await axiosInstance.post(`/users/logout`);
-          set({ user: undefined, loading: false });
-        } catch (error: any) {
+        } catch {
+          // Deliberately swallowed: there is nothing the person can do about
+          // it, and the sign-out below happens regardless.
+        } finally {
           set({
-            error: error?.response?.data?.message || error.message,
+            user: undefined,
+            users: [],
+            deletedUsers: [],
+            paginated: undefined,
             loading: false,
+            error: undefined,
           });
         }
       },
@@ -590,6 +616,32 @@ export const useUserStore = create<UserStore>()(
 
     {
       name: "user-store",
+      /*
+        Only the signed-in account is persisted.
+
+        With no `partialize`, zustand writes the whole store — which meant
+        `users`, the admin roster fetched by the Users page, was copied into
+        localStorage: every account's name, email, role and status, sitting
+        in the browser profile indefinitely. Nothing removed it on sign-out,
+        because sign-out cleared `user` and nothing else. An admin who opened
+        that page once on a shared machine left the shop's user list behind
+        for whoever sat down next, readable from the browser console.
+
+        `deletedUsers` went the same way, and `loading` too — persisted mid
+        request as `true`, it came back `true` on the next visit and left a
+        spinner running over a screen with nothing loading.
+
+        No version bump on purpose. Zustand discards persisted state when the
+        version changes and no migration is supplied, which would sign every
+        customer out on deploy. The keys below simply stop being written, and
+        the first state change after this ships rewrites the entry without
+        them; `merge` keeps a stale copy from being read back in meanwhile.
+      */
+      partialize: (state) => ({ user: state.user }),
+      merge: (persisted, current) => ({
+        ...current,
+        user: (persisted as { user?: User } | undefined)?.user,
+      }),
     }
   )
 );

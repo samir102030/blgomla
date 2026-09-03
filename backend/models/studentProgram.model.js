@@ -75,6 +75,16 @@ const studentProgramSchema = new mongoose.Schema(
         type: Number,
         default: 10,
         min: [0, "Discount value cannot be negative"],
+        /*
+          There was no ceiling, and the field is a percentage as often as it
+          is an amount. Typing 150 where 15 was meant made
+          `subtotal * (150/100)` — clamped to the subtotal by
+          `studentDiscountOn`, so nothing went negative and nothing errored:
+          every verified student's order simply came to zero, quietly, until
+          somebody noticed. The cap is only meaningful for the percentage
+          type, so it is enforced in the validator below rather than here,
+          where a fixed amount of 5,000 EGP is perfectly reasonable.
+        */
       },
       /** Caps a percentage discount in currency. Ignored when unset. */
       maximumDiscount: {

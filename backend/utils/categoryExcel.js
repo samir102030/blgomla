@@ -1,4 +1,4 @@
-import XLSX from "xlsx";
+import XLSX from "./xlsxCompat.js";
 
 /**
  * Excel template and parser for bulk category upload.
@@ -87,7 +87,7 @@ const INSTRUCTIONS = [
   },
 ];
 
-export const generateCategoryTemplate = () => {
+export const generateCategoryTemplate = async () => {
   const workbook = XLSX.utils.book_new();
 
   const sheet = XLSX.utils.json_to_sheet(EXAMPLE_ROWS, { header: COLUMNS });
@@ -114,8 +114,8 @@ const parseBool = (value, fallback = true) => {
   return fallback;
 };
 
-export const parseCategoryExcel = (fileBuffer) => {
-  const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+export const parseCategoryExcel = async (fileBuffer) => {
+  const workbook = await XLSX.read(fileBuffer, { type: "buffer" });
   const worksheet = workbook.Sheets[workbook.SheetNames[0]];
   const rows = XLSX.utils.sheet_to_json(worksheet);
 

@@ -409,7 +409,18 @@ export const validateCoupon = controllerWrapper(
     // Check if coupon applies to cart items
     let applicableItems = [];
     for (const item of cartItems) {
-      const product = await Product.findById(item.product).populate("Category");
+      /*
+        No populate. The path is `category`, lower case — `"Category"` is not
+        on the schema at all, and Mongoose's `strictPopulate` (on by default
+        since v6) rejects a path it cannot find, so this threw on the first
+        real product and the whole endpoint answered 500. Every coupon in the
+        shop, including the students' personal codes, was dead at the cart.
+
+        And it was never needed: the line below already handles both shapes
+        with `product.category?._id || product.category`, and an unpopulated
+        ref is the id, which is all `canApplyToProduct` wants.
+      */
+      const product = await Product.findById(item.product);
       if (!product) continue;
 
       if (

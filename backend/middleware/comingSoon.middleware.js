@@ -22,11 +22,20 @@ export const bustComingSoonCache = () => {
 
 // Paths that must never be gated, regardless of mode — admins need the
 // dashboard, auth, and the site-mode endpoint itself to be able to flip it.
+/*
+  The paths that stay open while the shop is behind the splash.
+
+  These have to cover POST as well as GET now — see the note on the method
+  check below — so the auth endpoints are listed by the verb they are actually
+  used with.
+*/
 const ALWAYS_ALLOW_PREFIXES = [
   "/api/site-mode",
   "/api/users/login",
   "/api/users/logout",
   "/api/users/me",
+  "/api/users/refresh",
+  "/api/users/profile",
   "/api/_ping",
   "/api/v1/health",
   "/api/cron",
@@ -45,9 +54,22 @@ const isAdminToken = async (accessToken) => {
 
 export const comingSoonGate = async (req, res, next) => {
   try {
-    // Only consider gating API GETs — POST/PUT/DELETE flow through normally
-    // so admins keep working. Frontend has its own splash gate for the UI.
-    if (req.method !== "GET") return next();
+    /*
+      Every method, not only GET.
+
+      This used to exempt POST/PUT/DELETE outright "so admins keep working",
+      which let the whole shop through the gate to anyone who asked with the
+      right verb: `POST /api/products/by-ids` is a public product read,
+      `POST /api/support/ask` searches the catalogue through the assistant,
+      and `POST /api/orders` places an order. So with the splash up and
+      `blockPublicApi` on, a stranger could still browse and buy — the gate
+      only ever stopped the storefront's own GETs.
+
+      Admins keep working through the two things that were actually holding
+      that exemption up: the allow-list above, and the admin-token and
+      preview-key checks below, both of which run for every method.
+    */
+    if (req.method === "OPTIONS") return next();
 
     const mode = await loadMode();
     if (!mode?.comingSoon || !mode?.blockPublicApi) return next();
@@ -63,10 +85,22 @@ export const comingSoonGate = async (req, res, next) => {
       return next();
     }
 
-    // Admin cookie bypass.
-    if (mode.allowAdminBypass) {
-      const ok = await isAdminToken(req.cookies?.accessToken);
-      if (ok) return next();
+    /*
+      Admin cookie bypass.
+
+      `allowAdminBypass` governs whether an administrator may *browse* the shop
+      while the splash is up — that is what the toggle is for. It must not
+      govern whether they can work: before the method check above was widened,
+      every write passed unconditionally, so an operator with the toggle off
+      could still run the dashboard. Keeping that true is the condition on
+      which widening the gate is safe at all.
+
+      So: a verified administrator always passes on a write, and on a read only
+      when the toggle allows it.
+    */
+    const adminBypassApplies = req.method !== "GET" || mode.allowAdminBypass;
+    if (adminBypassApplies && (await isAdminToken(req.cookies?.accessToken))) {
+      return next();
     }
 
     res.setHeader("Retry-After", "3600");

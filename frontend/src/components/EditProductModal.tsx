@@ -60,9 +60,17 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
   const [previews, setPreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<any[]>([]);
 
+  /*
+    Whether the product we were handed actually carried `bulkPricing`. When it
+    did not, this modal has nothing to say about the tiers and must not send
+    the field at all — an empty array is an instruction to delete them.
+  */
+  const [loadedBulkPricing, setLoadedBulkPricing] = useState(false);
+
   // Reset form when modal opens with product data
   useEffect(() => {
     if (isOpen && product) {
+      setLoadedBulkPricing(Array.isArray(product.bulkPricing));
       setForm({
         name: product.name || "",
         nameAr: product.nameAr || "",
@@ -81,6 +89,24 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         tags: product.tags || [],
         features: product.features || [],
         attributes: product.attributes || [],
+        /*
+          `undefined` and `[]` are not the same thing here, and treating them
+          as one deleted people's pricing.
+
+          The row this modal is handed comes from the list, and the list
+          projection dropped `bulkPricing`. So `product.bulkPricing` was
+          always `undefined`, the form always started empty, and the payload
+          below always carried `bulkPricing: []` — which `updateProduct`
+          tests with `!== undefined` and duly writes. Opening a wholesale SKU
+          to correct a typo in its name wiped every quantity break on it,
+          silently, on a B2B catalogue, while the panel said "no rules yet" as
+          though that were the truth.
+
+          The projection now keeps the field (see productPagination.js), and
+          `loadedBulkPricing` records whether this product actually arrived
+          with one, so that if it ever goes missing again the payload omits it
+          rather than clearing it.
+        */
         bulkPricing: Array.isArray(product.bulkPricing)
           ? product.bulkPricing.map((rule: any) => ({
               minQty: rule.minQty?.toString() || "",
@@ -168,18 +194,22 @@ const EditProductModal: React.FC<EditProductModalProps> = ({
         tags: form.tags,
         features: form.features,
         attributes: form.attributes,
-        bulkPricing: form.bulkPricing
-          .map((rule) => ({
-            minQty: Number(rule.minQty),
-            unitPrice: Number(rule.unitPrice),
-          }))
-          .filter(
-            (rule) =>
-              Number.isFinite(rule.minQty) &&
-              Number.isFinite(rule.unitPrice) &&
-              rule.minQty >= 1 &&
-              rule.unitPrice > 0
-          ),
+        ...(loadedBulkPricing
+          ? {
+              bulkPricing: form.bulkPricing
+                .map((rule) => ({
+                  minQty: Number(rule.minQty),
+                  unitPrice: Number(rule.unitPrice),
+                }))
+                .filter(
+                  (rule) =>
+                    Number.isFinite(rule.minQty) &&
+                    Number.isFinite(rule.unitPrice) &&
+                    rule.minQty >= 1 &&
+                    rule.unitPrice > 0
+                ),
+            }
+          : {}),
         installation: {
           offered: form.installationOffered,
           price: form.installationOffered ? Number(form.installationPrice) || 0 : 0,

@@ -384,14 +384,17 @@ export const registerVendor = controllerWrapper(
 export const getAllVendors = controllerWrapper(
   "getAllVendors",
   async (req, res) => {
-    // Only admin can access this
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
+    /*
+      Authorisation is the route's now — `adminOrPermission("vendors.view")`.
 
+      The inline test that stood here was `role === "admin" || "super_admin"`,
+      which is not the same question as "may this account see vendors": it
+      admitted no custom staff role however Roles & Access was configured, so
+      the Vendors permission group in that screen decided nothing. It also sat
+      on only two of the vendor endpoints, which is how `getVendorById` came
+      to have no check at all. One guard, on the route, where it can be read
+      off the route table.
+    */
     const { page, limit, status } = req.query;
     let query = Store.find().populate("owner", "name email phoneNumber");
 
@@ -605,6 +608,28 @@ export const updateVendorStatus = controllerWrapper(
 
     await vendor.save();
 
+    /*
+      The owner's account has to move with the store.
+
+      This endpoint is the one the dashboard's vendor pages actually call, and
+      it only ever wrote Store fields. `registerVendor` creates the owner with
+      `isVerified: false, active: false`, and `suspendVendor` sets
+      `active: false` — so approving a vendor from the status dropdown left
+      their account exactly as it was. The vendor signed in, got
+      EMAIL_NOT_VERIFIED with no code ever sent, and after a manual resend hit
+      "Account is inactive" on every protected route. Nothing on either screen
+      explained why, and suspended → approved left the account dead for good.
+
+      `approveVendor` beside this has done it correctly all along; the two had
+      simply drifted, and the UI calls this one.
+    */
+    await User.findByIdAndUpdate(
+      vendor.owner,
+      status === "approved" || status === "active"
+        ? { isVerified: true, active: true }
+        : { active: false }
+    );
+
     res.status(200).json({
       success: true,
       message: `Vendor status updated to ${status}`,
@@ -732,11 +757,61 @@ export const restoreVendor = controllerWrapper(
 
 // ============= Existing Store Controllers =============
 
+/*
+  What a shop page is allowed to know about a store.
+
+  `GET /api/stores` and `GET /api/stores/:id` carry no `protectRoute` — they
+  are the storefront's vendor pages, and they were returning the whole Store
+  document. A Store holds the vendor's onboarding file: Cloudinary URLs for
+  their national ID, tax card, commercial registration and bank statement, and
+  a `payoutDetails` block with their IBAN, InstaPay handle and wallet number.
+  All of it was one unauthenticated request away, and the id needed for the
+  second endpoint was handed out by the first.
+
+  The owner populate was trimmed to `name` at some point for exactly this
+  reason. The store body itself was never trimmed, which is the larger half.
+
+  A whitelist, not a blacklist: fields added to this schema later — and the
+  reason to add a field to a vendor record is usually that it is sensitive —
+  stay out of the public response until someone puts them here deliberately.
+*/
+const PUBLIC_STORE_FIELDS =
+  "name slug description logo banner slider socialLinks about story features rating totalReviews isActive createdAt owner";
+
+/*
+  The store this request is allowed to act on.
+
+  Four lifecycle endpoints — safeDelete, restore, activate, deactivate — took
+  an `:id` and never asked whose store it was, behind `adminOrStoreRoute`,
+  which admits every approved vendor. So any vendor could soft-delete any
+  other store, and `protectRoute` refuses a `store` user whose store is
+  deleted: one request locked a competitor out of their own account. The same
+  call against the house store took the shop's own catalogue with it.
+
+  Admins reach any store. A vendor reaches theirs and nothing else, and the
+  `:id` they send is checked rather than trusted.
+*/
+const storeForRequest = async (req, id) => {
+  if (await reachesAllStores(req.user)) {
+    const store = id ? await Store.findById(id) : null;
+    return { store, scopedToOwn: false };
+  }
+  const own = await Store.findOne({ owner: req.user._id });
+  if (!own) return { store: null, scopedToOwn: true };
+  // An id that is not theirs is answered as "not found" rather than
+  // "not yours" — the latter confirms the store exists.
+  if (id && String(own._id) !== String(id)) return { store: null, scopedToOwn: true };
+  return { store: own, scopedToOwn: true };
+};
+
 export const getAllStores = controllerWrapper(
   "getAllStores",
   async (req, res) => {
     const { page, limit } = req.query;
-    const query = Store.find();
+    // Public and unauthenticated — see PUBLIC_STORE_FIELDS.
+    const query = Store.find({ deleted: { $ne: true } })
+      .select(PUBLIC_STORE_FIELDS)
+      .populate("owner", "name");
     const users = await paginateQuery(page, limit, query);
     if (!users.success) return res.status(400).json(users);
     res.status(200).json(users);
@@ -779,7 +854,9 @@ export const getStoreById = controllerWrapper(
     // document — password hash, email, role, loyalty points, cart, Google id —
     // to anybody who asked, with the id available from the public store list.
     // A shop page needs the owner's name and nothing else.
-    const store = await Store.findById(id).populate("owner", "name");
+    const store = await Store.findById(id)
+      .select(PUBLIC_STORE_FIELDS)
+      .populate("owner", "name");
     if (!store) return res.status(404).json({ message: "Store not found" });
     res.status(200).json(store);
   }
@@ -816,7 +893,29 @@ export const updateStore = controllerWrapper(
         success: false,
         message: "Access denied - You are not authorized to update this store",
       });
-    store.set(req.body);
+    /*
+      A whitelist, because `store.set(req.body)` wrote whatever it was given.
+
+      The ownership check above is real, but it only establishes that this is
+      the vendor's own store — and `commission`, `rating`, `totalReviews`,
+      `status`, `approved` and `owner` all live on that same document. A vendor
+      could set their own commission to zero, their rating to five stars over
+      four thousand invented reviews, or hand the store to another account.
+      None of those are theirs to decide; the rest of the page is.
+    */
+    const VENDOR_EDITABLE = [
+      "name", "description", "logo", "banner", "slider", "socialLinks",
+      "about", "story", "features", "phone", "email", "address",
+      "payoutDetails", "workingHours",
+    ];
+    const fields = (await reachesAllStores(req.user))
+      ? Object.keys(req.body)
+      : VENDOR_EDITABLE;
+    for (const key of fields) {
+      if (Object.prototype.hasOwnProperty.call(req.body, key)) {
+        store.set(key, req.body[key]);
+      }
+    }
     await store.save();
     res.status(200).json({ success: true, store });
   }
@@ -848,7 +947,7 @@ export const safeDeleteStore = controllerWrapper(
   "safeDeleteStore",
   async (req, res) => {
     const { id } = req.params;
-    const store = await Store.findById(id);
+    const { store } = await storeForRequest(req, id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.deleted = true;
     await store.save();
@@ -860,7 +959,7 @@ export const restoreStore = controllerWrapper(
   "restoreStore",
   async (req, res) => {
     const { id } = req.params;
-    const store = await Store.findById(id);
+    const { store } = await storeForRequest(req, id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.deleted = false;
     await store.save();
@@ -936,7 +1035,7 @@ export const activateStore = controllerWrapper(
   "activateStore",
   async (req, res) => {
     const { id } = req.params;
-    const store = await Store.findById(id);
+    const { store } = await storeForRequest(req, id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.isActive = true;
     await store.save();
@@ -948,7 +1047,7 @@ export const deactivateStore = controllerWrapper(
   "deactivateStore",
   async (req, res) => {
     const { id } = req.params;
-    const store = await Store.findById(id);
+    const { store } = await storeForRequest(req, id);
     if (!store) return res.status(404).json({ message: "Store not found" });
     store.isActive = false;
     await store.save();
@@ -1037,11 +1136,22 @@ export const deactivateStore = controllerWrapper(
 export const getStoreDashboard = controllerWrapper(
   "getStoreDashboard",
   async (req, res) => {
-    // Example: return basic stats
+    /*
+      Scoped, and no longer the whole document.
+
+      This is behind `adminOrStoreRoute`, which admits every approved vendor,
+      and it looked up whatever `:id` it was given. So one vendor could read
+      another's store record entire — the four files under `documents`, all of
+      `payoutDetails` — by putting a competitor's id in the URL. Vendor ids
+      travel in ordinary product payloads, so finding one took no effort.
+
+      `storeForRequest` answers with the caller's own store, or with any store
+      for platform staff, and treats an id that is not theirs as "not found"
+      rather than "not yours".
+    */
     const { id } = req.params;
-    const store = await Store.findById(id);
+    const { store } = await storeForRequest(req, id);
     if (!store) return res.status(404).json({ message: "Store not found" });
-    // Add your own dashboard logic here
     res.json({ success: true, dashboard: { store } });
   }
 );
@@ -1056,13 +1166,9 @@ export const getStoreStatistics = controllerWrapper(
     let orderFilter = {};
 
     if (req.user.role === "store") {
-      // For store owners, get stats for their store
-      let store;
-      if (id) {
-        store = await Store.findById(id);
-      } else {
-        store = await Store.findOne({ owner: req.user._id });
-      }
+      // The `:id` was loaded without asking whose store it was, so a vendor
+      // could read any other store's revenue, order counts and top products.
+      const { store } = await storeForRequest(req, id);
       if (!store) return res.status(404).json({ message: "Store not found" });
 
       storeFilter = { _id: store._id };
@@ -1316,17 +1422,27 @@ export const getStoreStatistics = controllerWrapper(
 export const getAllStoreOrders = controllerWrapper(
   "getAllStoreOrders",
   async (req, res) => {
+    /*
+      Scoped and paginated, which it was neither.
+
+      `Order.find({ store: id })` on an `:id` nobody checked meant any vendor
+      could read every order of any store — customer ids, totals, payment
+      results — by asking for the house store. And with no limit, that answer
+      was the whole orders collection in one Lambda response.
+    */
     const { id } = req.params;
-    if (id) {
-      const orders = await Order.find({ store: id });
-      return res.json({ success: true, orders });
-    }
-    const store = await Store.findOne({ owner: req.user._id });
+    const { page, limit } = req.query;
+    const { store } = await storeForRequest(req, id);
     if (!store)
       return res.status(404).json({ message: "Store not found for this user" });
 
-    const orders = await Order.find({ store: store._id });
-    return res.json({ success: true, orders });
+    const result = await paginateQuery(
+      page,
+      limit,
+      Order.find({ store: store._id }).sort({ createdAt: -1 })
+    );
+    if (!result.success) return res.status(400).json(result);
+    return res.json({ success: true, orders: result.data, ...result });
   }
 );
 
@@ -1344,16 +1460,25 @@ export const getAllStoreComments = controllerWrapper(
 export const getAllStoreProducts = controllerWrapper(
   "getAllStoreProducts",
   async (req, res) => {
+    // Same two problems as the orders above: any store's products by id, and
+    // no limit — the house store holds most of the 13,000-product catalogue,
+    // and this returned every one of them with its full description, images
+    // and attributes.
     const { id } = req.params;
-    if (id) {
-      const products = await Product.find({ store: id });
-      return res.json({ success: true, products });
-    }
-    const store = await Store.findOne({ owner: req.user._id });
+    const { page, limit } = req.query;
+    const { store } = await storeForRequest(req, id);
     if (!store)
       return res.status(404).json({ message: "Store not found for this user" });
-    const products = await Product.find({ store: store._id });
-    res.json({ success: true, products });
+
+    const result = await paginateQuery(
+      page,
+      limit,
+      Product.find({ store: store._id })
+        .select("name nameAr slug price salePercentage saleActive stock images isActive approvalStatus createdAt")
+        .sort({ createdAt: -1 })
+    );
+    if (!result.success) return res.status(400).json(result);
+    res.json({ success: true, products: result.data, ...result });
   }
 );
 

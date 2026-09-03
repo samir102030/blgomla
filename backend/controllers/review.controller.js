@@ -1,7 +1,13 @@
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
-import { paginateQuery } from "../utils/pagination.js";
 import { reachesAllStores } from "../utils/permissions.js";
+
+/*
+  User input goes into `$regex` in two of the filters below, so it is escaped.
+  Unescaped it is both a correctness bug — a search for "c++" matches nothing
+  — and a way to hand Mongo a pathological pattern from a query string.
+*/
+const escapeRegex = (value) => String(value ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Get all reviews with role-based filtering
 export const getAllReviews = controllerWrapper(
@@ -44,105 +50,130 @@ export const getAllReviews = controllerWrapper(
       query.store = userStore._id;
     }
 
-    // Additional filters
-    if (storeId) query.store = storeId;
+    /*
+      Additional filters — but `storeId` may not widen the scope set above.
+
+      For a vendor, `query.store` has just been pinned to their own store; an
+      unconditional assignment here let `?storeId=<someone else>` replace it,
+      and the reviews come back with each reviewer's name and email address.
+    */
+    if (storeId && (await reachesAllStores(req.user))) query.store = storeId;
     if (productId) query._id = productId;
 
-    // First, find products that match the criteria and have reviews
-    query["reviews.0"] = { $exists: true }; // Only products with at least one review
-    const products = await Product.find(query).populate("store", "name");
+    /*
+      One aggregation, rather than the whole catalogue and a query per review.
 
-    // Extract and flatten reviews from products
-    let allReviews = [];
-    for (const product of products) {
-      for (const review of product.reviews) {
-        // Apply additional filters that can't be done in the query
-        if (
-          isVisible !== undefined &&
-          review.isVisible !== (isVisible === "true")
-        ) {
-          continue;
-        }
-        if (rating && review.rating !== Number(rating)) {
-          continue;
-        }
-        if (dateFrom && new Date(review.createdAt) < new Date(dateFrom)) {
-          continue;
-        }
-        if (dateTo && new Date(review.createdAt) > new Date(dateTo)) {
-          continue;
-        }
-        if (userEmail) {
-          const User = (await import("../models/user.model.js")).default;
-          const reviewUser = await User.findById(review.user).select("email");
-          if (
-            !reviewUser ||
-            !reviewUser.email.toLowerCase().includes(userEmail.toLowerCase())
-          ) {
-            continue;
-          }
-        }
+      What this replaces: `Product.find(query)` with no projection and no
+      limit — every reviewed product in full, description, images, attributes
+      and all — then a nested loop that ran `User.findById` once per review
+      (twice, when filtering by email), then filtered, sorted and paginated
+      the result in JavaScript. Page one and page nine cost exactly the same,
+      and that cost grows with the catalogue: a few hundred reviewed products
+      is a few hundred full documents plus a thousand sequential round trips,
+      for a screen that shows twenty rows.
 
-        // Get user data
-        const User = (await import("../models/user.model.js")).default;
-        const reviewUser = await User.findById(review.user).select(
-          "name email"
-        );
+      Mongo can do all of it. `$unwind` turns each review into a row, the
+      filters become `$match` stages, the reviewer is joined once with a
+      `$lookup`, and `$facet` returns the page and the count together so the
+      total is not a second pass.
+    */
+    const pageNum = Math.max(Number(page) || 1, 1);
+    const perPage = Math.min(Math.max(Number(limit) || 20, 1), 100);
 
-        if (reviewUser) {
-          const reviewData = {
-            reviewId: review._id,
-            productId: product._id,
-            productName: product.name,
-            storeId: product.store._id,
-            storeName: product.store.name,
-            userId: review.user,
-            userName: reviewUser.name,
-            userEmail: reviewUser.email,
-            rating: review.rating,
-            comment: review.comment,
-            isVisible: review.isVisible,
-            createdAt: review.createdAt,
-            updatedAt: review.updatedAt,
-          };
-
-          // Apply search filter if provided
-          if (search) {
-            const searchLower = search.toLowerCase();
-            const matchesSearch =
-              product.name.toLowerCase().includes(searchLower) ||
-              reviewUser.name.toLowerCase().includes(searchLower) ||
-              reviewUser.email.toLowerCase().includes(searchLower) ||
-              (review.comment &&
-                review.comment.toLowerCase().includes(searchLower));
-
-            if (!matchesSearch) {
-              continue;
-            }
-          }
-
-          allReviews.push(reviewData);
-        }
+    const reviewMatch = {};
+    if (isVisible !== undefined) reviewMatch["reviews.isVisible"] = isVisible === "true";
+    if (rating) reviewMatch["reviews.rating"] = Number(rating);
+    if (dateFrom || dateTo) {
+      reviewMatch["reviews.createdAt"] = {};
+      if (dateFrom) reviewMatch["reviews.createdAt"].$gte = new Date(dateFrom);
+      // A "to" date names a day, and a day includes the whole of itself.
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        reviewMatch["reviews.createdAt"].$lte = end;
       }
     }
 
-    // Sort by creation date (newest first)
-    allReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    // Applied after the reviewer join, since they read joined fields.
+    const joinedMatch = {};
+    if (userEmail) {
+      joinedMatch["reviewer.email"] = { $regex: escapeRegex(userEmail), $options: "i" };
+    }
+    if (search) {
+      const rx = { $regex: escapeRegex(search), $options: "i" };
+      joinedMatch.$or = [
+        { productName: rx },
+        { userName: rx },
+        { userEmail: rx },
+        { comment: rx },
+      ];
+    }
 
-    // Apply pagination
-    const total = allReviews.length;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + Number(limit);
-    const paginatedReviews = allReviews.slice(startIndex, endIndex);
+    const pipeline = [
+      { $match: query },
+      { $unwind: "$reviews" },
+      ...(Object.keys(reviewMatch).length ? [{ $match: reviewMatch }] : []),
+      {
+        $lookup: {
+          from: "users",
+          localField: "reviews.user",
+          foreignField: "_id",
+          as: "reviewer",
+        },
+      },
+      { $unwind: "$reviewer" },
+      {
+        $lookup: {
+          from: "stores",
+          localField: "store",
+          foreignField: "_id",
+          as: "storeDoc",
+        },
+      },
+      // Preserved: a product whose store has been deleted still has reviews,
+      // and the old code threw on `product.store._id` for exactly that row.
+      { $unwind: { path: "$storeDoc", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 0,
+          reviewId: "$reviews._id",
+          productId: "$_id",
+          productName: "$name",
+          storeId: "$storeDoc._id",
+          storeName: "$storeDoc.name",
+          userId: "$reviews.user",
+          userName: "$reviewer.name",
+          userEmail: "$reviewer.email",
+          comment: "$reviews.comment",
+          rating: "$reviews.rating",
+          isVisible: "$reviews.isVisible",
+          createdAt: "$reviews.createdAt",
+          updatedAt: "$reviews.updatedAt",
+          "reviewer.email": 1,
+        },
+      },
+      ...(Object.keys(joinedMatch).length ? [{ $match: joinedMatch }] : []),
+      { $project: { reviewer: 0 } },
+      { $sort: { createdAt: -1 } },
+      {
+        $facet: {
+          rows: [{ $skip: (pageNum - 1) * perPage }, { $limit: perPage }],
+          count: [{ $count: "n" }],
+        },
+      },
+    ];
 
-    const pages = Math.ceil(total / limit);
+    const [result] = await Product.aggregate(pipeline);
+    const paginatedReviews = result?.rows ?? [];
+    const total = result?.count?.[0]?.n ?? 0;
+    const pages = Math.ceil(total / perPage) || 0;
 
     res.status(200).json({
       success: true,
       data: paginatedReviews,
       total,
-      limit: Number(limit),
-      page: Number(page),
+      limit: perPage,
+      page: pageNum,
       pages,
     });
   }

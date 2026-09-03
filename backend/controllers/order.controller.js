@@ -37,11 +37,13 @@ import {
   sendNewOrderEmail,
 } from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
+import { paginateQuery } from "../utils/pagination.js";
 
 /** What the account pages print: the last eight characters, in capitals. */
 const shortOrderId = (id) => String(id).slice(-8).toUpperCase();
 import {
   earnedPointsFor,
+  pointsToEgp,
   POINT_VALUE_EGP,
   REFERRER_REWARD,
   REFEREE_REWARD,
@@ -68,7 +70,28 @@ const processReferralReward = async (userId) => {
 const awardPointsForDelivery = async (orderId) => {
   const order = await Order.findById(orderId);
   if (!order || order.pointsAwarded) return;
-  const pts = earnedPointsFor(order.itemsPrice);
+  /*
+    Points on what the customer actually paid for the goods, not on the list
+    price of them.
+
+    This was `earnedPointsFor(order.itemsPrice)`, and `itemsPrice` is the gross
+    — the coupon, the student-programme discount and any points already spent
+    are all subtracted after it. So an order whose 1,000 EGP of goods came to
+    600 after a coupon still earned points on 1,000, and points redeemed for a
+    discount earned a fraction of themselves straight back. The shop paid a
+    reward on money it did not take.
+
+    Shipping, tax and fitting stay out, as they always have: none of them is
+    the customer buying stock.
+  */
+  const spentOnGoods =
+    (Number(order.itemsPrice) || 0) -
+    (Number(order.couponDiscount) || 0) -
+    (Number(order.studentDiscount) || 0) -
+    // `pointsRedeemed` is a count of points, not EGP — converting it is the
+    // difference between subtracting 200 pounds and subtracting 200 points.
+    pointsToEgp(order.pointsRedeemed);
+  const pts = earnedPointsFor(Math.max(0, spentOnGoods));
   const claimed = await Order.updateOne(
     { _id: orderId, pointsAwarded: { $ne: true } },
     { $set: { pointsAwarded: true, pointsEarned: pts } }
@@ -207,21 +230,37 @@ export const createOrder = controllerWrapper(
       };
 
       const addRequiredProduct = (product, quantity) => {
+        // Coerced here as well as in the validator: `+=` on two strings
+        // concatenates, and this is the line that would have done it.
+        const qty = Number(quantity) || 0;
         const key = product._id.toString();
         if (requiredProducts.has(key)) {
-          requiredProducts.get(key).quantity += quantity;
+          requiredProducts.get(key).quantity += qty;
           return;
         }
-        requiredProducts.set(key, { product, quantity });
+        requiredProducts.set(key, { product, quantity: qty });
       };
 
       for (const item of orderItems) {
-        const product = await Product.findById(item.product).session(session);
+        /*
+          Scoped to products that are actually for sale.
+
+          This was a bare `findById`, so an id in a stale cart — a product
+          since archived, deactivated, or a vendor's still awaiting approval —
+          went through checkout, decremented its stock and notified the vendor
+          of an order for something that is not on the storefront.
+        */
+        const product = await Product.findOne({
+          _id: item.product,
+          isActive: true,
+          deleted: { $ne: true },
+          approvalStatus: "approved",
+        }).session(session);
         if (!product) {
           await session.abortTransaction();
           return res.status(404).json({
             success: false,
-            message: `Product ${item.product} not found`,
+            message: `Product ${item.product} is no longer available`,
           });
         }
 
@@ -843,11 +882,42 @@ export const getOrders = controllerWrapper("getOrders", async (req, res) => {
     query = { user: req.user._id };
   }
 
-  const orders = await Order.find(query)
-    .populate(populateOptions)
-    .sort({ createdAt: -1 });
+  /*
+    Paginated, which it was not.
 
-  res.status(200).json({ success: true, orders });
+    This returned every order the caller could see, with `orderItems.product`
+    populated in full, on every load of the dashboard's orders page. It grows
+    without bound and degrades quietly rather than failing — the request that
+    eventually exhausts a Lambda's memory looks exactly like the one before
+    it. `paginateQuery` also caps `limit`, so `?limit=99999` is no longer a
+    way round it.
+
+    The status, date and user filters the validator already accepts are read
+    here too; they were validated and then ignored, so the dashboard's status
+    tabs had no effect on the server at all.
+  */
+  const { page, limit, status, dateFrom, dateTo, userId } = req.query;
+  if (status) query.status = status;
+  if (userId && (await reachesAllStores(req.user))) query.user = userId;
+  if (dateFrom || dateTo) {
+    query.createdAt = {};
+    if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+    // The "to" date names a day, and a day includes the whole of itself.
+    if (dateTo) {
+      const end = new Date(dateTo);
+      end.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = end;
+    }
+  }
+
+  const result = await paginateQuery(
+    page,
+    limit,
+    Order.find(query).populate(populateOptions).sort({ createdAt: -1 })
+  );
+  if (!result.success) return res.status(400).json(result);
+
+  res.status(200).json({ success: true, orders: result.data, ...result });
 });
 
 /**
@@ -1203,10 +1273,84 @@ const reconcileDelivery = async (order) => {
   return unwind;
 };
 
+/*
+  Whether this account may act on this order at all.
+
+  `orders.edit` and `orders.cancel` are both in STORE_PERMISSIONS — a vendor
+  has to be able to move their own orders along — and the four handlers below
+  took `req.params.id` straight to `findByIdAndUpdate`. So the permission was
+  the entire check, and it does not say *whose* order. Any approved vendor
+  could cancel a competitor's order, which runs `releaseOrderHolds` and puts
+  the goods back on that competitor's shelf while refunding the buyer's coupon
+  and points; or mark it delivered, which flags a COD order paid and awards
+  loyalty and referral points against a sale that never happened.
+
+  Returns null when the caller may proceed, or the response body to send.
+  404 rather than 403 for another store's order: "not yours" confirms the id
+  is real, and order ids travel — they are in confirmation emails and URLs.
+*/
+const orderAccessDenied = async (req, order) => {
+  if (!order) return { status: 404, body: { success: false, message: "Order not found" } };
+  if (await reachesAllStores(req.user)) return null;
+  const store = await Store.findOne({ owner: req.user._id }).select("_id");
+  if (!store || String(order.store) !== String(store._id)) {
+    return { status: 404, body: { success: false, message: "Order not found" } };
+  }
+  return null;
+};
+
+/*
+  Read the order, check it, then write — rather than writing and checking the
+  result. `findByIdAndUpdate` had already applied the change by the time
+  anything could have objected to it.
+*/
+const loadOrderForMutation = async (req, res) => {
+  const existing = await Order.findById(req.params.id).select("_id store status");
+  const denied = await orderAccessDenied(req, existing);
+  if (denied) {
+    res.status(denied.status).json(denied.body);
+    return null;
+  }
+  return existing;
+};
+
 export const updateOrderStatus = controllerWrapper(
   "updateOrderStatus",
   async (req, res) => {
     const { status, note } = req.body;
+    const existing = await loadOrderForMutation(req, res);
+    if (!existing) return;
+
+    /*
+      An order cannot come back from cancelled.
+
+      There is no transition graph here, deliberately — staff correct their
+      own mistakes by moving an order forwards and backwards through the flow,
+      and that is fine for every state but one. Cancelling runs
+      `releaseOrderHolds`: the stock goes back on the shelf, the coupon use is
+      refunded, the buyer's redeemed points are returned, and `holdsReleased`
+      is set so it cannot run twice.
+
+      Nothing takes any of that back. So a mis-click on "cancelled" followed
+      by a correction to "processing" left the shop believing it had stock it
+      had already sold, the customer holding both the points-paid discount and
+      the refunded points, and the coupon free to use again — and because
+      `holdsReleased` is now true, cancelling it properly later would do
+      nothing at all.
+
+      Re-taking the holds is the other way to fix this, and it is a larger
+      change than the fault warrants: the products may have sold out in the
+      meantime, and there is no sensible answer to a re-take that fails. A
+      refusal costs an operator one new order and is always correct.
+    */
+    if (existing.status === "cancelled" && status && status !== "cancelled") {
+      return res.status(409).json({
+        success: false,
+        code: "ORDER_ALREADY_CANCELLED",
+        message:
+          "This order was cancelled — its stock, coupon and points have already gone back. Place a new order rather than reopening this one.",
+      });
+    }
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {
@@ -1340,6 +1484,7 @@ export const markOrderPaid = controllerWrapper(
       does not match, so nothing is written and `paidAt` keeps the hour it
       earned. Same shape as reconcileDelivery, for the same reason.
     */
+    if (!(await loadOrderForMutation(req, res))) return;
     const claimed = await Order.findOneAndUpdate(
       { _id: req.params.id, isPaid: { $ne: true } },
       {
@@ -1387,6 +1532,7 @@ export const markOrderDelivered = controllerWrapper(
       instead — and two doors to the same act that disagree about what the act
       means is how the next person wires this one up and gets different books.
     */
+    if (!(await loadOrderForMutation(req, res))) return;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {
@@ -1416,6 +1562,7 @@ export const markOrderDelivered = controllerWrapper(
 export const cancelOrder = controllerWrapper(
   "cancelOrder",
   async (req, res) => {
+    if (!(await loadOrderForMutation(req, res))) return;
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       {

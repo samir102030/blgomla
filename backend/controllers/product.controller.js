@@ -5,10 +5,12 @@ import {
   isElectronicsCategory,
 } from "../utils/electronicsVisibility.js";
 import { scopedCategoryIds } from "../utils/categoryScope.js";
+import { reachesAllStores } from "../utils/permissions.js";
 import { controllerWrapper } from "../utils/wrappers.js";
 import { paginateQuery } from "../utils/pagination.js";
 import { paginateProducts } from "../utils/productPagination.js";
 import User from "../models/user.model.js";
+import Store from "../models/store.model.js";
 import Brand from "../models/brand.model.js";
 import Category from "../models/category.model.js";
 import PriceSnapshot from "../models/priceSnapshot.model.js";
@@ -324,6 +326,34 @@ export const getAllProducts = controllerWrapper(
     }
     if (filters.brandId) filter.brand = asId(filters.brandId);
     if (filters.storeId) filter.store = asId(filters.storeId);
+
+    /*
+      A vendor's dashboard listing is their own store's, whatever `storeId`
+      says.
+
+      `/products/manage` is gated on `products.view`, which the Store role
+      holds — that is how a vendor lists their own products. But `storeId`
+      came straight off the query string and nothing asked whose store it
+      named, so any vendor could pass a competitor's id and be handed that
+      store's catalogue in dashboard view: unpublished products, submissions
+      still awaiting approval, soft-deleted rows, prices and stock. With no
+      `storeId` at all they got every product in the shop, from every store,
+      in every state.
+
+      Forced after the query filters, for the same reason the visibility gate
+      below is: this is not a default the caller may override. Platform staff
+      are unaffected — `reachesAllStores` is what separates them — and a
+      vendor with no store matches an empty `$in`, which is nothing, rather
+      than everything.
+    */
+    if (req.user && !(await reachesAllStores(req.user))) {
+      const ownStores = await Store.find({ owner: req.user._id })
+        .select("_id")
+        .lean();
+      const ownIds = ownStores.map((store) => store._id);
+      filter.store =
+        ownIds.length === 1 ? ownIds[0] : { $in: ownIds };
+    }
     // Booleans arrive as the strings "true"/"false" via query params; coerce
     // so Mongo matches the actual Boolean field type.
     const toBool = (v) => (v === true || v === "true");
@@ -336,6 +366,27 @@ export const getAllProducts = controllerWrapper(
       filter.price = {};
       if (filters.minPrice) filter.price.$gte = Number(filters.minPrice);
       if (filters.maxPrice) filter.price.$lte = Number(filters.maxPrice);
+    }
+
+    /*
+      A shopper sees what is for sale, and cannot ask for anything else.
+
+      `isActive`, `deleted` and `approvalStatus` are all readable from the
+      query string above, and this handler serves the public listing at
+      `GET /api/products` as well as the dashboard's `/manage`. So
+      `?deleted=true` listed the archive, `?approvalStatus=pending` listed
+      every vendor's product still awaiting review, and both answers were
+      cached at the edge for five minutes for whoever asked next.
+
+      Forced after the filters rather than defaulted before them, because a
+      default is something the caller can override and this is not. The
+      dashboard is unaffected: `/manage` is the only route here with
+      `protectRoute`, so `req.user` is exactly the signal for "this is staff".
+    */
+    if (!req.user) {
+      filter.isActive = true;
+      filter.deleted = { $ne: true };
+      filter.approvalStatus = "approved";
     }
 
     const result = await paginateProducts({
@@ -451,7 +502,22 @@ export const getProductById = controllerWrapper(
   "getProductById",
   async (req, res) => {
     const { productId } = req.params;
-    const product = await Product.findById(productId)
+    /*
+      A product page for something that is not on sale is a page that should
+      not exist. This was a bare `findById`, so an archived or rejected
+      product kept a working, edge-cached URL — and `getProductBySlug` beside
+      it already excluded deleted rows, so the two disagreed about the same
+      product depending on which link you followed.
+
+      Staff reach unpublished products through the dashboard, which uses
+      `/manage` and its own handlers.
+    */
+    const product = await Product.findOne({
+      _id: productId,
+      isActive: true,
+      deleted: { $ne: true },
+      approvalStatus: "approved",
+    })
       .populate("brand", "name slug logo")
       .populate("category", "name nameAr slug")
       .populate("store", "storeName logo")
@@ -469,7 +535,14 @@ export const getProductBySlug = controllerWrapper(
   "getProductBySlug",
   async (req, res) => {
     const { slug } = req.params;
-    const product = await Product.findOne({ slug, deleted: { $ne: true } })
+    // `deleted` alone was not enough — a deactivated or unapproved product
+    // still rendered its own page. Matches getProductById above.
+    const product = await Product.findOne({
+      slug,
+      isActive: true,
+      deleted: { $ne: true },
+      approvalStatus: "approved",
+    })
       .populate("brand", "name slug logo")
       .populate("category", "name nameAr slug")
       .populate("store", "storeName logo")
@@ -579,6 +652,65 @@ export const bulkUpdateProducts = controllerWrapper(
         success: false,
         message: "The sale has to end after it starts.",
       });
+    }
+
+    /*
+      The plain numbers need checking too, for the same reason the structured
+      fields above do: `updateMany` runs no validators, so the schema's own
+      `min: 0, max: 100` on salePercentage and `min: 0` on price and stock are
+      not enforced on this path at all.
+
+      A negative percentage is the one that costs money rather than merely
+      looking wrong. `salePrice` is `price * (1 - salePercentage / 100)`, so
+      `salePercentage: -50` prices the product at 150% of list — and the
+      checkout reads that same virtual, so the customer is charged it. Above
+      100 gives a negative price; a negative `stock` puts a product below zero
+      with nothing to sell; `minOrderQty: 0` is a minimum that cannot be met.
+    */
+    const NUMERIC_BOUNDS = {
+      price: { min: 0, integer: false, label: "Price cannot be negative." },
+      stock: { min: 0, integer: true, label: "Stock cannot be negative." },
+      salePercentage: {
+        min: 0,
+        max: 100,
+        integer: false,
+        label: "Sale percentage has to be between 0 and 100.",
+      },
+      minOrderQty: {
+        min: 1,
+        integer: true,
+        label: "Minimum order quantity has to be at least 1.",
+      },
+    };
+    for (const [key, rule] of Object.entries(NUMERIC_BOUNDS)) {
+      if (sanitized[key] === undefined) continue;
+      const value = Number(sanitized[key]);
+      if (
+        !Number.isFinite(value) ||
+        value < rule.min ||
+        (rule.max !== undefined && value > rule.max) ||
+        (rule.integer && !Number.isInteger(value))
+      ) {
+        return res.status(400).json({ success: false, message: rule.label });
+      }
+      sanitized[key] = value;
+    }
+
+    /*
+      And a sale that is switched on has to discount something. `saleActive`
+      with a zero percentage puts a "Sale" badge on a product and strikes
+      through a price identical to the one beside it — the shop advertising a
+      saving of nothing.
+    */
+    if (sanitized.saleActive === true) {
+      const pct =
+        sanitized.salePercentage !== undefined ? Number(sanitized.salePercentage) : undefined;
+      if (pct !== undefined && pct <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "A sale needs a percentage above 0. Leave it off instead.",
+        });
+      }
     }
 
     const result = await Product.updateMany(
@@ -1061,7 +1193,12 @@ export const filterProducts = controllerWrapper(
       page = 1,
       limit = 20,
     } = req.query;
-    let query = {};
+    /*
+      Public, so it starts from what is for sale rather than from everything.
+      This was `{}` — the filter page listed archived products, deactivated
+      ones, and vendors' products still waiting on approval.
+    */
+    let query = { isActive: true, deleted: { $ne: true }, approvalStatus: "approved" };
     if (category) query.category = await categoryFilterValue(category);
     if (brand) query.brand = brand;
     if (store) query.store = store;

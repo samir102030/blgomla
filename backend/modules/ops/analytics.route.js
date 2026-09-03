@@ -15,7 +15,7 @@ import {
 // Cross-module: event capture/insights live in the (future) engagement module.
 import { createEvent, getInsights } from "../../controllers/event.controller.js";
 import { getBacklog } from "./backlog.controller.js";
-import { protectRoute, requirePermission } from "../../middleware/auth.middleware.js";
+import { protectRoute, adminRoute, requirePermission } from "../../middleware/auth.middleware.js";
 import { translateResponse } from "../../middleware/translation.middleware.js";
 
 const router = express.Router();
@@ -57,10 +57,24 @@ router.get("/revenue-breakdown", requirePermission("analytics.view"), translateR
 // Get sales trend data
 router.get("/sales-trend", requirePermission("analytics.view"), translateResponse, getSalesTrend);
 
-// ── Phase 5: Admin Analytics ──
-router.get("/payments", requirePermission("analytics.view"), translateResponse, getPaymentAnalytics);
+/*
+  Phase 5: Admin Analytics — and admin is now enforced on two of the three.
+
+  `analytics.view` is in STORE_PERMISSIONS, because a vendor needs their own
+  dashboard. But unlike the handlers around them, `getPaymentAnalytics` and
+  `getCustomerAnalytics` have no store branch: the first returns the last
+  twenty paid orders across the whole shop with each customer's name, email
+  and transaction id plus the shop's total takings, and the second the top ten
+  spenders by name and email. Neither is meaningfully scopeable to one vendor
+  — they are questions about the platform — so they are gated rather than
+  filtered. A vendor's own numbers are on `/stores/statistics`.
+
+  `/inventory-alerts` keeps the permission: it already filters to the
+  vendor's own stores.
+*/
+router.get("/payments", adminRoute, requirePermission("analytics.view"), translateResponse, getPaymentAnalytics);
 router.get("/inventory-alerts", requirePermission("analytics.view"), translateResponse, getInventoryAlerts);
-router.get("/customers", requirePermission("analytics.view"), translateResponse, getCustomerAnalytics);
+router.get("/customers", adminRoute, requirePermission("analytics.view"), translateResponse, getCustomerAnalytics);
 
 // ── Visitor Analytics ──
 import {

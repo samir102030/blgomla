@@ -36,7 +36,7 @@ export const exportProducts = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    const buffer = buildProductExport(products);
+    const buffer = await buildProductExport(products);
     const stamp = new Date().toISOString().slice(0, 10);
 
     res.setHeader(
@@ -63,7 +63,7 @@ export const downloadTemplate = async (req, res) => {
   try {
     const templateType = req.query.templateType === 'simple' ? 'simple' : 'full';
     console.log('Generating template for user:', req.user?.email, 'type:', templateType);
-    const buffer = generateProductTemplate(templateType);
+    const buffer = await generateProductTemplate(templateType);
     console.log('Template generated, buffer size:', buffer.length);
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -183,7 +183,7 @@ export const bulkUploadProducts = async (req, res) => {
     }
 
     // Parse Excel file
-    const products = parseProductExcel(req.file.buffer, templateType);
+    const products = await parseProductExcel(req.file.buffer, templateType);
 
     /*
       Which product fields this particular sheet is entitled to change.
@@ -325,11 +325,43 @@ export const bulkUploadProducts = async (req, res) => {
           naming a product should revive it rather than fail on the unique
           index of a record nobody can see.
         */
+        const nameMatch = {
+          name: new RegExp(`^${String(productData.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
+        };
         const existing = productData.sku
           ? await Product.findOne({ sku: productData.sku })
-          : await Product.findOne({
-              name: new RegExp(`^${String(productData.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i'),
-            });
+          : await Product.findOne(nameMatch);
+
+        /*
+          A match that belongs to somebody else is not this vendor's to write.
+
+          The lookup above is deliberately catalogue-wide — SKUs are unique
+          across the shop and a name collision is worth knowing about — but the
+          update branch below then rewrote whatever it found. `store` is in the
+          `untouched` set, so the product stayed with its owner and simply took
+          the uploader's price, stock, description and images. A vendor whose
+          sheet carried a house-store SKU could put the shop's own product on
+          sale at one pound, and the summary would say "1 updated".
+
+          Refused per row rather than per file: the rest of the sheet is
+          probably fine, and an operator needs to know which line was rejected
+          and why.
+        */
+        if (
+          existing &&
+          store &&
+          existing.store &&
+          String(existing.store) !== String(store._id)
+        ) {
+          results.failed.push({
+            row: productData.rowNumber,
+            name: productData.name,
+            error: productData.sku
+              ? `SKU ${productData.sku} already belongs to another store's product.`
+              : `A product named "${productData.name}" already belongs to another store.`,
+          });
+          continue;
+        }
 
         // Prepare product object
         const newProduct = {

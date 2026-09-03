@@ -65,10 +65,20 @@ export const validateCreateOrder = validate([
     .custom((value) => mongoose.Types.ObjectId.isValid(value))
     .withMessage("Invalid product ID format"),
 
+  /*
+    `.toInt()` matters here, not just tidiness. `isInt` accepts the string
+    "1", and the controller pools duplicate lines with `quantity += quantity`
+    — so two lines of "1" for the same product became the string "11". That
+    then passed the stock check as eleven, decremented eleven units and bumped
+    soldCount by eleven, while the saved order lines still said 1 and 1. A
+    later cancellation gave two back, and nine units vanished from the shelf.
+    Any customer could do that to any product.
+  */
   body("orderItems.*.quantity")
     .optional()
     .isInt({ min: 1 })
-    .withMessage("Quantity must be at least 1"),
+    .withMessage("Quantity must be at least 1")
+    .toInt(),
 
   body("collectionItems")
     .optional()
@@ -83,7 +93,8 @@ export const validateCreateOrder = validate([
   body("collectionItems.*.quantity")
     .optional()
     .isInt({ min: 1 })
-    .withMessage("Quantity must be at least 1"),
+    .withMessage("Quantity must be at least 1")
+    .toInt(),
 
   body("shippingAddress")
     .custom((value) => mongoose.Types.ObjectId.isValid(value))

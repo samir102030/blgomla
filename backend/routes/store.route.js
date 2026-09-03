@@ -35,6 +35,7 @@ import {
   protectRoute,
   adminOrStoreRoute,
   storeRoute,
+  adminOrPermission,
 } from "../middleware/auth.middleware.js";
 import { translateResponse } from "../middleware/translation.middleware.js";
 import {
@@ -88,13 +89,36 @@ router.post(
   ]),
   registerVendor
 ); // Register new vendor
-router.get("/vendors", protectRoute, translateResponse, getAllVendors); // Get all vendors (admin only)
+/*
+  The vendor roster and one vendor's record.
+
+  Both sat behind `protectRoute` alone, and `getVendorById` had no check of
+  its own — so any signed-in account, a shopper included, could ask for
+  `/stores/vendors/<id>` and be handed the store document whole: the four
+  files under `documents` (commercial registration, tax card, national ID,
+  bank statement), every field of `payoutDetails` (IBAN or account number,
+  bank name, InstaPay handle, wallet number), and the owner's name, email and
+  phone from the populate. Vendor ids are not secret — they appear in product
+  and order payloads — so this was a list anyone with an account could walk.
+
+  These are the same fields kept out of the public store endpoints by
+  PUBLIC_STORE_FIELDS. That projection closed the front door; this was the
+  side one.
+*/
+router.get(
+  "/vendors",
+  protectRoute,
+  adminOrPermission("vendors.view"),
+  translateResponse,
+  getAllVendors
+);
 router.get(
   "/vendors/:vendorId",
   protectRoute,
+  adminOrPermission("vendors.view"),
   translateResponse,
   getVendorById
-); // Get vendor by ID
+);
 router.put("/vendors/:vendorId/approve", protectRoute, approveVendor); // Approve vendor
 router.put("/vendors/:vendorId/reject", protectRoute, rejectVendor); // Reject vendor
 router.put("/vendors/:vendorId/suspend", protectRoute, suspendVendor); // Suspend vendor

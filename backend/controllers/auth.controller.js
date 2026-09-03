@@ -57,6 +57,57 @@ const secretsMatch = (a, b) => {
 // themselves straight to super_admin.
 const PRIVILEGED_ROLES = ["admin", "super_admin"];
 
+/*
+  The only roles a person may put on their own account at registration.
+
+  The old test was `role !== "admin"`, which reads like a guard and is not
+  one: it blocks exactly one string. `validateSignup` never looks at `role`,
+  the schema has no enum so any custom role key is accepted, and the schema's
+  `lowercase` setter means even "Admin" would have landed as `admin` had the
+  comparison been case-sensitive the other way. So the registration form —
+  open to anyone on the internet — would mint a `super_admin` for whoever
+  typed it into the request body, and email them the code to verify it.
+
+  A whitelist rather than a blacklist, because the set of roles that are safe
+  to self-assign is two and the set that is not is open-ended: every role
+  Roles & Access will ever create belongs on the other side of this line.
+*/
+const SELF_ASSIGNABLE_ROLES = ["customer", "store"];
+
+/*
+  The schema stores `role` trimmed and lower-cased. A guard that compares the
+  raw value is therefore checking a different string from the one that gets
+  written: `"super_admin "` is not in PRIVILEGED_ROLES, passes, and is saved
+  as `super_admin`. Normalise on the way in so the guard and the write agree.
+*/
+const normaliseRole = (value) => String(value ?? "").trim().toLowerCase();
+
+/*
+  Whether this account is one the shop cannot afford to lose.
+
+  Both privileged roles plus vendors: a compromised `store` account can alter
+  prices and publish products, which is not the same blast radius as an admin
+  but is not a customer's either.
+*/
+const shouldUseTwoFactor = (user) =>
+  PRIVILEGED_ROLES.includes(user?.role) || user?.role === "store";
+
+/*
+  Whether a privileged account without 2FA is *refused*, as opposed to nagged.
+
+  Off unless `REQUIRE_ADMIN_2FA` is set, and that default is the whole point.
+  Turning enforcement on before the people it applies to have enrolled locks
+  them out of the dashboard, and the first person it would lock out is
+  whoever is reading this — there is no second admin to let them back in.
+
+  So the sequence is: ship this, enrol, confirm the recovery codes are saved,
+  then set the variable. Until then every login still reports
+  `twoFactorRecommended` so the dashboard can ask, which is the part that
+  actually gets people enrolled.
+*/
+const twoFactorEnforced = () =>
+  String(process.env.REQUIRE_ADMIN_2FA ?? "").toLowerCase() === "true";
+
 const guardSuperAdminMutation = async (targetUserId, actor) => {
   const targetUser = await User.findById(targetUserId);
   if (!targetUser) {
@@ -73,6 +124,18 @@ const guardSuperAdminMutation = async (targetUserId, actor) => {
 export const signup = controllerWrapper("signup", async (req, res) => {
   const { email, password, name, phoneNumber, role, storeDescription, referralCode, deliveryAddress } =
     req.body;
+
+  // Anything outside the whitelist silently becomes a customer rather than a
+  // 400: the field is not on any form we ship, so a request carrying one is
+  // either a mistake or an attempt, and neither deserves an error message
+  // that confirms which roles exist.
+  // `typeof` first: an array coerces to its joined contents, so `["store"]`
+  // would otherwise pass the whitelist. It happens to be harmless here, but a
+  // guard that depends on which shapes coerce favourably is not a guard.
+  const requestedRole = typeof role === "string" ? normaliseRole(role) : "";
+  const signupRole = SELF_ASSIGNABLE_ROLES.includes(requestedRole)
+    ? requestedRole
+    : "customer";
 
   if (await User.findOne({ email: emailMatch(email) }))
     return res
@@ -105,7 +168,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
     lang,
     verificationToken,
     verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-    role: role !== "admin" ? role || "customer" : "customer", // default to customer
+    role: signupRole,
     referredBy,
     lastLogin: new Date(),
     active: true, // Set active to true by default
@@ -142,7 +205,7 @@ export const signup = controllerWrapper("signup", async (req, res) => {
   }
 
   let store;
-  if (role === "store") {
+  if (signupRole === "store") {
     store = new Store({
       name: user.name,
       owner: user._id,
@@ -313,7 +376,7 @@ export const verifyEmail = controllerWrapper(
     // 2FA is enabled — those users must complete the second factor flow
     // through /login, not via this endpoint.
     if (!user.twoFactorEnabled) {
-      generateTokensAndSetCookies(res, user._id);
+      generateTokensAndSetCookies(res, user._id, user.tokenVersion ?? 0);
     }
 
     res.status(200).json({
@@ -341,11 +404,11 @@ export const login = controllerWrapper("login", async (req, res) => {
   let user;
   if (email) {
     user = await User.findOne({ email: emailMatch(email) })
-      .select("+totpSecret")
+      .select("+totpSecret +twoFactorRecoveryCodes")
       .populate("love");
   } else if (phone) {
     user = await User.findOne({ phoneNumber: phone })
-      .select("+totpSecret")
+      .select("+totpSecret +twoFactorRecoveryCodes")
       .populate("love");
   }
   if (!user) {
@@ -406,6 +469,13 @@ export const login = controllerWrapper("login", async (req, res) => {
     });
   }
 
+  /*
+    Set only when a recovery code was spent, so the response can tell the
+    person how many they have left. Silence on a normal login is deliberate —
+    the count is not news unless one has just been used.
+  */
+  let remainingRecoveryCodes;
+
   // Optional second factor. If the user has enrolled in TOTP, require a
   // valid code before issuing cookies. Front-end signals enrollment by
   // first POSTing without totpCode (gets a 401 + code:"TOTP_REQUIRED"),
@@ -420,23 +490,71 @@ export const login = controllerWrapper("login", async (req, res) => {
     }
     const { verifyTOTP } = await import("../utils/totp.js");
     if (!verifyTOTP(user.totpSecret, totpCode)) {
-      logAudit(
-        req,
-        "auth.login_failed",
-        "auth",
-        user._id,
-        { email: user.email, reason: "totp_invalid" },
-        { status: "failure", severity: "warning", category: "security", actor: user }
+      /*
+        Not the app's code — so try it as a recovery code before refusing.
+
+        This is the path that exists for the phone that fell in the sea. It
+        is deliberately the same field on the same form: someone locked out
+        is not in a state to hunt for a second input, and the two code shapes
+        (six digits versus `a1b2-c3d4`) cannot be mistaken for each other.
+
+        The code is spent whether or not the rest of the login succeeds,
+        which is the correct way round — a code that has been transmitted
+        should not be reusable, and there are nine more.
+      */
+      const { consumeRecoveryCode, countUnusedRecoveryCodes } = await import(
+        "../utils/recoveryCodes.js"
       );
-      return res.status(401).json({
-        success: false,
-        code: "TOTP_INVALID",
-        message: "Invalid authenticator code.",
-      });
+      const index = consumeRecoveryCode(user.twoFactorRecoveryCodes, totpCode);
+      if (index === -1) {
+        logAudit(
+          req,
+          "auth.login_failed",
+          "auth",
+          user._id,
+          { email: user.email, reason: "totp_invalid" },
+          { status: "failure", severity: "warning", category: "security", actor: user }
+        );
+        return res.status(401).json({
+          success: false,
+          code: "TOTP_INVALID",
+          message: "Invalid authenticator code.",
+        });
+      }
+      user.twoFactorRecoveryCodes[index].usedAt = new Date();
+      user.markModified("twoFactorRecoveryCodes");
+      await user.save();
+      remainingRecoveryCodes = countUnusedRecoveryCodes(user.twoFactorRecoveryCodes);
+      // Worth a security-category line of its own: a recovery code being spent
+      // is either the owner in trouble or somebody who found the printout.
+      logAudit(req, "auth.2fa_recovery_used", "auth", user._id,
+        { email: user.email, remaining: remainingRecoveryCodes },
+        { severity: "warning", category: "security", actor: user });
     }
   }
 
-  generateTokensAndSetCookies(res, user._id);
+  /*
+    A privileged account with no second factor.
+
+    When enforcement is off — the default — this only sets a flag the
+    dashboard can act on, and the login proceeds exactly as before. When it is
+    on, the account is refused with an answer that says what to do rather than
+    just "no".
+  */
+  const twoFactorRecommended = shouldUseTwoFactor(user) && !user.twoFactorEnabled;
+  if (twoFactorRecommended && twoFactorEnforced()) {
+    logAudit(req, "auth.login_blocked_no_2fa", "auth", user._id,
+      { email: user.email, role: user.role },
+      { status: "failure", severity: "warning", category: "security", actor: user });
+    return res.status(403).json({
+      success: false,
+      code: "TWO_FACTOR_REQUIRED_SETUP",
+      message:
+        "This account needs two-factor authentication before it can sign in. Ask an administrator to enrol it, or turn REQUIRE_ADMIN_2FA off to sign in and enrol yourself.",
+    });
+  }
+
+  generateTokensAndSetCookies(res, user._id, user.tokenVersion ?? 0);
 
   user.lastLogin = new Date();
   await user.save();
@@ -449,10 +567,13 @@ export const login = controllerWrapper("login", async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Logged in successfully",
+    ...(remainingRecoveryCodes !== undefined ? { remainingRecoveryCodes } : {}),
+    ...(twoFactorRecommended ? { twoFactorRecommended: true } : {}),
     user: {
       ...user._doc,
       password: undefined,
       totpSecret: undefined,
+      twoFactorRecoveryCodes: undefined,
       permissions: await getUserPermissions(user),
       store:
         user.role === "store"
@@ -502,14 +623,45 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
   const acceptLang = String(req.headers["accept-language"] || "").toLowerCase();
   const lang = acceptLang.startsWith("ar") ? "ar" : "en";
 
+  // Deleted rows are excluded: a soft-deleted account keeps its row, and
+  // before the deletion fix above it kept its `googleId` too — so this found
+  // the dead account, issued cookies for it, and every request afterwards
+  // answered "Account is inactive or deleted".
   let user = await User.findOne({
     $or: [{ googleId }, { email: emailMatch(email) }],
+    deleted: { $ne: true },
   });
 
   if (user) {
     let dirty = false;
+    /*
+      Linking to an account that was never verified retires its password.
+
+      The pre-hijack: somebody registers with your address and a password of
+      their choosing. They cannot use it — the account is unverified — so it
+      sits there. You later sign in with Google, this matches you by email,
+      flips `isVerified` to true, and hands you the account. It is now a
+      working account with their password still on it, and they can sign in
+      beside you and read every order and address you add.
+
+      Nothing is lost by clearing it: an unverified password has never been
+      used to sign in, and its owner — if they were genuine — can set one
+      through the reset flow, which does prove the address.
+    */
     if (!user.googleId) { user.googleId = googleId; dirty = true; }
-    if (!user.isVerified) { user.isVerified = true; dirty = true; }
+    if (!user.isVerified) {
+      if (user.password) {
+        user.password = undefined;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpiresAt = undefined;
+        user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+        logAudit(req, "auth.unverified_password_cleared", "user", user._id,
+          { email: user.email, reason: "google_link_to_unverified_account" },
+          { target: user, severity: "warning", category: "security" });
+      }
+      user.isVerified = true;
+      dirty = true;
+    }
     if (!user.profilePicture && picture) { user.profilePicture = picture; dirty = true; }
     if (!user.name && name) { user.name = name; dirty = true; }
     user.lastLogin = new Date();
@@ -532,6 +684,8 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
     );
   }
 
+  let remainingRecoveryCodes;
+
   // Second factor, mirroring the password login flow: the client re-posts the
   // same Google credential together with the 6-digit code. Previously this
   // branch returned TOTP_REQUIRED but the handler accepted no code, so anyone
@@ -545,25 +699,60 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
       });
     }
     const { verifyTOTP } = await import("../utils/totp.js");
-    const enrolled = await User.findById(user._id).select("+totpSecret");
+    const enrolled = await User.findById(user._id).select("+totpSecret +twoFactorRecoveryCodes");
     if (!verifyTOTP(enrolled?.totpSecret, totpCode)) {
-      logAudit(
-        req,
-        "auth.login_failed",
-        "auth",
-        user._id,
-        { email: user.email, reason: "totp_invalid", method: "google" },
-        { status: "failure", severity: "warning", category: "security", actor: user }
+      // Same fallback as the password path — see the comment there.
+      const { consumeRecoveryCode, countUnusedRecoveryCodes } = await import(
+        "../utils/recoveryCodes.js"
       );
-      return res.status(401).json({
-        success: false,
-        code: "TOTP_INVALID",
-        message: "Invalid authenticator code.",
-      });
+      const index = consumeRecoveryCode(enrolled?.twoFactorRecoveryCodes, totpCode);
+      if (index === -1) {
+        logAudit(
+          req,
+          "auth.login_failed",
+          "auth",
+          user._id,
+          { email: user.email, reason: "totp_invalid", method: "google" },
+          { status: "failure", severity: "warning", category: "security", actor: user }
+        );
+        return res.status(401).json({
+          success: false,
+          code: "TOTP_INVALID",
+          message: "Invalid authenticator code.",
+        });
+      }
+      enrolled.twoFactorRecoveryCodes[index].usedAt = new Date();
+      enrolled.markModified("twoFactorRecoveryCodes");
+      await enrolled.save();
+      remainingRecoveryCodes = countUnusedRecoveryCodes(enrolled.twoFactorRecoveryCodes);
+      logAudit(req, "auth.2fa_recovery_used", "auth", user._id,
+        { email: user.email, remaining: remainingRecoveryCodes, method: "google" },
+        { severity: "warning", category: "security", actor: user });
     }
   }
 
-  generateTokensAndSetCookies(res, user._id);
+  /*
+    A privileged account with no second factor.
+
+    When enforcement is off — the default — this only sets a flag the
+    dashboard can act on, and the login proceeds exactly as before. When it is
+    on, the account is refused with an answer that says what to do rather than
+    just "no".
+  */
+  const twoFactorRecommended = shouldUseTwoFactor(user) && !user.twoFactorEnabled;
+  if (twoFactorRecommended && twoFactorEnforced()) {
+    logAudit(req, "auth.login_blocked_no_2fa", "auth", user._id,
+      { email: user.email, role: user.role },
+      { status: "failure", severity: "warning", category: "security", actor: user });
+    return res.status(403).json({
+      success: false,
+      code: "TWO_FACTOR_REQUIRED_SETUP",
+      message:
+        "This account needs two-factor authentication before it can sign in. Ask an administrator to enrol it, or turn REQUIRE_ADMIN_2FA off to sign in and enrol yourself.",
+    });
+  }
+
+  generateTokensAndSetCookies(res, user._id, user.tokenVersion ?? 0);
 
   logAudit(req, "auth.login", "auth", user._id, { method: "google" }, {
     actor: user,
@@ -573,10 +762,13 @@ export const googleSignIn = controllerWrapper("googleSignIn", async (req, res) =
   return res.status(200).json({
     success: true,
     message: "Signed in with Google",
+    ...(remainingRecoveryCodes !== undefined ? { remainingRecoveryCodes } : {}),
+    ...(twoFactorRecommended ? { twoFactorRecommended: true } : {}),
     user: {
       ...user._doc,
       password: undefined,
       totpSecret: undefined,
+      twoFactorRecoveryCodes: undefined,
       permissions: await getUserPermissions(user),
       store:
         user.role === "store"
@@ -606,7 +798,7 @@ export const refreshToken = controllerWrapper(
     // days, so without this check a deleted or deactivated account could keep
     // minting fresh sessions for a week after being locked out. (Admin-window
     // expiry is enforced per-request by protectRoute.)
-    const user = await User.findById(userId).select("active deleted");
+    const user = await User.findById(userId).select("active deleted tokenVersion");
     if (!user || user.deleted || !user.active) {
       clearAuthCookies(res);
       return res.status(401).json({
@@ -616,7 +808,21 @@ export const refreshToken = controllerWrapper(
     }
 
     // Generate new access token
-    const newAccessToken = generateToken(userId, "5h");
+    /*
+      The refresh cookie is the long-lived one — seven days — so this is the
+      endpoint a stolen session actually lives on. A refresh token minted
+      before the account's last revocation is refused here rather than being
+      exchanged for another five hours of access.
+    */
+    if ((req.refreshTokenPayload?.tokenVersion ?? 0) !== (user.tokenVersion ?? 0)) {
+      return res.status(401).json({
+        success: false,
+        code: "SESSION_REVOKED",
+        message: "This session has ended. Please sign in again.",
+      });
+    }
+
+    const newAccessToken = generateToken(userId, "5h", user.tokenVersion ?? 0);
 
     res.cookie("accessToken", newAccessToken, {
       ...authCookieOptions(),
@@ -682,6 +888,16 @@ export const resetPassword = controllerWrapper(
     }
 
     user.password = password;
+    /*
+      Every session this account had stops here.
+
+      This is the endpoint somebody reaches when they believe their password
+      is in the wrong hands, and until now it changed the password and left
+      the attacker's refresh cookie working for the rest of its seven days.
+      Resetting a password that has been used against you has to end the
+      sessions it opened, or it is not a remedy.
+    */
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiresAt = undefined;
     await user.save();
@@ -785,12 +1001,15 @@ export const updateUser = controllerWrapper("updateUser", async (req, res) => {
         message: "Access denied - changing a role requires the users.role permission",
       });
     }
-    if (PRIVILEGED_ROLES.includes(String(filteredData.role).toLowerCase())) {
+    const wantedRole = normaliseRole(filteredData.role);
+    if (PRIVILEGED_ROLES.includes(wantedRole)) {
       return res.status(400).json({
         success: false,
         message: `Cannot change role to ${filteredData.role}`,
       });
     }
+    // Write what was checked, not what was sent.
+    filteredData.role = wantedRole;
   }
 
   const updatedUser = await User.findByIdAndUpdate(userId, filteredData, {
@@ -1047,7 +1266,8 @@ export const changeUserRole = controllerWrapper(
   async (req, res) => {
   const { userId } = req.params;
   const { role } = req.body;
-  if (PRIVILEGED_ROLES.includes(String(role).toLowerCase()))
+  const wantedRole = normaliseRole(role);
+  if (PRIVILEGED_ROLES.includes(wantedRole))
     return res.status(400).json({ message: `Cannot change role to ${role}` });
   if (!userId || !role)
       return res.status(400).json({ message: "User ID and role are required" });
@@ -1058,7 +1278,7 @@ export const changeUserRole = controllerWrapper(
   const user = guard.targetUser;
 
   const previousRole = user.role;
-  user.role = role;
+  user.role = wantedRole;
   await user.save();
 
     logAudit(req, "user.role_changed", "user", user._id, {}, {
@@ -1437,6 +1657,9 @@ export const changePassword = controllerWrapper(
 
     // Update password
     user.password = newPassword;
+    // Same as the reset above: changing a password ends the sessions the old
+    // one opened, including on any device the person no longer has.
+    user.tokenVersion = (user.tokenVersion ?? 0) + 1;
     await user.save();
 
     logAudit(req, "user.password_changed", "user", user._id, {}, {
@@ -1541,7 +1764,7 @@ export const updateProfile = controllerWrapper(
 
 export const setup2FA = controllerWrapper("setup2FA", async (req, res) => {
   const userId = req.user._id;
-  const user = await User.findById(userId).select("+totpSecret");
+  const user = await User.findById(userId).select("+totpSecret +twoFactorRecoveryCodes");
   if (!user) {
     return res.status(404).json({ success: false, message: "User not found" });
   }
@@ -1576,7 +1799,7 @@ export const enable2FA = controllerWrapper("enable2FA", async (req, res) => {
   if (!code) {
     return res.status(400).json({ success: false, message: "Code is required" });
   }
-  const user = await User.findById(userId).select("+totpSecret");
+  const user = await User.findById(userId).select("+totpSecret +twoFactorRecoveryCodes");
   if (!user || !user.totpSecret) {
     return res.status(400).json({
       success: false,
@@ -1587,6 +1810,21 @@ export const enable2FA = controllerWrapper("enable2FA", async (req, res) => {
   if (!verifyTOTP(user.totpSecret, code)) {
     return res.status(400).json({ success: false, message: "Invalid code" });
   }
+
+  /*
+    Recovery codes are issued here and nowhere else in the enrolment flow,
+    because here is the only moment we know the authenticator actually works.
+    Issuing them at /2fa/setup would hand out ten ways into an account that has
+    not yet produced a single valid code.
+
+    Returned in plaintext exactly once. Only hashes are stored, so this
+    response cannot be reconstructed from the database afterwards — if the
+    person closes the tab without saving them, the way back is
+    /2fa/recovery-codes, which costs a password and a live code.
+  */
+  const { generateRecoveryCodes } = await import("../utils/recoveryCodes.js");
+  const { plain, records } = generateRecoveryCodes();
+  user.twoFactorRecoveryCodes = records;
   user.twoFactorEnabled = true;
   await user.save();
   logAudit(req, "user.2fa_enabled", "user", user._id, {}, {
@@ -1597,8 +1835,68 @@ export const enable2FA = controllerWrapper("enable2FA", async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "Two-factor authentication enabled.",
+    recoveryCodes: plain,
+    recoveryCodesNotice:
+      "Save these somewhere safe. Each one signs you in once if you lose your authenticator app, and they are not shown again.",
   });
 });
+
+/**
+ * A fresh set of recovery codes, replacing whatever is there.
+ *
+ * Costs a password and a live authenticator code — the same price as turning
+ * 2FA off — because a stranger at an unlocked laptop who could mint new codes
+ * would keep a way back in long after the laptop was locked again.
+ *
+ * Replaces rather than appends: someone asking for new codes has usually lost
+ * track of the old ones, and leaving those live would defeat the request.
+ */
+export const regenerateRecoveryCodes = controllerWrapper(
+  "regenerateRecoveryCodes",
+  async (req, res) => {
+    const { password, code } = req.body;
+    if (!password || !code) {
+      return res.status(400).json({
+        success: false,
+        message: "Current password and current authenticator code are both required.",
+      });
+    }
+    const user = await User.findById(req.user._id).select(
+      "+password +totpSecret +twoFactorRecoveryCodes"
+    );
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (!user.twoFactorEnabled) {
+      return res.status(400).json({
+        success: false,
+        message: "Two-factor authentication is not enabled on this account.",
+      });
+    }
+    if (!(await user.comparePassword(password))) {
+      return res.status(400).json({ success: false, message: "Invalid password" });
+    }
+    const { verifyTOTP } = await import("../utils/totp.js");
+    if (!verifyTOTP(user.totpSecret, code)) {
+      return res.status(400).json({ success: false, message: "Invalid code" });
+    }
+
+    const { generateRecoveryCodes } = await import("../utils/recoveryCodes.js");
+    const { plain, records } = generateRecoveryCodes();
+    user.twoFactorRecoveryCodes = records;
+    await user.save();
+    logAudit(req, "user.2fa_recovery_regenerated", "user", user._id, {}, {
+      target: user,
+      severity: "warning",
+      category: "security",
+    });
+    return res.status(200).json({
+      success: true,
+      message: "New recovery codes issued. The previous set no longer works.",
+      recoveryCodes: plain,
+    });
+  }
+);
 
 export const disable2FA = controllerWrapper("disable2FA", async (req, res) => {
   const userId = req.user._id;
@@ -1609,7 +1907,7 @@ export const disable2FA = controllerWrapper("disable2FA", async (req, res) => {
       message: "Current password and current authenticator code are both required.",
     });
   }
-  const user = await User.findById(userId).select("+totpSecret");
+  const user = await User.findById(userId).select("+totpSecret +twoFactorRecoveryCodes");
   if (!user) {
     return res.status(404).json({ success: false, message: "User not found" });
   }
@@ -1623,6 +1921,13 @@ export const disable2FA = controllerWrapper("disable2FA", async (req, res) => {
   }
   user.twoFactorEnabled = false;
   user.totpSecret = undefined;
+  // Turning the second factor off is a downgrade in how well this account is
+  // protected, so the sessions opened while it was on do not carry over.
+  user.tokenVersion = (user.tokenVersion ?? 0) + 1;
+  // The codes exist to stand in for the secret, so they die with it. Leaving
+  // them behind would mean a printout still opened an account whose owner
+  // believes they have turned the second factor off.
+  user.twoFactorRecoveryCodes = [];
   await user.save();
   logAudit(req, "user.2fa_disabled", "user", user._id, {}, {
     target: user,
@@ -1682,19 +1987,40 @@ export const deleteMyAccount = controllerWrapper("deleteMyAccount", async (req, 
   }
 
   const ts = Date.now();
-  // Anonymise all PII — keep the document so relational data stays intact.
+  /*
+    Anonymise all PII — keep the document so relational data stays intact.
+
+    `$unset` rather than `undefined`. Mongoose drops undefined keys when it
+    casts an update, so the previous version of this sent Mongo nothing but
+    `{email, name, cart, love, pushSubscriptions, deleted, active}` and the
+    phone number, profile picture, Google id and referral code all survived a
+    deletion whose own comment says it removes them.
+
+    The Google id mattered twice over: it stayed matchable, so the person's
+    next "Sign in with Google" found the dead row, was issued cookies, and
+    then got 403 on every request — with no way to make a fresh account for
+    that identity either.
+  */
   await User.findByIdAndUpdate(req.user._id, {
-    email: `deleted_${ts}@deleted.invalid`,
-    name: "Deleted User",
-    phoneNumber: undefined,
-    profilePicture: undefined,
-    googleId: undefined,
-    cart: [],
-    love: [],
-    pushSubscriptions: [],
-    referralCode: undefined,
-    deleted: true,
-    active: false,
+    $set: {
+      email: `deleted_${ts}@deleted.invalid`,
+      name: "Deleted User",
+      cart: [],
+      love: [],
+      pushSubscriptions: [],
+      deleted: true,
+      active: false,
+      // Ends every session this account had open.
+      tokenVersion: (user.tokenVersion ?? 0) + 1,
+    },
+    $unset: {
+      phoneNumber: 1,
+      profilePicture: 1,
+      googleId: 1,
+      referralCode: 1,
+      totpSecret: 1,
+      twoFactorRecoveryCodes: 1,
+    },
   });
 
   // Cancel any open orders so stock is not held indefinitely.

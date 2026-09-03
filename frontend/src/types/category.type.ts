@@ -5,7 +5,21 @@ export interface Category {
   description?: string;
   descriptionAr?: string;
   image?: string;
-  parentCategory?: string | Category; // ObjectId as string or populated Category
+  /*
+    An id, a populated category, or null.
+
+    `null` is what a root category actually carries — it is the schema's
+    default, and every list response says so — and it is also the value the
+    editor sends to clear a parent. Leaving it out of the type meant the one
+    assignment that promotes a subcategory back to a department did not
+    typecheck, which is a fair warning about a value the API returns on most
+    of its rows.
+
+    Every reader here already handles it: they test the value for truthiness
+    before deciding whether it is an id or an object, which is necessary
+    anyway because `typeof null` is `"object"`.
+  */
+  parentCategory?: string | Category | null;
   subCategories?: Category[];
   productCount?: number;
   isActive: boolean;

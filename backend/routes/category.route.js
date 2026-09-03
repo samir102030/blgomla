@@ -13,6 +13,7 @@ import {
   safeDeleteCategory,
   setCategoryToProduct,
   updateCategory,
+  moveCategoryProducts,
 } from "../controllers/category.controller.js";
 import {
   getCategoryAudit,
@@ -136,7 +137,27 @@ router.put("/:categoryId", protectRoute, requirePermission("categories.manage"),
 router.delete("/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, deleteCategory);
 router.put("/safeDelete/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, safeDeleteCategory);
 router.put("/restore/:categoryId", protectRoute, requirePermission("categories.manage"), invalidate, restoreCategory);
-router.put("/setCategoryToProduct/:productId", protectRoute, requirePermission("categories.manage"), setCategoryToProduct);
+router.put("/setCategoryToProduct/:productId", protectRoute, requirePermission("categories.manage"), invalidate, setCategoryToProduct);
+
+/*
+  Move a whole category's products into another category.
+
+  The dashboard's modal for this has existed all along and had nowhere to post
+  to. It sends `dryRun: true` first to fill in the confirmation's count, then
+  the same body without it to perform the move, so both go through one handler
+  and the number shown is the number that moves.
+
+  Behind `invalidate` like every other write here: the products change
+  department, so the menu counts, the category pages and the home rails are all
+  answering with the old arrangement until the cache is cleared.
+*/
+router.post(
+  "/:categoryId/move-products",
+  protectRoute,
+  requirePermission("categories.manage"),
+  invalidate,
+  moveCategoryProducts
+);
 
 // Nested resource lookups
 router.get("/products/:categoryId", getProductsByCategory);

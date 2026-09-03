@@ -477,7 +477,33 @@ export const updateProgramSettings = controllerWrapper("updateProgramSettings", 
   if (typeof enabled === "boolean") program.enabled = enabled;
   if (discount && typeof discount === "object") {
     if (discount.type) program.discount.type = discount.type;
-    if (discount.value !== undefined) program.discount.value = discount.value;
+    if (discount.value !== undefined) {
+      /*
+        A percentage cannot exceed 100.
+
+        The field is a percentage as often as it is an amount, and had a floor
+        of zero and no ceiling. Typing 150 where 15 was meant gives
+        `subtotal * 1.5`, which `studentDiscountOn` then clamps to the
+        subtotal — so nothing errors, nothing goes negative, and every
+        verified student's order simply comes to zero until somebody notices.
+        A fixed amount has no such ceiling: 5,000 EGP off is a real offer.
+      */
+      const value = Number(discount.value);
+      const type = discount.type || program.discount.type;
+      if (!Number.isFinite(value) || value < 0) {
+        return res.status(400).json({
+          success: false,
+          message: "The discount value has to be a number of at least 0.",
+        });
+      }
+      if (type === "percentage" && value > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "A percentage discount cannot be more than 100.",
+        });
+      }
+      program.discount.value = value;
+    }
     program.discount.maximumDiscount = discount.maximumDiscount ?? undefined;
     if (discount.minimumPurchase !== undefined) program.discount.minimumPurchase = discount.minimumPurchase;
   }

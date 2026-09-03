@@ -14,7 +14,7 @@ import {
   subscribePush,
   unsubscribePush,
 } from "../controllers/notification.controller.js";
-import { protectRoute } from "../middleware/auth.middleware.js";
+import { protectRoute, adminRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -37,8 +37,18 @@ router.put("/:id/read", markAsRead);
 router.put("/mark-all-read", markAllAsRead);
 router.delete("/:id", deleteNotification);
 
-// Admin routes (additional routes for admin functionality)
-router.get("/admin/all", getAllNotifications);
-router.post("/admin/create", createNotification);
+/*
+  Admin routes — which is what they were called and not what they were.
+
+  `router.use(protectRoute)` above is the only guard the file had, so any
+  signed-in customer could read every user's notifications (`/admin/all`
+  populates the recipient's name, email and role, so it is an order and
+  approval history for the whole shop) and post a notification to anybody —
+  which the model's `post("save")` hook then delivers as a web push to that
+  person's devices. A convincing "Action required" arriving on an
+  administrator's phone from a customer account is a phishing primitive.
+*/
+router.get("/admin/all", adminRoute, getAllNotifications);
+router.post("/admin/create", adminRoute, createNotification);
 
 export default router;

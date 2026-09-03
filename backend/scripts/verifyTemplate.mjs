@@ -9,13 +9,19 @@
  *   node scripts/verifyTemplate.mjs
  */
 import { readFileSync } from "fs";
-import XLSX from "xlsx";
+/*
+   The ExcelJS shim, not the `xlsx` package — which commit 6 removed from
+   package.json without moving this file, so CI has been red since. Its `read`
+   and `write` are async, hence the awaits below; `.mjs` gives us top-level
+   await, so nothing here needed restructuring.
+ */
+import XLSX from "../utils/xlsxCompat.js";
 import { generateProductTemplate, parseProductExcel } from "../utils/excelTemplate.js";
 import { PRODUCT_EXPORT_HEADERS, buildProductExport } from "../utils/productExport.js";
 
 for (const variant of ["full", "simple"]) {
-  const buffer = generateProductTemplate(variant);
-  const wb = XLSX.read(buffer, { type: "buffer" });
+  const buffer = await generateProductTemplate(variant);
+  const wb = await XLSX.read(buffer, { type: "buffer" });
   const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
   const header = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {
     header: 1,
@@ -28,7 +34,7 @@ for (const variant of ["full", "simple"]) {
   console.log(`example rows: ${rows.length}`);
   console.log(`  row 1 name: ${rows[0]?.["Product Name"]}`);
 
-  const parsed = parseProductExcel(buffer, variant);
+  const parsed = await parseProductExcel(buffer, variant);
   const first = parsed.products?.[0] ?? parsed[0];
   console.log(
     `parsed back: ${(parsed.products ?? parsed).length} products, ` +
@@ -62,8 +68,8 @@ const wide = XLSX.utils.json_to_sheet([
 ]);
 const wideBook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wideBook, wide, "Products");
-const wideParsed = parseProductExcel(
-  XLSX.write(wideBook, { type: "buffer", bookType: "xlsx" }),
+const wideParsed = await parseProductExcel(
+  await XLSX.write(wideBook, { type: "buffer", bookType: "xlsx" }),
   "full"
 );
 const p = (wideParsed.products ?? wideParsed)[0];
@@ -125,7 +131,7 @@ const sample = {
 
 // parseProductExcel answers with either { products } or a bare array depending
 // on the variant, the same way the printing pass above has to cope with.
-const parsedExport = parseProductExcel(buildProductExport([sample]), "full");
+const parsedExport = await parseProductExcel(await buildProductExport([sample]), "full");
 const roundTripped = (parsedExport.products ?? parsedExport)[0];
 
 if (!roundTripped) {
