@@ -16,7 +16,11 @@
  */
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import XLSX from "xlsx";
+/*
+  The ExcelJS shim, not the `xlsx` package — commit 6 took that off
+  package.json. Its readers are async, so the calls below gained an `await`.
+*/
+import XLSX from "../utils/xlsxCompat.js";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import Product from "../models/product.model.js";
@@ -35,7 +39,7 @@ if (!file || (!dry && !args.includes("--confirm"))) {
 const IMAGE_COLUMNS = ["Image URL 1", "Image URL 2", "Image URL 3", "Image URL 4"];
 const norm = (v) => String(v ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 
-const workbook = XLSX.readFile(file);
+const workbook = await XLSX.readFile(file);
 const sheet = workbook.Sheets.Products || workbook.Sheets[workbook.SheetNames[0]];
 const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 console.log(`sheet rows: ${rows.length}`);

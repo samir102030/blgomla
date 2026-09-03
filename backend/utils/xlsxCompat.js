@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { readFile as fsReadFile, writeFile as fsWriteFile } from "node:fs/promises";
 
 /**
  * The small part of SheetJS this codebase actually used, backed by ExcelJS.
@@ -17,10 +18,18 @@ import ExcelJS from "exceljs";
  * mattered.
  *
  * The surface below is not a general SheetJS emulation and should not grow
- * into one. It is the six calls this repository made, plus the two internals
- * it reached for — `sheet["!cols"]` and `workbook.Sheets[name]` — so that
- * `excelTemplate.js`, `categoryExcel.js`, `studentCatalogExcel.js` and
+ * into one. It is the calls this repository actually makes, plus the two
+ * internals it reached for — `sheet["!cols"]` and `workbook.Sheets[name]` — so
+ * that `excelTemplate.js`, `categoryExcel.js`, `studentCatalogExcel.js` and
  * `productExport.js` keep their shape and only their `await`s change.
+ *
+ * That list was short by three when this shim was first written, because the
+ * grep behind it passed `--include=*.js --include=*.jsx` and five scripts
+ * under `scripts/` are `.mjs` or `.cjs`. CI found them: `verifyTemplate.mjs`
+ * runs on every push and had been importing a package that was no longer in
+ * `package.json`. `readFile`, `writeFile` and `sheet_to_json`'s `defval` are
+ * theirs, and they are here rather than reimplemented per script so there is
+ * one definition of what these calls mean.
  *
  * The one difference callers must care about: **`write` and `read` are
  * async.** ExcelJS has no synchronous buffer path, and pretending otherwise
@@ -86,7 +95,9 @@ const isBlank = (v) => v === undefined || v === null || v === "";
  *
  * Two shapes, both of which the callers use:
  *   - default — an array of objects keyed by the header row, empty cells
- *     omitted, fully-empty rows dropped.
+ *     omitted, fully-empty rows dropped. `defval` fills the empty cells
+ *     instead of omitting them, which is what the migration scripts pass so
+ *     that `row["Some Column"]` is a string rather than `undefined`.
  *   - `{ header: 1 }` — an array of arrays, the raw grid. `range` is a
  *     starting row offset, and `studentCatalogExcel.js` uses
  *     `{ header: 1, range: 0 }[0]` to read the header row on its own.
@@ -101,6 +112,7 @@ export const sheet_to_json = (sheet, opts = {}) => {
 
   const [head = [], ...body] = grid;
   const keys = head.map((h) => (isBlank(h) ? "" : String(h).trim()));
+  const hasDefault = "defval" in opts;
   const out = [];
   for (const row of body) {
     if (row.every(isBlank)) continue;
@@ -108,10 +120,17 @@ export const sheet_to_json = (sheet, opts = {}) => {
     keys.forEach((key, i) => {
       if (!key) return;
       const v = row[i];
-      if (isBlank(v)) return;
+      if (isBlank(v)) {
+        if (hasDefault) obj[key] = opts.defval;
+        return;
+      }
       obj[key] = v;
     });
-    if (Object.keys(obj).length) out.push(obj);
+    // Without a default an all-blank row builds an empty object and is
+    // dropped by this test; with one it builds a full object of defaults, so
+    // the same question has to be asked of the row instead. The `every(isBlank)`
+    // guard above already covers it, and this keeps the two in agreement.
+    if (hasDefault || Object.keys(obj).length) out.push(obj);
   }
   return out;
 };
@@ -188,6 +207,21 @@ export const read = async (fileBuffer) => {
   return out;
 };
 
+/**
+ * A workbook off disk, and a workbook onto it.
+ *
+ * SheetJS's `readFile`/`writeFile` are synchronous and take a path. These take
+ * the same argument and do the same thing, asynchronously, for the same reason
+ * `read` and `write` are async: ExcelJS has no synchronous buffer path.
+ *
+ * Only the migration scripts under `scripts/` use these — the server never
+ * touches the filesystem for a workbook, it works from an upload buffer.
+ */
+export const readFile = async (path) => read(await fsReadFile(path));
+
+export const writeFile = async (workbook, path) =>
+  fsWriteFile(path, await write(workbook));
+
 export const utils = { book_new, json_to_sheet, book_append_sheet, sheet_to_json };
 
-export default { utils, read, write };
+export default { utils, read, write, readFile, writeFile };

@@ -4,7 +4,11 @@
  */
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import XLSX from "xlsx";
+/*
+  The ExcelJS shim, not the `xlsx` package — commit 6 took that off
+  package.json. Its readers are async, so the calls below gained an `await`.
+*/
+import XLSX from "../utils/xlsxCompat.js";
 dotenv.config({ path: "C:\\Users\\Crafted\\blgomla\\backend\\.env" });
 
 import Category from "../models/category.model.js";
@@ -45,7 +49,7 @@ const sheetOf = async (url, sheetName) => {
   const res = await fetch(url, { headers: { cookie } });
   if (res.status !== 200) return { status: res.status, rows: [], headers: [] };
   const buf = Buffer.from(await res.arrayBuffer());
-  const wb = XLSX.read(buf, { type: "buffer" });
+  const wb = await XLSX.read(buf, { type: "buffer" });
   const ws = wb.Sheets[sheetName || wb.SheetNames[0]];
   return {
     status: 200,
