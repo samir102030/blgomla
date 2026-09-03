@@ -72,5 +72,14 @@ notificationSchema.post("save", function (doc) {
   }).catch(() => {});
 });
 
+/*
+  The three queries this collection actually serves — the list, the unread
+  count and mark-all-read — all filter on `{ user, deleted, read }` and sort on
+  `createdAt`. None of that was indexed, so the notification bell's count,
+  which the header polls on every page load, was a collection scan that grows
+  with every order event for every user.
+*/
+notificationSchema.index({ user: 1, deleted: 1, read: 1, createdAt: -1 });
+
 const Notification = mongoose.model("Notification", notificationSchema);
 export default Notification;

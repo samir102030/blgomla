@@ -213,8 +213,57 @@ export const subscribePush = controllerWrapper("subscribePush", async (req, res)
   if (!endpoint || !keys?.p256dh || !keys?.auth) {
     return res.status(400).json({ success: false, message: "Invalid subscription" });
   }
+
+  /*
+    The endpoint is a URL this server will POST to, on its own initiative,
+    every time the account gets a notification — and it was whatever string
+    the client sent. That is a blind SSRF with a trigger the caller controls:
+    register `http://169.254.169.254/...` or an address on the deploy's own
+    network and the server delivers to it forever.
+
+    Only the real push services, only over https.
+  */
+  let host;
+  try {
+    const url = new URL(String(endpoint));
+    if (url.protocol !== "https:") throw new Error("not https");
+    host = url.hostname.toLowerCase();
+  } catch {
+    return res.status(400).json({ success: false, message: "Invalid subscription" });
+  }
+  const PUSH_HOSTS = [
+    "fcm.googleapis.com",              // Chrome, Edge, Android
+    "updates.push.services.mozilla.com", // Firefox
+    "web.push.apple.com",              // Safari
+    "wns2-.*\\.notify\\.windows\\.com",  // legacy Windows
+  ];
+  const allowed = PUSH_HOSTS.some((h) =>
+    h.includes("*") || h.includes("\\.") ? new RegExp(`^${h}$`).test(host) : host === h
+  );
+  if (!allowed) {
+    return res.status(400).json({ success: false, message: "Unsupported push service" });
+  }
+
+  /*
+    One entry per endpoint, newest keys win, ten devices at most.
+
+    `$addToSet` was wrong in both directions. It only dedupes byte-identical
+    objects, so the same browser re-registering with rotated keys — which is
+    what a service worker does — added a second entry for the same device;
+    and there was no ceiling, so the array grew on the user document without
+    bound and every notification fanned out across all of it.
+
+    `$pull` then `$push` rather than one operation, because Mongo will not
+    take both on the same field in a single update. Two round trips on an
+    action that happens once per browser per subscription renewal.
+  */
   await User.findByIdAndUpdate(req.user._id, {
-    $addToSet: { pushSubscriptions: { endpoint, keys } },
+    $pull: { pushSubscriptions: { endpoint } },
+  });
+  await User.findByIdAndUpdate(req.user._id, {
+    $push: {
+      pushSubscriptions: { $each: [{ endpoint, keys }], $slice: -10 },
+    },
   });
   res.json({ success: true });
 });

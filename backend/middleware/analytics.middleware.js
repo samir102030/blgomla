@@ -107,10 +107,24 @@ export const trackVisitor = async (req, res, next) => {
       }
     }
 
-    // Upsert visitor record — add page visit to existing session or create new
+    /*
+      Not awaited, and the trail is bounded.
+
+      Two problems with the old shape. Every `GET /api/products`,
+      `/categories`, `/brands` and `/collections` — the storefront's hottest
+      reads — waited on a Mongo write before the handler ran, so a page of
+      products cost an extra round trip for a number nobody reads in real
+      time.
+
+      And `$push` had no ceiling on an array keyed by a cookie the client
+      supplies. A crawler replaying one `visitorSession` value adds a row per
+      request for ever; the document grows toward the 16 MB limit and then
+      every write for that session fails, silently, in the catch below.
+      `$slice: -200` keeps the most recent visits and drops the rest.
+    */
     const pageVisit = { path, timestamp: new Date() };
 
-    await Visitor.findOneAndUpdate(
+    Visitor.findOneAndUpdate(
       { sessionId },
       {
         $set: {
@@ -127,10 +141,10 @@ export const trackVisitor = async (req, res, next) => {
           referrer: req.headers.referer || req.headers.referrer || "",
           user: req.user?._id || null,
         },
-        $push: { pagesVisited: pageVisit },
+        $push: { pagesVisited: { $each: [pageVisit], $slice: -200 } },
       },
-      { upsert: true, new: true }
-    );
+      { upsert: true }
+    ).catch((err) => console.error("Visitor tracking failed:", err.message));
   } catch (error) {
     // Don't let tracking errors break the request
     console.error("Visitor tracking error:", error.message);
