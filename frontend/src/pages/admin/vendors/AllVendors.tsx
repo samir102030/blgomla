@@ -11,7 +11,7 @@ const AllVendors: React.FC = () => {
     loading,
     fetchVendors,
     updateVendorStatus,
-    deleteVendor
+    safeDeleteVendor
   } = useVendorStore();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -42,7 +42,7 @@ const AllVendors: React.FC = () => {
   const handleDeleteVendor = async (vendorId: string) => {
     if (window.confirm(t("allVendors.messages.deleteConfirm"))) {
       try {
-        await deleteVendor(vendorId);
+        await safeDeleteVendor(vendorId);
         toast.success(t("vendorManagement.messages.deleteSuccess"));
       } catch (error) {
         toast.error(t("vendorManagement.messages.deleteError"));

@@ -34,7 +34,6 @@ interface VendorStore {
   activateVendor: (id: string) => Promise<void>;
   updateVendorStatus: (id: string, status: string) => Promise<void>;
   updateVendor: (id: string, data: Partial<Vendor>) => Promise<void>;
-  deleteVendor: (id: string) => Promise<void>;
   safeDeleteVendor: (id: string) => Promise<void>;
   restoreVendor: (id: string) => Promise<void>;
 
@@ -378,28 +377,15 @@ export const useVendorStore = create<VendorStore>()(
         }
       },
 
-      // Delete Vendor
-      deleteVendor: async (id: string) => {
-        set({ loading: true, error: undefined });
-        try {
-          await axiosInstance.delete(`/stores/vendors/${id}`);
+      /*
+        `deleteVendor` used to sit here, calling DELETE /stores/vendors/:id.
 
-          const { vendors } = get();
-          const updatedVendors = vendors.filter((v) => v._id !== id);
-
-          set({ vendors: updatedVendors, loading: false });
-        } catch (error: any) {
-          set({
-            error: error?.response?.data?.message || error.message,
-            loading: false,
-          });
-          // Rethrown so the caller's catch can run. Without this the action
-          // resolved on failure, every page `await`ed it inside a try/catch
-          // whose catch could never fire, and the success toast showed on a
-          // 403 — see the note at the top of this file.
-          throw error;
-        }
-      },
+        No such route was ever registered, so every call 404'd — and two admin
+        screens had a Delete button wired to it. They use `safeDeleteVendor`
+        now, which is what the third screen was already doing and what the
+        shop actually wants: a hard delete would leave a vendor's products and
+        orders pointing at nothing.
+      */
 
       // Safe Delete Vendor
       safeDeleteVendor: async (id: string) => {
