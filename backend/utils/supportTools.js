@@ -22,6 +22,9 @@ import { getShippingSettings } from "../models/shippingSettings.model.js";
  * differ only in a hamza, a dotted yaa or a taa marbuta are folded together
  * before anything is matched against them.
  */
+/** Where a link the assistant hands out has to point. */
+const SITE_URL = (process.env.SITE_URL || "https://belgmla.com").replace(/\/+$/, "");
+
 export const normalizeArabic = (text) =>
   String(text || "")
     .toLowerCase()
@@ -227,11 +230,22 @@ export const searchProducts = async (query, { limit = 5, strict = false } = {}) 
     return query.lean();
   };
 
+  /**
+   * `url` is built here rather than left to the caller.
+   *
+   * The assistant is asked for a link a dozen times a day and the product
+   * page is keyed by id, not slug — so a model asked to compose the link
+   * from a slug produces a plausible URL that 404s. Handing it the finished
+   * link is the difference between a customer tapping through and a customer
+   * deciding the shop is broken.
+   */
   const shape = (rows) =>
     rows.map((p) => ({
+      id: String(p._id),
       name: p.name,
       nameAr: p.nameAr || "",
       slug: p.slug,
+      url: `${SITE_URL}/product/${p._id}`,
       brand: p.brand?.name || "",
       price: money(p.price),
       salePrice: p.salePercentage ? money(p.price * (1 - p.salePercentage / 100)) : null,

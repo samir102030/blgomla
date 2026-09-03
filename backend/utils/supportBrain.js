@@ -427,7 +427,13 @@ const TOOL_SPECS = [
   },
 ];
 
-const runTool = async (name, input, user) => {
+/**
+ * `extras` is how a caller adds a tool of its own without this file learning
+ * about it. The website assistant passes none; the social channels pass the
+ * two that only make sense in a chat somebody can be handed out of — taking
+ * an order down, and fetching a human.
+ */
+const runTool = async (name, input, user, extras = {}) => {
   switch (name) {
     case "recent_orders":
       return recentOrders(user, { limit: 5 });
@@ -438,11 +444,15 @@ const runTool = async (name, input, user) => {
     case "shipping_facts":
       return shippingFacts(input?.governorate);
     default:
-      return { error: "unknown tool" };
+      break;
   }
+
+  const extra = extras[name];
+  if (typeof extra === "function") return extra(input || {});
+  return { error: "unknown tool" };
 };
 
-const systemPrompt = (user, lang) =>
+const systemPrompt = (user, lang, extra = "") =>
   [
     "You are the support assistant for Belgomla, an Egyptian IT and networking shop.",
     "Answer only from the tools. Never invent a price, a stock level, a delivery time or an order status — call the tool and report what it returns.",
@@ -454,13 +464,26 @@ const systemPrompt = (user, lang) =>
       ? `The customer is signed in as ${user.name}. Order tools will only ever return their own orders.`
       : "Nobody is signed in, so no order can be looked up. If they ask about an order, ask them to sign in.",
     "Keep replies to a few lines. Do not use headings or bullet lists.",
-  ].join(" ");
+    extra,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
 /**
  * One call, then as many tool round-trips as the model asks for, capped so a
  * confused model cannot spend the shop's budget in a loop.
  */
-const answerWithModel = async ({ text, user, history = [], lang = "ar" }) => {
+const answerWithModel = async ({
+  text,
+  user,
+  history = [],
+  lang = "ar",
+  extraTools = [],
+  systemExtra = "",
+}) => {
+  const tools = [...TOOL_SPECS, ...extraTools.map((t) => t.spec)];
+  const extras = Object.fromEntries(extraTools.map((t) => [t.spec.name, t.run]));
+
   const messages = [
     ...history.slice(-8).map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
@@ -480,8 +503,8 @@ const answerWithModel = async ({ text, user, history = [], lang = "ar" }) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 700,
-        system: systemPrompt(user, lang),
-        tools: TOOL_SPECS,
+        system: systemPrompt(user, lang, systemExtra),
+        tools,
         messages,
       }),
     });
@@ -509,7 +532,7 @@ const answerWithModel = async ({ text, user, history = [], lang = "ar" }) => {
         toolUses.map(async (use) => ({
           type: "tool_result",
           tool_use_id: use.id,
-          content: JSON.stringify(await runTool(use.name, use.input, user)),
+          content: JSON.stringify(await runTool(use.name, use.input, user, extras)),
         }))
       ),
     });
@@ -521,10 +544,24 @@ const answerWithModel = async ({ text, user, history = [], lang = "ar" }) => {
 
 /* ───────────────────────────────── entry ───────────────────────────────── */
 
-export const answer = async ({ text, user, history, lang = "ar" }) => {
+export const answer = async ({
+  text,
+  user,
+  history,
+  lang = "ar",
+  extraTools = [],
+  systemExtra = "",
+}) => {
   if (hasModel()) {
     try {
-      const fromModel = await answerWithModel({ text, user, history, lang });
+      const fromModel = await answerWithModel({
+        text,
+        user,
+        history,
+        lang,
+        extraTools,
+        systemExtra,
+      });
       if (fromModel.text) {
         return { ...fromModel, handoff: false, suggestions: [] };
       }

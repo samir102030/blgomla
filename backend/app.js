@@ -6,6 +6,7 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import connectDB from "./config/db.js";
 import systemRoutes from "./routes/system.route.js";
+import socialWebhookRoutes from "./routes/socialWebhook.route.js";
 import { CLIENT_ORIGINS } from "./utils/socket.js";
 import { trackVisitor } from "./middleware/analytics.middleware.js";
 import { comingSoonGate } from "./middleware/comingSoon.middleware.js";
@@ -131,7 +132,23 @@ app.use(
   }),
 );
 
-app.use(express.json({ limit: "10mb" }));
+/**
+ * Keep the bytes, not just the parsed object.
+ *
+ * Meta signs the webhook body with the app secret, and the signature is over
+ * exactly what was sent. `JSON.parse` followed by `JSON.stringify` does not
+ * reproduce it — key order, unicode escapes and whitespace all move — so the
+ * only way to check the signature is to hold on to the original buffer while
+ * it is still in hand. Costs nothing for every other route.
+ */
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
@@ -162,6 +179,21 @@ app.get("/api/v1/health", async (req, res) => {
     ts: new Date().toISOString(),
   });
 });
+
+/**
+ * Social webhooks — WhatsApp, Instagram, Messenger, TikTok.
+ *
+ * Mounted here, above the rate limiter and the coming-soon gate, because none
+ * of those three middlewares is meant for machine callers: the limiter would
+ * 429 Meta on a busy evening and Meta answers a 429 by disabling the
+ * subscription, the gate would hand the verification GET a splash page, and
+ * the visitor tracker would file Meta's servers as shoppers. Authenticity is
+ * checked inside, per request, against the app secret.
+ *
+ * The routes open their own DB connection, so they do not need the ensureDB
+ * middleware further down either.
+ */
+app.use("/api/social", socialWebhookRoutes);
 
 /*
   The image migration gets its own ceiling.

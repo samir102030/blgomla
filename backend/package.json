@@ -6,7 +6,8 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "getpics": "node scripts/imageHoard.mjs",
-    "movepics": "node scripts/imageCourier.mjs --from-cache"
+    "movepics": "node scripts/imageCourier.mjs --from-cache",
+    "test:social": "node --experimental-test-module-mocks scripts/socialSmokeTest.mjs"
   },
   "engines": {
     "node": ">=20"
