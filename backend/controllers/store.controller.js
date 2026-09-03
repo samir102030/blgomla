@@ -384,14 +384,17 @@ export const registerVendor = controllerWrapper(
 export const getAllVendors = controllerWrapper(
   "getAllVendors",
   async (req, res) => {
-    // Only admin can access this
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
+    /*
+      Authorisation is the route's now — `adminOrPermission("vendors.view")`.
 
+      The inline test that stood here was `role === "admin" || "super_admin"`,
+      which is not the same question as "may this account see vendors": it
+      admitted no custom staff role however Roles & Access was configured, so
+      the Vendors permission group in that screen decided nothing. It also sat
+      on only two of the vendor endpoints, which is how `getVendorById` came
+      to have no check at all. One guard, on the route, where it can be read
+      off the route table.
+    */
     const { page, limit, status } = req.query;
     let query = Store.find().populate("owner", "name email phoneNumber");
 
@@ -1133,11 +1136,22 @@ export const deactivateStore = controllerWrapper(
 export const getStoreDashboard = controllerWrapper(
   "getStoreDashboard",
   async (req, res) => {
-    // Example: return basic stats
+    /*
+      Scoped, and no longer the whole document.
+
+      This is behind `adminOrStoreRoute`, which admits every approved vendor,
+      and it looked up whatever `:id` it was given. So one vendor could read
+      another's store record entire — the four files under `documents`, all of
+      `payoutDetails` — by putting a competitor's id in the URL. Vendor ids
+      travel in ordinary product payloads, so finding one took no effort.
+
+      `storeForRequest` answers with the caller's own store, or with any store
+      for platform staff, and treats an id that is not theirs as "not found"
+      rather than "not yours".
+    */
     const { id } = req.params;
-    const store = await Store.findById(id);
+    const { store } = await storeForRequest(req, id);
     if (!store) return res.status(404).json({ message: "Store not found" });
-    // Add your own dashboard logic here
     res.json({ success: true, dashboard: { store } });
   }
 );

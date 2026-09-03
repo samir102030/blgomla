@@ -193,6 +193,45 @@ export const requirePermission = (keys) => {
   };
 };
 
+/**
+ * Staff by role, or anyone the Roles & Access screen has granted the key.
+ *
+ * `requirePermission` alone would be the obvious guard, but the role documents
+ * in the database are seeded with `$setOnInsert` and never updated, so a
+ * permission added to the catalogue after that first seed is missing from the
+ * stored `admin` role — and `getUserPermissions` prefers the stored list. A
+ * bare `requirePermission("vendors.view")` would therefore have a real chance
+ * of locking the shop's own administrators out of the vendors page on deploy,
+ * which is a worse outcome than the hole it closes.
+ *
+ * So: the built-in admin roles pass on their role, exactly as they do today,
+ * and everyone else passes only by holding the permission. Nothing that works
+ * now stops working; what changes is that a customer or a vendor no longer
+ * reaches these routes at all.
+ */
+export const adminOrPermission = (keys) => {
+  const list = Array.isArray(keys) ? keys : [keys];
+  return async (req, res, next) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, message: "Unauthorized" });
+      }
+      if (["admin", "super_admin"].includes(req.user.role)) return next();
+      for (const key of list) {
+        if (await userCan(req.user, key)) return next();
+      }
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied - missing permission" });
+    } catch (error) {
+      console.log("Error in adminOrPermission middleware", error.message);
+      return res
+        .status(500)
+        .json({ success: false, message: "Authorization check failed" });
+    }
+  };
+};
+
 // Aliases for compatibility with route imports
 export const verifyToken = protectRoute;
 export const customerRoute = roleRoute("customer");
