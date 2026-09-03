@@ -182,10 +182,23 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       return;
     }
 
+    /*
+      `null`, not `undefined`, for "no parent".
+
+      `undefined` does not survive the trip: JSON.stringify drops the key, so
+      the request body arrived without `parentCategory` at all and the server
+      had nothing to act on. Setting a parent worked; clearing one silently
+      did not. A subcategory could never be promoted back to a department —
+      the select would show "No parent", the save would report success, and
+      the row would reappear under its old parent on the next refresh.
+
+      `null` is a value, survives serialisation, and is the schema's own
+      default for a root category.
+    */
     const submitData = {
       ...formData,
       image: imageUrl || formData.image,
-      parentCategory: formData.parentCategory || undefined,
+      parentCategory: formData.parentCategory || null,
     };
 
     // The store catches save failures and parks the reason in `error` rather

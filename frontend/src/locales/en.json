@@ -1559,6 +1559,7 @@
   "categories.inMenu": "Shown",
   "categories.hiddenFromMenu": "Hidden",
   "categories.addSubcategory": "Add subcategory",
+  "categories.moveProducts": "Move products",
   "categories.expandAll": "Expand all",
   "categories.collapseAll": "Collapse all",
   "categories.colActions": "Actions",

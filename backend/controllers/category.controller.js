@@ -2,8 +2,13 @@ import Category from "../models/category.model.js";
 import { ANY_AUDIENCE, isElectronicsCategory } from "../utils/electronicsVisibility.js";
 import Product from "../models/product.model.js";
 import { controllerWrapper } from "../utils/wrappers.js";
+import { clearStorefrontCaches } from "../utils/storefrontCache.js";
 import { findByName } from "../utils/findOrCreateByName.js";
-import { categoryFilterValue, wouldCreateCycle } from "../utils/categoryTree.js";
+import {
+  categoryFilterValue,
+  collectCategoryIds,
+  wouldCreateCycle,
+} from "../utils/categoryTree.js";
 
 // Create Category
 export const createCategory = controllerWrapper(
@@ -194,7 +199,55 @@ export const updateCategory = controllerWrapper(
       }
     }
 
-    Object.assign(category, req.body);
+    /*
+      An explicit list, rather than `Object.assign(category, req.body)`.
+
+      Two of this document's fields are not opinions the caller is entitled to:
+      `subCategories` is the denormalised mirror of everybody else's
+      `parentCategory` and is maintained below, and `deleted` has its own pair
+      of endpoints with their own refusals — `safeDeleteCategory` counts what
+      sits under a category before letting it go. A body that happened to carry
+      either would have gone straight in: send back a category object you read
+      from `GET /categories/:id` with one child edited out of its
+      `subCategories`, and the parent forgets that child while the child still
+      names the parent. The tree then reads differently depending on which side
+      you walk it from, which is the one failure a restructure cannot afford,
+      because it does not surface until something is already missing from the
+      shop.
+
+      Nothing legitimate is lost: every field the dashboard actually edits is
+      on this list.
+    */
+    const EDITABLE = [
+      "name",
+      "nameAr",
+      "description",
+      "descriptionAr",
+      "image",
+      "icon",
+      "metaTitle",
+      "metaDescription",
+      "sortOrder",
+      "isActive",
+      "showInMenu",
+      "parentCategory",
+    ];
+    for (const field of EDITABLE) {
+      if (!(field in req.body)) continue;
+      /*
+        "" and null both mean "no parent" and must both clear it.
+
+        The modal sends null, which is a value and survives JSON; an empty
+        string is what a <select> hands over if it ever reaches here directly.
+        Casting "" to an ObjectId throws, so it is normalised rather than
+        passed on.
+      */
+      if (field === "parentCategory") {
+        category.parentCategory = req.body.parentCategory || null;
+        continue;
+      }
+      category[field] = req.body[field];
+    }
     await category.save();
 
     const newParent = category.parentCategory?.toString();
@@ -341,15 +394,171 @@ export const getProductsByCategory = controllerWrapper(
   }
 );
 
+/**
+ * Move every product filed under one category into another.
+ *
+ * The dashboard has had the screen for this since before I got here — the
+ * modal picks a target, offers to include subcategories, and asks for a count
+ * before it writes anything. What it never had was somewhere to send the
+ * request: nothing on the server answered `POST
+ * /categories/:id/move-products`, so the count read "Could not read the
+ * count", the button stayed disabled, and no page imported the component at
+ * all. Recategorising a catalogue meant opening products one at a time.
+ *
+ * `dryRun` is the same call with the write left off, so the number in the
+ * confirmation is the number of documents the move will actually touch rather
+ * than a separate query that could disagree with it.
+ */
+export const moveCategoryProducts = controllerWrapper(
+  "moveCategoryProducts",
+  async (req, res) => {
+    const { categoryId } = req.params;
+    const {
+      targetCategoryId,
+      includeSubcategories = true,
+      dryRun = false,
+    } = req.body;
+
+    if (!targetCategoryId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Choose a category to move into" });
+    }
+    if (String(targetCategoryId) === String(categoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: "That is the category the products are already in",
+      });
+    }
+
+    const [source, target] = await Promise.all([
+      Category.findById(categoryId).lean(),
+      Category.findById(targetCategoryId).lean(),
+    ]);
+    if (!source || source.deleted) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
+    }
+    if (!target || target.deleted) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Target category not found" });
+    }
+
+    // Which categories the products are coming out of. Without subcategories
+    // this is the one; with them it is the whole branch, because a catalogue
+    // three levels deep files its products at the leaves and "move Laptops"
+    // meaning "move the nothing filed directly on Laptops" would be useless.
+    const fromIds = includeSubcategories
+      ? await collectCategoryIds(categoryId)
+      : [String(categoryId)];
+
+    // Moving a branch into its own descendant. Every product below the target
+    // would keep the category it has and everything else would land on top of
+    // it, so the result is neither "moved" nor "unchanged" — refusing says so
+    // instead of reporting a number that means neither.
+    if (fromIds.includes(String(targetCategoryId))) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "That category is inside the one you are moving from — pick a target outside it",
+      });
+    }
+
+    /*
+      The electronics branch does not mix with the rest of the catalogue.
+
+      Which section a product belongs to is `audience` on the product, not the
+      category it sits in, and this endpoint does not touch `audience`. So a
+      move across the boundary files products where nobody will find them:
+      electronics products dragged into an ordinary category stay hidden from
+      every ordinary listing — the operator moves two hundred products into
+      Cables and watches nothing appear — and ordinary products dragged into
+      the electronics branch start showing up in a section that is deliberately
+      kept apart from the shop.
+
+      Refusing is the honest answer, because the move the operator wants in
+      that case is a change of section, which is a different decision made in a
+      different place.
+    */
+    const [sourceInElectronics, targetInElectronics] = await Promise.all([
+      isElectronicsCategory(categoryId),
+      isElectronicsCategory(targetCategoryId),
+    ]);
+    if (sourceInElectronics !== targetInElectronics) {
+      return res.status(400).json({
+        success: false,
+        code: "CROSSES_SECTION",
+        message:
+          "One of these categories is in the electronics section and the other is not. Products cannot be moved across the two.",
+      });
+    }
+
+    const filter = { category: { $in: fromIds }, deleted: { $ne: true } };
+    const count = await Product.countDocuments(filter);
+
+    const targetSummary = {
+      _id: target._id,
+      name: target.name,
+      nameAr: target.nameAr || "",
+    };
+
+    if (dryRun) {
+      return res
+        .status(200)
+        .json({ success: true, count, target: targetSummary });
+    }
+
+    const result = await Product.updateMany(filter, {
+      $set: { category: target._id },
+    });
+
+    /*
+      Cleared again, after the write.
+
+      The route's `invalidate` middleware runs on the way in, which is the
+      pattern every write here follows and is fine when the write is one small
+      document. This one can shift thousands of products between departments,
+      and any read landing between the clear and the `updateMany` would refill
+      the category caches with the counts from before the move and hold them
+      for the full five minutes. Clearing once more when the write has actually
+      finished costs one map delete and removes the window.
+    */
+    clearStorefrontCaches("categories");
+
+    res.status(200).json({
+      success: true,
+      count,
+      moved: result.modifiedCount ?? 0,
+      target: targetSummary,
+    });
+  }
+);
+
 // Set Category to Product
 export const setCategoryToProduct = controllerWrapper(
   "setCategoryToProduct",
   async (req, res) => {
     const { productId } = req.params;
     const { categoryId } = req.body;
+
+    // The id was written straight onto the product without anyone asking
+    // whether it named a category. A stale id from a list left open in another
+    // tab, or a deleted one, filed the product under a category that no walk
+    // over the tree reaches: it stops appearing in its old department and
+    // never appears in a new one, and the only sign is a product that has
+    // quietly left the shop.
+    const category = await Category.findById(categoryId).select("_id deleted").lean();
+    if (!category || category.deleted) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Category not found" });
+    }
+
     const product = await Product.findByIdAndUpdate(
       productId,
-      { category: categoryId },
+      { category: category._id },
       { new: true }
     );
     if (!product)
