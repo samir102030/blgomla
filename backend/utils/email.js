@@ -8,7 +8,19 @@ const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "support@belgmla.com";
 // verification link most of all, which is the only way a new account can be
 // used. Set CLIENT_URL on every deployment: the fallback exists so a missing
 // variable doesn't produce `undefined/verify/...`, not because it is right.
-const CLIENT_URL = process.env.CLIENT_URL || "https://blgomla.vercel.app";
+/*
+  The first entry, because `app.js` reads this same variable as a
+  comma-separated CORS allow-list and splits it. Setting it to
+  "https://belgmla.com,https://www.belgmla.com" — the shape app.js invites —
+  made every link in every email
+  "https://belgmla.com,https://www.belgmla.com/reset-password/..." : the
+  verification link, the reset link, the order links, the logo. All broken,
+  silently, in the one channel where nobody sees the failure.
+*/
+const CLIENT_URL =
+  String(process.env.CLIENT_URL || "")
+    .split(",")[0]
+    .trim() || "https://blgomla.vercel.app";
 const API_URL =
   process.env.API_URL ||
   process.env.PUBLIC_API_URL ||

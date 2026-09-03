@@ -43,6 +43,7 @@ import { paginateQuery } from "../utils/pagination.js";
 const shortOrderId = (id) => String(id).slice(-8).toUpperCase();
 import {
   earnedPointsFor,
+  pointsToEgp,
   POINT_VALUE_EGP,
   REFERRER_REWARD,
   REFEREE_REWARD,
@@ -69,7 +70,28 @@ const processReferralReward = async (userId) => {
 const awardPointsForDelivery = async (orderId) => {
   const order = await Order.findById(orderId);
   if (!order || order.pointsAwarded) return;
-  const pts = earnedPointsFor(order.itemsPrice);
+  /*
+    Points on what the customer actually paid for the goods, not on the list
+    price of them.
+
+    This was `earnedPointsFor(order.itemsPrice)`, and `itemsPrice` is the gross
+    — the coupon, the student-programme discount and any points already spent
+    are all subtracted after it. So an order whose 1,000 EGP of goods came to
+    600 after a coupon still earned points on 1,000, and points redeemed for a
+    discount earned a fraction of themselves straight back. The shop paid a
+    reward on money it did not take.
+
+    Shipping, tax and fitting stay out, as they always have: none of them is
+    the customer buying stock.
+  */
+  const spentOnGoods =
+    (Number(order.itemsPrice) || 0) -
+    (Number(order.couponDiscount) || 0) -
+    (Number(order.studentDiscount) || 0) -
+    // `pointsRedeemed` is a count of points, not EGP — converting it is the
+    // difference between subtracting 200 pounds and subtracting 200 points.
+    pointsToEgp(order.pointsRedeemed);
+  const pts = earnedPointsFor(Math.max(0, spentOnGoods));
   const claimed = await Order.updateOne(
     { _id: orderId, pointsAwarded: { $ne: true } },
     { $set: { pointsAwarded: true, pointsEarned: pts } }

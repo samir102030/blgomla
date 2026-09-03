@@ -11,8 +11,25 @@ import { trackVisitor } from "./middleware/analytics.middleware.js";
 import { comingSoonGate } from "./middleware/comingSoon.middleware.js";
 import { captureException } from "./utils/sentry.js";
 import { MongoRateLimitStore } from "./utils/rateLimitStore.js";
+import { initSentry } from "./utils/sentry.js";
 
 dotenv.config();
+
+/*
+  Initialised here rather than only in `index.js`.
+
+  `index.js` is the local HTTP server. Vercel loads `api/index.js`, which
+  imports this file and never touches that one — so in production `initSentry`
+  was never called, `enabled` stayed false, and every `captureException` in
+  this file and in `wrappers.js` was a no-op. The comment in `wrappers.js`
+  says "Sentry gets the full stack" while the client gets a generic message;
+  in production nobody got either, and the only trace of a 500 was a line in
+  the Vercel log.
+
+  Idempotent, and it reads `SENTRY_DSN` itself, so calling it from both entry
+  points is safe and a deployment without the variable is unaffected.
+*/
+initSentry();
 
 // Cache the bootstrap promise (DB connect + role seed) so consecutive
 // requests on the same warm Lambda share the same handshake. Reset on

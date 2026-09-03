@@ -144,6 +144,12 @@ export const contactLimiter = rateLimit({
   max: 8,
   standardHeaders: true,
   legacyHeaders: false,
+  // The only limiter in this file that was left on the default memory store,
+  // which on Vercel means one counter per warm Lambda: the effective ceiling
+  // was `8 × live instances`, resetting whenever a container recycled. This
+  // is the sole write an anonymous stranger can perform, and every accepted
+  // message is both stored and mailed to the shop's inbox.
+  store: new MongoRateLimitStore({ prefix: "rl:contact" }),
   message: {
     success: false,
     message:
