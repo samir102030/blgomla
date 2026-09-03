@@ -113,16 +113,64 @@ export const getCategoryAudit = controllerWrapper(
       .select("_id name nameAr image parentCategory isActive")
       .lean();
 
+    /*
+      Which parents still exist.
+
+      Read separately, and including the deleted ones, because the question
+      this answers cannot be asked of the list above: a category whose parent
+      has been soft-deleted is still in that list, looking ordinary, and its
+      parent is not — so nothing in a pass over live rows alone can tell the
+      two apart from a category that simply sits at the root.
+
+      That state was reachable until the delete endpoint learned to refuse it.
+      A parent soft-deleted under the old behaviour left its children holding a
+      `parentCategory` that is no longer in any live list, and the two sides of
+      the shop then disagree about them: the dashboard walks down from the
+      roots and never arrives, so the whole branch vanishes from the tree,
+      while `getAllCategories` decides what is buried by walking *up* through
+      parents it can see — and it cannot see a deleted one — so the branch
+      stays live and keeps selling. The second half is the expensive one. An
+      operator who took a department down is still selling everything under it,
+      from a menu they believe is gone.
+
+      Refusing new ones does not find the old ones, which is what this is for.
+    */
+    const everyId = await Category.find({}).select("_id deleted").lean();
+    const liveIds = new Set(
+      everyId.filter((c) => c.deleted !== true).map((c) => String(c._id))
+    );
+    const knownIds = new Set(everyId.map((c) => String(c._id)));
+
     const direct = await directCounts();
     const kids = childrenOf(categories);
     const inBranch = branchCounter(direct, kids);
 
     const needsImage = [];
     const empty = [];
+    const orphans = [];
 
     for (const category of categories) {
       const id = String(category._id);
       const held = inBranch(id);
+
+      // Checked before the two below, and without `continue`, because an
+      // orphan can also be empty or missing a picture and the operator needs
+      // to know it is detached whichever else is true of it.
+      const parentId = category.parentCategory ? String(category.parentCategory) : null;
+      if (parentId && !liveIds.has(parentId)) {
+        orphans.push({
+          _id: id,
+          name: category.name,
+          nameAr: category.nameAr || "",
+          products: held,
+          children: (kids.get(id) || []).length,
+          isActive: category.isActive !== false,
+          // The two cases read differently. A deleted parent is a category
+          // somebody took down and can restore; an id that names nothing is
+          // data damage, and the fix is to give this one a new parent.
+          reason: knownIds.has(parentId) ? "its parent was deleted" : "its parent does not exist",
+        });
+      }
 
       if (held === 0) {
         empty.push({
@@ -153,6 +201,11 @@ export const getCategoryAudit = controllerWrapper(
         categories: categories.length,
         needsImage: needsImage.length,
         empty: empty.length,
+        // Sorted by what is still on sale underneath, so the branch that is
+        // costing the most is the first row rather than the alphabetical one.
+        orphans: orphans.length,
+        orphanProducts: orphans.reduce((sum, o) => sum + o.products, 0),
+        orphanList: orphans.sort((a, b) => b.products - a.products),
         needsImageList: needsImage,
         emptyList: empty,
       },

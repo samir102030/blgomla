@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ExclamationTriangleIcon,
   EyeSlashIcon,
   PhotoIcon,
   Squares2X2Icon,
@@ -45,12 +46,26 @@ interface Empty {
   children: number;
 }
 
+/** A category still filed under a parent that is no longer live. */
+interface Orphan {
+  _id: string;
+  name: string;
+  nameAr: string;
+  products: number;
+  children: number;
+  isActive: boolean;
+  reason: string;
+}
+
 interface Audit {
   categories: number;
   needsImage: number;
   empty: number;
+  orphans: number;
+  orphanProducts: number;
   needsImageList: Gap[];
   emptyList: Empty[];
+  orphanList: Orphan[];
 }
 
 const CategoryGapsCard: React.FC = () => {
@@ -184,7 +199,7 @@ const CategoryGapsCard: React.FC = () => {
   }
   if (!audit) return null;
 
-  if (!audit.needsImage && !audit.empty) {
+  if (!audit.needsImage && !audit.empty && !audit.orphans) {
     return (
       <div className="bg-white rounded-2xl border border-gray-200 p-5">
         <div className="flex items-center gap-3">
@@ -225,11 +240,12 @@ const CategoryGapsCard: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: ar ? "قسم" : "categories", value: audit.categories },
           { label: ar ? "من غير صورة" : "without a picture", value: audit.needsImage },
           { label: ar ? "فاضي تمامًا" : "empty throughout", value: audit.empty },
+          { label: ar ? "مقطوع عن الشجرة" : "cut off the tree", value: audit.orphans },
         ].map((stat) => (
           <div key={stat.label} className="rounded-xl bg-gray-50 border border-gray-200 p-3">
             <div className="text-xl font-bold text-gray-900 tabular-nums">{stat.value}</div>
@@ -237,6 +253,58 @@ const CategoryGapsCard: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/*
+        First, and in red, because it is the only one of the three that is
+        costing money while it sits there. A category whose parent was deleted
+        disappears from the dashboard tree — you cannot find it to fix it —
+        and stays live on the storefront, so it keeps selling from a
+        department the operator believes they took down.
+      */}
+      {audit.orphans > 0 && (
+        <div className="rounded-xl border border-red-300 bg-red-50/50 p-4 mb-3">
+          <div className="flex items-start gap-3">
+            <ExclamationTriangleIcon className="w-5 h-5 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">
+                {ar
+                  ? `${audit.orphans} قسم أبوهم اتمسح — و${audit.orphanProducts} منتج تحتهم لسه بيتباع`
+                  : `${audit.orphans} categories whose parent was deleted — and ${audit.orphanProducts} products under them are still on sale`}
+              </p>
+              <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                {ar
+                  ? "دول مش ظاهرين في شجرة اللوحة، لأن الشجرة بتنزل من الجذور وماتوصلش لهم. بس المتجر بيقرر المخفي بالطلوع لفوق، وماشايفش الأب الممسوح — فالفرع شغّال. افتح كل واحد وحطّ له أب من جديد (أو خلّيه قسم رئيسي)."
+                  : "They are missing from the dashboard tree, because it walks down from the roots and never reaches them. The storefront decides what is hidden by walking up, and cannot see a deleted parent — so the branch is live. Open each one and give it a parent again, or make it a department."}
+              </p>
+              <ul className="mt-2 space-y-1">
+                {audit.orphanList.slice(0, 10).map((cat) => (
+                  <li key={cat._id} className="text-xs text-gray-700 flex justify-between gap-3">
+                    <span className="truncate">
+                      {ar && cat.nameAr ? cat.nameAr : cat.name}
+                      <span className="text-gray-400"> — {cat.reason}</span>
+                    </span>
+                    <span className="shrink-0 tabular-nums text-gray-500">
+                      {cat.products} {ar ? "منتج" : "products"}
+                    </span>
+                  </li>
+                ))}
+                {audit.orphans > 10 && (
+                  <li className="text-xs text-gray-400">
+                    {ar ? `و${audit.orphans - 10} غيرهم` : `and ${audit.orphans - 10} more`}
+                  </li>
+                )}
+              </ul>
+              {/*
+                No button. Every other action on this card is reversible and
+                has one right answer; this one does not — where a detached
+                branch belongs is a decision about the shop, and guessing it
+                for the operator would move products between departments
+                without anybody choosing to.
+              */}
+            </div>
+          </div>
+        </div>
+      )}
 
       {audit.needsImage > 0 && (
         <div className="rounded-xl border border-gray-200 p-4 mb-3">

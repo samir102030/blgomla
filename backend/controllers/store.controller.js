@@ -9,9 +9,6 @@ import User from "../models/user.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import { controllerWrapper } from "../utils/wrappers.js";
 
-const isAdminUser = (user) =>
-  user && ["admin", "super_admin"].includes(user.role);
-
 // Configure Cloudinary. No hardcoded fallbacks — the previous fallback
 // values were a committed secret. Missing env throws at first upload.
 cloudinary.config({
@@ -450,14 +447,10 @@ export const getVendorById = controllerWrapper(
 export const approveVendor = controllerWrapper(
   "approveVendor",
   async (req, res) => {
-    // Only admin can approve vendors
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
-
+    // Authorisation is the route's — see the note above these six in
+    // store.route.js. The inline `role === "admin"` test that stood here
+    // could not be granted from Roles & Access, which is what made the
+    // Vendors permission group decorative.
     const { vendorId } = req.params;
 
     const vendor = await Store.findById(vendorId);
@@ -490,14 +483,10 @@ export const approveVendor = controllerWrapper(
 export const rejectVendor = controllerWrapper(
   "rejectVendor",
   async (req, res) => {
-    // Only admin can reject vendors
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
-
+    // Authorisation is the route's — see the note above these six in
+    // store.route.js. The inline `role === "admin"` test that stood here
+    // could not be granted from Roles & Access, which is what made the
+    // Vendors permission group decorative.
     const { vendorId } = req.params;
     const { reason } = req.body;
 
@@ -532,14 +521,10 @@ export const rejectVendor = controllerWrapper(
 export const suspendVendor = controllerWrapper(
   "suspendVendor",
   async (req, res) => {
-    // Only admin can suspend vendors
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
-
+    // Authorisation is the route's — see the note above these six in
+    // store.route.js. The inline `role === "admin"` test that stood here
+    // could not be granted from Roles & Access, which is what made the
+    // Vendors permission group decorative.
     const { vendorId } = req.params;
 
     const vendor = await Store.findById(vendorId);
@@ -568,14 +553,10 @@ export const suspendVendor = controllerWrapper(
 export const updateVendorStatus = controllerWrapper(
   "updateVendorStatus",
   async (req, res) => {
-    // Only admin can update vendor status
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
-
+    // Authorisation is the route's — see the note above these six in
+    // store.route.js. The inline `role === "admin"` test that stood here
+    // could not be granted from Roles & Access, which is what made the
+    // Vendors permission group decorative.
     const { vendorId } = req.params;
     const { status } = req.body;
 
@@ -638,56 +619,27 @@ export const updateVendorStatus = controllerWrapper(
   }
 );
 
-export const deleteVendor = controllerWrapper(
-  "deleteVendor",
-  async (req, res) => {
-    // Only admin can delete vendors
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
+/*
+  `deleteVendor` used to live here and had no route.
 
-    const { vendorId } = req.params;
+  Nothing in the route table registered `DELETE /stores/vendors/:vendorId`, so
+  every call fell through and 404'd — and two admin screens, AllVendors and
+  RejectedVendors, had a Delete button wired to it. Pressing it did nothing
+  and said so only after the store learned to rethrow.
 
-    const vendor = await Store.findById(vendorId);
-    if (!vendor) {
-      return res.status(404).json({
-        success: false,
-        message: "Vendor not found",
-      });
-    }
-
-    // Soft delete
-    vendor.deleted = true;
-    vendor.isActive = false;
-    await vendor.save();
-
-    // Also deactivate the user account
-    await User.findByIdAndUpdate(vendor.owner, {
-      active: false,
-      deleted: true,
-    });
-
-    res.status(200).json({
-      success: true,
-      message: "Vendor deleted successfully",
-    });
-  }
-);
+  It is gone rather than given a route. A hard delete of a store leaves its
+  products and its orders pointing at a document that no longer exists, and
+  the shop already has the operation it wants: `safeDeleteVendor`, which the
+  third screen was using all along. All three use it now.
+*/
 
 export const safeDeleteVendor = controllerWrapper(
   "safeDeleteVendor",
   async (req, res) => {
-    // Only admin can soft delete vendors
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
-
+    // Authorisation is the route's — see the note above these six in
+    // store.route.js. The inline `role === "admin"` test that stood here
+    // could not be granted from Roles & Access, which is what made the
+    // Vendors permission group decorative.
     const { vendorId } = req.params;
 
     const vendor = await Store.findById(vendorId);
@@ -719,14 +671,10 @@ export const safeDeleteVendor = controllerWrapper(
 export const restoreVendor = controllerWrapper(
   "restoreVendor",
   async (req, res) => {
-    // Only admin can restore vendors
-    if (!isAdminUser(req.user)) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied - Admin only",
-      });
-    }
-
+    // Authorisation is the route's — see the note above these six in
+    // store.route.js. The inline `role === "admin"` test that stood here
+    // could not be granted from Roles & Access, which is what made the
+    // Vendors permission group decorative.
     const { vendorId } = req.params;
 
     const vendor = await Store.findById(vendorId);
