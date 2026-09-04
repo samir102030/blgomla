@@ -26,12 +26,34 @@ const CHANNEL_LABEL = {
 const detectLang = (text) => (/[؀-ۿ]/.test(String(text || "")) ? "ar" : "en");
 
 /**
- * A human took this conversation, so the assistant is not to speak on it.
- * The mark is cleared by a person, not by a timer: an unanswered customer is
- * a problem for the team's inbox to show, not something to paper over by
- * letting the bot start talking again mid-handover.
+ * How long a hand-off holds the assistant back before it starts helping again.
+ * Long enough that nobody is talked over while the team is picking the
+ * conversation up; short enough that a customer nobody reached is not left in
+ * silence indefinitely.
  */
-const botShouldStayQuiet = (thread) => thread.status === "human";
+const HANDOFF_HOLD_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * A person is taking this conversation, so the assistant is not to speak on it.
+ *
+ * The hold used to be permanent, and the reasoning was sound — a bot talking
+ * over a colleague mid-handover is worse than no bot. What it missed is that
+ * nothing here ever hears the colleague arrive: echoes of the Page's own
+ * outgoing messages are dropped in the webhook controller, so a reply typed in
+ * the Meta inbox never reaches a thread. The mark could be set and never
+ * cleared, and a conversation that nobody picked up stayed silent for good.
+ *
+ * Two hours is the compromise. Inside it the assistant stays out of the way.
+ * Past it, with still no sign of anyone, answering the customer beats leaving
+ * them talking to a wall — and the team has the notification either way.
+ * `closed` is a decision someone made on purpose and does not lapse.
+ */
+const botShouldStayQuiet = (thread) => {
+  if (thread.status === "closed") return true;
+  if (thread.status !== "human") return false;
+  if (!thread.handoffAt) return true;
+  return Date.now() - new Date(thread.handoffAt).getTime() < HANDOFF_HOLD_MS;
+};
 
 /* ────────────────────────── tools that only exist here ────────────────────────── */
 
