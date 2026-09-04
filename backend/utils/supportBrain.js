@@ -906,7 +906,7 @@ const TOOL_SPECS = [
   {
     name: "search_products",
     description:
-      "Search the shop's catalogue by name, Arabic name or SKU. Returns price, sale price and stock.",
+      "Search the shop's catalogue by name, Arabic name or SKU. Each result carries its price, its sale price, whether it is in stock, and `url` — the product's page on the shop's site.",
     input_schema: {
       type: "object",
       properties: { query: { type: "string" } },
@@ -937,8 +937,22 @@ const runTool = async (name, input, user, extras = {}) => {
       return recentOrders(user, { limit: 5 });
     case "find_order":
       return (await findOrder(user, input?.reference)) || { found: false };
-    case "search_products":
-      return searchProducts(input?.query, { limit: 5 });
+    case "search_products": {
+      /*
+        The rules engine prints the link itself; the model can only print what
+        a tool hands it, and `shape()` hands back `/product/<id>` — a path with
+        no origin on it. So the model named products and prices and gave the
+        customer nothing to tap. Absolute URLs, here, where only the model
+        looks.
+      */
+      const found = await searchProducts(input?.query, { limit: 5 });
+      const link = (p) => ({ ...p, ...(p?.id ? { url: `${SITE_URL}/product/${p.id}` } : {}) });
+      // `shape()` returns a bare array here; the `withTotal` form returns
+      // `{ items, total }`. Handle both so a later caller cannot break this.
+      if (Array.isArray(found)) return found.map(link);
+      if (Array.isArray(found?.items)) return { ...found, items: found.items.map(link) };
+      return found;
+    }
     case "shipping_facts":
       return shippingFacts(input?.governorate);
     default:
@@ -986,7 +1000,8 @@ const systemPrompt = (user, lang, extra = "") =>
     user
       ? `The customer is signed in as ${user.name}. Order tools will only ever return their own orders.`
       : "Nobody is signed in, so no order can be looked up. If they ask about an order, ask them to sign in.",
-    "Keep replies to a few lines. Do not use headings or bullet lists.",
+    "Whenever you name a product, put its `url` on its own line straight after it, exactly as the tool gave it. A customer who cannot tap the thing you just recommended has to go and find it, and most will not. Name at most four products in one reply.",
+    "Keep replies short — a few lines plus the product lines. Do not use headings or bullet lists.",
     extra,
   ]
     .filter(Boolean)
@@ -1120,7 +1135,7 @@ const answerWithGemini = async ({
       systemInstruction: { parts: [{ text: systemPrompt(user, lang, systemExtra) }] },
       contents,
       tools: [{ functionDeclarations: declarations }],
-      generationConfig: { maxOutputTokens: 700, temperature: 0.3 },
+      generationConfig: { maxOutputTokens: 1600, temperature: 0.3 },
     });
 
   /*
