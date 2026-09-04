@@ -238,6 +238,9 @@ const STOP_WORDS = new Set(
     "متوفر", "متوفره", "موجود", "موجوده", "عندكم", "عندك", "بكام", "كام",
     "السعر", "سعر", "عايز", "عاوز", "محتاج", "بدور", "علي", "في", "هل", "من",
     "ايه", "ده", "دي", "لو", "سمحت", "المنتج", "منتج", "فيه",
+    // How the question gets asked, which is never part of what is being asked
+    // for. "هل يوجد هيكفيجين" was searching for a product called "هل يوجد".
+    "يوجد", "متاح", "متاحه", "لديكم", "عندكو", "بتوفروا", "بتجيبوا",
     "in", "stock", "available", "price", "how", "much", "do", "you", "have",
     "looking", "for", "is", "the", "a", "an", "i", "want", "need", "any",
     /*

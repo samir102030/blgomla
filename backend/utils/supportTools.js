@@ -783,6 +783,19 @@ export const searchProducts = async (
     if (!rows.length && arabicWords.length) {
       rows = await run({ $and: arabicWords.map(anyField) });
     }
+    /*
+      A make or a shelf is not a guess.
+
+      `strict` exists so that a sentence which merely *might* be a product name
+      does not come back holding a security camera — every word has to appear in
+      the row, and a wrong guess finds nothing. But a brand read out of the
+      sentence is not a guess at all: it is a name this shop files four hundred
+      of its own products under. "هل يوجد هيكفيجين" was answering "I did not
+      understand" while the row filter sat one line below, unreached, holding
+      every Hikvision camera in the catalogue — because the strict branch
+      returned before the fallback the loose branch already had.
+    */
+    if (!rows.length && (category?.ids?.length || brand?.id)) rows = await run({});
     return answer(rows);
   }
 
