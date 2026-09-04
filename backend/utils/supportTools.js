@@ -419,6 +419,24 @@ const loadVocab = async () => {
  * long enough that being close means something — "سيسكو" reduces to "sk", which
  * half the catalogue's brands are within one letter of, and is let go.
  */
+/*
+  Words that are the trade, not a make.
+
+  "nvr" reduces to n-v-r and Nvidia reduces to n-v-d: one letter apart, so a
+  customer asking about the difference between eight-channel NVRs was handed a
+  GeForce graphics card. The sound matcher is right to be generous with four
+  hundred makes it has never been taught to spell — but the shop's own jargon
+  is the one place where a near-miss is never a make, and it is exactly the
+  vocabulary customers type most.
+*/
+const TRADE_WORDS = new Set([
+  "nvr", "dvr", "xvr", "hvr", "cctv", "poe", "ptz", "ip", "ir", "wdr", "onvif",
+  "nas", "san", "hdd", "ssd", "nvme", "sata", "ram", "rom", "cpu", "gpu", "psu",
+  "ups", "kvm", "pbx", "voip", "lan", "wan", "wifi", "vpn", "dns", "poe+",
+  "usb", "hdmi", "vga", "sdi", "bnc", "rj45", "cat5", "cat6", "cat7",
+  "mp", "gb", "tb", "mb", "hd", "uhd", "sd", "fhd", "4k", "8k",
+]);
+
 export const brandFor = async (text) => {
   const { brandByName, brandBySkeleton } = await loadVocab();
   const words = normalizeArabic(text).split(/[\s,،.؟?!]+/).filter(Boolean);
@@ -449,6 +467,8 @@ export const brandFor = async (text) => {
   }
 
   for (const word of words) {
+    if (TRADE_WORDS.has(word)) continue;
+
     const key = skeletonOf(word);
     if (key.length < 3) continue;
 
@@ -466,7 +486,17 @@ export const brandFor = async (text) => {
         tied = true;
       }
     }
-    if (best && bestDistance <= 1 && !tied) return { id: String(best._id), name: best.name };
+    /*
+      An exact skeleton can be short; a guess cannot.
+
+      At three consonants a single edit is a third of the word wrong, which is
+      not a resemblance — it is two different words. So a distance of one has
+      to earn a longer skeleton, and three-letter words match only exactly.
+    */
+    const needed = bestDistance === 0 ? 3 : 4;
+    if (best && bestDistance <= 1 && !tied && key.length >= needed) {
+      return { id: String(best._id), name: best.name };
+    }
   }
   return null;
 };
