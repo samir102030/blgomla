@@ -825,9 +825,20 @@ export const answerWithRules = async ({ text, user, lang = "ar" }) => {
         Search it properly rather than as a guess: the customer told us what
         they want, they just did not phrase it as an enquiry.
       */
+      /*
+        An answer is products *or* the shelves of a make.
+
+        This read `data.products.length` alone, and "هل يوجد هيكفيجين" — which
+        answers with the range Hikvision covers rather than with four rows off
+        it — carries no products at all. A correct answer was being computed and
+        then thrown away for "I did not understand".
+      */
+      const answered = (reply) =>
+        !!(reply?.data?.products?.length || reply?.data?.shelves?.length);
+
       if (namesAProduct(text)) {
         const named = await answerProduct({ text, lang });
-        if (named?.data?.products?.length) return named;
+        if (answered(named)) return named;
       }
 
       // Otherwise it may still be a bare product name. Guessed, though — so
@@ -835,7 +846,7 @@ export const answerWithRules = async ({ text, user, lang = "ar" }) => {
       // nothing says nothing.
       if (normalize(text).length >= 3) {
         const guess = await answerProduct({ text, lang, strict: true });
-        if (guess?.data?.products?.length) return guess;
+        if (answered(guess)) return guess;
       }
       return fallback(lang);
     }
