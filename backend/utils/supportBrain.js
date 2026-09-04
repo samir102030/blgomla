@@ -400,7 +400,49 @@ const withoutTheBudget = (words) =>
 */
 const LIST_SIZE = 12;
 
-const answerProduct = async ({ text, lang, strict = false }) => {
+/*
+  What the customer was talking about a message ago.
+
+  "طيب لو عايزها ip" is four words that name no shelf, and the rules engine —
+  which reads one message and forgets it — searched the whole shop for "ip" and
+  came back holding IP telephones, in the middle of a conversation about
+  cameras. The model gets the history and would have known; the fallback is
+  exactly the moment the model did not answer, so the fallback needs it too.
+
+  Only a short follow-up looks back, and only for what the current sentence did
+  not say itself. "عايز لابتوب" after a camera question names its own shelf and
+  keeps it; "لو عايزها ip" names none and inherits the camera shelf. A long
+  sentence is a new question even when it names no shelf, so it is left alone.
+*/
+const FOLLOW_UP_WORDS = 6;
+
+const recalled = async ({ history, shelf, make, words }) => {
+  if ((shelf && make) || words.length > FOLLOW_UP_WORDS) return { shelf, make };
+
+  const earlier = (Array.isArray(history) ? history : [])
+    .filter((m) => m?.role !== "assistant")
+    .map((m) => String(m?.content || "").slice(0, 300))
+    .filter(Boolean)
+    .slice(-4)
+    .reverse();
+
+  let recalledShelf = shelf;
+  let recalledMake = make;
+
+  for (const said of earlier) {
+    if (recalledShelf && recalledMake) break;
+    const [wasShelf, wasMake] = await Promise.all([
+      recalledShelf ? null : categoryFor(said),
+      recalledMake ? null : brandFor(said),
+    ]);
+    if (!recalledShelf && wasShelf) recalledShelf = wasShelf;
+    if (!recalledMake && wasMake) recalledMake = wasMake;
+  }
+
+  return { shelf: recalledShelf, make: recalledMake };
+};
+
+const answerProduct = async ({ text, lang, strict = false, history = [] }) => {
   const budget = budgetIn(text);
 
   // The words that made this a product question are not part of the product's
@@ -435,10 +477,18 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     the shop's own tables — all 349 categories carry Arabic names, and the 444
     brands are matched by how they sound.
   */
-  const [shelf, make] = await Promise.all([
+  const [namedShelf, namedMake] = await Promise.all([
     categoryFor(stripped || text),
     brandFor(stripped || text),
   ]);
+
+  // A follow-up too short to name its own subject inherits the last one.
+  const { shelf, make } = await recalled({
+    history,
+    shelf: namedShelf,
+    make: namedMake,
+    words,
+  });
 
   /*
     A make and nothing else is a question about the range, not about a product.
@@ -809,7 +859,7 @@ const answerDeals = (lang) => ({
   data: { deals: `${SITE_URL}/deals` },
 });
 
-export const answerWithRules = async ({ text, user, lang = "ar" }) => {
+export const answerWithRules = async ({ text, user, lang = "ar", history = [] }) => {
   const intent = intentOf(text);
 
   switch (intent) {
@@ -825,7 +875,7 @@ export const answerWithRules = async ({ text, user, lang = "ar" }) => {
     case "order":
       return answerOrder({ text, user, lang });
     case "product":
-      return answerProduct({ text, lang });
+      return answerProduct({ text, lang, history });
     case "shipping":
       return answerShipping({ lang, text });
     case "deals": {
@@ -1260,7 +1310,7 @@ export const answer = async ({
     }
   }
 
-  const fromRules = await answerWithRules({ text, user, lang });
+  const fromRules = await answerWithRules({ text, user, lang, history });
   return { suggestions: [], handoff: false, source: "rules", ...fromRules };
 };
 
