@@ -734,8 +734,8 @@ const STATIC = {
     "You have 3 days from delivery to return an item in its original condition and box. Request the return from the order page in your account and we arrange the pickup.",
   ],
   warranty: [
-    "كل المنتجات ضمان سنة. قولّي رقم الطلب وإيه اللي حصل بالظبط، وأنا أحوّلك لحد من الفريق يفتحلك بلاغ صيانة.",
-    "Everything we sell carries a one-year warranty. Tell me the order number and what is happening, and I will pass you to someone who can open a service request.",
+    "كل المنتجات بضمان الوكيل، والمدة بتختلف حسب المنتج. قولّي اسم المنتج أو رقم الطلب وأنا أحوّلك لحد من الفريق يقولك المدة بالظبط ويفتحلك بلاغ لو فيه عطل.",
+    "Everything we sell carries its agent's warranty, and the length depends on the product. Tell me the item or the order number and I will pass you to someone who can give you the exact period and open a service request if something is faulty.",
   ],
   payment: [
     "بتقدر تدفع كاش عند الاستلام، أو بالكارت، أو بالتقسيط.",
@@ -965,7 +965,10 @@ const runTool = async (name, input, user, extras = {}) => {
 const SHOP_FACTS = [
   "The shop does install: cameras and networks are fitted by its own team, and the team agrees the date and the price with the customer.",
   "Trade and bulk pricing exists, and the sales team quotes it. Never state a percentage or a figure.",
-  "Warranty is one year on everything the shop sells.",
+  "Every product carries its agent's warranty. How long it runs depends on the "
+    + "product and you do not know it: never name a number of years or months, "
+    + "not even as a range or a guess. Say the warranty is the agent's and the "
+    + "period depends on the item, then offer to have the team confirm it.",
   "Shipping, returns and payment are answered by the tools, not from memory.",
 ].join(" ");
 
