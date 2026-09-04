@@ -521,6 +521,83 @@ export const categoryFor = async (text) => {
 };
 
 /**
+ * Is the make the only thing this sentence names?
+ *
+ * Deciding that in the brain would mean counting Arabic words, and the count
+ * lies in both directions: "تي بي لينك" is three words and one make, while
+ * "هيكفيجين" is one word the translation table has never seen. Decided here
+ * instead, where the sentence can be put through the same spelling and the same
+ * sound the make was recognised by.
+ */
+export const namesOnlyABrand = (text, brand) => {
+  if (!brand?.id) return false;
+
+  const key = skeletonOf(brand.name);
+  const spelled = normalizeArabic(brand.name);
+
+  const rest = withEnglish(text)
+    .split(/[\s,،.؟?!]+/)
+    .filter(Boolean)
+    .filter((word) => {
+      if (word.length < 2) return false;
+      // The make written the way the catalogue writes it: "tp-link", "hikvision".
+      if (spelled.includes(word) || word.includes(spelled)) return false;
+      // …or the way it is said: "هيكفيجين" against "Hikvision".
+      const sound = skeletonOf(word);
+      return !(sound.length >= 3 && editDistance(sound, key) <= 1);
+    });
+
+  return rest.length === 0;
+};
+
+/**
+ * Which shelves a make actually fills.
+ *
+ * "هل يوجد هيكفيجين" is a real question with no good answer: the shop carries
+ * four hundred Hikvision products across cameras, recorders and displays, and
+ * four of them picked at random — an 86-inch whiteboard at 95,000 opened the
+ * list — tell the customer nothing except that we did not understand what he
+ * meant. What he needs back is the shape of the range, so he can say which part
+ * of it he wants.
+ *
+ * Counted through `find` rather than an aggregation on purpose: the model hides
+ * the unpublished Electronics branch on `find`, and an aggregation would walk
+ * straight past that switch and name a shelf the storefront does not show.
+ */
+export const brandShelves = async (brand, { limit = 5 } = {}) => {
+  if (!brand?.id) return [];
+
+  const rows = await Product.find({
+    brand: brand.id,
+    isActive: { $ne: false },
+    deleted: { $ne: true },
+    approvalStatus: "approved",
+  })
+    .select("category")
+    .limit(400)
+    .lean();
+
+  const tally = new Map();
+  for (const row of rows) {
+    const key = String(row.category || "");
+    if (key) tally.set(key, (tally.get(key) || 0) + 1);
+  }
+
+  const top = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, limit);
+  if (!top.length) return [];
+
+  const found = await Category.find({ _id: { $in: top.map(([id]) => id) } })
+    .select("name nameAr")
+    .lean();
+  const byId = new Map(found.map((c) => [String(c._id), c]));
+
+  return top
+    .map(([id]) => byId.get(id))
+    .filter(Boolean)
+    .map((c) => ({ id: String(c._id), name: c.name, nameAr: c.nameAr || "" }));
+};
+
+/**
  * The governorate in "الشحن للاسكندرية بكام".
  *
  * `shippingFacts` has taken one since it was written and nothing ever passed
@@ -879,6 +956,8 @@ export default {
   governorateIn,
   categoryFor,
   brandFor,
+  brandShelves,
+  namesOnlyABrand,
   orderReference,
   referenceIn,
   recentOrders,
