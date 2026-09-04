@@ -103,13 +103,43 @@ const WORDS = {
   داخلي: "internal",
 };
 
+/**
+ * "الراوتر" is "راوتر" wearing the definite article.
+ *
+ * Arabic glues the article onto the front of the word and the plural onto the
+ * back, and every table in this file is filed under the bare singular. So half
+ * the sentences customers actually type — "اللابتوب ده متوفر؟", "عندكم
+ * الكاميرات دي" — looked up nothing at all: not translated, so searched in
+ * Arabic against six thousand rows whose names are in English.
+ *
+ * The word as typed is always tried first and only then the stripped forms, and
+ * the article only comes off words long enough that losing two letters still
+ * leaves a word — so "الفا" stays "الفا".
+ */
+const bareForms = (word) => {
+  const forms = [word];
+  const stem = word.length > 4 && word.startsWith("ال") ? word.slice(2) : word;
+  if (stem !== word) forms.push(stem);
+  for (const suffix of ["ات", "ين", "ون", "هم", "ها"]) {
+    if (stem.endsWith(suffix) && stem.length - suffix.length >= 3) {
+      forms.push(stem.slice(0, -suffix.length));
+    }
+  }
+  // كاميرات is كاميرا plus a taa, and dropping the whole "ات" leaves كامير.
+  if (stem.length >= 5 && stem.endsWith("ت")) forms.push(stem.slice(0, -1));
+  return forms;
+};
+
+/** The bare form a lookup table would have this word filed under, if any. */
+const bare = (word) => bareForms(word).find((form) => WORDS[form]) || bareForms(word)[1] || word;
+
 /** The English the row is written in, kept beside the Arabic that was typed. */
 const withEnglish = (term) => {
   let out = normalizeArabic(term);
   for (const [arabic, english] of PHRASES) out = out.split(arabic).join(english);
   return out
     .split(/\s+/)
-    .map((word) => WORDS[word] || word)
+    .map((word) => WORDS[word] || WORDS[bare(word)] || word)
     .join(" ")
     .trim();
 };
@@ -142,7 +172,10 @@ export const namesAProduct = (text) => {
   if (PHRASES.some(([arabic]) => folded.includes(normalizeArabic(arabic)))) return true;
   return folded
     .split(/[\s,،.؟?!]+/)
-    .some((word) => word.length >= 2 && PRODUCT_NOUNS.has(word));
+    .some(
+      (word) =>
+        word.length >= 2 && bareForms(word).some((form) => PRODUCT_NOUNS.has(form))
+    );
 };
 
 /**
@@ -246,7 +279,7 @@ export const findOrder = async (user, reference) => {
  * storefront does would answer questions about things the customer cannot
  * reach from any page.
  */
-export const searchProducts = async (query, { limit = 5, strict = false } = {}) => {
+export const searchProducts = async (query, { limit = 5, strict = false, maxPrice = 0 } = {}) => {
   // Two readings of the same question. Rows imported from suppliers are named
   // in English and rows entered by hand are named in Arabic, so the words the
   // customer typed are tried as they were typed and again translated, and
@@ -264,15 +297,34 @@ export const searchProducts = async (query, { limit = 5, strict = false } = {}) 
    * MAG 276CF … Gaming Monitor". Matching the sentence as one string finds
    * nothing, so each word has to be found somewhere in the row and the row
    * kept only if all of them are.
+   *
+   * Stripped to the bare word for these passes only, and safely so: they match
+   * a substring, and "راوتر" finds both "راوتر" and "الراوتر" while "الراوتر"
+   * finds only one of them. The text index above still sees the sentence as it
+   * was typed.
    */
-  const wordsOf = (text) => text.split(/\s+/).filter((w) => w.length >= 2).slice(0, 6);
+  const wordsOf = (text) =>
+    text.split(/\s+/).filter((w) => w.length >= 2).slice(0, 6).map(bare);
   const words = wordsOf(english);
   const arabicWords = arabic === english ? [] : wordsOf(arabic);
+
+  /*
+    A ceiling belongs in the query rather than in a filter over the answer.
+
+    The index ranks rows by how well the words matched, which says nothing about
+    price, so filtering afterwards threw away the whole shortlist whenever the
+    best-matching rows happened to be the expensive ones — and the shop told a
+    customer with 25,000 to spend that it had nothing for him. The widest
+    discount the shop allows is 13%, so the cut is made a little above the
+    ceiling and the exact figure is checked by the caller against the sale price.
+  */
+  const ceiling = maxPrice > 0 ? { price: { $lte: Math.round(maxPrice / 0.87) } } : {};
 
   const run = (conditions, { byScore = false } = {}) => {
     const query = Product.find({
       isActive: { $ne: false },
       deleted: { $ne: true },
+      ...ceiling,
       ...conditions,
     })
       .select("name nameAr slug price salePercentage stock images brand")

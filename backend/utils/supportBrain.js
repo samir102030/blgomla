@@ -215,8 +215,54 @@ const STOP_WORDS = new Set(
     "ايه", "ده", "دي", "لو", "سمحت", "المنتج", "منتج", "فيه",
     "in", "stock", "available", "price", "how", "much", "do", "you", "have",
     "looking", "for", "is", "the", "a", "an", "i", "want", "need", "any",
+    /*
+      What the thing is *for*. No row in the catalogue is named after the job it
+      does, so "لابتوب للشغل" searched as two words is a laptop search with one
+      word that can never match dragging the ranking down. Deliberately short:
+      "جيمنج" and "العاب" stay in, because plenty of rows really are named that.
+    */
+    "للشغل", "شغل", "للمكتب", "للبيت", "للجامعه", "للدراسه", "دراسه", "للاستخدام",
+    "كويس", "كويسه", "حلو", "حلوه", "احسن", "افضل", "مناسب", "مناسبه", "رخيص",
+    "النهارده", "ممكن", "ياريت", "work", "office", "home", "school", "university",
+    "good", "best", "better", "cheap", "cheapest", "today",
+    // Asking about a discount says nothing about which product; no row is named
+    // "خصم". Kept out of the search so "فيه خصم على الراوتر" searches a router.
+    "خصم", "خصومات", "عروض", "عرض", "تخفيض", "تخفيضات", "اوفر",
   ].map((w) => normalizeArabic(w))
 );
+
+/*
+  Words that are about the price rather than about the thing. None of them names
+  a product, so they come out of the search either way.
+*/
+const MONEY_WORDS = new Set(
+  [
+    "حدود", "حوالي", "تحت", "اقل", "لحد", "ميزانيه", "ميزانيتي", "جنيه", "جنيها",
+    "الف", "الاف", "under", "below", "max", "maximum", "budget", "egp", "le", "k",
+  ].map((w) => normalizeArabic(w))
+);
+
+/*
+  Units that make a number part of the product instead of part of the price.
+  "كاميرا 4 ميجا حدود 3 الف" has to keep its 4 and lose its 3, and the only
+  thing that tells them apart is the word that comes next.
+*/
+const SPEC_UNITS = new Set(
+  [
+    "ميجا", "ميغا", "جيجا", "جيغا", "تيرا", "بكسل", "بوصه", "انش", "وات", "فولت",
+    "امبير", "متر", "سم", "مم", "ميجابكسل", "ساعه", "نواه", "كور",
+    "mp", "gb", "tb", "mb", "hz", "ghz", "mhz", "khz", "w", "v", "ah", "va",
+    "kva", "mm", "cm", "inch", "in", "mbps", "gbps", "g", "ac", "ax", "pro",
+  ].map((w) => normalizeArabic(w))
+);
+
+const BUDGET_CUE = /(حدود|حوالي|تحت|اقل من|لحد|ميزانيه|ميزانيتي|في حدود|under|below|max|budget|up to)/;
+
+const wordsOf = (text) =>
+  normalize(text)
+    .replace(/[?؟.,!]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
 
 /**
  * The ceiling in "لابتوب للشغل حدود 25 الف".
@@ -230,23 +276,29 @@ const STOP_WORDS = new Set(
  * "الف" and "k" are how the number is nearly always said; 25 on its own means
  * 25 pounds, which is nothing this shop sells, so a bare number under a
  * thousand is read as thousands too.
+ *
+ * A sentence can carry more than one number and only one of them is money.
+ * "كاميرا 4 ميجا حدود 3 الف" holds a resolution and a ceiling — which is why
+ * the word *after* each number is read: a number wearing a unit is a
+ * specification and never a price, whichever of the two happens to be larger.
  */
-const BUDGET_CUE = /(حدود|حوالي|تحت|اقل من|لحد|ميزانيه|ميزانيتي|في حدود|under|below|max|budget|up to)/;
-
 const budgetIn = (text) => {
-  const folded = normalize(text);
-  const hasCue = BUDGET_CUE.test(folded);
+  const words = wordsOf(text);
+  const hasCue = BUDGET_CUE.test(words.join(" "));
 
-  /*
-    Every number in the sentence, then the largest — because a sentence can
-    carry more than one and only one of them is money. "كاميرا 2 ميجا حدود 3
-    الف" holds a resolution and a ceiling, and taking the first would shop for
-    a two-thousand-pound camera.
-  */
-  const amounts = [...folded.matchAll(/(\d[\d,]*)\s*(الف|k)?/g)]
-    .map(([, digits, thousands]) => {
-      const raw = Number(String(digits).replace(/,/g, ""));
+  const amounts = words
+    .map((word, i) => {
+      // "25 الف" and "25الف" are the same sentence typed by two people.
+      const m = word.match(/^(\d[\d,]*)(الف|k)?$/);
+      if (!m) return null;
+
+      const raw = Number(m[1].replace(/,/g, ""));
       if (!Number.isFinite(raw) || raw <= 0) return null;
+
+      const next = words[i + 1];
+      const thousands = m[2] || (next === "الف" || next === "k" ? next : null);
+      if (!thousands && next && SPEC_UNITS.has(next)) return null;
+
       if (thousands) return raw * 1000;
       if (!hasCue) return null;
       // A bare "25" after "حدود" is 25 thousand; nothing here costs 25 pounds.
@@ -257,7 +309,32 @@ const budgetIn = (text) => {
   return amounts.length ? Math.max(...amounts) : null;
 };
 
+/**
+ * Take the money back out of the sentence before it becomes the search.
+ *
+ * Reading the ceiling was only half of it. "لابتوب للشغل حدود 25 الف" still went
+ * to the catalogue as five words, and the text index matches *any* of them and
+ * ranks by how many hit — so "حدود", "25" and "الف", which no row contains,
+ * scored nothing while the one word that mattered was outvoted. The shortlist
+ * came back led by a 69,599 EGP machine and the customer was told his budget
+ * bought nothing.
+ *
+ * Only applied once a budget has actually been read, so a sentence with no
+ * money in it searches exactly as it did before.
+ */
+const withoutTheBudget = (words) =>
+  words.filter((word, i) => {
+    if (MONEY_WORDS.has(word)) return false;
+    // "25 الف" and "25الف" are the same sentence typed by two people.
+    if (/^\d[\d,.]*(الف|k)$/.test(word)) return false;
+    if (!/^\d[\d,.]*$/.test(word)) return true;
+    const next = words[i + 1];
+    return !!next && SPEC_UNITS.has(next);
+  });
+
 const answerProduct = async ({ text, lang, strict = false }) => {
+  const budget = budgetIn(text);
+
   // The words that made this a product question are not part of the product's
   // name, and searching with them still in finds nothing.
   //
@@ -266,20 +343,32 @@ const answerProduct = async ({ text, lang, strict = false }) => {
   // Arabic letter counts as a non-word character and `\bعايز\b` matches almost
   // nowhere. The stop words were being left in, and the search was looking for
   // a product called "عايز شاشة msi".
-  const stripped = normalize(text)
-    .replace(/[?؟.,!]/g, " ")
-    .split(/\s+/)
-    .filter((word) => word && !STOP_WORDS.has(word))
-    .join(" ");
+  const words = wordsOf(text).filter((word) => !STOP_WORDS.has(word));
+  const stripped = (budget ? withoutTheBudget(words) : words).join(" ");
 
-  const budget = budgetIn(text);
+  /*
+    The ceiling goes to the database, not to a filter over the answer.
 
-  // Ask for more than we will show, so trimming to the budget still leaves a
-  // shortlist rather than one lonely row.
-  const found = await searchProducts(stripped || text, { limit: budget ? 12 : 4, strict });
+    Filtering afterwards only worked if something affordable happened to be in
+    the first handful the index returned — ranked by how well the words matched,
+    which has nothing to do with price. Ask for rows under the budget and every
+    row that comes back is one the customer can buy.
+  */
+  const found = await searchProducts(stripped || text, {
+    limit: budget ? 8 : 4,
+    strict,
+    maxPrice: budget || 0,
+  });
   const affordable = budget
     ? found.filter((p) => (p.salePrice ?? p.price) <= budget)
     : found;
+
+  // Nothing under the ceiling: ask again without it, so the shop can at least
+  // say what the thing costs instead of pretending not to stock it.
+  const nearest =
+    budget && !affordable.length
+      ? await searchProducts(stripped || text, { limit: 3, strict })
+      : [];
 
   /*
     A budget nothing meets is worth saying out loud. Silently showing the
@@ -287,8 +376,8 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     showing nothing at all hides that the item exists — so the ceiling is named
     and the closest few are offered anyway.
   */
-  const overBudget = budget && !affordable.length && found.length;
-  const hits = overBudget ? found.slice(0, 3) : affordable.slice(0, 4);
+  const overBudget = budget && !affordable.length && nearest.length;
+  const hits = overBudget ? nearest.slice(0, 3) : affordable.slice(0, 4);
 
   if (!hits.length) {
     if (strict) return null;
@@ -325,24 +414,39 @@ const answerProduct = async ({ text, lang, strict = false }) => {
 
   return {
     text: lines.join("\n\n"),
+    /*
+      The chip goes to `/product/:id`, which is the route the app actually has.
+      It was pointing at `/products/<slug>` — a plausible-looking URL for a page
+      that does not exist, so every suggestion under every product answer landed
+      the customer on a 404. Same id the link in the line above uses.
+    */
     suggestions: hits.slice(0, 3).map((p) => ({
       label: lang === "ar" && p.nameAr ? p.nameAr : p.name,
       action: "navigate",
-      to: `/products/${p.slug}`,
+      to: `/product/${p.id}`,
     })),
     data: { products: hits },
   };
 };
 
-const answerShipping = async ({ lang }) => {
-  const s = await shippingFacts();
+/**
+ * "الشحن للاسكندرية بكام" is a question about Alexandria.
+ *
+ * `shippingFacts` has taken a governorate since it was written and nothing ever
+ * passed one, so every customer got the national answer — the same paragraph
+ * about the table existing, to someone who had already told us which row of it
+ * he was standing in.
+ */
+const answerShipping = async ({ lang, text = "" }) => {
+  const asked = await governorateIn(text);
+  const s = await shippingFacts(asked);
   const parts = [];
 
   parts.push(
     say(
       lang,
-      `التوصيل بياخد من ${s.daysMin} لـ ${s.daysMax} أيام عمل.`,
-      `Delivery takes ${s.daysMin}–${s.daysMax} working days.`
+      `التوصيل${s.zone ? ` لـ${s.zone}` : ""} بياخد من ${s.daysMin} لـ ${s.daysMax} أيام عمل.`,
+      `Delivery${s.zone ? ` to ${s.zone}` : ""} takes ${s.daysMin}–${s.daysMax} working days.`
     )
   );
 
@@ -362,7 +466,21 @@ const answerShipping = async ({ lang }) => {
     return { text: parts.join(" "), data: { shipping: s } };
   }
 
-  if (s.zones.length) {
+  /*
+    One governorate asked about, one number given. The table is only read out to
+    someone who did not say where they are.
+  */
+  if (s.zone) {
+    parts.push(
+      s.fee > 0
+        ? say(
+            lang,
+            `مصاريف الشحن لـ${s.zone} ${egp(s.fee, lang)}.`,
+            `Shipping to ${s.zone} is ${egp(s.fee, lang)}.`
+          )
+        : say(lang, `والشحن لـ${s.zone} مجاني.`, `Delivery to ${s.zone} is free.`)
+    );
+  } else if (s.zones.length) {
     const sample = s.zones.slice(0, 4).map((z) => `${z.governorate}: ${egp(z.fee, lang)}`);
     parts.push(
       say(
@@ -493,7 +611,20 @@ export const answerWithRules = async ({ text, user, lang = "ar" }) => {
     case "product":
       return answerProduct({ text, lang });
     case "shipping":
-      return answerShipping({ lang });
+      return answerShipping({ lang, text });
+    case "deals": {
+      /*
+        "فيه خصم على الراوتر ده؟" is a question about the router. The row already
+        carries its own sale price, which is a better answer than a page listing
+        everything the shop has on offer — so the page is the fallback, not the
+        first move.
+      */
+      if (namesAProduct(text)) {
+        const named = await answerProduct({ text, lang });
+        if (named?.data?.products?.length) return named;
+      }
+      return answerDeals(lang);
+    }
     case "returns":
       return staticAnswer("returns", lang);
     case "warranty":
