@@ -734,8 +734,8 @@ const STATIC = {
     "You have 3 days from delivery to return an item in its original condition and box. Request the return from the order page in your account and we arrange the pickup.",
   ],
   warranty: [
-    "كل المنتجات بضمان الوكيل المعتمد. قولّي رقم الطلب وإيه اللي حصل بالظبط، وأنا أحوّلك لحد من الفريق يفتحلك بلاغ صيانة.",
-    "Everything we sell carries the manufacturer's warranty. Tell me the order number and what is happening, and I will pass you to someone who can open a service request.",
+    "كل المنتجات بضمان الوكيل، والمدة بتختلف حسب المنتج. قولّي اسم المنتج أو رقم الطلب وأنا أحوّلك لحد من الفريق يقولك المدة بالظبط ويفتحلك بلاغ لو فيه عطل.",
+    "Everything we sell carries its agent's warranty, and the length depends on the product. Tell me the item or the order number and I will pass you to someone who can give you the exact period and open a service request if something is faulty.",
   ],
   payment: [
     "بتقدر تدفع كاش عند الاستلام، أو بالكارت، أو بالتقسيط.",
@@ -950,13 +950,36 @@ const runTool = async (name, input, user, extras = {}) => {
   return { error: "unknown tool" };
 };
 
+/*
+  What the shop itself does, as opposed to what it sells.
+
+  A model that has been told to be helpful will answer "do you install?" with
+  yes, because most shops do, and then a customer arrives expecting a fitter.
+  Product knowledge can be reasoned about; a shop's own terms cannot. So the
+  ones that come up are written down here as facts, and everything else is a
+  question for the team.
+
+  Confirmed by the owner, 5 September 2026. Change the lines here, not the
+  prompt below.
+*/
+const SHOP_FACTS = [
+  "The shop does install: cameras and networks are fitted by its own team, and the team agrees the date and the price with the customer.",
+  "Trade and bulk pricing exists, and the sales team quotes it. Never state a percentage or a figure.",
+  "Every product carries its agent's warranty. How long it runs depends on the "
+    + "product and you do not know it: never name a number of years or months, "
+    + "not even as a range or a guess. Say the warranty is the agent's and the "
+    + "period depends on the item, then offer to have the team confirm it.",
+  "Shipping, returns and payment are answered by the tools, not from memory.",
+].join(" ");
+
 const systemPrompt = (user, lang, extra = "") =>
   [
     "You are the support assistant for Belgomla, an Egyptian IT and networking shop.",
     "Shop facts come from the tools and nowhere else: a price, a stock level, a delivery time, a discount, an order status is whatever the tool returns. Never guess one, never round one, never describe a product the tools did not return. If a tool cannot answer a shop fact, say so plainly and offer to pass the customer to a person.",
     "General knowledge about the kit is yours to give, and you should give it. The difference between a DVR and an NVR, what PoE is for, what megapixels or IR range or colour night vision mean in practice, what a NAS does, how many cameras a shop of a given size usually needs, what to look for when choosing between two things — answer all of that from what you know, in a few plain sentences, the way someone behind the counter would. Do not say the information is unavailable: it is a technical question, not a catalogue lookup.",
     "When a technical question has a product behind it, answer the question first and then, if it helps, call a tool and name what the shop actually has.",
-    "Installation, wholesale pricing and anything else the tools do not cover: say what you know in one line and offer to put the customer through to the team.",
+    `What the shop itself offers, you know only from this line and from the tools: ${SHOP_FACTS}`,
+    "Anything else about how the shop operates — a service, a policy, a term, a timescale, a guarantee — you do not know and must not decide. Never answer such a question with yes or no. Say you will check with the team and offer to put the customer through. Inventing a service the shop does not run is the one mistake that reaches the counter.",
     lang === "ar"
       ? "Reply in Egyptian Arabic, the way a shop assistant in Cairo would speak — short, direct, no formal filler."
       : "Reply in English. Keep it short and direct.",
