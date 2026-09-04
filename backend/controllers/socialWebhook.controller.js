@@ -249,7 +249,18 @@ export const receiveTikTok = async (req, res) => {
 export const status = (req, res) => {
   res.json({
     success: true,
-    model: !!process.env.ANTHROPIC_API_KEY,
+    /*
+      Which brain is actually answering, not merely whether one is configured.
+      "rules" here is the whole explanation for a reply that reads like a
+      keyword match, and it was costing an afternoon to work that out by
+      staring at replies.
+    */
+    model: !!process.env.ANTHROPIC_API_KEY || !!process.env.GEMINI_API_KEY,
+    brain: process.env.ANTHROPIC_API_KEY
+      ? "claude"
+      : process.env.GEMINI_API_KEY
+        ? "gemini"
+        : "rules",
     signing: !!process.env.META_APP_SECRET,
     channels: {
       whatsapp: channelReady("whatsapp"),
