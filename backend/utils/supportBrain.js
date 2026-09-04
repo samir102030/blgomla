@@ -343,7 +343,18 @@ const fallback = (lang) => ({
     "مش متأكد إني فهمت. تقدر تسألني عن طلبك، أو عن منتج، أو عن الشحن والإرجاع — ولو محتاج حد من الفريق قوللي وأنا أوصّلك.",
     "I am not sure I followed that. You can ask me about your order, about a product, or about shipping and returns — and if you need someone from the team, say so and I will connect you."
   ),
-  handoff: true,
+  /*
+    No `handoff` here, deliberately.
+
+    This reply invites the customer to ask for a person — "قوللي وأنا أوصّلك".
+    Flagging the invitation as a hand-off makes "I did not understand you"
+    indistinguishable from "get me someone", and every caller that acts on the
+    flag acts on the wrong one: the social inbox took a sentence it could not
+    parse as its cue to stop answering that customer for good.
+
+    A customer who takes the invitation lands on the `human` intent next turn,
+    and that one does hand off.
+  */
 });
 
 export const answerWithRules = async ({ text, user, lang = "ar" }) => {
