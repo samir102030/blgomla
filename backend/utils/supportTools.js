@@ -15,6 +15,7 @@
 import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import Category from "../models/category.model.js";
+import Brand from "../models/brand.model.js";
 import { collectCategoryIds } from "./categoryTree.js";
 import { getShippingSettings } from "../models/shippingSettings.model.js";
 
@@ -271,9 +272,9 @@ export const namesAProduct = (text) => {
  * would quietly hide every analogue camera in the shop. Anything that does not
  * match exactly falls through to the search that was there before.
  */
-const CATEGORY_TTL_MS = 10 * 60 * 1000;
-let categoryIndex = null;
-let categoryIndexAt = 0;
+const VOCAB_TTL_MS = 10 * 60 * 1000;
+let vocab = null;
+let vocabAt = 0;
 
 /** Plural to singular, in both languages, as far as a shop needs it. */
 const singular = (word) => {
@@ -286,57 +287,233 @@ const singular = (word) => {
   return bareForms(word).slice(-1)[0];
 };
 
+/**
+ * A word reduced to the consonants it is built on, in either alphabet.
+ *
+ * Four hundred and forty-four brands are filed in Latin letters and not one of
+ * them carries an Arabic name, while the questions arrive written the way the
+ * make is *said*: هيكفيجن، ابسون، سيجيت. No table could be written by hand for
+ * all of them and stay true as the catalogue grows, so both sides are reduced
+ * to the same skeleton instead — Arabic marks vowels weakly and Egyptian
+ * Arabic has no p and no v, so those collapse too — and "هيكفيجن" and
+ * "Hikvision" both come out as roughly "hkfsn".
+ */
+const AR_CONSONANT = {
+  ب: "b", پ: "b", ت: "t", ث: "t", ج: "g", چ: "g", ح: "h", خ: "k", د: "d",
+  ذ: "z", ر: "r", ز: "z", س: "s", ش: "s", ص: "s", ض: "d", ط: "t", ظ: "z",
+  غ: "g", ف: "f", ڤ: "f", ق: "k", ك: "k", ل: "l", م: "m", ن: "n", ه: "h",
+};
+
+const squeeze = (text) => text.replace(/(.)\1+/g, "$1");
+
+const skeletonOf = (word) => {
+  const folded = normalizeArabic(word);
+  if (/[\u0600-\u06FF]/.test(folded)) {
+    return squeeze([...folded].map((letter) => AR_CONSONANT[letter] || "").join(""));
+  }
+  return squeeze(
+    folded
+      .replace(/[^a-z]/g, "")
+      .replace(/ph/g, "f")
+      .replace(/ck/g, "k")
+      .replace(/sh/g, "s")
+      .replace(/ch/g, "s")
+      .replace(/th/g, "t")
+      .replace(/x/g, "ks")
+      .replace(/[aeiouwy]/g, "")
+      .replace(/v/g, "f")
+      .replace(/p/g, "b")
+      .replace(/[cq]/g, "k")
+      .replace(/j/g, "g")
+  );
+};
+
+/** Levenshtein, bounded by the two words we are ever comparing. */
+const editDistance = (a, b) => {
+  const rows = a.length;
+  const cols = b.length;
+  let previous = Array.from({ length: cols + 1 }, (_, i) => i);
+  for (let i = 1; i <= rows; i += 1) {
+    const current = [i];
+    for (let j = 1; j <= cols; j += 1) {
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+    previous = current;
+  }
+  return previous[cols];
+};
+
 /** The one word a category is called, or nothing if it is called several. */
 const soleWord = (label) => {
   const parts = normalizeArabic(label).split(/[^0-9a-z؀-ۿ]+/).filter(Boolean);
   return parts.length === 1 ? singular(parts[0]) : null;
 };
 
-const loadCategoryIndex = async () => {
-  if (categoryIndex && Date.now() - categoryIndexAt < CATEGORY_TTL_MS) return categoryIndex;
+/**
+ * Everything the shop calls its own things, read from the shop.
+ *
+ * Every category carries an Arabic name — all three hundred and forty-nine of
+ * them — so the Arabic side of the catalogue needs no invention at all: it is
+ * already written down, and this reads it. Brands are the opposite and are
+ * matched by sound; see `skeletonOf`.
+ */
+const loadVocab = async () => {
+  if (vocab && Date.now() - vocabAt < VOCAB_TTL_MS) return vocab;
 
-  const rows = await Category.find({ deleted: { $ne: true } })
-    .select("_id name nameAr level")
-    .lean();
+  const [categories, brands] = await Promise.all([
+    Category.find({ deleted: { $ne: true } }).select("_id name nameAr level").lean(),
+    Brand.find({ deleted: { $ne: true } }).select("_id name nameAr").lean(),
+  ]);
 
-  const index = new Map();
-  for (const row of rows) {
+  // Whole names first — "كاميرات ip", "لابتوبات جيمنج", "طابعات ليزر" are how
+  // the shelves are actually labelled, and a customer quoting one means it.
+  const byPhrase = new Map();
+  const byWord = new Map();
+
+  const keepShallowest = (map, key, row) => {
+    if (!key) return;
+    const held = map.get(key);
+    if (!held || (row.level ?? 9) < (held.level ?? 9)) map.set(key, row);
+  };
+
+  for (const row of categories) {
     for (const label of [row.name, row.nameAr]) {
-      const key = soleWord(label);
-      if (!key) continue;
-      // The shallowest wins: "Laptops" over "Used Laptops" for the same word.
-      const held = index.get(key);
-      if (!held || (row.level ?? 9) < (held.level ?? 9)) index.set(key, row);
+      const phrase = normalizeArabic(label);
+      if (phrase.length >= 3) keepShallowest(byPhrase, phrase, row);
+      keepShallowest(byWord, soleWord(label), row);
     }
   }
 
-  categoryIndex = index;
-  categoryIndexAt = Date.now();
-  return index;
+  const brandByName = new Map();
+  const brandBySkeleton = new Map();
+  for (const row of brands) {
+    const name = normalizeArabic(row.name);
+    if (name.length >= 2) brandByName.set(name, row);
+    if (row.nameAr) brandByName.set(normalizeArabic(row.nameAr), row);
+
+    const key = skeletonOf(row.name);
+    if (key.length >= 3) {
+      const held = brandBySkeleton.get(key) || [];
+      held.push(row);
+      brandBySkeleton.set(key, held);
+    }
+  }
+
+  vocab = { byPhrase, byWord, brandByName, brandBySkeleton };
+  vocabAt = Date.now();
+  return vocab;
 };
 
 /**
- * @returns {Promise<{id: string, name: string, ids: string[]}|null>} the shelf
- *   the sentence names, with every category beneath it — products hang off the
- *   leaves, so the branch on its own would match nothing.
+ * The make the sentence names.
+ *
+ * Spelling first, sound second, and nothing at all when the sound is ambiguous.
+ * A wrong brand is worse than no brand: filtering a camera question down to the
+ * wrong manufacturer answers confidently with products the customer did not ask
+ * about, while declining to filter just leaves the word in the search. So a
+ * sound-alike is only accepted when it is the single best match, close, and
+ * long enough that being close means something — "سيسكو" reduces to "sk", which
+ * half the catalogue's brands are within one letter of, and is let go.
+ */
+export const brandFor = async (text) => {
+  const { brandByName, brandBySkeleton } = await loadVocab();
+  const words = normalizeArabic(text).split(/[\s,،.؟?!]+/).filter(Boolean);
+
+  /*
+    Translated first, which is what makes the two layers one.
+
+    `withEnglish` already knows the makes whose Arabic spelling is too short or
+    too common for sound to settle — داهوا، سيسكو، ابل، اسوس all reduce to two
+    consonants that half this catalogue is within a letter of. Running the
+    sentence through it turns those into the catalogue's own spelling and the
+    exact pass below catches them; everything it has never heard of falls to the
+    skeleton pass, which is the half that scales to four hundred brands.
+  */
+  const spelled = withEnglish(text).split(/[\s,،.؟?!]+/).filter(Boolean);
+
+  for (const word of [...spelled, ...words]) {
+    if (word.length < 2) continue;
+    const exact = brandByName.get(word);
+    if (exact) return { id: String(exact._id), name: exact.name };
+  }
+  // Two words that are one name — "tp link", "hik vision".
+  for (const list of [spelled, words]) {
+    for (let i = 0; i < list.length - 1; i += 1) {
+      const joined = brandByName.get(`${list[i]}${list[i + 1]}`);
+      if (joined) return { id: String(joined._id), name: joined.name };
+    }
+  }
+
+  for (const word of words) {
+    const key = skeletonOf(word);
+    if (key.length < 3) continue;
+
+    let best = null;
+    let bestDistance = Infinity;
+    let tied = false;
+    for (const [candidate, rows] of brandBySkeleton) {
+      if (Math.abs(candidate.length - key.length) > 1) continue;
+      const gap = editDistance(key, candidate);
+      if (gap < bestDistance) {
+        bestDistance = gap;
+        best = rows[0];
+        tied = rows.length > 1;
+      } else if (gap === bestDistance) {
+        tied = true;
+      }
+    }
+    if (best && bestDistance <= 1 && !tied) return { id: String(best._id), name: best.name };
+  }
+  return null;
+};
+
+/**
+ * The shelf the sentence names.
+ *
+ * The whole label is tried before any single word of it, because "كاميرات ip"
+ * is a shelf and "كاميرا" on its own is not — there is no single Cameras
+ * category, and resolving it to the first camera shelf that matched would hide
+ * every analogue camera in the shop. A single word is accepted only when it is
+ * the category's entire name.
  */
 export const categoryFor = async (text) => {
-  const index = await loadCategoryIndex();
+  const { byPhrase, byWord } = await loadVocab();
+  const folded = normalizeArabic(text);
 
-  for (const raw of normalizeArabic(text).split(/[\s,،.؟?!]+/)) {
+  let longest = null;
+  for (const [phrase, row] of byPhrase) {
+    if (phrase.length < 4 || !folded.includes(phrase)) continue;
+    if (!longest || phrase.length > longest.phrase.length) longest = { phrase, row };
+  }
+  if (longest) {
+    return {
+      id: String(longest.row._id),
+      name: longest.row.name,
+      nameAr: longest.row.nameAr || "",
+      ids: await collectCategoryIds(longest.row._id),
+    };
+  }
+
+  for (const raw of folded.split(/[\s,،.؟?!]+/)) {
     if (raw.length < 3) continue;
-    // The word as typed, the English the catalogue files it under, and both
-    // without the article or the plural.
     const tries = new Set();
     for (const form of bareForms(raw)) {
       tries.add(singular(form));
       if (WORDS[form]) tries.add(singular(WORDS[form]));
     }
-
     for (const form of tries) {
-      const hit = index.get(form);
+      const hit = byWord.get(form);
       if (hit) {
-        return { id: String(hit._id), name: hit.name, ids: await collectCategoryIds(hit._id) };
+        return {
+          id: String(hit._id),
+          name: hit.name,
+          nameAr: hit.nameAr || "",
+          ids: await collectCategoryIds(hit._id),
+        };
       }
     }
   }
@@ -446,7 +623,15 @@ export const findOrder = async (user, reference) => {
  */
 export const searchProducts = async (
   query,
-  { limit = 5, strict = false, maxPrice = 0, sort = null, category = null, withTotal = false } = {}
+  {
+    limit = 5,
+    strict = false,
+    maxPrice = 0,
+    sort = null,
+    category = null,
+    brand = null,
+    withTotal = false,
+  } = {}
 ) => {
   // Two readings of the same question. Rows imported from suppliers are named
   // in English and rows entered by hand are named in Arabic, so the words the
@@ -501,6 +686,13 @@ export const searchProducts = async (
   // it is the whole subtree or nothing.
   const shelf = category?.ids?.length ? { category: { $in: category.ids } } : {};
 
+  /*
+    The make, when the sentence named one. Filed as a reference on the row, so
+    asking for Hikvision this way is exact — where leaving "hikvision" in the
+    text search would also return every row that merely mentions it.
+  */
+  const make = brand?.id ? { brand: brand.id } : {};
+
   const base = {
     isActive: { $ne: false },
     deleted: { $ne: true },
@@ -514,6 +706,7 @@ export const searchProducts = async (
     approvalStatus: "approved",
     ...ceiling,
     ...shelf,
+    ...make,
   };
 
   // Which conditions produced the rows, so a total can be counted for exactly
@@ -602,7 +795,7 @@ export const searchProducts = async (
     in for the search when it is all the customer gave.
   */
   const shelfIsTheQuestion =
-    category?.ids?.length && sort === "price_asc" && words.length <= 1;
+    (category?.ids?.length || brand?.id) && sort === "price_asc" && words.length <= 1;
 
   if (shelfIsTheQuestion) {
     const shelfRows = await run({});
@@ -638,7 +831,7 @@ export const searchProducts = async (
     did tell us which aisle to look down. Better the right aisle than "we do not
     stock that".
   */
-  if (!products.length && category?.ids?.length) products = await run({});
+  if (!products.length && (category?.ids?.length || brand?.id)) products = await run({});
 
   return answer(products);
 };
@@ -672,6 +865,7 @@ export default {
   namesAProduct,
   governorateIn,
   categoryFor,
+  brandFor,
   orderReference,
   referenceIn,
   recentOrders,

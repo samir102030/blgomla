@@ -22,6 +22,7 @@ import {
   namesAProduct,
   governorateIn,
   categoryFor,
+  brandFor,
 } from "./supportTools.js";
 
 const MODEL = process.env.SUPPORT_MODEL || "claude-sonnet-5";
@@ -389,16 +390,44 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     not a pick: the shelf is read cheapest first, as many as a chat message will
     carry, and the real count is said out loud with a link to the rest.
   */
-  const shelf = budget ? await categoryFor(stripped || text) : null;
+  /*
+    What the sentence actually named, before it is searched as words.
 
-  const { items: found, total } = await searchProducts(stripped || text, {
+    Both are read on every product question, not only on the ones carrying a
+    budget: "كاميرا ٢ ميجا هيكفيجن" has no ceiling and still has exactly one
+    right answer, and it is the brand and the shelf that pick it out. Read from
+    the shop's own tables — all 349 categories carry Arabic names, and the 444
+    brands are matched by how they sound.
+  */
+  const [shelf, make] = await Promise.all([
+    categoryFor(stripped || text),
+    brandFor(stripped || text),
+  ]);
+
+  let { items: found, total } = await searchProducts(stripped || text, {
     limit: budget ? LIST_SIZE : 4,
     strict,
     maxPrice: budget || 0,
     sort: budget ? "price_asc" : null,
     category: shelf,
+    brand: make,
     withTotal: true,
   });
+
+  /*
+    A shelf or a make read out of a sentence is a guess, and a guess that
+    narrows to nothing must not be the final answer — the customer would be told
+    the shop does not stock a thing it stocks. Ask again without them.
+  */
+  if (!found.length && (shelf || make)) {
+    ({ items: found, total } = await searchProducts(stripped || text, {
+      limit: budget ? LIST_SIZE : 4,
+      strict,
+      maxPrice: budget || 0,
+      sort: budget ? "price_asc" : null,
+      withTotal: true,
+    }));
+  }
 
   const affordable = budget
     ? found.filter((p) => (p.salePrice ?? p.price) <= budget)
@@ -432,6 +461,24 @@ const answerProduct = async ({ text, lang, strict = false }) => {
       ),
     };
   }
+
+  /*
+    Say back what the question was taken to mean.
+
+    A list of four cameras answers "كاميرا ٢ ميجا هيكفيجن" and a list of four
+    cameras also answers a question it misread — and the customer cannot tell
+    which from the products alone. Naming the shelf and the make turns a wrong
+    reading into something correctable in one message instead of a customer who
+    quietly decides the shop does not stock what he asked for.
+  */
+  const shelfName = shelf ? (lang === "ar" && shelf.nameAr ? shelf.nameAr : shelf.name) : "";
+  const understood = shelf && make
+    ? say(lang, `${shelfName} من ${make.name}`, `${shelfName} from ${make.name}`)
+    : shelf
+      ? shelfName
+      : make
+        ? say(lang, `منتجات ${make.name}`, `${make.name} products`)
+        : "";
 
   const lines = hits.map((p) => {
     /*
@@ -487,11 +534,17 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     const more = (total || hits.length) > hits.length;
 
     lines.unshift(
-      say(
-        lang,
-        `دي اللي عندنا تحت ${egp(budget, lang)}، من الأرخص:`,
-        `Here is what we have under ${egp(budget, lang)}, cheapest first:`
-      )
+      understood
+        ? say(
+            lang,
+            `دي ${understood} اللي تحت ${egp(budget, lang)}، من الأرخص:`,
+            `Here is the ${understood} under ${egp(budget, lang)}, cheapest first:`
+          )
+        : say(
+            lang,
+            `دي اللي عندنا تحت ${egp(budget, lang)}، من الأرخص:`,
+            `Here is what we have under ${egp(budget, lang)}, cheapest first:`
+          )
     );
 
     if (more) {
@@ -508,6 +561,9 @@ const answerProduct = async ({ text, lang, strict = false }) => {
         )
       );
     }
+  } else if (understood) {
+    // No ceiling given, but the sentence still named a shelf or a make.
+    lines.unshift(say(lang, `دي ${understood} اللي عندنا:`, `Here is the ${understood} we have:`));
   }
 
   return {
