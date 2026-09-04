@@ -114,6 +114,65 @@ const withEnglish = (term) => {
     .trim();
 };
 
+/**
+ * Does this sentence name something the shop sells?
+ *
+ * The intent list reads a question by the words that frame it — "بكام",
+ * "عندكم", "عايز". A customer who types "لابتوب للشغل حدود 25 الف" frames
+ * nothing; they just say what they want, and the sentence fell through to
+ * "I did not understand" while the catalogue held forty answers to it.
+ *
+ * So the goods themselves are also a signal. This is the same vocabulary the
+ * search already translates with, which keeps the two in step: a word that can
+ * find a product is a word that can start a product question.
+ */
+const PRODUCT_NOUNS = new Set([
+  ...Object.keys(WORDS).map((w) => normalizeArabic(w)),
+  ...PHRASES.map(([arabic]) => normalizeArabic(arabic)),
+  ...Object.values(WORDS),
+  // English as customers type it, which is rarely the noun in the row.
+  "laptop", "notebook", "pc", "monitor", "screen", "router", "switch", "camera",
+  "cctv", "dvr", "nvr", "printer", "scanner", "headset", "speaker", "keyboard",
+  "mouse", "ssd", "hdd", "ram", "cpu", "gpu", "ups", "server", "tablet",
+  "iphone", "macbook", "playstation", "ps5", "xbox",
+]);
+
+export const namesAProduct = (text) => {
+  const folded = normalizeArabic(text);
+  if (PHRASES.some(([arabic]) => folded.includes(normalizeArabic(arabic)))) return true;
+  return folded
+    .split(/[\s,،.؟?!]+/)
+    .some((word) => word.length >= 2 && PRODUCT_NOUNS.has(word));
+};
+
+/**
+ * The governorate in "الشحن للاسكندرية بكام".
+ *
+ * `shippingFacts` has taken one since it was written and nothing ever passed
+ * it, so the answer was the national one however specific the question. Matched
+ * against the shop's own configured zones first — those are the names the fees
+ * are filed under — and against a spelling list only as a fallback, so a zone
+ * named in a way this list never anticipated still resolves.
+ */
+const GOVERNORATES = [
+  "القاهره", "الجيزه", "الاسكندريه", "اسكندريه", "القليوبيه", "الشرقيه",
+  "الدقهليه", "المنصوره", "البحيره", "دمنهور", "الغربيه", "طنطا", "المنوفيه",
+  "كفر الشيخ", "دمياط", "بورسعيد", "الاسماعيليه", "السويس", "شمال سيناء",
+  "جنوب سيناء", "بني سويف", "الفيوم", "المنيا", "اسيوط", "سوهاج", "قنا",
+  "الاقصر", "اسوان", "البحر الاحمر", "الغردقه", "الوادي الجديد", "مطروح",
+  "العلمين", "الساحل الشمالي", "6 اكتوبر", "الشيخ زايد", "العاشر من رمضان",
+];
+
+export const governorateIn = async (text) => {
+  const folded = normalizeArabic(text);
+  const { zones = [] } = await shippingFacts();
+  const configured = zones
+    .map((z) => z.governorate)
+    .find((name) => name && folded.includes(normalizeArabic(name)));
+  if (configured) return configured;
+  return GOVERNORATES.find((name) => folded.includes(normalizeArabic(name))) || null;
+};
+
 /** What the customer sees on their orders page, and so what they will quote. */
 export const orderReference = (id) => String(id).slice(-8).toUpperCase();
 
@@ -323,6 +382,8 @@ export const shippingFacts = async (governorate) => {
 };
 
 export default {
+  namesAProduct,
+  governorateIn,
   orderReference,
   referenceIn,
   recentOrders,
