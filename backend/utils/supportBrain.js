@@ -23,6 +23,8 @@ import {
   governorateIn,
   categoryFor,
   brandFor,
+  brandShelves,
+  namesOnlyABrand,
 } from "./supportTools.js";
 
 const MODEL = process.env.SUPPORT_MODEL || "claude-sonnet-5";
@@ -406,6 +408,34 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     categoryFor(stripped || text),
     brandFor(stripped || text),
   ]);
+
+  /*
+    A make and nothing else is a question about the range, not about a product.
+
+    Four products off a shelf of four hundred are not an answer to "do you carry
+    Hikvision" — they are four arbitrary rows, and the first one that came back
+    was an 86-inch whiteboard at 95,000. Naming the shelves the make actually
+    fills hands the question back in a form the customer can finish.
+  */
+  if (make && !shelf && namesOnlyABrand(stripped || text, make)) {
+    const shelves = await brandShelves(make, { limit: 5 });
+    if (shelves.length) {
+      const named = shelves.map((s) => (lang === "ar" && s.nameAr ? s.nameAr : s.name));
+      return {
+        text: say(
+          lang,
+          `عندنا كتير من ${make.name} — ${named.join("، ")}.\nبتدوّر على إيه بالظبط؟`,
+          `We carry a lot of ${make.name} — ${named.join(", ")}.\nWhich one are you after?`
+        ),
+        suggestions: shelves.slice(0, 3).map((s, i) => ({
+          label: named[i],
+          action: "navigate",
+          to: `/products?category=${s.id}`,
+        })),
+        data: { brand: make.name, shelves },
+      };
+    }
+  }
 
   let { items: found, total } = await searchProducts(stripped || text, {
     limit: budget ? LIST_SIZE : 4,
