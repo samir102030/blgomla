@@ -792,7 +792,9 @@ export const searchProducts = async (
 
   const run = async (conditions, { byScore = false } = {}) => {
     const query = Product.find({ ...base, ...conditions })
-      .select("name nameAr slug price salePercentage stock images brand")
+      .select(
+        "name nameAr slug price salePercentage saleActive saleStartsAt saleEndsAt stock images brand"
+      )
       .populate("brand", "name")
       .limit(Math.min(limit, 24));
 
@@ -819,6 +821,33 @@ export const searchProducts = async (
     return Product.countDocuments({ ...base, ...(matched || {}) });
   };
 
+  /*
+    A percentage is not a sale.
+
+    Rows carry a `salePercentage` whose flag is off: 82% sitting on a camera
+    whose sale was never switched on. The shop's own page reads the flag and
+    prints 959; this file did not, and quoted 173 — an 82% discount that does
+    not exist, to a customer on Messenger, in writing. Eight hundred and
+    seventy-six rows carry a percentage above the 13% the shop actually allows,
+    so this was not one unlucky camera.
+
+    A sale counts when the flag is on, the percentage is real, and today is
+    inside whatever window was set. Anything else is list price, which is what
+    the customer will be charged.
+  */
+  const onSale = (p) => {
+    if (!p.saleActive) return false;
+    if (!(Number(p.salePercentage) > 0)) return false;
+
+    const now = Date.now();
+    const from = p.saleStartsAt ? new Date(p.saleStartsAt).getTime() : null;
+    const until = p.saleEndsAt ? new Date(p.saleEndsAt).getTime() : null;
+    if (from && Number.isFinite(from) && from > now) return false;
+    if (until && Number.isFinite(until) && until < now) return false;
+
+    return true;
+  };
+
   /**
    * `url` is built here rather than left to the caller.
    *
@@ -837,7 +866,7 @@ export const searchProducts = async (
       url: `${SITE_URL}/product/${p._id}`,
       brand: p.brand?.name || "",
       price: money(p.price),
-      salePrice: p.salePercentage ? money(p.price * (1 - p.salePercentage / 100)) : null,
+      salePrice: onSale(p) ? money(p.price * (1 - p.salePercentage / 100)) : null,
       // Whether, not how many — the count is the shop's number, and nothing
       // outside this file has any business repeating it to a customer.
       inStock: Number(p.stock || 0) > 0,
