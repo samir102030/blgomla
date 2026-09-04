@@ -21,6 +21,7 @@ import {
   normalizeArabic,
   namesAProduct,
   governorateIn,
+  categoryFor,
 } from "./supportTools.js";
 
 const MODEL = process.env.SUPPORT_MODEL || "claude-sonnet-5";
@@ -129,6 +130,29 @@ const statusText = (status, lang) => {
 };
 
 const egp = (n, lang) => (lang === "ar" ? `${n} جنيه` : `EGP ${n}`);
+
+/** Where a link the assistant hands out has to point. */
+const SITE_URL = (process.env.SITE_URL || "https://belgmla.com").replace(/\/+$/, "");
+
+/**
+ * The catalogue page, already filtered to the question that was asked.
+ *
+ * A chat message cannot hold 128 laptops, and a shortlist with nothing behind
+ * it reads as the shop having four. This is the rest of the answer: the same
+ * shelf, the same ceiling, cheapest first, on a page built to be scrolled.
+ */
+const catalogueLink = ({ query, budget, categoryId }) => {
+  const params = new URLSearchParams();
+  if (categoryId) params.set("category", categoryId);
+  else if (query) params.set("search", query);
+  if (budget) {
+    // Rows with no price set would otherwise lead the list at zero.
+    params.set("min", "1");
+    params.set("max", String(budget));
+  }
+  params.set("sort", "price-low");
+  return `${SITE_URL}/products?${params.toString()}`;
+};
 
 const describeOrder = (order, lang) => {
   const head = say(
@@ -332,6 +356,13 @@ const withoutTheBudget = (words) =>
     return !!next && SPEC_UNITS.has(next);
   });
 
+/*
+  How many rows one answer carries. The channel splits a long reply into
+  messages of its own accord, so this is about what a person will read in a chat
+  window before scrolling past it — not about what fits.
+*/
+const LIST_SIZE = 12;
+
 const answerProduct = async ({ text, lang, strict = false }) => {
   const budget = budgetIn(text);
 
@@ -353,12 +384,22 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     the first handful the index returned — ranked by how well the words matched,
     which has nothing to do with price. Ask for rows under the budget and every
     row that comes back is one the customer can buy.
+
+    With a budget the question is "what can I get for this", which is a list and
+    not a pick: the shelf is read cheapest first, as many as a chat message will
+    carry, and the real count is said out loud with a link to the rest.
   */
-  const found = await searchProducts(stripped || text, {
-    limit: budget ? 8 : 4,
+  const shelf = budget ? await categoryFor(stripped || text) : null;
+
+  const { items: found, total } = await searchProducts(stripped || text, {
+    limit: budget ? LIST_SIZE : 4,
     strict,
     maxPrice: budget || 0,
+    sort: budget ? "price_asc" : null,
+    category: shelf,
+    withTotal: true,
   });
+
   const affordable = budget
     ? found.filter((p) => (p.salePrice ?? p.price) <= budget)
     : found;
@@ -377,7 +418,9 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     and the closest few are offered anyway.
   */
   const overBudget = budget && !affordable.length && nearest.length;
-  const hits = overBudget ? nearest.slice(0, 3) : affordable.slice(0, 4);
+  const hits = overBudget
+    ? nearest.slice(0, 3)
+    : affordable.slice(0, budget ? LIST_SIZE : 4);
 
   if (!hits.length) {
     if (strict) return null;
@@ -391,11 +434,23 @@ const answerProduct = async ({ text, lang, strict = false }) => {
   }
 
   const lines = hits.map((p) => {
-    const name = lang === "ar" && p.nameAr ? p.nameAr : p.name;
-    const price = p.salePrice ? `${egp(p.salePrice, lang)}` : egp(p.price, lang);
+    /*
+      These names run to a hundred and thirty characters — every specification
+      the supplier's sheet carried, in the row's name. Twelve of them with their
+      links do not fit in a message the channel will send, so the tail that says
+      the same thing as the line above it is dropped.
+    */
+    const full = lang === "ar" && p.nameAr ? p.nameAr : p.name;
+    const name = full.length > 72 ? `${full.slice(0, 72).trimEnd()}…` : full;
+    // A price of zero is a price nobody has set, not a machine being given away.
+    const price = p.price > 0
+      ? p.salePrice
+        ? `${egp(p.salePrice, lang)}`
+        : egp(p.price, lang)
+      : say(lang, "السعر بيتأكد مع الفريق", "price confirmed by the team");
     const stock = p.inStock
       ? say(lang, `متوفر (${p.stock})`, `in stock (${p.stock})`)
-      : say(lang, "مش متوفر حالياً", "out of stock");
+      : say(lang, "بيتجاب بالطلب", "ordered in");
     // The link belongs in the line. On a chat channel a name and a price the
     // customer cannot open is a dead end — they have to go and search the site
     // for the thing they were just shown.
@@ -410,6 +465,42 @@ const answerProduct = async ({ text, lang, strict = false }) => {
         `Nothing came in under ${egp(budget, lang)} for that. The closest:`
       )
     );
+  } else if (budget) {
+    /*
+      The true count, then the rest of it. Showing four of a hundred and
+      twenty-eight without saying so is the shop looking smaller than it is, and
+      a customer who wanted to compare has nowhere to go.
+    */
+    const shown = hits.length;
+    const count = total || shown;
+    lines.unshift(
+      count > shown
+        ? say(
+            lang,
+            `لقيت ${count} حاجة تحت ${egp(budget, lang)}. دول أرخص ${shown}:`,
+            `${count} of them came in under ${egp(budget, lang)}. The cheapest ${shown}:`
+          )
+        : say(
+            lang,
+            `دي كل الحاجات اللي تحت ${egp(budget, lang)} (${shown}):`,
+            `Everything under ${egp(budget, lang)} — all ${shown} of them:`
+          )
+    );
+
+    if (count > shown) {
+      const link = catalogueLink({
+        query: stripped,
+        budget,
+        categoryId: shelf?.id || null,
+      });
+      lines.push(
+        say(
+          lang,
+          `الليستة كاملة، كل الـ${count} بالترتيب من الأرخص:\n${link}`,
+          `The complete list, all ${count} of them, cheapest first:\n${link}`
+        )
+      );
+    }
   }
 
   return {
@@ -574,8 +665,6 @@ const fallback = (lang) => ({
     and that one does hand off.
   */
 });
-
-const SITE_URL = (process.env.SITE_URL || "https://belgmla.com").replace(/\/+$/, "");
 
 /**
  * "فيه خصومات النهارده؟"

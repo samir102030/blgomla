@@ -14,6 +14,8 @@
  */
 import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
+import Category from "../models/category.model.js";
+import { collectCategoryIds } from "./categoryTree.js";
 import { getShippingSettings } from "../models/shippingSettings.model.js";
 
 /**
@@ -179,6 +181,94 @@ export const namesAProduct = (text) => {
 };
 
 /**
+ * The shelf a word names — "لابتوب" is the Laptops category, not a word to
+ * look for inside product names.
+ *
+ * Searching the name alone is how "كل اللابات تحت 25 ألف" answered with a
+ * keyboard sticker and a patch cord: both are called "… For Laptop …", both
+ * cost less than 25,000, and by the only test the search applied they were
+ * laptops. Filed under the right shelf, the same question returns 128 machines
+ * and nothing else.
+ *
+ * Deliberately conservative. A category is used only when its whole name *is*
+ * the word — "Laptops", "Routers", "Monitors" — because a near match narrows
+ * the answer instead of sharpening it: "كاميرا" resolving to "IP Cameras"
+ * would quietly hide every analogue camera in the shop. Anything that does not
+ * match exactly falls through to the search that was there before.
+ */
+const CATEGORY_TTL_MS = 10 * 60 * 1000;
+let categoryIndex = null;
+let categoryIndexAt = 0;
+
+/** Plural to singular, in both languages, as far as a shop needs it. */
+const singular = (word) => {
+  if (/[a-z0-9]$/.test(word)) {
+    if (word.endsWith("ies") && word.length > 4) return `${word.slice(0, -3)}y`;
+    if (word.endsWith("es") && word.length > 4) return word.slice(0, -2);
+    if (word.endsWith("s") && word.length > 3) return word.slice(0, -1);
+    return word;
+  }
+  return bareForms(word).slice(-1)[0];
+};
+
+/** The one word a category is called, or nothing if it is called several. */
+const soleWord = (label) => {
+  const parts = normalizeArabic(label).split(/[^0-9a-z؀-ۿ]+/).filter(Boolean);
+  return parts.length === 1 ? singular(parts[0]) : null;
+};
+
+const loadCategoryIndex = async () => {
+  if (categoryIndex && Date.now() - categoryIndexAt < CATEGORY_TTL_MS) return categoryIndex;
+
+  const rows = await Category.find({ deleted: { $ne: true } })
+    .select("_id name nameAr level")
+    .lean();
+
+  const index = new Map();
+  for (const row of rows) {
+    for (const label of [row.name, row.nameAr]) {
+      const key = soleWord(label);
+      if (!key) continue;
+      // The shallowest wins: "Laptops" over "Used Laptops" for the same word.
+      const held = index.get(key);
+      if (!held || (row.level ?? 9) < (held.level ?? 9)) index.set(key, row);
+    }
+  }
+
+  categoryIndex = index;
+  categoryIndexAt = Date.now();
+  return index;
+};
+
+/**
+ * @returns {Promise<{id: string, name: string, ids: string[]}|null>} the shelf
+ *   the sentence names, with every category beneath it — products hang off the
+ *   leaves, so the branch on its own would match nothing.
+ */
+export const categoryFor = async (text) => {
+  const index = await loadCategoryIndex();
+
+  for (const raw of normalizeArabic(text).split(/[\s,،.؟?!]+/)) {
+    if (raw.length < 3) continue;
+    // The word as typed, the English the catalogue files it under, and both
+    // without the article or the plural.
+    const tries = new Set();
+    for (const form of bareForms(raw)) {
+      tries.add(singular(form));
+      if (WORDS[form]) tries.add(singular(WORDS[form]));
+    }
+
+    for (const form of tries) {
+      const hit = index.get(form);
+      if (hit) {
+        return { id: String(hit._id), name: hit.name, ids: await collectCategoryIds(hit._id) };
+      }
+    }
+  }
+  return null;
+};
+
+/**
  * The governorate in "الشحن للاسكندرية بكام".
  *
  * `shippingFacts` has taken one since it was written and nothing ever passed
@@ -279,7 +369,10 @@ export const findOrder = async (user, reference) => {
  * storefront does would answer questions about things the customer cannot
  * reach from any page.
  */
-export const searchProducts = async (query, { limit = 5, strict = false, maxPrice = 0 } = {}) => {
+export const searchProducts = async (
+  query,
+  { limit = 5, strict = false, maxPrice = 0, sort = null, category = null, withTotal = false } = {}
+) => {
   // Two readings of the same question. Rows imported from suppliers are named
   // in English and rows entered by hand are named in Arabic, so the words the
   // customer typed are tried as they were typed and again translated, and
@@ -287,7 +380,10 @@ export const searchProducts = async (query, { limit = 5, strict = false, maxPric
   const arabic = normalizeArabic(query);
   const english = withEnglish(query);
   const term = english;
-  if (term.length < 2) return [];
+  // Nothing to search for. Shaped like every other answer, because a caller
+  // that asked for a total and got a bare array back crashes on the first
+  // property it reads.
+  if (term.length < 2) return withTotal ? { items: [], total: 0 } : [];
 
   const rx = (word) => new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
   const anyField = (word) => ({ $or: [{ name: rx(word) }, { nameAr: rx(word) }, { sku: rx(word) }] });
@@ -317,28 +413,65 @@ export const searchProducts = async (query, { limit = 5, strict = false, maxPric
     customer with 25,000 to spend that it had nothing for him. The widest
     discount the shop allows is 13%, so the cut is made a little above the
     ceiling and the exact figure is checked by the caller against the sale price.
-  */
-  const ceiling = maxPrice > 0 ? { price: { $lte: Math.round(maxPrice / 0.87) } } : {};
 
-  const run = (conditions, { byScore = false } = {}) => {
-    const query = Product.find({
-      isActive: { $ne: false },
-      deleted: { $ne: true },
-      ...ceiling,
-      ...conditions,
-    })
+    `$gt: 0` matters as much as the ceiling. Sixty-seven of the rows under
+    25,000 are under it because they carry no price at all — a price of zero is
+    the shop not having set one, not the thing being free — and sorted cheapest
+    first they filled the whole answer with laptops offered at nothing.
+  */
+  const ceiling =
+    maxPrice > 0 ? { price: { $gt: 0, $lte: Math.round(maxPrice / 0.87) } } : {};
+
+  // The shelf, when the sentence named one. Products hang off the leaves, so
+  // it is the whole subtree or nothing.
+  const shelf = category?.ids?.length ? { category: { $in: category.ids } } : {};
+
+  const base = {
+    isActive: { $ne: false },
+    deleted: { $ne: true },
+    /*
+      The same gate the storefront uses. A vendor's product waiting on approval
+      is not on any page a customer can reach, and the assistant was quoting it
+      a price for it — the one thing this file's whole design is meant to
+      prevent. `approvalStatus` defaults to "pending", so this is the difference
+      between the catalogue and the queue behind it.
+    */
+    approvalStatus: "approved",
+    ...ceiling,
+    ...shelf,
+  };
+
+  // Which conditions produced the rows, so a total can be counted for exactly
+  // the same question rather than for a wider one.
+  let matched = null;
+
+  const run = async (conditions, { byScore = false } = {}) => {
+    const query = Product.find({ ...base, ...conditions })
       .select("name nameAr slug price salePercentage stock images brand")
       .populate("brand", "name")
-      .limit(Math.min(limit, 8));
+      .limit(Math.min(limit, 24));
 
-    // A text search matches any of the words, so "msi monitor" pulls every
-    // monitor in the shop. Ranking puts the rows that matched both first —
-    // without it the answer is confidently about the wrong brand.
-    if (byScore) {
+    if (sort === "price_asc") {
+      // Asked for a list under a budget, the useful order is cheapest first —
+      // not how well the words matched, which the customer cannot see.
+      query.sort({ price: 1 });
+    } else if (byScore) {
+      // A text search matches any of the words, so "msi monitor" pulls every
+      // monitor in the shop. Ranking puts the rows that matched both first —
+      // without it the answer is confidently about the wrong brand.
       query.select({ score: { $meta: "textScore" } }).sort({ score: { $meta: "textScore" } });
     }
 
-    return query.lean();
+    const rows = await query.lean();
+    if (rows.length && !matched) matched = conditions;
+    return rows;
+  };
+
+  /** How many rows the question has in total, not just how many were shown. */
+  const totalFor = async (rows) => {
+    if (!withTotal) return undefined;
+    if (!rows.length) return 0;
+    return Product.countDocuments({ ...base, ...(matched || {}) });
   };
 
   /**
@@ -373,12 +506,31 @@ export const searchProducts = async (query, { limit = 5, strict = false, maxPric
    * strict every word has to appear in the row, so a guess that is wrong finds
    * nothing and the assistant admits it did not understand, which is true.
    */
+  const answer = async (rows) =>
+    withTotal ? { items: shape(rows), total: await totalFor(rows) } : shape(rows);
+
   if (strict) {
     let rows = words.length ? await run({ $and: words.map(anyField) }) : [];
     if (!rows.length && arabicWords.length) {
       rows = await run({ $and: arabicWords.map(anyField) });
     }
-    return shape(rows);
+    return answer(rows);
+  }
+
+  /*
+    "كل اللابات تحت 25 ألف" names a shelf and nothing else, and there the shelf
+    *is* the question: requiring the word as well would drop the machines whose
+    row happens to be called a Notebook. But "لابتوب lenovo حدود 25 الف" names a
+    shelf *and* a make, and answering that with the twelve cheapest laptops in
+    the shop would be ignoring half of what was asked — so the shelf only stands
+    in for the search when it is all the customer gave.
+  */
+  const shelfIsTheQuestion =
+    category?.ids?.length && sort === "price_asc" && words.length <= 1;
+
+  if (shelfIsTheQuestion) {
+    const shelfRows = await run({});
+    if (shelfRows.length) return answer(shelfRows);
   }
 
   /**
@@ -405,7 +557,14 @@ export const searchProducts = async (query, { limit = 5, strict = false, maxPric
   }
   if (!products.length && !words.length) products = await run(anyField(term));
 
-  return shape(products);
+  /*
+    Last resort with a shelf in hand: the words found nothing, but the customer
+    did tell us which aisle to look down. Better the right aisle than "we do not
+    stock that".
+  */
+  if (!products.length && category?.ids?.length) products = await run({});
+
+  return answer(products);
 };
 
 /**
@@ -436,6 +595,7 @@ export const shippingFacts = async (governorate) => {
 export default {
   namesAProduct,
   governorateIn,
+  categoryFor,
   orderReference,
   referenceIn,
   recentOrders,
