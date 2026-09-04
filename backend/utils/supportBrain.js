@@ -36,7 +36,27 @@ const MODEL = process.env.SUPPORT_MODEL || "claude-sonnet-5";
   shop that can answer "ايه الفرق بين DVR و NVR" and one that cannot. Neither
   key configured means the rules engine, exactly as before.
 */
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+/*
+  A list, not a name. Google retires ids without warning — `gemini-2.5-flash`
+  answers a 404 telling you to move on — and the free tier answers 503 whenever
+  the model it points at is busy, which on an alias like `gemini-flash-latest`
+  is often. So the shop keeps an ordered list and walks it: the first id that
+  answers wins, a dead id is skipped, a busy one is retried once and then
+  skipped. GEMINI_MODEL overrides the list and may itself be comma-separated,
+  so a future retirement is an environment variable rather than a deploy.
+*/
+const GEMINI_MODELS = (
+  process.env.GEMINI_MODEL || "gemini-3.6-flash,gemini-flash-latest,gemini-3.5-flash"
+)
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+
+// Busy or broken on Google's side: worth one more go. Anything else — a bad id,
+// a bad key, a bad request — will fail exactly the same way twice.
+const GEMINI_RETRIABLE = new Set([429, 500, 502, 503, 504]);
+
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const hasClaude = () => !!process.env.ANTHROPIC_API_KEY;
 const hasGemini = () => !!process.env.GEMINI_API_KEY;
 const hasModel = () => hasClaude() || hasGemini();
@@ -933,8 +953,10 @@ const runTool = async (name, input, user, extras = {}) => {
 const systemPrompt = (user, lang, extra = "") =>
   [
     "You are the support assistant for Belgomla, an Egyptian IT and networking shop.",
-    "Answer only from the tools. Never invent a price, a stock level, a delivery time or an order status — call the tool and report what it returns.",
-    "If the tools cannot answer, say so plainly and offer to pass the customer to a person.",
+    "Shop facts come from the tools and nowhere else: a price, a stock level, a delivery time, a discount, an order status is whatever the tool returns. Never guess one, never round one, never describe a product the tools did not return. If a tool cannot answer a shop fact, say so plainly and offer to pass the customer to a person.",
+    "General knowledge about the kit is yours to give, and you should give it. The difference between a DVR and an NVR, what PoE is for, what megapixels or IR range or colour night vision mean in practice, what a NAS does, how many cameras a shop of a given size usually needs, what to look for when choosing between two things — answer all of that from what you know, in a few plain sentences, the way someone behind the counter would. Do not say the information is unavailable: it is a technical question, not a catalogue lookup.",
+    "When a technical question has a product behind it, answer the question first and then, if it helps, call a tool and name what the shop actually has.",
+    "Installation, wholesale pricing and anything else the tools do not cover: say what you know in one line and offer to put the customer through to the team.",
     lang === "ar"
       ? "Reply in Egyptian Arabic, the way a shop assistant in Cairo would speak — short, direct, no formal filler."
       : "Reply in English. Keep it short and direct.",
@@ -1070,28 +1092,55 @@ const answerWithGemini = async ({
     { role: "user", parts: [{ text: String(text).slice(0, 2000) }] },
   ];
 
-  const endpoint =
-    `https://generativelanguage.googleapis.com/v1beta/models/` +
-    `${GEMINI_MODEL}:generateContent`;
-
-  for (let turn = 0; turn < 4; turn += 1) {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-goog-api-key": process.env.GEMINI_API_KEY,
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt(user, lang, systemExtra) }] },
-        contents,
-        tools: [{ functionDeclarations: declarations }],
-        generationConfig: { maxOutputTokens: 700, temperature: 0.3 },
-      }),
+  const payload = () =>
+    JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt(user, lang, systemExtra) }] },
+      contents,
+      tools: [{ functionDeclarations: declarations }],
+      generationConfig: { maxOutputTokens: 700, temperature: 0.3 },
     });
 
-    if (!response.ok) {
-      throw new Error(`gemini ${response.status}: ${(await response.text()).slice(0, 300)}`);
+  /*
+    Walk the model list until one answers. A retriable status gets one more go
+    after a short wait — a 503 on the free tier is usually over in well under a
+    second — and anything else moves straight to the next id. The whole budget
+    is under two seconds of waiting, which a customer will not feel and a
+    webhook will not time out on.
+  */
+  let chosen = null;
+  const ask = async () => {
+    let last = "gemini: no model configured";
+
+    for (const model of chosen ? [chosen] : GEMINI_MODELS) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+          {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-goog-api-key": process.env.GEMINI_API_KEY,
+            },
+            body: payload(),
+          }
+        );
+
+        if (response.ok) {
+          chosen = model;
+          return response;
+        }
+
+        last = `gemini ${response.status} (${model}): ${(await response.text()).slice(0, 200)}`;
+        if (!GEMINI_RETRIABLE.has(response.status)) break;
+        await pause(350 * (attempt + 1));
+      }
     }
+
+    throw new Error(last);
+  };
+
+  for (let turn = 0; turn < 4; turn += 1) {
+    const response = await ask();
 
     const body = await response.json();
     const parts = body.candidates?.[0]?.content?.parts || [];
