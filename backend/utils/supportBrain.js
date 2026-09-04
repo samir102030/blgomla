@@ -28,7 +28,18 @@ import {
 } from "./supportTools.js";
 
 const MODEL = process.env.SUPPORT_MODEL || "claude-sonnet-5";
-const hasModel = () => !!process.env.ANTHROPIC_API_KEY;
+
+/*
+  Two models can drive this file, and which one is a question of what the shop
+  has paid for rather than of anything in the code. Claude first when its key is
+  there; Gemini's free tier when it is not, which is the difference between a
+  shop that can answer "ايه الفرق بين DVR و NVR" and one that cannot. Neither
+  key configured means the rules engine, exactly as before.
+*/
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
+const hasClaude = () => !!process.env.ANTHROPIC_API_KEY;
+const hasGemini = () => !!process.env.GEMINI_API_KEY;
+const hasModel = () => hasClaude() || hasGemini();
 
 /* ─────────────────────────── reading the question ─────────────────────────── */
 
@@ -1009,6 +1020,113 @@ const answerWithModel = async ({
   return { text: null, source: "model" };
 };
 
+/**
+ * The same conversation, spoken to Gemini.
+ *
+ * Same tools, same system prompt, same cap on rounds — only the wire format
+ * differs, and the shapes are close enough that the translation is mechanical:
+ * `input_schema` is already JSON Schema and becomes `parameters`, a tool call
+ * arrives as a `functionCall` part instead of a `tool_use` block, and a result
+ * goes back as a `functionResponse` part.
+ *
+ * Written to the free tier's grain. Google trains on free-tier traffic, so the
+ * caller decides what may be sent — `answer` keeps order questions away from it
+ * — and the rate limit is low enough that a failure here has to fall through to
+ * the rules engine rather than become an apology to a customer.
+ */
+const answerWithGemini = async ({
+  text,
+  user,
+  history = [],
+  lang = "ar",
+  extraTools = [],
+  systemExtra = "",
+}) => {
+  const specs = [...TOOL_SPECS, ...extraTools.map((t) => t.spec)];
+  const extras = Object.fromEntries(extraTools.map((t) => [t.spec.name, t.run]));
+
+  // Gemini rejects an empty `properties`, which Anthropic accepts.
+  const declarations = specs.map((spec) => {
+    const shape = spec.input_schema || {};
+    const declared = {
+      name: spec.name,
+      description: spec.description,
+    };
+    if (Object.keys(shape.properties || {}).length) {
+      declared.parameters = {
+        type: "object",
+        properties: shape.properties,
+        ...(shape.required?.length ? { required: shape.required } : {}),
+      };
+    }
+    return declared;
+  });
+
+  const contents = [
+    ...history.slice(-8).map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: String(m.content || "").slice(0, 2000) }],
+    })),
+    { role: "user", parts: [{ text: String(text).slice(0, 2000) }] },
+  ];
+
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/` +
+    `${GEMINI_MODEL}:generateContent`;
+
+  for (let turn = 0; turn < 4; turn += 1) {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: systemPrompt(user, lang, systemExtra) }] },
+        contents,
+        tools: [{ functionDeclarations: declarations }],
+        generationConfig: { maxOutputTokens: 700, temperature: 0.3 },
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`gemini ${response.status}: ${(await response.text()).slice(0, 300)}`);
+    }
+
+    const body = await response.json();
+    const parts = body.candidates?.[0]?.content?.parts || [];
+    const calls = parts.filter((p) => p.functionCall);
+
+    if (!calls.length) {
+      const said = parts
+        .map((p) => p.text)
+        .filter(Boolean)
+        .join("\n")
+        .trim();
+      return { text: said || null, source: "gemini" };
+    }
+
+    contents.push({ role: "model", parts });
+    contents.push({
+      role: "user",
+      parts: await Promise.all(
+        calls.map(async ({ functionCall }) => ({
+          functionResponse: {
+            name: functionCall.name,
+            // Gemini wants an object here, and a tool that returns an array —
+            // every product search does — is not one.
+            response: {
+              result: await runTool(functionCall.name, functionCall.args, user, extras),
+            },
+          },
+        }))
+      ),
+    });
+  }
+
+  return { text: null, source: "gemini" };
+};
+
 /* ───────────────────────────────── entry ───────────────────────────────── */
 
 export const answer = async ({
@@ -1019,9 +1137,25 @@ export const answer = async ({
   extraTools = [],
   systemExtra = "",
 }) => {
-  if (hasModel()) {
+  /*
+    An order question is answered here, never by a free model.
+
+    Google trains on free-tier traffic. A customer asking for a product is
+    asking about the catalogue and nothing of his own goes anywhere; a customer
+    asking where his order is hands over a reference, a name and an address, and
+    those are his, not ours to spend on somebody's training set. The rules
+    engine has always answered order questions well — it reads the row and
+    reports it — so on the free tier that is where they stay.
+
+    With Claude's key configured the question does not arise: paid API traffic
+    is not trained on, and the model answers everything.
+  */
+  const engine = hasClaude() ? answerWithModel : hasGemini() ? answerWithGemini : null;
+  const theirs = !hasClaude() && intentOf(text) === "order";
+
+  if (engine && !theirs) {
     try {
-      const fromModel = await answerWithModel({
+      const fromModel = await engine({
         text,
         user,
         history,
@@ -1043,4 +1177,4 @@ export const answer = async ({
   return { suggestions: [], handoff: false, source: "rules", ...fromRules };
 };
 
-export default { answer, answerWithRules, hasModel };
+export default { answer, answerWithRules, hasModel, hasClaude, hasGemini };
