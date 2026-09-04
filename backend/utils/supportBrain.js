@@ -19,6 +19,8 @@ import {
   shippingFacts,
   referenceIn,
   normalizeArabic,
+  namesAProduct,
+  governorateIn,
 } from "./supportTools.js";
 
 const MODEL = process.env.SUPPORT_MODEL || "claude-sonnet-5";
@@ -71,6 +73,13 @@ const INTENTS = [
     patterns: [
       "الدفع", "ادفع", "فيزا", "تقسيط", "كاش", "عند الاستلام", "فودافون كاش",
       "payment", "pay", "instalment", "installment", "cash on delivery", "cod", "visa",
+    ],
+  },
+  {
+    name: "deals",
+    patterns: [
+      "خصم", "خصومات", "عروض", "عرض", "تخفيضات", "تخفيض", "اوفر", "اوكازيون",
+      "sale", "deals", "offer", "offers", "discount", "promo",
     ],
   },
   {
@@ -209,6 +218,45 @@ const STOP_WORDS = new Set(
   ].map((w) => normalizeArabic(w))
 );
 
+/**
+ * The ceiling in "لابتوب للشغل حدود 25 الف".
+ *
+ * A budget is the second half of most product questions here and it was going
+ * into the search as if it were part of the name — so the words that mattered
+ * were diluted by a number no row contains. Read it out, and the shortlist can
+ * be cut to what the customer can actually afford instead of leading with the
+ * most expensive thing that matched.
+ *
+ * "الف" and "k" are how the number is nearly always said; 25 on its own means
+ * 25 pounds, which is nothing this shop sells, so a bare number under a
+ * thousand is read as thousands too.
+ */
+const BUDGET_CUE = /(حدود|حوالي|تحت|اقل من|لحد|ميزانيه|ميزانيتي|في حدود|under|below|max|budget|up to)/;
+
+const budgetIn = (text) => {
+  const folded = normalize(text);
+  const hasCue = BUDGET_CUE.test(folded);
+
+  /*
+    Every number in the sentence, then the largest — because a sentence can
+    carry more than one and only one of them is money. "كاميرا 2 ميجا حدود 3
+    الف" holds a resolution and a ceiling, and taking the first would shop for
+    a two-thousand-pound camera.
+  */
+  const amounts = [...folded.matchAll(/(\d[\d,]*)\s*(الف|k)?/g)]
+    .map(([, digits, thousands]) => {
+      const raw = Number(String(digits).replace(/,/g, ""));
+      if (!Number.isFinite(raw) || raw <= 0) return null;
+      if (thousands) return raw * 1000;
+      if (!hasCue) return null;
+      // A bare "25" after "حدود" is 25 thousand; nothing here costs 25 pounds.
+      return raw < 1000 ? raw * 1000 : raw;
+    })
+    .filter(Boolean);
+
+  return amounts.length ? Math.max(...amounts) : null;
+};
+
 const answerProduct = async ({ text, lang, strict = false }) => {
   // The words that made this a product question are not part of the product's
   // name, and searching with them still in finds nothing.
@@ -224,7 +272,24 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     .filter((word) => word && !STOP_WORDS.has(word))
     .join(" ");
 
-  const hits = await searchProducts(stripped || text, { limit: 4, strict });
+  const budget = budgetIn(text);
+
+  // Ask for more than we will show, so trimming to the budget still leaves a
+  // shortlist rather than one lonely row.
+  const found = await searchProducts(stripped || text, { limit: budget ? 12 : 4, strict });
+  const affordable = budget
+    ? found.filter((p) => (p.salePrice ?? p.price) <= budget)
+    : found;
+
+  /*
+    A budget nothing meets is worth saying out loud. Silently showing the
+    cheapest thing over the line reads as the shop ignoring what was asked, and
+    showing nothing at all hides that the item exists — so the ceiling is named
+    and the closest few are offered anyway.
+  */
+  const overBudget = budget && !affordable.length && found.length;
+  const hits = overBudget ? found.slice(0, 3) : affordable.slice(0, 4);
+
   if (!hits.length) {
     if (strict) return null;
     return {
@@ -242,11 +307,24 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     const stock = p.inStock
       ? say(lang, `متوفر (${p.stock})`, `in stock (${p.stock})`)
       : say(lang, "مش متوفر حالياً", "out of stock");
-    return `${name} — ${price} · ${stock}`;
+    // The link belongs in the line. On a chat channel a name and a price the
+    // customer cannot open is a dead end — they have to go and search the site
+    // for the thing they were just shown.
+    return `${name} — ${price} · ${stock}${p.url ? `\n${p.url}` : ""}`;
   });
 
+  if (overBudget) {
+    lines.unshift(
+      say(
+        lang,
+        `مفيش حاجة تحت ${egp(budget, lang)} في اللي دوّرت عليه. أقرب حاجة:`,
+        `Nothing came in under ${egp(budget, lang)} for that. The closest:`
+      )
+    );
+  }
+
   return {
-    text: lines.join("\n"),
+    text: lines.join("\n\n"),
     suggestions: hits.slice(0, 3).map((p) => ({
       label: lang === "ar" && p.nameAr ? p.nameAr : p.name,
       action: "navigate",
@@ -338,10 +416,32 @@ const staticAnswer = (key, lang) => ({
 });
 
 const fallback = (lang) => ({
+  /*
+    A dead end is where these conversations are lost, so this says what to type
+    next instead of only what went wrong. The examples are the shapes that do
+    work — a product name, a name with a ceiling, a governorate — which is
+    cheaper to read than a menu and teaches the customer the thing they need.
+  */
   text: say(
     lang,
-    "مش متأكد إني فهمت. تقدر تسألني عن طلبك، أو عن منتج، أو عن الشحن والإرجاع — ولو محتاج حد من الفريق قوللي وأنا أوصّلك.",
-    "I am not sure I followed that. You can ask me about your order, about a product, or about shipping and returns — and if you need someone from the team, say so and I will connect you."
+    [
+      "مش متأكد إني فهمت 🙏 جرّب تكتبلي:",
+      "• اسم المنتج — زي «راوتر tp-link» أو «كاميرا 4 ميجا»",
+      "• أو المنتج وميزانيتك — «لابتوب حدود 25 الف»",
+      "• أو «الشحن للاسكندرية بكام»",
+      "",
+      `والكتالوج كله هنا: ${SITE_URL}`,
+      "ولو محتاج حد من الفريق قوللي وأنا أوصّلك.",
+    ].join("\n"),
+    [
+      "I am not sure I followed that. Try one of these:",
+      "• a product name — \"tp-link router\", \"4 MP camera\"",
+      "• a product and a budget — \"laptop under 25k\"",
+      "• or \"how much is shipping to Alexandria\"",
+      "",
+      `The full catalogue is here: ${SITE_URL}`,
+      "And if you need someone from the team, say so and I will connect you.",
+    ].join("\n")
   ),
   /*
     No `handoff` here, deliberately.
@@ -355,6 +455,24 @@ const fallback = (lang) => ({
     A customer who takes the invitation lands on the `human` intent next turn,
     and that one does hand off.
   */
+});
+
+const SITE_URL = (process.env.SITE_URL || "https://belgmla.com").replace(/\/+$/, "");
+
+/**
+ * "فيه خصومات النهارده؟"
+ *
+ * The shop keeps its reductions on one page and changes them often, so the
+ * honest answer is the page rather than a list this file would have to be
+ * redeployed to keep true.
+ */
+const answerDeals = (lang) => ({
+  text: say(
+    lang,
+    `العروض والخصومات كلها هنا، وبتتحدث أول بأول:\n${SITE_URL}/deals\n\nولو بتدوّر على حاجة معينة قوللي اسمها وأنا أشوفلك سعرها.`,
+    `Every current offer is on one page, kept up to date:\n${SITE_URL}/deals\n\nAnd if you are after something specific, tell me what it is and I will check the price.`
+  ),
+  data: { deals: `${SITE_URL}/deals` },
 });
 
 export const answerWithRules = async ({ text, user, lang = "ar" }) => {
@@ -385,9 +503,20 @@ export const answerWithRules = async ({ text, user, lang = "ar" }) => {
     case "greeting":
       return staticAnswer("greeting", lang);
     default: {
-      // A sentence with no intent in it is often just a product name typed on
-      // its own. Guessed, though — so the search is held to every word
-      // matching, and a guess that finds nothing says nothing.
+      /*
+        No framing words, but the sentence names something we sell — "لابتوب
+        للشغل حدود 25 الف" is a product question wearing no question marks.
+        Search it properly rather than as a guess: the customer told us what
+        they want, they just did not phrase it as an enquiry.
+      */
+      if (namesAProduct(text)) {
+        const named = await answerProduct({ text, lang });
+        if (named?.data?.products?.length) return named;
+      }
+
+      // Otherwise it may still be a bare product name. Guessed, though — so
+      // the search is held to every word matching, and a guess that finds
+      // nothing says nothing.
       if (normalize(text).length >= 3) {
         const guess = await answerProduct({ text, lang, strict: true });
         if (guess?.data?.products?.length) return guess;
