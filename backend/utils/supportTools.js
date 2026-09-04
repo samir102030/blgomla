@@ -34,6 +34,12 @@ export const normalizeArabic = (text) =>
     .replace(/[أإآٱ]/g, "ا")
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
+    // "٢" is a digit. A customer typing "كاميرا ٢ ميجا حدود ٣ الف" on an
+    // Arabic keyboard was invisible to every \d in this codebase — the budget
+    // reader, the spec joiner, the search — because Arabic-Indic and Persian
+    // numerals are different characters from 0-9.
+    .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
     .replace(/\s+/g, " ")
     .trim();
 
@@ -51,6 +57,17 @@ export const normalizeArabic = (text) =>
  * "card monitor".
  */
 const PHRASES = [
+  // Brands typed as two Arabic words. A customer asking for "كاميرا هيك فيجن"
+  // was searching six thousand English rows for an Arabic word.
+  ["هيك فيجن", "hikvision"],
+  ["هيك لوك", "hilook"],
+  ["ايزي فيز", "ezviz"],
+  ["تي بي لينك", "tp-link"],
+  ["دي لينك", "d-link"],
+  ["اتش بي", "hp"],
+  ["يوني فيو", "unv"],
+  ["زد كي تيكو", "zkteco"],
+  ["ام اس اي", "msi"],
   ["كارت شاشه", "graphics card"],
   ["كارت الشاشه", "graphics card"],
   ["لوحه مفاتيح", "keyboard"],
@@ -94,13 +111,57 @@ const WORDS = {
   سويتش: "switch",
   ماك: "macbook",
   ايفون: "iphone",
+  /*
+    The makes, spelled the way people type them. The rows all say Hikvision and
+    Dahua in Latin letters; the questions arrive saying هيكفيجن وداهوا — and a
+    brand the search cannot see is a brand the shop appears not to carry. This
+    also teaches `namesAProduct` that a bare brand is a product question:
+    "عندكم هيكفيجن؟" deserves a shelf, not "I did not understand".
+  */
+  هيكفيجن: "hikvision",
+  هايكفيجن: "hikvision",
+  هيكفيچن: "hikvision",
+  هيلوك: "hilook",
+  ايزيفيز: "ezviz",
+  داهوا: "dahua",
+  ايمو: "imou",
+  تياندي: "tiandy",
+  يونيفيو: "unv",
+  ميكروتيك: "mikrotik",
+  ميكروتك: "mikrotik",
+  سيسكو: "cisco",
+  تيندا: "tenda",
+  يوبيكويتي: "ubiquiti",
+  جراندستريم: "grandstream",
+  لينوفو: "lenovo",
+  ديل: "dell",
+  اسوس: "asus",
+  ايسر: "acer",
+  توشيبا: "toshiba",
+  سامسونج: "samsung",
+  سامسونغ: "samsung",
+  هواوي: "huawei",
+  شاومي: "xiaomi",
+  ابل: "apple",
+  كانون: "canon",
+  ابسون: "epson",
+  ايبسون: "epson",
+  برذر: "brother",
+  براذر: "brother",
+  كينجستون: "kingston",
+  سانديسك: "sandisk",
+  سيجيت: "seagate",
   // Units, which people say in Arabic and every row spells in English.
+  // Bare ميجا reads as a camera resolution because in this shop it almost
+  // always is one; a number in front of any of these is joined to it below.
   تيرا: "tb",
   جيجا: "gb",
-  ميجا: "mb",
+  ميجا: "mp",
   بوصه: "inch",
   انش: "inch",
   وايرلس: "wireless",
+  بورت: "port",
+  بورتات: "port",
   خارجي: "external",
   داخلي: "internal",
 };
@@ -139,6 +200,20 @@ const bare = (word) => bareForms(word).find((form) => WORDS[form]) || bareForms(
 const withEnglish = (term) => {
   let out = normalizeArabic(term);
   for (const [arabic, english] of PHRASES) out = out.split(arabic).join(english);
+
+  /*
+    "٢ ميجا" is how a camera's resolution is said out loud and "2MP" is how
+    every row spells it. Left as two words, the 2 is too short to survive the
+    word filters and "ميجا" matches nothing — so the one specification the
+    customer gave never reached the search, and an 8MP camera answered a 2MP
+    question. Joined here into the row's own spelling, before the word-by-word
+    translation, and the same for storage: "١ تيرا" is "1TB".
+  */
+  out = out
+    .replace(/(\d+)\s*(?:ميجا ?بكسل|ميجابكسل|ميجا|ميغا|mp)/g, "$1mp")
+    .replace(/(\d+)\s*(?:جيجابايت|جيجا|جيغا|gb)/g, "$1gb")
+    .replace(/(\d+)\s*(?:تيرابايت|تيرا|tb)/g, "$1tb");
+
   return out
     .split(/\s+/)
     .map((word) => WORDS[word] || WORDS[bare(word)] || word)
