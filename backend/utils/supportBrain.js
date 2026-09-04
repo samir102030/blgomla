@@ -52,9 +52,16 @@ const GEMINI_MODELS = (
   .map((id) => id.trim())
   .filter(Boolean);
 
-// Busy or broken on Google's side: worth one more go. Anything else — a bad id,
-// a bad key, a bad request — will fail exactly the same way twice.
-const GEMINI_RETRIABLE = new Set([429, 500, 502, 503, 504]);
+/*
+  Busy or broken on Google's side: worth one more go after a short wait.
+
+  429 is deliberately not in here. It means the free tier's quota is spent, and
+  a quota does not come back in 350 milliseconds — retrying only spends the
+  next model's allowance and keeps a customer waiting for an answer that is
+  already decided. On a 429 the call moves straight to the next id, and when
+  they are all spent it gives up quickly and the rules engine answers.
+*/
+const GEMINI_RETRIABLE = new Set([500, 502, 503, 504]);
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const hasClaude = () => !!process.env.ANTHROPIC_API_KEY;
@@ -133,6 +140,24 @@ const INTENTS = [
 
 /** First intent whose wording is actually in the sentence. Order matters: a
  *  customer asking for a human has said so, whatever else the message mentions. */
+/*
+  A question about the difference between two things.
+
+  The rules engine reads a sentence for the product it names; a comparison
+  names two and asks about neither. Left to the product path it returns rows
+  off whichever shelf matched, which reads as a shop that did not listen.
+*/
+const COMPARE_CUES = [
+  "الفرق بين", "ايه الفرق", "ايه احسن", "ايه افضل", "افضل ولا", "احسن ولا",
+  "اقارن", "مقارنه", "فرق بين", "ولا اروح على", "ايه يفرق",
+  "difference between", "what is better", "which is better", "compare", " vs ",
+];
+
+const comparesThings = (text) => {
+  const t = normalize(text);
+  return COMPARE_CUES.some((cue) => t.includes(normalize(cue)));
+};
+
 const intentOf = (text) => {
   const t = normalize(text);
   for (const intent of INTENTS) {
@@ -874,8 +899,28 @@ export const answerWithRules = async ({ text, user, lang = "ar", history = [] })
       };
     case "order":
       return answerOrder({ text, user, lang });
-    case "product":
+    case "product": {
+      /*
+        "ايه الفرق بين الأجهزة ٨ مخارج NVR" is not a request for products, and
+        answering it with a handful of rows is worse than admitting the limit:
+        the customer asked a question and got a shelf. The model answers these
+        properly; the rules engine cannot, and should say so rather than
+        perform an answer.
+      */
+      if (comparesThings(text)) {
+        const shelf = await categoryFor(text);
+        const where = shelf ? `${SITE_URL}/products?category=${shelf.id}` : SITE_URL;
+        return {
+          text: say(
+            lang,
+            `دي مقارنة فنية محتاجة حد من الفريق يشرحهالك صح — تحب أوصّلك؟\nولو حابب تشوف الموجود بنفسك: ${where}`,
+            `That is a technical comparison and someone on the team should walk you through it — shall I connect you?\nAnd if you would rather look yourself: ${where}`
+          ),
+          data: shelf ? { shelf: shelf.name } : {},
+        };
+      }
       return answerProduct({ text, lang, history });
+    }
     case "shipping":
       return answerShipping({ lang, text });
     case "deals": {
