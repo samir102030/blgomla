@@ -477,27 +477,24 @@ const answerProduct = async ({ text, lang, strict = false }) => {
     );
   } else if (budget) {
     /*
-      The true count, then the rest of it. Showing four of a hundred and
-      twenty-eight without saying so is the shop looking smaller than it is, and
-      a customer who wanted to compare has nowhere to go.
+      The rest of the list, without saying how long it is.
+
+      How many of a thing the shop has — on the shelf or in the answer — is the
+      shop's number and not the customer's, so no count appears in a reply. The
+      total is still read, because it is what decides whether there is anything
+      behind the twelve rows worth linking to; it just never reaches the page.
     */
-    const shown = hits.length;
-    const count = total || shown;
+    const more = (total || hits.length) > hits.length;
+
     lines.unshift(
-      count > shown
-        ? say(
-            lang,
-            `لقيت ${count} حاجة تحت ${egp(budget, lang)}. دول أرخص ${shown}:`,
-            `${count} of them came in under ${egp(budget, lang)}. The cheapest ${shown}:`
-          )
-        : say(
-            lang,
-            `دي كل الحاجات اللي تحت ${egp(budget, lang)} (${shown}):`,
-            `Everything under ${egp(budget, lang)} — all ${shown} of them:`
-          )
+      say(
+        lang,
+        `دي اللي عندنا تحت ${egp(budget, lang)}، من الأرخص:`,
+        `Here is what we have under ${egp(budget, lang)}, cheapest first:`
+      )
     );
 
-    if (count > shown) {
+    if (more) {
       const link = catalogueLink({
         query: stripped,
         budget,
@@ -506,8 +503,8 @@ const answerProduct = async ({ text, lang, strict = false }) => {
       lines.push(
         say(
           lang,
-          `الليستة كاملة، كل الـ${count} بالترتيب من الأرخص:\n${link}`,
-          `The complete list, all ${count} of them, cheapest first:\n${link}`
+          `والليستة كاملة هنا، مرتّبة من الأرخص:\n${link}`,
+          `And the complete list, cheapest first:\n${link}`
         )
       );
     }
