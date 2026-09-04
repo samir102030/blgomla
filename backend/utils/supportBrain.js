@@ -448,8 +448,18 @@ const answerProduct = async ({ text, lang, strict = false }) => {
         ? `${egp(p.salePrice, lang)}`
         : egp(p.price, lang)
       : say(lang, "السعر بيتأكد مع الفريق", "price confirmed by the team");
+    /*
+      Whether it is there, never how many.
+
+      The count was going out to customers on every line, and it is the shop's
+      own number — how much of a thing is on the shelf is what a competitor
+      would price against and what a buyer would haggle with. It was not even
+      true: ninety-three rows in a hundred read exactly 25 and the rest read 10,
+      which is the figure the import wrote, not the figure in the warehouse. So
+      the line carries the one number the customer asked for.
+    */
     const stock = p.inStock
-      ? say(lang, `متوفر (${p.stock})`, `in stock (${p.stock})`)
+      ? say(lang, "متوفر", "in stock")
       : say(lang, "بيتجاب بالطلب", "ordered in");
     // The link belongs in the line. On a chat channel a name and a price the
     // customer cannot open is a dead end — they have to go and search the site

@@ -493,8 +493,9 @@ export const searchProducts = async (
       brand: p.brand?.name || "",
       price: money(p.price),
       salePrice: p.salePercentage ? money(p.price * (1 - p.salePercentage / 100)) : null,
+      // Whether, not how many — the count is the shop's number, and nothing
+      // outside this file has any business repeating it to a customer.
       inStock: Number(p.stock || 0) > 0,
-      stock: Number(p.stock || 0),
       image: p.images?.[0]?.url || p.images?.[0] || null,
     }));
 
