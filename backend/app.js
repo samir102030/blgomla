@@ -3,6 +3,8 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import helmet from "helmet";
+
+import { sanitizeRequest } from "./middleware/sanitize.middleware.js";
 import { rateLimit } from "express-rate-limit";
 import connectDB from "./config/db.js";
 import systemRoutes from "./routes/system.route.js";
@@ -240,10 +242,63 @@ const migrationLimiter = rateLimit({
   store: new MongoRateLimitStore({ prefix: "rl:migration" }),
 });
 
+/*
+  A second limiter, on a much shorter window.
+
+  The one above caps volume: a thousand requests a quarter hour, which averages
+  out to sixty-six a minute and is a sensible ceiling for a person browsing.
+  What it does not cap is *shape*. Nothing stops those thousand arriving in the
+  first ten seconds — the limiter is satisfied, the window is spent, and by the
+  time the 429s start the burst has already been through. A quarter hour of
+  refusals afterwards is not much comfort if the burst is what took the site
+  down.
+
+  So this one bounds the rate rather than the total. Two hundred a minute is
+  three a second sustained, which no human generates and no page load needs:
+  the storefront's heaviest screen is a couple of dozen requests, and a shopper
+  clicking quickly is well underneath. A scraper walking the catalogue is not.
+
+  Both apply. A caller has to stay under the burst ceiling *and* under the
+  volume ceiling, and they catch different attacks: this one the sharp spike,
+  the other one the patient crawl that never spikes at all.
+*/
+const burstLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  message: {
+    success: false,
+    message: "That is a lot of requests very quickly. Give it a moment and try again.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // The migration route is exempt from the volume limiter for the reason
+  // written above it, and exempting it here too keeps that decision in one
+  // place instead of half-undoing it.
+  skip: (req) => MIGRATION_PATH.test(req.path),
+  store: new MongoRateLimitStore({ prefix: "rl:burst" }),
+});
+
+app.use(burstLimiter);
 app.use(limiter);
 // A string prefix rather than the regex above: app.use() treats a RegExp
 // differently across Express majors, and this mount has to be exact.
 app.use("/api/upload/migration", migrationLimiter);
+
+/*
+  Query operators are stripped before anything reads the request.
+
+  Mongo takes its query language as data, so on the wire a value and an
+  instruction look identical: `{"password": "x"}` is a password and
+  `{"password": {"$ne": null}}` is "any password at all". Individual
+  controllers do guard against this — the login one checks the type of the
+  email it was given — but that is the kind of care that holds until the next
+  endpoint is written by somebody who did not know to take it.
+
+  Mounted after the body parsers, because there is nothing to clean before
+  they run, and before every route, so a new one is covered on the day it is
+  added.
+*/
+app.use(sanitizeRequest);
 
 app.use(async (req, res, next) => {
   try {
