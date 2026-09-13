@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-09-06T07:47:55.538Z",
+  "generatedAt": "2026-09-13T08:03:48.112Z",
   "catalogueImages": 40026,
   "backedUp": 40020,
   "bytes": 2090502708,
   "megabytes": 1993.7,
-  "fetchedThisRun": 9957,
+  "fetchedThisRun": 0,
   "goneAtSource": 0,
   "failedThisRun": 6
 }
