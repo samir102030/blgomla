@@ -1,6 +1,6 @@
 # Pictures the source no longer serves
 
-Last checked: 2026-10-11T09:44:10.356Z
+Last checked: 2026-10-18T07:50:31.676Z
 
 - **0** are gone upstream but **held here** — this backup is the only copy left.
 - **0** were gone before anything copied them. Those catalogue entries need a new picture.
