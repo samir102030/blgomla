@@ -1321,6 +1321,76 @@ const answerWithGemini = async ({
   return { text: null, source: "gemini" };
 };
 
+export const whatsappUsesOpenAI = () =>
+  process.env.WHATSAPP_AI_PROVIDER === "openai" && Boolean(process.env.OPENAI_API_KEY);
+
+const answerWithOpenAI = async ({ text, user, history = [], lang, extraTools, systemExtra, signal }) => {
+  const model = process.env.OPENAI_WHATSAPP_MODEL || "gpt-5-mini";
+  const specs = [...TOOL_SPECS, ...extraTools.map((tool) => tool.spec)];
+  const extras = Object.fromEntries(extraTools.map((tool) => [tool.spec.name, tool.run]));
+  const tools = specs.map((spec) => ({
+    type: "function",
+    name: spec.name,
+    description: spec.description,
+    parameters: spec.input_schema,
+    strict: false,
+  }));
+  const toolNames = new Set(tools.map((tool) => tool.name));
+  const input = [
+    ...history.slice(-8).map((turn) => ({
+      role: turn.role === "assistant" ? "assistant" : "user",
+      content: String(turn.content || "").slice(0, 2000),
+    })),
+    { role: "user", content: String(text).slice(0, 2000) },
+  ];
+  const instructions = systemPrompt(user, lang, systemExtra);
+
+  for (let turn = 0; turn < 4; turn += 1) {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model, instructions, input, tools, store: false,
+        parallel_tool_calls: false,
+        max_output_tokens: 1200,
+        ...(model.startsWith("gpt-5") ? { reasoning: { effort: "low" } } : {}),
+      }),
+      signal,
+    });
+    if (!response.ok) throw new Error(`OpenAI API returned HTTP ${response.status}`);
+
+    const { output = [] } = await response.json();
+    const calls = output.filter((item) => item.type === "function_call");
+    if (!calls.length) {
+      const reply = output.filter((item) => item.type === "message")
+        .flatMap((item) => item.content || [])
+        .filter((part) => part.type === "output_text")
+        .map((part) => part.text).join("\n").trim();
+      return { text: reply, source: "openai" };
+    }
+
+    input.push(...output);
+    for (const call of calls) {
+      signal?.throwIfAborted();
+      let result = { error: "Unknown tool or invalid arguments" };
+      let args;
+      try { args = JSON.parse(call.arguments); } catch { /* Ask the model for valid arguments. */ }
+      if (args && typeof args === "object" && !Array.isArray(args) && toolNames.has(call.name)) {
+        result = await runTool(call.name, args, user, extras);
+      }
+      input.push({
+        type: "function_call_output",
+        call_id: call.call_id,
+        output: JSON.stringify(result ?? null),
+      });
+    }
+  }
+  return { text: null, source: "openai" };
+};
+
 /* ───────────────────────────────── entry ───────────────────────────────── */
 
 export const isCableCatalogueQuestion = (text) =>
@@ -1352,6 +1422,7 @@ export const answer = async ({
   systemExtra = "",
   modelTimeoutMs,
   conversational = false,
+  channel,
 }) => {
   /*
     An order question is answered here, never by a free model.
@@ -1371,8 +1442,9 @@ export const answer = async ({
     return { suggestions: [], handoff: false, source: "rules", ...catalogueAnswer };
   }
 
-  const engine = hasClaude() ? answerWithModel : hasGemini() ? answerWithGemini : null;
-  const theirs = !hasClaude() && intentOf(text) === "order";
+  const useOpenAI = channel === "whatsapp" && whatsappUsesOpenAI();
+  const engine = useOpenAI ? answerWithOpenAI : hasClaude() ? answerWithModel : hasGemini() ? answerWithGemini : null;
+  const theirs = !useOpenAI && !hasClaude() && intentOf(text) === "order";
 
   if (engine && !theirs) {
     try {
