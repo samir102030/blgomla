@@ -112,6 +112,9 @@ const WORDS = {
   كيس: "case",
   شاحن: "charger",
   كابل: "cable",
+  كابلات: "cable",
+  كيبل: "cable",
+  كيبلات: "cable",
   سويتش: "switch",
   ماك: "macbook",
   ايفون: "iphone",
@@ -736,6 +739,22 @@ export const findOrder = async (user, reference) => {
 export const networkCableGrade = (text) =>
   /(?:\bcat(?:egory)?|(?:^|[^\p{L}\p{N}])كات)[\s-]*([5-8](?:[ae])?)\b/iu.exec(normalizeArabic(text))?.[1] || null;
 
+const PRODUCT_TYPE_PATTERNS = [
+  /\b(?:cables?|cords?)\b|ك[او]بل|كيبل|اسلاك|سلك/iu,
+  /\b(?:cameras?|كاميرا)\b|كامير/iu,
+  /\bnvr\b/i,
+  /\bdvr\b/i,
+  /\b(?:routers?|راوتر)\b|راوتر/iu,
+  /\b(?:network\s+switch(?:es)?|switch(?:es)?)\b|سويتش/iu,
+  /\b(?:monitors?|displays?)\b|شاش[هة]/iu,
+  /\b(?:laptops?|notebooks?)\b|لابتوب/iu,
+  /\b(?:printers?)\b|طابع[هة]/iu,
+  /\b(?:keyboards?)\b|كيبورد|لوح[هة] مفاتيح/iu,
+  /\b(?:headsets?|headphones?)\b|هيدسيت/iu,
+  /\b(?:graphics? cards?|gpu)\b|كارت شاش[هة]/iu,
+];
+const CABLE_INTERFACE = /\b(?:hdmi|displayport|usb(?:[-\s]?[abc])?|rj[-\s]?45|vga|dvi|sdi|bnc|ethernet)\b/i;
+
 export const searchProducts = async (
   query,
   {
@@ -778,6 +797,21 @@ export const searchProducts = async (
     text.split(/\s+/).filter((w) => w.length >= 2).slice(0, 6).map(bare);
   const words = wordsOf(english);
   const arabicWords = arabic === english ? [] : wordsOf(arabic);
+  const productTypes = PRODUCT_TYPE_PATTERNS.filter((pattern) => pattern.test(english));
+  const productType = productTypes.length === 1 ? productTypes[0] : null;
+  const cableInterface = PRODUCT_TYPE_PATTERNS[0].test(english)
+    ? CABLE_INTERFACE.exec(english)?.[0]
+    : null;
+  const constraints = [];
+  if (productType) constraints.push({ $or: [{ name: productType }, { nameAr: productType }] });
+  if (cableInterface) {
+    const connector = cableInterface.replace(/[-\s]/g, "");
+    const interfacePattern = new RegExp("\\b" + connector.split("").join("[-\\s]?") + "\\b", "i");
+    constraints.push({ $or: [{ name: interfacePattern }, { nameAr: interfacePattern }, { sku: interfacePattern }] });
+  }
+  const withConstraints = (conditions) => constraints.length
+    ? { $and: [conditions, ...constraints] }
+    : conditions;
 
   /*
     A ceiling belongs in the query rather than in a filter over the answer.
@@ -829,7 +863,7 @@ export const searchProducts = async (
   let matched = null;
 
   const run = async (conditions, { byScore = false } = {}) => {
-    const query = Product.find({ ...base, ...conditions })
+    const query = Product.find({ ...base, ...withConstraints(conditions) })
       .select(
         "name nameAr slug price salePercentage saleActive saleStartsAt saleEndsAt stock images brand"
       )
@@ -856,7 +890,7 @@ export const searchProducts = async (
   const totalFor = async (rows) => {
     if (!withTotal) return undefined;
     if (!rows.length) return 0;
-    return Product.countDocuments({ ...base, ...(matched || {}) });
+    return Product.countDocuments({ ...base, ...withConstraints(matched || {}) });
   };
 
   /*
@@ -933,6 +967,8 @@ export const searchProducts = async (
     }
     return answer(await run(gradeFields));
   }
+
+  if (cableInterface) return answer(await run({}));
 
   if (strict) {
     let rows = words.length ? await run({ $and: words.map(anyField) }) : [];
