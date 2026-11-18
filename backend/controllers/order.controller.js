@@ -37,6 +37,7 @@ import {
   sendNewOrderEmail,
 } from "../utils/email.js";
 import { sendSMS, orderSmsText } from "../utils/sms.js";
+import { sendNewOrderWhatsApp } from "../utils/socialChannels.js";
 import { paginateQuery } from "../utils/pagination.js";
 
 /** What the account pages print: the last eight characters, in capitals. */
@@ -740,6 +741,16 @@ export const createOrder = controllerWrapper(
         paymentMethod,
         items: (orderItems?.length || 0) + (collectionItems?.length || 0),
       }, { category: "customer" });
+
+      // Finish the bounded request while the Vercel invocation is still active.
+      // Delivery failures must not affect the already committed order.
+      await sendNewOrderWhatsApp(shortOrderId(savedOrder._id)).catch((error) => {
+        const status = /^\d{3} /.exec(error.message)?.[0].trim();
+        console.error("New order WhatsApp alert failed", {
+          orderId: String(savedOrder._id),
+          error: status || error.name,
+        });
+      });
 
       res.status(201).json({
         success: true,
