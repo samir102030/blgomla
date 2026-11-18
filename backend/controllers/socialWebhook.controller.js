@@ -177,10 +177,14 @@ const drain = async (events) => {
  */
 export const receiveMeta = async (req, res) => {
   const signature = req.get("x-hub-signature-256");
-  const whatsappSecret = req.body?.object === "whatsapp_business_account"
-    ? process.env.WHATSAPP_APP_SECRET
-    : undefined;
-  const valid = verifyMetaSignature(req.rawBody, signature, whatsappSecret);
+  const object = req.body?.object;
+  const appSecret = process.env.WHATSAPP_APP_SECRET;
+  const isWhatsApp = object === "whatsapp_business_account";
+  const isSocialMessaging = object === "page" || object === "instagram";
+  const legacyValid = (!isWhatsApp || !appSecret) && verifyMetaSignature(req.rawBody, signature);
+  const appValid = Boolean(appSecret) && (isWhatsApp || isSocialMessaging)
+    && verifyMetaSignature(req.rawBody, signature, appSecret);
+  const valid = legacyValid || appValid;
   if (!valid) {
     console.warn("[social] rejected a webhook with a bad signature");
     return res.sendStatus(403);
