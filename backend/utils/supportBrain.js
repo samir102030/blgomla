@@ -1313,6 +1313,9 @@ const answerWithGemini = async ({
 
 /* ───────────────────────────────── entry ───────────────────────────────── */
 
+export const isCableCatalogueQuestion = (text) =>
+  Boolean(networkCableGrade(text)) && intentOf(text) === "product" && !comparesThings(text);
+
 export const answer = async ({
   text,
   user,
@@ -1334,7 +1337,7 @@ export const answer = async ({
     With Claude's key configured the question does not arise: paid API traffic
     is not trained on, and the model answers everything.
   */
-  if (networkCableGrade(text) && intentOf(text) === "product" && !comparesThings(text)) {
+  if (isCableCatalogueQuestion(text)) {
     const catalogueAnswer = await answerProduct({ text, lang, history });
     return { suggestions: [], handoff: false, source: "rules", ...catalogueAnswer };
   }
