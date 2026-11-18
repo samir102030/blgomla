@@ -367,6 +367,7 @@ export const handleInbound = async (event) => {
     systemExtra: SYSTEM_EXTRA,
     modelTimeoutMs: 12000,
     conversational: true,
+    channel,
   });
 
   let reply = String(result.text || "").trim();
