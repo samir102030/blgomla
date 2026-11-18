@@ -1,5 +1,6 @@
 import connectDB from "../config/db.js";
 import { handleInbound } from "../utils/socialInbox.js";
+import { whatsappUsesOpenAI } from "../utils/supportBrain.js";
 import {
   verifyMetaSignature,
   verifyRelaySignature,
@@ -248,6 +249,7 @@ export const receiveTikTok = async (req, res) => {
  * token is missing" without anyone having to read the deploy's env vars.
  */
 export const status = (req, res) => {
+  const defaultBrain = process.env.ANTHROPIC_API_KEY ? "claude" : process.env.GEMINI_API_KEY ? "gemini" : "rules";
   res.json({
     success: true,
     /*
@@ -257,11 +259,8 @@ export const status = (req, res) => {
       staring at replies.
     */
     model: !!process.env.ANTHROPIC_API_KEY || !!process.env.GEMINI_API_KEY,
-    brain: process.env.ANTHROPIC_API_KEY
-      ? "claude"
-      : process.env.GEMINI_API_KEY
-        ? "gemini"
-        : "rules",
+    brain: defaultBrain,
+    whatsappBrain: whatsappUsesOpenAI() ? "openai" : defaultBrain,
     signing: !!process.env.META_APP_SECRET,
     channels: {
       whatsapp: channelReady("whatsapp"),
