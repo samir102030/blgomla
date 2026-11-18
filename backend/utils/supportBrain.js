@@ -459,7 +459,7 @@ const recalled = async ({ history, shelf, make, words }) => {
     if (recalledShelf && recalledMake) break;
     const [wasShelf, wasMake] = await Promise.all([
       recalledShelf ? null : categoryFor(said),
-      recalledMake ? null : brandFor(said),
+      recalledMake ? null : brandFor(said, { exactOnly: true }),
     ]);
     if (!recalledShelf && wasShelf) recalledShelf = wasShelf;
     if (!recalledMake && wasMake) recalledMake = wasMake;
@@ -506,12 +506,12 @@ const answerProduct = async ({ text, lang, strict = false, history = [] }) => {
   */
   const [namedShelf, namedMake] = await Promise.all([
     categoryFor(stripped || text),
-    brandFor(stripped || text, { exactOnly: Boolean(cableGrade) }),
+    brandFor(stripped || text, { exactOnly: true }),
   ]);
 
   // A follow-up too short to name its own subject inherits the last one.
-  const { shelf, make } = await recalled({
-    history: cableGrade ? [] : history,
+  let { shelf, make } = await recalled({
+    history: cableGrade || namesAProduct(stripped || text) ? [] : history,
     shelf: namedShelf,
     make: namedMake,
     words,
@@ -561,6 +561,8 @@ const answerProduct = async ({ text, lang, strict = false, history = [] }) => {
     the shop does not stock a thing it stocks. Ask again without them.
   */
   if (!found.length && (shelf || make)) {
+    shelf = null;
+    make = null;
     ({ items: found, total } = await searchProducts(stripped || text, {
       limit: budget ? LIST_SIZE : 4,
       strict,
@@ -1360,7 +1362,12 @@ const answerWithOpenAI = async ({ text, user, history = [], lang, extraTools, sy
       }),
       signal,
     });
-    if (!response.ok) throw new Error(`OpenAI API returned HTTP ${response.status}`);
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      const code = error?.error?.code;
+      const suffix = typeof code === "string" && /^[a-z0-9_]{1,64}$/i.test(code) ? ` (${code})` : "";
+      throw new Error(`OpenAI API returned HTTP ${response.status}${suffix}`);
+    }
 
     const { output = [] } = await response.json();
     const calls = output.filter((item) => item.type === "function_call");
