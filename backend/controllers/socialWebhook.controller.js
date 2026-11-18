@@ -187,31 +187,23 @@ export const receiveMeta = async (req, res) => {
   // there is nothing to answer, so acknowledge it and stop.
   if (!events.length) return res.sendStatus(200);
 
-  /*
-    Answer first, acknowledge second — the reverse of the usual advice, and
-    deliberate.
-
-    Acknowledging first is right on a host that keeps running after the body
-    is flushed. Vercel only does that when the request-context hook is present
-    to hand `waitUntil` a promise, and when it is absent the function is frozen
-    the moment the 200 goes out. What that looked like in the inbox was worse
-    than a crash: the cheap replies — a greeting, the "I did not follow that"
-    fallback — made it out, and every question that needed a catalogue search
-    died mid-flight. The assistant appeared to be working and then went silent
-    on exactly the questions worth answering.
-
-    The budget is not tight. Meta allows twenty seconds; a search and a send
-    take two or three. And a webhook we do run long on is redelivered, where
-    the `seenMessageIds` check in `handleInbound` drops it — so the customer is
-    never answered twice. The race is the backstop: if something downstream
-    hangs, Meta still gets its 200 inside the window.
-  */
-  await Promise.race([
-    drain(events).catch((error) =>
-      console.error("[social] drain failed:", error.message)
-    ),
-    new Promise((resolve) => setTimeout(resolve, ACK_DEADLINE_MS)),
-  ]);
+  // Keep the drain alive on Vercel if a model or catalogue lookup outlasts
+  // the acknowledgement deadline. On other hosts still wait up to the deadline.
+  const work = runAfterResponse(() => drain(events));
+  let timer;
+  try {
+    await Promise.race([
+      work,
+      new Promise((resolve) => {
+        timer = setTimeout(() => {
+          console.warn("[social] reply processing continued past webhook deadline");
+          resolve();
+        }, ACK_DEADLINE_MS);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
 
   res.sendStatus(200);
 };
