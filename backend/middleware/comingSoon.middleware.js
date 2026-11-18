@@ -69,7 +69,7 @@ export const comingSoonGate = async (req, res, next) => {
       that exemption up: the allow-list above, and the admin-token and
       preview-key checks below, both of which run for every method.
     */
-    if (req.method === "OPTIONS") return next();
+    if (req.method === "OPTIONS" || /^\/api\/social-inbox(?:\/|$)/.test(req.path)) return next();
 
     const mode = await loadMode();
     if (!mode?.comingSoon || !mode?.blockPublicApi) return next();
