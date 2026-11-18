@@ -26,7 +26,10 @@ import { getShippingSettings } from "../models/shippingSettings.model.js";
  * before anything is matched against them.
  */
 /** Where a link the assistant hands out has to point. */
-const SITE_URL = (process.env.SITE_URL || "https://belgmla.com").replace(/\/+$/, "");
+const configuredSiteUrl = (process.env.SITE_URL || "https://www.belgmla.com").replace(/\/+$/, "");
+export const SITE_URL = ["https://blgomla.vercel.app", "https://belgmla.com"].includes(configuredSiteUrl)
+  ? "https://www.belgmla.com"
+  : configuredSiteUrl;
 
 export const normalizeArabic = (text) =>
   String(text || "")
@@ -437,7 +440,7 @@ const TRADE_WORDS = new Set([
   "mp", "gb", "tb", "mb", "hd", "uhd", "sd", "fhd", "4k", "8k",
 ]);
 
-export const brandFor = async (text) => {
+export const brandFor = async (text, { exactOnly = false } = {}) => {
   const { brandByName, brandBySkeleton } = await loadVocab();
   const words = normalizeArabic(text).split(/[\s,،.؟?!]+/).filter(Boolean);
 
@@ -465,6 +468,8 @@ export const brandFor = async (text) => {
       if (joined) return { id: String(joined._id), name: joined.name };
     }
   }
+
+  if (exactOnly) return null;
 
   for (const word of words) {
     if (TRADE_WORDS.has(word)) continue;
@@ -728,6 +733,9 @@ export const findOrder = async (user, reference) => {
  * storefront does would answer questions about things the customer cannot
  * reach from any page.
  */
+export const networkCableGrade = (text) =>
+  /\bcat(?:egory)?[\s-]*([5-8](?:[ae])?)\b/i.exec(normalizeArabic(text))?.[1] || null;
+
 export const searchProducts = async (
   query,
   {
@@ -913,6 +921,18 @@ export const searchProducts = async (
    */
   const answer = async (rows) =>
     withTotal ? { items: shape(rows), total: await totalFor(rows) } : shape(rows);
+
+  const cableGrade = networkCableGrade(term);
+  if (cableGrade) {
+    // Keep an explicit cable grade in every match, including loose searches.
+    const gradePattern = new RegExp("\\bcat(?:egory)?[\\s-]*" + cableGrade + "\\b", "i");
+    const gradeFields = { $or: [{ name: gradePattern }, { nameAr: gradePattern }, { sku: gradePattern }] };
+    if (/\b(?:cables?|cords?)\b/i.test(term)) {
+      const cablePattern = /\b(?:cables?|cords?)\b|ك[او]بل|كابلات|اسلاك/iu;
+      return answer(await run({ $and: [gradeFields, { $or: [{ name: cablePattern }, { nameAr: cablePattern }] }] }));
+    }
+    return answer(await run(gradeFields));
+  }
 
   if (strict) {
     let rows = words.length ? await run({ $and: words.map(anyField) }) : [];
