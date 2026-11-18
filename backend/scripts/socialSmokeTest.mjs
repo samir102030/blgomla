@@ -120,6 +120,9 @@ if (!USE_REAL_DB) {
 
   mock.module(here("../models/socialThread.model.js"), { defaultExport: SocialThread });
   mock.module(here("../models/socialLead.model.js"), { defaultExport: SocialLead });
+  mock.module(here("../models/inboxTraining.model.js"), {
+    defaultExport: { findById: () => ({ lean: () => ({ maxTimeMS: async () => null }) }) },
+  });
   mock.module(here("../config/db.js"), { defaultExport: async () => ({}) });
 
   // notifyTeam reaches for these; with no database they would throw into its

@@ -1,3 +1,5 @@
+import InboxTraining from "../models/inboxTraining.model.js";
+import { trainingKey } from "../utils/inboxTraining.js";
 import express from "express";
 import multer from "multer";
 import { randomBytes } from "node:crypto";
@@ -172,6 +174,29 @@ router.post("/images", uploadLimiter, (req, res, next) => {
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
   res.status(201).json({ url: imageOrigin + imagePath + key });
+}));
+
+router.get("/training", requireInboxOwner, handle(async (_req, res) => {
+  const settings = await InboxTraining.findById("social").lean();
+  res.json({ instructions: settings?.instructions ?? "", examples: settings?.examples ?? [] });
+}));
+
+router.put("/training", requireInboxOwner, handle(async (req, res) => {
+  const { instructions, examples } = req.body || {};
+  if (typeof instructions !== "string" || instructions.length > 2500 || !Array.isArray(examples) ||
+      examples.length > 20 || examples.some((example) =>
+        typeof example?.question !== "string" || !trainingKey(example.question) || example.question.length > 250 ||
+        typeof example?.answer !== "string" || !example.answer.trim() || example.answer.length > 900)) {
+    return res.status(400).json({ code: "INVALID_TRAINING" });
+  }
+  const keys = new Set(examples.map(({ question }) => trainingKey(question)));
+  if (keys.size !== examples.length) return res.status(400).json({ code: "DUPLICATE_QUESTION" });
+  const clean = {
+    instructions: instructions.trim(),
+    examples: examples.map(({ question, answer }) => ({ question: question.trim(), answer: answer.trim() })),
+  };
+  await InboxTraining.updateOne({ _id: "social" }, { $set: clean }, { upsert: true });
+  res.json(clean);
 }));
 
 router.get("/:id", handle(async (req, res) => {

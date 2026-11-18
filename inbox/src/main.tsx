@@ -3,16 +3,17 @@ import { createRoot } from "react-dom/client";
 import { isAxiosError } from "axios";
 import Team from "./Team";
 import Overview from "./Overview";
-import { ArrowLeftOnRectangleIcon, ChatBubbleLeftRightIcon, Squares2X2Icon, UserGroupIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftOnRectangleIcon, ChatBubbleLeftRightIcon, Squares2X2Icon, SparklesIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import SocialInboxPage, { channels, type Channel } from "./SocialInboxPage";
 import Campaigns from "./Campaigns";
+import Training from "./Training";
 import { axiosInstance } from "./api";
 import "./style.css";
 
 function App() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
-  const [view, setView] = useState<"overview" | Channel | "campaigns" | "team">("overview");
+  const [view, setView] = useState<"overview" | Channel | "campaigns" | "team" | "training">("overview");
   const [invite, setInvite] = useState(() => new URLSearchParams(location.hash.slice(1)).get("invite") || "");
   const [loginEmail, setLoginEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,7 +112,7 @@ function App() {
     { id: "overview", label: "نظرة عامة", icon: Squares2X2Icon },
     ...(Object.keys(channels) as Channel[]).map((channel) => ({ id: channel, label: channels[channel], icon: ChatBubbleLeftRightIcon })),
     { id: "campaigns", label: "إرسال جماعي", icon: ChatBubbleLeftRightIcon },
-    ...(role === "owner" ? [{ id: "team", label: "إدارة الفريق", icon: UserGroupIcon }] as const : []),
+    ...(role === "owner" ? [{ id: "training", label: "تدريب المساعد", icon: SparklesIcon }, { id: "team", label: "إدارة الفريق", icon: UserGroupIcon }] as const : []),
   ] as const;
 
   return (
@@ -137,6 +138,7 @@ function App() {
         {view in channels && <SocialInboxPage key={view} channel={view as Channel} />}
         <div hidden={view !== "campaigns"}><Campaigns /></div>
         {view === "team" && role === "owner" && <Team />}
+        {view === "training" && role === "owner" && <Training />}
       </main>
     </div>
   );

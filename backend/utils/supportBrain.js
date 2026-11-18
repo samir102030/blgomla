@@ -1,3 +1,4 @@
+import { relatedTrainingExamples, trainingKey } from "./inboxTraining.js";
 /**
  * What the support assistant says back.
  *
@@ -1459,6 +1460,7 @@ export const answer = async ({
   systemExtra = "",
   modelTimeoutMs,
   conversational = false,
+  training,
   channel,
 }) => {
   /*
@@ -1496,9 +1498,28 @@ export const answer = async ({
     };
   }
 
+  const intent = intentOf(text);
+  if (conversational) {
+    const examples = training?.examples ?? [];
+    const key = trainingKey(text);
+    const saved = !["order", "human"].includes(intent) &&
+      examples.find(({ question }) => trainingKey(question) === key);
+    if (saved) return { text: saved.answer, suggestions: [], handoff: false, source: "training" };
+
+    if (/^(?:السلام عليكم(?: ورحمه الله(?: وبركاته)?)?|سلام عليكم|اهلا|مرحبا|هاي|hi|hello|hey)$/iu.test(key)) {
+      const greeting = /عليكم/.test(key) ? "وعليكم السلام! أهلاً بيك، أقدر أساعدك في إيه؟" : "أهلاً بيك! أقدر أساعدك في إيه؟";
+      return { text: say(lang, greeting, "Hi! How can I help?"), suggestions: [], handoff: false, source: "rules" };
+    }
+
+    const relevant = relatedTrainingExamples(examples, text);
+    if (training?.instructions || relevant.length) {
+      systemExtra += "\nOwner guidance and examples for style and business FAQs. Follow them where applicable while preserving the order privacy rules, handoff rules, and verification of current stock and prices.\n" +
+        JSON.stringify({ instructions: training?.instructions ?? "", examples: relevant });
+    }
+  }
+
   const useOpenAI = ["whatsapp", "messenger", "instagram"].includes(channel) && whatsappUsesOpenAI();
   const engine = useOpenAI ? answerWithOpenAI : hasClaude() ? answerWithModel : hasGemini() ? answerWithGemini : null;
-  const intent = intentOf(text);
   const theirs = !useOpenAI && !hasClaude() && intent === "order";
 
   if (engine && !theirs) {

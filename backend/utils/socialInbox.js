@@ -1,3 +1,4 @@
+import InboxTraining from "../models/inboxTraining.model.js";
 import SocialThread from "../models/socialThread.model.js";
 import SocialLead from "../models/socialLead.model.js";
 import { answer, isCableCatalogueQuestion } from "./supportBrain.js";
@@ -349,6 +350,8 @@ export const handleInbound = async (event) => {
 
   const beforeStatus = thread.status;
 
+  const startedAt = Date.now();
+  const training = await InboxTraining.findById("social").lean().maxTimeMS(1500).catch(() => null);
   const result = await answer({
     text,
     // Nobody on a social channel is authenticated. Passing null is what makes
@@ -358,6 +361,7 @@ export const handleInbound = async (event) => {
     lang: thread.lang,
     extraTools: [captureOrderTool(thread, notifyTeam), requestHumanTool(thread, notifyTeam)],
     systemExtra: SYSTEM_EXTRA,
+    training,
     modelTimeoutMs: 12000,
     conversational: true,
     channel,
@@ -402,7 +406,7 @@ export const handleInbound = async (event) => {
   }
 
   await send(channel, externalId, reply);
-  if (channel === "whatsapp") console.info("[social] WhatsApp reply source:", result.source || "unknown");
+  console.info("[social] reply completed", { channel, source: result.source || "unknown", elapsedMs: Date.now() - startedAt });
 
   thread.history.push({ role: "assistant", content: reply.slice(0, 4000) });
   thread.lastOutboundAt = new Date();
