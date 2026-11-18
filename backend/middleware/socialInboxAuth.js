@@ -1,4 +1,4 @@
-import { randomBytes, createHash } from "node:crypto";
+import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import InboxMember from "../models/inboxMember.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -16,7 +16,11 @@ const settings = () => {
   const email = process.env.INBOX_LOGIN_EMAIL?.trim().toLowerCase();
   const hash = process.env.INBOX_PASSWORD_HASH;
   const secret = process.env.INBOX_SESSION_SECRET;
-  return email && hash?.startsWith("$2") && secret?.length >= 32 ? { email, hash, secret } : null;
+  const [setupHash, setupExpiry] = (process.env.INBOX_OWNER_SETUP || "").split(":");
+  const bootstrap = /^[a-f0-9]{64}$/.test(setupHash) && Number.isFinite(Number(setupExpiry));
+  return email && secret?.length >= 32 && (hash?.startsWith("$2") || bootstrap)
+    ? { email, hash, secret, setupHash, setupExpiry, bootstrap }
+    : null;
 };
 
 const limitAttempts = (prefix) => rateLimit({
@@ -46,9 +50,9 @@ export const loginInbox = [limitAttempts("rl:inbox-login"), async (req, res, nex
       return res.status(401).json({ code: "INVALID_LOGIN" });
     }
     const owner = email === config.email;
-    const member = owner ? null : await InboxMember.findOne({ email }).lean();
-    const hash = owner ? config.hash : member?.passwordHash;
-    const valid = await bcrypt.compare(password, hash || config.hash);
+    const member = owner && config.hash ? null : await InboxMember.findOne({ email }).select("passwordHash").lean();
+    const hash = owner && config.hash ? config.hash : member?.passwordHash;
+    const valid = await bcrypt.compare(password, hash || config.hash || fallbackHash);
     if (!valid || !hash) return res.status(401).json({ code: "INVALID_LOGIN" });
 
     openSession(res, config, email, owner ? "owner" : "member");
@@ -63,6 +67,7 @@ function openSession(res, config, email, role) {
   res.json({ email, role });
 }
 
+const fallbackHash = bcrypt.hashSync(randomBytes(32).toString("hex"), 12);
 const digest = (token) => createHash("sha256").update(token).digest("hex");
 
 export const requireInboxSession = async (req, res, next) => {
@@ -96,9 +101,9 @@ export const requireInboxOwner = (req, res, next) => {
   next();
 };
 
-export const listMembers = async (_req, res, next) => {
+export const listMembers = async (req, res, next) => {
   try {
-    const members = await InboxMember.find().select("email passwordHash inviteExpiresAt").sort({ email: 1 }).lean();
+    const members = await InboxMember.find({ email: { $ne: req.inboxEmail } }).select("email passwordHash inviteExpiresAt").sort({ email: 1 }).lean();
     res.json({ items: members.map(({ email, passwordHash, inviteExpiresAt }) => ({
       email, status: passwordHash ? "active" : new Date(inviteExpiresAt) > new Date() ? "pending" : "expired",
     })) });
@@ -133,7 +138,25 @@ export const activateMember = [limitAttempts("rl:inbox-activation"), async (req,
     return res.status(400).json({ code: "INVALID_ACTIVATION" });
   }
   try {
-    const filter = { inviteHash: digest(token), inviteExpiresAt: { $gt: new Date() }, passwordHash: { $exists: false } };
+    const tokenHash = digest(token);
+    const ownerSetup = !config.hash && config.bootstrap && Number(config.setupExpiry) > Date.now() &&
+      timingSafeEqual(Buffer.from(tokenHash, "hex"), Buffer.from(config.setupHash, "hex"));
+    if (ownerSetup) {
+      const filter = { email: config.email, passwordHash: { $exists: false } };
+      try {
+        const result = await InboxMember.updateOne(filter, {
+          $set: { passwordHash: await bcrypt.hash(password, 12) },
+        }, { upsert: true });
+        if (!result.upsertedCount && !result.modifiedCount) {
+          return res.status(400).json({ code: "INVALID_ACTIVATION" });
+        }
+      } catch (error) {
+        if (error.code === 11000) return res.status(400).json({ code: "INVALID_ACTIVATION" });
+        throw error;
+      }
+      return openSession(res, config, config.email, "owner");
+    }
+    const filter = { email: { $ne: config.email }, inviteHash: tokenHash, inviteExpiresAt: { $gt: new Date() }, passwordHash: { $exists: false } };
     if (!await InboxMember.exists(filter)) return res.status(400).json({ code: "INVALID_ACTIVATION" });
     const member = await InboxMember.findOneAndUpdate(filter, {
       $set: { passwordHash: await bcrypt.hash(password, 12) },
