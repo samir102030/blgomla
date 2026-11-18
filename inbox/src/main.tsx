@@ -90,7 +90,7 @@ function App() {
   );
 
   return (
-    <main className="mx-auto max-w-7xl p-3 sm:p-6">
+    <main className="mx-auto max-w-[1920px] p-3 sm:p-6">
       <div className="mb-4 flex items-center justify-between gap-3">
         <span className="truncate text-sm text-[var(--text-subtle)]" dir="ltr">{email}</span>
         {role === "owner" && <button type="button" className="ms-auto rounded-lg border bg-white px-3 py-2 text-sm" onClick={() => setShowTeam(!showTeam)}>{showTeam ? "المحادثات" : "إدارة الفريق"}</button>}

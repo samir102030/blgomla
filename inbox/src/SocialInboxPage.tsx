@@ -37,9 +37,30 @@ const input = "min-w-0 rounded-lg border border-[var(--border)] bg-[var(--surfac
 const primary = "rounded-lg bg-[var(--primary,#ed6b22)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function SocialInboxPage() {
+  const [refreshVersion, setRefreshVersion] = useState(0);
+  return (
+    <section className="space-y-4 text-[var(--text)]" dir="rtl">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">صندوق الرسائل</h1>
+        <button className={button + " inline-flex items-center gap-2"} onClick={() => setRefreshVersion((version) => version + 1)}>
+          <ArrowPathIcon className="size-4" />
+          تحديث
+        </button>
+      </header>
+      <div className="overflow-x-auto pb-3">
+        <div className="grid min-w-[960px] grid-cols-3 items-stretch gap-3">
+          {(Object.keys(channels) as Channel[]).map((channel) => (
+            <ChannelColumn key={channel} channel={channel} refreshVersion={refreshVersion} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshVersion: number }) {
   const arabic = true;
   const say = (ar: string, en: string) => arabic ? ar : en;
-  const [channel, setChannel] = useState<Channel | "">("");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -52,7 +73,8 @@ export default function SocialInboxPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const draftRequest = useRef<string | null>(null);
-  const tail = useRef<HTMLLIElement>(null);
+  const messageList = useRef<HTMLOListElement>(null);
+  const initialSelection = useRef(false);
   const selected = thread?.id === selectedId ? thread : null;
 
   useEffect(() => {
@@ -66,7 +88,7 @@ export default function SocialInboxPage() {
   const loadList = useCallback(async (signal?: AbortSignal) => {
     try {
       const { data } = await axiosInstance.get<{ items: Summary[]; hasNext: boolean }>("/social-inbox", {
-        params: { channel: channel || undefined, q: query || undefined, page },
+        params: { channel, q: query || undefined, page },
         signal,
       });
       if (!signal?.aborted) {
@@ -103,7 +125,7 @@ export default function SocialInboxPage() {
       if (!document.hidden) void loadList(controller.signal);
     }, 12000);
     return () => { controller.abort(); window.clearInterval(timer); };
-  }, [loadList]);
+  }, [loadList, refreshVersion]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -113,11 +135,12 @@ export default function SocialInboxPage() {
       if (!document.hidden) void loadThread(selectedId, controller.signal);
     }, 10000);
     return () => { controller.abort(); window.clearInterval(timer); };
-  }, [loadThread, selectedId]);
+  }, [loadThread, selectedId, refreshVersion]);
 
   const lastMessageAt = selected?.messages.at(-1)?.at;
   useEffect(() => {
-    tail.current?.scrollIntoView({ block: "nearest" });
+    const list = messageList.current;
+    if (list) list.scrollTop = list.scrollHeight;
   }, [selectedId, lastMessageAt]);
 
   const chooseThread = (id: string) => {
@@ -128,10 +151,11 @@ export default function SocialInboxPage() {
     setError("");
   };
 
-  const refresh = () => {
-    void loadList();
-    void loadThread(selectedId);
-  };
+  useEffect(() => {
+    if (initialSelection.current || !items.length) return;
+    initialSelection.current = true;
+    setSelectedId(items[0].id);
+  }, [items]);
 
   const changeAssignment = async (assignment: "team" | "bot") => {
     if (!selected || busy) return;
@@ -188,104 +212,89 @@ export default function SocialInboxPage() {
     : row.status === "closed" ? say("مغلقة", "Closed") : say("المساعد", "Assistant");
 
   return (
-    <section className="space-y-4 text-[var(--text)]" dir={arabic ? "rtl" : "ltr"}>
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{say("صندوق الرسائل", "Social inbox")}</h1>
-        <button className={button + " inline-flex items-center gap-2"} onClick={refresh} disabled={busy}>
-          <ArrowPathIcon className="size-4" />
-          {say("تحديث", "Refresh")}
-        </button>
+    <section className={panel + " flex min-w-0 flex-col overflow-hidden"} aria-labelledby={channel + "-title"}>
+      <header className={"px-4 py-3 " + channelStyles[channel]}>
+        <h2 id={channel + "-title"} className="text-lg font-semibold"><bdi>{channels[channel]}</bdi></h2>
       </header>
 
       {error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800 dark:bg-red-950 dark:text-red-200">
         {errorText[error] || say("حصل خطأ أثناء العملية.", "Something went wrong.")}
       </p>}
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_minmax(0,2fr)]">
-        <aside className={panel + (selectedId ? " hidden lg:block" : "")}>
-          <div className="grid gap-2 border-b border-[var(--border)] p-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <input className={input} aria-label={say("بحث المحادثات", "Search conversations")} placeholder={say("الاسم أو الرقم", "Name or phone")} value={search} onChange={(event) => setSearch(event.target.value)} />
-            <select className={input} aria-label={say("فلتر القناة", "Filter channel")} value={channel} onChange={(event) => { setChannel(event.target.value as Channel | ""); setPage(1); }}>
-              <option value="">{say("كل القنوات", "All channels")}</option>
-              {Object.entries(channels).map(([id, label]) => <option value={id} key={id}>{label}</option>)}
-            </select>
-          </div>
-          <div className="max-h-[64vh] overflow-y-auto divide-y divide-[var(--border)]">
-            {!loaded && <p className="p-4 text-sm">{say("جاري التحميل…", "Loading…")}</p>}
-            {loaded && !items.length && <p className="p-4 text-sm text-[var(--text-subtle)]">{say("مفيش محادثات مطابقة.", "No matching conversations.")}</p>}
-            {items.map((item) => (
-              <button type="button" key={item.id} onClick={() => chooseThread(item.id)} disabled={busy}
-                aria-pressed={item.id === selectedId}
-                className={"block w-full p-3 text-start hover:bg-[var(--surface-2)] " + (item.id === selectedId ? "bg-[var(--surface-2)]" : "")}>
-                <span className="flex items-center justify-between gap-2">
-                  <span className="truncate font-medium">{item.name}</span>
-                  <span className={"shrink-0 rounded-full px-2 py-0.5 text-xs " + channelStyles[item.channel]}>{channels[item.channel]}</span>
-                </span>
-                <span className="mt-1 flex flex-wrap justify-between gap-1 text-xs text-[var(--text-subtle)]">
-                  <time dateTime={item.updatedAt}>{when(item.updatedAt)}</time>
-                  <span>{statusText(item)}</span>
-                </span>
-                {item.lastAgentEmail && <span className="mt-1 block truncate text-xs text-[var(--text-subtle)]">آخر رد من الفريق <bdi>{item.lastAgentEmail}</bdi></span>}
-              </button>
-            ))}
-          </div>
-          {(page > 1 || hasNext) && <div className="flex justify-between gap-2 border-t border-[var(--border)] p-3">
-            <button className={button} disabled={page === 1} onClick={() => setPage(page - 1)}>{say("السابق", "Previous")}</button>
-            <button className={button} disabled={!hasNext} onClick={() => setPage(page + 1)}>{say("التالي", "Next")}</button>
-          </div>}
-        </aside>
-
-        <div className={panel + " min-h-[60vh] min-w-0 flex-col " + (selectedId ? "flex" : "hidden lg:flex")}>
-          {!selected && (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-[var(--text-subtle)]">
-              <ChatBubbleLeftRightIcon className="size-8" />
-              {selectedId ? say("جاري تحميل الرسائل…", "Loading messages…") : say("اختار محادثة من القائمة.", "Choose a conversation.")}
-              {selectedId && <button className={button + " lg:hidden"} onClick={() => chooseThread("")}>{say("المحادثات", "Conversations")}</button>}
-            </div>
-          )}
-          {selected && <>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] p-3 sm:p-4">
-              <div className="min-w-0">
-                <button className={button + " mb-2 lg:hidden"} onClick={() => chooseThread("")} disabled={busy}>{say("كل المحادثات", "All conversations")}</button>
-                <h2 className="truncate font-semibold">{selected.name}</h2>
-                <div className="mt-1 flex items-center gap-2 text-xs">
-                  <span className={"rounded-full px-2 py-0.5 " + channelStyles[selected.channel]}>{channels[selected.channel]}</span>
-                  <span className="text-[var(--text-subtle)]">{say("الرد مع", "Assigned to")} {statusText(selected)}</span>
-                </div>
-              </div>
-              <button className={button} disabled={busy} onClick={() => void changeAssignment(selected.status === "human" ? "bot" : "team")}>
-                {selected.status === "human" ? say("رجّع الرد للمساعد", "Resume assistant") : say("استلم المحادثة", "Take over")}
-              </button>
-            </div>
-            <ol className="grid max-h-[55vh] flex-1 content-start gap-3 overflow-y-auto p-3 sm:p-4" aria-label={say("الرسائل", "Messages")}>
-              {selected.messages.map((message, index) => (
-                <li key={index} className={"max-w-[88%] rounded-xl px-3 py-2 " + (message.role === "user" ? "justify-self-start bg-[var(--surface-2)]" : "justify-self-end border border-[var(--border)] bg-[var(--surface-1)]")}>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-subtle)]">
-                    <span>{message.role === "user" ? say("العميل", "Customer") : message.role === "agent" ? (message.agentEmail ? <bdi>{message.agentEmail}</bdi> : say("الفريق", "Team")) : say("المساعد", "Assistant")}</span>
-                    {message.at && <time dateTime={message.at}>{when(message.at)}</time>}
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap break-words text-sm" dir="auto">{message.content}</p>
-                </li>
-              ))}
-              {!selected.messages.length && <li className="text-sm text-[var(--text-subtle)]">{say("مفيش رسائل محفوظة.", "No saved messages.")}</li>}
-              <li ref={tail} aria-hidden />
-            </ol>
-            <form className="border-t border-[var(--border)] p-3 sm:p-4" onSubmit={(event) => { event.preventDefault(); void sendReply(); }}>
-              {!canReply && <p className="mb-2 text-sm text-[var(--text-subtle)]">
-                {!selected.channelConnected ? say("حساب الإرسال غير متوصل.", "This sending account is not connected.") : say("نافذة الرد اتقفلت. لازم العميل يبعت رسالة جديدة.", "The reply window has closed. The customer needs to send a new message.")}
-              </p>}
-              <div className="flex items-end gap-2">
-                <textarea className={input + " flex-1 resize-y"} rows={2} maxLength={1000} dir="auto"
-                  aria-label={say("اكتب رد", "Write a reply")} placeholder={say("اكتب رد…", "Write a reply…")} disabled={!canReply || busy}
-                  value={draft} onChange={(event) => { setDraft(event.target.value); draftRequest.current = null; }} />
-                <button type="submit" className={primary + " inline-flex items-center gap-2"} disabled={!canReply || busy || !draft.trim()}>
-                  <PaperAirplaneIcon className="size-4" />
-                  {say("إرسال", "Send")}
-                </button>
-              </div>
-            </form>
-          </>}
+      <aside className="border-b border-[var(--border)]">
+        <div className="grid border-b border-[var(--border)] p-3">
+          <input className={input} aria-label={"بحث محادثات " + channels[channel]} placeholder={say("الاسم أو الرقم", "Name or phone")} value={search} onChange={(event) => setSearch(event.target.value)} />
         </div>
+        <div className="max-h-44 overflow-y-auto divide-y divide-[var(--border)]">
+          {!loaded && <p className="p-4 text-sm">{say("جاري التحميل…", "Loading…")}</p>}
+          {loaded && !items.length && <p className="p-4 text-sm text-[var(--text-subtle)]">{say("مفيش محادثات مطابقة.", "No matching conversations.")}</p>}
+          {items.map((item) => (
+            <button type="button" key={item.id} onClick={() => chooseThread(item.id)} disabled={busy}
+              aria-pressed={item.id === selectedId}
+              className={"block w-full p-3 text-start hover:bg-[var(--surface-2)] " + (item.id === selectedId ? "bg-[var(--surface-2)]" : "")}>
+              <span className="flex items-center justify-between gap-2">
+                <span className="truncate font-medium">{item.name}</span>
+              </span>
+              <span className="mt-1 flex flex-wrap justify-between gap-1 text-xs text-[var(--text-subtle)]">
+                <time dateTime={item.updatedAt}>{when(item.updatedAt)}</time>
+                <span>{statusText(item)}</span>
+              </span>
+              {item.lastAgentEmail && <span className="mt-1 block truncate text-xs text-[var(--text-subtle)]">آخر رد من الفريق <bdi>{item.lastAgentEmail}</bdi></span>}
+            </button>
+          ))}
+        </div>
+        {(page > 1 || hasNext) && <div className="flex justify-between gap-2 border-t border-[var(--border)] p-3">
+          <button className={button} disabled={page === 1} onClick={() => setPage(page - 1)}>{say("السابق", "Previous")}</button>
+          <button className={button} disabled={!hasNext} onClick={() => setPage(page + 1)}>{say("التالي", "Next")}</button>
+        </div>}
+      </aside>
+
+      <div className="flex min-h-80 min-w-0 flex-1 flex-col">
+        {!selected && (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-[var(--text-subtle)]">
+            <ChatBubbleLeftRightIcon className="size-8" />
+            {selectedId ? say("جاري تحميل الرسائل…", "Loading messages…") : say("اختار محادثة من القائمة.", "Choose a conversation.")}
+          </div>
+        )}
+        {selected && <>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] p-3 sm:p-4">
+            <div className="min-w-0">
+              <h3 className="truncate font-semibold">{selected.name}</h3>
+              <div className="mt-1 flex items-center gap-2 text-xs">
+                <span className="text-[var(--text-subtle)]">{say("الرد مع", "Assigned to")} {statusText(selected)}</span>
+              </div>
+            </div>
+            <button className={button} disabled={busy} onClick={() => void changeAssignment(selected.status === "human" ? "bot" : "team")}>
+              {selected.status === "human" ? say("رجّع الرد للمساعد", "Resume assistant") : say("استلم المحادثة", "Take over")}
+            </button>
+          </div>
+          <ol ref={messageList} className="grid h-[38vh] min-h-48 content-start gap-3 overflow-y-auto p-3 sm:p-4" aria-label={"رسائل " + channels[channel]}>
+            {selected.messages.map((message, index) => (
+              <li key={index} className={"max-w-[88%] rounded-xl px-3 py-2 " + (message.role === "user" ? "justify-self-start bg-[var(--surface-2)]" : "justify-self-end border border-[var(--border)] bg-[var(--surface-1)]")}>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--text-subtle)]">
+                  <span>{message.role === "user" ? say("العميل", "Customer") : message.role === "agent" ? (message.agentEmail ? <bdi>{message.agentEmail}</bdi> : say("الفريق", "Team")) : say("المساعد", "Assistant")}</span>
+                  {message.at && <time dateTime={message.at}>{when(message.at)}</time>}
+                </div>
+                <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm" dir="auto">{message.content}</p>
+              </li>
+            ))}
+            {!selected.messages.length && <li className="text-sm text-[var(--text-subtle)]">{say("مفيش رسائل محفوظة.", "No saved messages.")}</li>}
+          </ol>
+          <form className="border-t border-[var(--border)] p-3 sm:p-4" onSubmit={(event) => { event.preventDefault(); void sendReply(); }}>
+            {!canReply && <p className="mb-2 text-sm text-[var(--text-subtle)]">
+              {!selected.channelConnected ? say("حساب الإرسال غير متوصل.", "This sending account is not connected.") : say("نافذة الرد اتقفلت. لازم العميل يبعت رسالة جديدة.", "The reply window has closed. The customer needs to send a new message.")}
+            </p>}
+            <div className="flex items-end gap-2">
+              <textarea className={input + " flex-1 resize-y"} rows={2} maxLength={1000} dir="auto"
+                aria-label={say("اكتب رد", "Write a reply")} placeholder={say("اكتب رد…", "Write a reply…")} disabled={!canReply || busy}
+                value={draft} onChange={(event) => { setDraft(event.target.value); draftRequest.current = null; }} />
+              <button type="submit" className={primary + " inline-flex items-center gap-2"} disabled={!canReply || busy || !draft.trim()}>
+                <PaperAirplaneIcon className="size-4" />
+                {say("إرسال", "Send")}
+              </button>
+            </div>
+          </form>
+        </>}
       </div>
     </section>
   );
