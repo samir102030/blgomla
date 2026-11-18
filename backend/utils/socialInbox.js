@@ -1,7 +1,7 @@
 import SocialThread from "../models/socialThread.model.js";
 import SocialLead from "../models/socialLead.model.js";
 import { answer, isCableCatalogueQuestion } from "./supportBrain.js";
-import { send, markRead } from "./socialChannels.js";
+import { send, markRead, runAfterResponse } from "./socialChannels.js";
 
 /**
  * What happens between a message arriving and a reply going out.
@@ -211,7 +211,11 @@ const requestHumanTool = (thread, notify) => ({
  * problem. Two routes, because the two fail differently — a WhatsApp message
  * reaches somebody who is not at a desk, a notification survives being missed.
  */
-const notifyTeam = async (title, body) => {
+const notifyTeam = (title, body) => {
+  runAfterResponse(() => deliverTeamNotification(title, body));
+};
+
+const deliverTeamNotification = async (title, body) => {
   const text = `🔔 ${title}\n\n${body}`;
 
   const alertNumber = (process.env.SOCIAL_ALERT_WHATSAPP || "").replace(/\D/g, "");
@@ -360,6 +364,7 @@ export const handleInbound = async (event) => {
     lang: thread.lang,
     extraTools: [captureOrderTool(thread, notifyTeam), requestHumanTool(thread, notifyTeam)],
     systemExtra: SYSTEM_EXTRA,
+    modelTimeoutMs: 6500,
   });
 
   let reply = String(result.text || "").trim();
