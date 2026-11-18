@@ -734,7 +734,7 @@ export const findOrder = async (user, reference) => {
  * reach from any page.
  */
 export const networkCableGrade = (text) =>
-  /\bcat(?:egory)?[\s-]*([5-8](?:[ae])?)\b/i.exec(normalizeArabic(text))?.[1] || null;
+  /(?:\bcat(?:egory)?|(?:^|[^\p{L}\p{N}])كات)[\s-]*([5-8](?:[ae])?)\b/iu.exec(normalizeArabic(text))?.[1] || null;
 
 export const searchProducts = async (
   query,
@@ -925,7 +925,7 @@ export const searchProducts = async (
   const cableGrade = networkCableGrade(term);
   if (cableGrade) {
     // Keep an explicit cable grade in every match, including loose searches.
-    const gradePattern = new RegExp("\\bcat(?:egory)?[\\s-]*" + cableGrade + "\\b", "i");
+    const gradePattern = new RegExp("(?:\\bcat(?:egory)?|(?:^|[^\\p{L}\\p{N}])كات)[\\s-]*" + cableGrade + "\\b", "iu");
     const gradeFields = { $or: [{ name: gradePattern }, { nameAr: gradePattern }, { sku: gradePattern }] };
     if (/\b(?:cables?|cords?)\b/i.test(term)) {
       const cablePattern = /\b(?:cables?|cords?)\b|ك[او]بل|كابلات|اسلاك/iu;
