@@ -18,7 +18,7 @@ type Summary = {
   channelConnected: boolean;
   lastAgentEmail?: string;
 };
-type Message = { role: "user" | "assistant" | "agent"; content: string; at?: string; agentEmail?: string };
+type Message = { role: "user" | "assistant" | "agent"; content: string; at?: string; agentEmail?: string; imageUrl?: string; delivery?: string; deliveryError?: number };
 type Thread = Summary & { messages: Message[] };
 
 export const channels = {
@@ -31,6 +31,11 @@ const channelStyles = {
   whatsapp: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
   messenger: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
   instagram: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-950 dark:text-fuchsia-300",
+};
+
+const deliveryLabel: Record<string, string> = {
+  accepted: "قبلتها المنصة", sent: "أرسلتها المنصة", delivered: "وصلت",
+  read: "اتقرت", failed: "فشل التسليم",
 };
 
 const panel = "rounded-xl border border-[var(--border)] bg-[var(--surface-1)]";
@@ -198,7 +203,7 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
   const windowOpen = Boolean(selected?.replyUntil && new Date(selected.replyUntil).getTime() > Date.now());
   const canReply = Boolean(selected?.channelConnected && windowOpen);
   const errorText: Record<string, string> = {
-    INVALID_REPLY: "تأكد من النص أو استخدم رابط صورة مباشر يبدأ بـ https://.",
+    INVALID_REPLY: "تأكد من النص أو ارفع الصورة من الجهاز مرة تانية.",
     LOAD_LIST: say("تعذر تحميل المحادثات.", "Could not load conversations."),
     LOAD_THREAD: say("تعذر تحميل الرسائل.", "Could not load messages."),
     ASSIGNMENT: say("تعذر تغيير المسؤول عن الرد.", "Could not update the assignment."),
@@ -280,7 +285,8 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
                   <span>{message.role === "user" ? say("العميل", "Customer") : message.role === "agent" ? (message.agentEmail ? <bdi>{message.agentEmail}</bdi> : say("الفريق", "Team")) : say("المساعد", "Assistant")}</span>
                   {message.at && <time dateTime={message.at}>{when(message.at)}</time>}
                 </div>
-                <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm" dir="auto">{message.content}</p>
+                {message.imageUrl ? <img src={message.imageUrl} alt="صورة مرفقة" className="mt-1 max-h-56 rounded-lg object-contain" /> : <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-sm" dir="auto">{message.content}</p>}
+                {message.delivery && <p className="mt-1 text-xs text-[var(--text-subtle)]">{deliveryLabel[message.delivery] || message.delivery}{message.deliveryError ? " (" + message.deliveryError + ")" : ""}</p>}
               </li>
             ))}
             {!selected.messages.length && <li className="text-sm text-[var(--text-subtle)]">{say("مفيش رسائل محفوظة.", "No saved messages.")}</li>}
@@ -289,12 +295,13 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
             {!canReply && <p className="mb-2 text-sm text-[var(--text-subtle)]">
               {!selected.channelConnected ? say("حساب الإرسال غير متوصل.", "This sending account is not connected.") : say("نافذة الرد اتقفلت. لازم العميل يبعت رسالة جديدة.", "The reply window has closed. The customer needs to send a new message.")}
             </p>}
-            <label className="mb-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={imageMode} disabled={busy} onChange={(event) => { setImageMode(event.target.checked); setDraft(""); draftRequest.current = null; }} />إرسال صورة برابط</label>
+            <label className="mb-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={imageMode} disabled={busy} onChange={(event) => { setImageMode(event.target.checked); setDraft(""); draftRequest.current = null; }} />إرفاق صورة</label>
             {imageMode && <ImageUpload disabled={!canReply || busy || uploading} onBusy={setUploading} onUploaded={(url) => { setDraft(url); draftRequest.current = null; }} />}
+            {imageMode && draft && <img className="my-2 max-h-44 rounded-lg border object-contain" src={draft} alt="معاينة الصورة" />}
             <div className="flex items-end gap-2">
-              <textarea className={input + " flex-1 resize-y"} rows={2} maxLength={imageMode ? 2000 : 950} dir="auto"
-                aria-label={say("اكتب رد", "Write a reply")} placeholder={imageMode ? "https://… رابط مباشر للصورة" : "اكتب رد… أو الصق رابط بوست"} disabled={!canReply || busy}
-                value={draft} onChange={(event) => { setDraft(event.target.value); draftRequest.current = null; }} />
+              {!imageMode && <textarea className={input + " flex-1 resize-y"} rows={2} maxLength={950} dir="auto"
+                aria-label={say("اكتب رد", "Write a reply")} placeholder="اكتب رد… أو الصق رابط بوست" disabled={!canReply || busy}
+                value={draft} onChange={(event) => { setDraft(event.target.value); draftRequest.current = null; }} />}
               <button type="submit" className={primary + " inline-flex items-center gap-2"} disabled={!canReply || busy || uploading || !draft.trim()}>
                 <PaperAirplaneIcon className="size-4" />
                 {say("إرسال", "Send")}

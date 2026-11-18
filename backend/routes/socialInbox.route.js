@@ -1,18 +1,19 @@
 import express from "express";
 import multer from "multer";
-import { v2 as cloudinary } from "cloudinary";
+import { randomBytes } from "node:crypto";
+import InboxImage from "../models/inboxImage.model.js";
 import { uploadLimiter } from "../middleware/rateLimit.middleware.js";
 import { identifyUpload } from "../utils/fileSignature.js";
 import SocialThread from "../models/socialThread.model.js";
 import { activateMember, inviteMember, listMembers, requireInboxOwner, loginInbox, logoutInbox, rejectForeignInboxWrites, requireInboxSession } from "../middleware/socialInboxAuth.js";
-import { channelConfig, channelReady, send, sendImage } from "../utils/socialChannels.js";
+import { channelConfig, channelReady, send, sendImage, fetchSocialProfile } from "../utils/socialChannels.js";
 
 const router = express.Router();
 const channels = ["whatsapp", "messenger", "instagram"];
 const replyWindowMs = 24 * 60 * 60 * 1000;
 const replyMaxLength = 950;
 const pageSize = 30;
-const summaryFields = "channel accountId displayName phone status handoffReason manualHandoff lastInboundAt lastOutboundAt lastAgentEmail updatedAt";
+const summaryFields = "channel accountId externalId profileCheckedAt displayName phone status handoffReason manualHandoff lastInboundAt lastOutboundAt lastAgentEmail updatedAt";
 
 router.use((_req, res, next) => {
   res.set("Cache-Control", "private, no-store");
@@ -21,6 +22,22 @@ router.use((_req, res, next) => {
 router.use(rejectForeignInboxWrites);
 router.post("/login", loginInbox);
 router.post("/activate", activateMember);
+const imageOrigin = "https://inbox.belgmla.com";
+const imagePath = "/api/social-inbox/media/";
+router.get("/media/:key", async (req, res, next) => {
+  if (!/^[a-f0-9]{48}$/.test(req.params.key)) return res.sendStatus(404);
+  try {
+    const image = await InboxImage.findOne({
+      key: req.params.key, expiresAt: { $gt: new Date() },
+    }).select("+bytes");
+    if (!image) return res.sendStatus(404);
+    res.set("X-Content-Type-Options", "nosniff");
+    res.set("X-Robots-Tag", "noindex, nofollow");
+    res.type(image.contentType).send(image.bytes);
+  } catch (error) {
+    next(error);
+  }
+});
 router.use(requireInboxSession);
 router.get("/session", (req, res) => res.json({ email: req.inboxEmail, role: req.inboxRole }));
 router.post("/logout", logoutInbox);
@@ -37,7 +54,7 @@ const replyAvailable = (thread) => {
 const summary = (thread) => ({
   id: String(thread._id),
   channel: thread.channel,
-  name: thread.displayName || thread.phone || "Customer",
+  name: thread.displayName || thread.phone || `حساب ${String(thread.externalId || "").slice(-6)}`,
   phone: thread.phone,
   status: thread.status,
   handoffReason: thread.status === "human" && !thread.manualHandoff ? thread.handoffReason : undefined,
@@ -52,7 +69,7 @@ const summary = (thread) => ({
 
 const detail = (thread) => ({
   ...summary(thread),
-  messages: thread.history.map(({ role, content, at, agentEmail }) => ({ role, content, at, agentEmail })),
+  messages: thread.history.map(({ role, content, at, agentEmail, imageUrl, delivery, deliveryError }) => ({ role, content, at, agentEmail, imageUrl, delivery, deliveryError })),
 });
 
 const handle = (action) => async (req, res, next) => {
@@ -91,7 +108,22 @@ router.get("/", handle(async (req, res) => {
   const rows = await SocialThread.find(filter)
     .select(summaryFields).sort({ updatedAt: -1, _id: -1 })
     .skip((page - 1) * pageSize).limit(pageSize + 1).lean();
-  res.json({ items: rows.slice(0, pageSize).map(summary), hasNext: rows.length > pageSize });
+  const items = rows.slice(0, pageSize);
+  const cutoff = new Date(Date.now() - 6 * 60 * 60 * 1000);
+  const unnamed = items.filter((row) => !row.displayName && row.channel !== "whatsapp" &&
+    replyAvailable(row) && (!row.profileCheckedAt || row.profileCheckedAt < cutoff)).slice(0, 4);
+  await Promise.all(unnamed.map(async (row) => {
+    const claimed = await SocialThread.updateOne({
+      _id: row._id,
+      $or: [{ profileCheckedAt: { $exists: false } }, { profileCheckedAt: { $lt: cutoff } }],
+    }, { $set: { profileCheckedAt: new Date() } }, { timestamps: false });
+    if (!claimed.modifiedCount) return;
+    const displayName = await fetchSocialProfile(row.channel, row.externalId).catch(() => "");
+    if (!displayName) return;
+    await SocialThread.updateOne({ _id: row._id }, { $set: { displayName } }, { timestamps: false });
+    row.displayName = displayName;
+  }));
+  res.json({ items: items.map(summary), hasNext: rows.length > pageSize });
 }));
 
 router.get("/overview", handle(async (_req, res) => {
@@ -133,13 +165,13 @@ router.post("/images", uploadLimiter, (req, res, next) => {
   if (!["jpeg", "png"].includes(identifyUpload(req.file?.buffer).format)) {
     return res.status(400).json({ code: "INVALID_IMAGE" });
   }
-  const url = await new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      { resource_type: "image", folder: "belgomla-inbox", allowed_formats: ["jpg", "png"] },
-      (error, result) => error ? reject(error) : resolve(result.secure_url)
-    ).end(req.file.buffer);
+  const key = randomBytes(24).toString("hex");
+  const contentType = identifyUpload(req.file.buffer).format === "jpeg" ? "image/jpeg" : "image/png";
+  await InboxImage.create({
+    key, contentType, bytes: req.file.buffer,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
-  res.status(201).json({ url });
+  res.status(201).json({ url: imageOrigin + imagePath + key });
 }));
 
 router.get("/:id", handle(async (req, res) => {
@@ -173,7 +205,7 @@ router.post("/:id/replies", handle(async (req, res) => {
   let image;
   try { if (imageUrl) image = new URL(imageUrl); } catch { /* Reject malformed links below. */ }
   if ((Boolean(text) === Boolean(imageUrl)) || text.length > replyMaxLength ||
-      (imageUrl && (imageUrl.length > 2000 || image?.protocol !== "https:" || image.username || image.password)) ||
+      (imageUrl && (imageUrl.length > 2000 || image?.origin !== imageOrigin || !image.pathname.startsWith(imagePath) || !/^[a-f0-9]{48}$/.test(image.pathname.slice(imagePath.length)) || image.search || image.hash || image.username || image.password)) ||
       typeof requestId !== "string" || !/^[a-f0-9-]{36}$/i.test(requestId)) {
     return res.status(400).json({ code: "INVALID_REPLY" });
   }
@@ -205,13 +237,14 @@ router.post("/:id/replies", handle(async (req, res) => {
     sent = image
       ? [await sendImage(claimed.channel, claimed.externalId, image.href)]
       : await send(claimed.channel, claimed.externalId, text);
-  } catch {
+  } catch (error) {
+    console.error("[social-inbox] send rejected", claimed.channel, error.graphStatus, error.graphCode);
     await SocialThread.updateOne(claimedFilter, { $unset: { manualReply: "" } });
     return res.status(502).json({ code: "REPLY_NOT_CONFIRMED" });
   }
 
-  const accepted = Boolean(sent[0]?.messages?.[0]?.id || sent[0]?.message_id);
-  if (!accepted) {
+  const platformMessageId = sent[0]?.messages?.[0]?.id || sent[0]?.message_id;
+  if (!platformMessageId) {
     await SocialThread.updateOne(claimedFilter, { $unset: { manualReply: "" } });
     return res.status(502).json({ code: "REPLY_NOT_CONFIRMED" });
   }
@@ -219,7 +252,7 @@ router.post("/:id/replies", handle(async (req, res) => {
   const now = new Date();
   await SocialThread.updateOne(claimedFilter, {
     $set: { lastOutboundAt: now, lastAgentEmail: req.inboxEmail },
-    $push: { history: { $each: [{ role: "agent", content: image ? image.href : text, at: now, requestId, agentEmail: req.inboxEmail }], $slice: -40 } },
+    $push: { history: { $each: [{ role: "agent", content: image ? "صورة مرفقة" : text, imageUrl: image?.href, delivery: "accepted", platformMessageId, at: now, requestId, agentEmail: req.inboxEmail }], $slice: -40 } },
     $unset: { manualReply: "" },
   });
   res.json({ accepted: true });

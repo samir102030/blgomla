@@ -25,6 +25,10 @@ const turnSchema = new mongoose.Schema(
     at: { type: Date, default: Date.now },
     requestId: { type: String },
     agentEmail: { type: String },
+    imageUrl: String,
+    platformMessageId: String,
+    delivery: String,
+    deliveryError: Number,
   },
   { _id: false }
 );
@@ -48,6 +52,7 @@ const socialThreadSchema = new mongoose.Schema(
     accountId: { type: String, trim: true, default: "" },
 
     displayName: { type: String, trim: true, default: "" },
+    profileCheckedAt: Date,
     /** Only ever what the platform handed us, or what the customer typed. */
     phone: { type: String, trim: true, default: "" },
 

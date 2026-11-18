@@ -1,3 +1,4 @@
+import SocialThread from "../models/socialThread.model.js";
 import connectDB from "../config/db.js";
 import { handleInbound } from "../utils/socialInbox.js";
 import { whatsappUsesOpenAI } from "../utils/supportBrain.js";
@@ -175,6 +176,25 @@ const drain = async (events) => {
  * WhatsApp, Instagram and Messenger all arrive here: one Meta app, one
  * webhook URL, three `object` values.
  */
+const updateWhatsAppDelivery = async (entry) => {
+  const changes = (entry || []).flatMap((item) => item.changes || []);
+  const updates = changes.flatMap(({ value }) => (value?.statuses || []).flatMap((status) => {
+    const predecessors = { sent: ["accepted"], delivered: ["accepted", "sent"], read: ["accepted", "sent", "delivered"], failed: ["accepted", "sent"] }[status.status];
+    if (!predecessors || !status.id || !value.metadata?.phone_number_id) return [];
+    const deliveryError = Number(status.errors?.[0]?.code);
+    return [{
+      updateOne: {
+        filter: { channel: "whatsapp", accountId: value.metadata.phone_number_id, history: { $elemMatch: { platformMessageId: status.id, delivery: { $in: predecessors } } } },
+        update: { $set: { "history.$.delivery": status.status, ...(Number.isFinite(deliveryError) && { "history.$.deliveryError": deliveryError }) } },
+        timestamps: false,
+      },
+    }];
+  }));
+  if (!updates.length) return;
+  await connectDB();
+  await SocialThread.bulkWrite(updates, { ordered: false });
+};
+
 export const receiveMeta = async (req, res) => {
   const signature = req.get("x-hub-signature-256");
   const object = req.body?.object;
@@ -190,6 +210,9 @@ export const receiveMeta = async (req, res) => {
     return res.sendStatus(403);
   }
 
+  if (isWhatsApp && req.body.entry?.some((entry) => entry.changes?.some((change) => change.value?.statuses?.length))) {
+    runAfterResponse(() => updateWhatsAppDelivery(req.body.entry)).catch((error) => console.error("[social] delivery update failed", error.name));
+  }
   const events = parseMeta(req.body);
 
   // A receipt-only webhook left unacknowledged is redelivered for hours, and

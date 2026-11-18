@@ -170,7 +170,11 @@ const postJson = async (url, body, { bearer, timeoutMs = 15000 } = {}) => {
       signal: controller.signal,
     });
     const text = await res.text();
-    if (!res.ok) throw new Error(`${res.status} ${text.slice(0, 400)}`);
+    if (!res.ok) {
+      let graphCode;
+      try { graphCode = JSON.parse(text)?.error?.code; } catch { /* Non-JSON response. */ }
+      throw Object.assign(new Error(`Messaging API HTTP ${res.status}`), { graphStatus: res.status, graphCode });
+    }
     return text ? JSON.parse(text) : {};
   } finally {
     clearTimeout(timer);
@@ -199,6 +203,23 @@ export const sendNewOrderWhatsApp = async (orderId) => {
     { bearer: token, timeoutMs: 2500 }
   );
   if (!response.messages?.[0]?.id) throw new Error("WhatsApp did not accept the order alert");
+};
+
+export const fetchSocialProfile = async (channel, externalId) => {
+  if (!["instagram", "messenger"].includes(channel)) return "";
+  const config = channelConfig(channel);
+  if (!config.token || !externalId) return "";
+  const url = new URL(`${config.base || GRAPH}/${encodeURIComponent(externalId)}`);
+  url.searchParams.set("fields", channel === "instagram" ? "name,username" : "first_name,last_name");
+  const response = await fetch(url, {
+    headers: { authorization: `Bearer ${config.token}` },
+    signal: AbortSignal.timeout(2200),
+  });
+  if (!response.ok) return "";
+  const profile = await response.json();
+  const name = profile.name || [profile.first_name, profile.last_name].filter(Boolean).join(" ");
+  const username = String(profile.username || "").trim();
+  return String(username ? (name ? `${name} (@${username})` : `@${username}`) : name).trim().slice(0, 180);
 };
 
 export const sendImage = async (channel, to, url) => {

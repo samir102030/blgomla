@@ -67,7 +67,7 @@ export default function Campaigns() {
       setResult("تمت معالجة " + (index + 1) + " من " + targets.length + " محادثة.");
     }
     setSelected(new Set());
-    setResult("تم قبول " + (targets.length - unconfirmed.length) + " رسالة للإرسال." +
+    setResult("تم قبول " + (targets.length - unconfirmed.length) + " رسالة من المنصات. القبول لا يؤكد التسليم." +
       (unconfirmed.length ? " لم يتأكد الإرسال لـ " + unconfirmed.map(({ name, channel }) => name + " (" + channels[channel] + ")").join("، ") + ". راجع المحادثات قبل إعادة المحاولة." : ""));
     setBusy(false);
   };
@@ -103,11 +103,12 @@ export default function Campaigns() {
       if (confirming) void send();
       else setConfirming(true);
     }}>
-      <label className="flex gap-2 text-sm"><input type="checkbox" checked={image} disabled={busy} onChange={(event) => { setImage(event.target.checked); setDraft(""); setConfirming(false); }} />إرسال صورة برابط</label>
+      <label className="flex gap-2 text-sm"><input type="checkbox" checked={image} disabled={busy} onChange={(event) => { setImage(event.target.checked); setDraft(""); setConfirming(false); }} />إرفاق صورة</label>
       {image && <ImageUpload disabled={busy || uploading} onBusy={setUploading} onUploaded={(url) => { setDraft(url); setConfirming(false); }} />}
-      <label className="block text-sm">{image ? "رابط الصورة المباشر" : "نص الرسالة أو رابط البوست"}
+      {image && draft && <img className="max-h-52 rounded-lg border object-contain" src={draft} alt="معاينة الصورة" />}
+      {!image && <label className="block text-sm">نص الرسالة أو رابط البوست
         <textarea dir="auto" className="mt-1 block w-full rounded-lg border p-2" rows={3} maxLength={image ? 2000 : 950} value={draft} disabled={busy} onChange={(event) => { setDraft(event.target.value); setConfirming(false); }} required />
-      </label>
+      </label>}
       {confirming && <p role="status">الرسالة هتتبعت لـ {targets.length} محادثة مختارة. راجع الرسالة والمستلمين قبل التأكيد.</p>}
       <div className="flex flex-wrap gap-2">
         <button className="rounded-lg bg-[var(--primary)] px-3 py-2 text-white disabled:opacity-50" disabled={busy || uploading || !targets.length || !draft.trim()}>
