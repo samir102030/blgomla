@@ -49,6 +49,7 @@ const HANDOFF_HOLD_MS = 2 * 60 * 60 * 1000;
  * `closed` is a decision someone made on purpose and does not lapse.
  */
 const botShouldStayQuiet = (thread) => {
+  if (thread.manualHandoff) return true;
   if (thread.status === "closed") return true;
   if (thread.status !== "human") return false;
   if (!thread.handoffAt) return true;
@@ -243,7 +244,7 @@ const deliverTeamNotification = async (title, body) => {
           title,
           message: body.slice(0, 1000),
           type: "info",
-          link: "/admin/social-inbox",
+          link: "https://inbox.belgmla.com/",
         }))
       );
     }
@@ -349,7 +350,7 @@ export const handleInbound = async (event) => {
 
   // Keep the handoff while allowing an independent, read-only catalogue lookup.
   const catalogueLookup = channel === "whatsapp" && isCableCatalogueQuestion(text);
-  if (botShouldStayQuiet(thread) && !catalogueLookup) {
+  if (botShouldStayQuiet(thread) && (thread.manualHandoff || !catalogueLookup)) {
     await thread.save();
     return { handled: true, kind: "silent-human-owned" };
   }
@@ -395,6 +396,17 @@ export const handleInbound = async (event) => {
         ? "ثانية واحدة، هوصّلك بحد من الفريق يرد عليك."
         : "One moment — I am passing you to someone from the team.";
     thread.status = "human";
+  }
+
+  // An operator may take over while the model is working.
+  if (await SocialThread.exists({ _id: thread._id, manualHandoff: true })) {
+    const update = {
+      $push: { history: { $each: [{ role: "user", content: text.slice(0, 4000) }], $slice: -40 } },
+      $inc: { messageCount: 1 },
+    };
+    if (messageId) update.$push.seenMessageIds = { $each: [messageId], $slice: -50 };
+    await SocialThread.updateOne({ _id: thread._id }, update);
+    return { handled: true, kind: "silent-human-owned" };
   }
 
   await send(channel, externalId, reply);

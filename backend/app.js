@@ -120,15 +120,18 @@ const isOriginAllowed = (origin) => {
 };
 
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (isOriginAllowed(origin)) return callback(null, true);
+  cors((req, callback) => {
+    const origin = req.get("origin");
+    const fromInbox = origin === "https://inbox.belgmla.com";
+    if (origin && !isOriginAllowed(origin) && !(fromInbox && /^\/api\/social-inbox(?:\/|$)/.test(req.path))) {
       return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    }
+    return callback(null, {
+      origin: true,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    });
   }),
 );
 

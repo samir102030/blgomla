@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: system-ui, sans-serif;
+  --text: #1e2b3b;
+  --text-subtle: #526175;
+  --surface-1: #fff;
+  --surface-2: #eef3f8;
+  --border: #d9e2ed;
+  --primary: #1b5d71;
+  color: var(--text);
+  background: #f5f8fb;
+}
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

@@ -23,6 +23,8 @@ const turnSchema = new mongoose.Schema(
     role: { type: String, enum: ["user", "assistant", "agent"], required: true },
     content: { type: String, required: true, maxlength: 4000 },
     at: { type: Date, default: Date.now },
+    requestId: { type: String },
+    agentEmail: { type: String },
   },
   { _id: false }
 );
@@ -60,6 +62,7 @@ const socialThreadSchema = new mongoose.Schema(
 
     lastInboundAt: { type: Date },
     lastOutboundAt: { type: Date },
+    lastAgentEmail: { type: String },
 
     /**
      * Message ids we have already answered.
@@ -83,6 +86,8 @@ const socialThreadSchema = new mongoose.Schema(
     },
     handoffReason: { type: String, trim: true, default: "" },
     handoffAt: { type: Date },
+    manualHandoff: { type: Boolean, default: false },
+    manualReply: { id: String },
 
     lang: { type: String, enum: ["ar", "en"], default: "ar" },
 
@@ -94,6 +99,7 @@ const socialThreadSchema = new mongoose.Schema(
 
 socialThreadSchema.index({ channel: 1, externalId: 1 }, { unique: true });
 socialThreadSchema.index({ status: 1, updatedAt: -1 });
+socialThreadSchema.index({ channel: 1, updatedAt: -1, _id: -1 });
 
 /**
  * A thread that has run for months is not more useful for having every turn
