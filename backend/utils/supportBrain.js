@@ -1115,6 +1115,7 @@ const answerWithModel = async ({
   lang = "ar",
   extraTools = [],
   systemExtra = "",
+  signal,
 }) => {
   const tools = [...TOOL_SPECS, ...extraTools.map((t) => t.spec)];
   const extras = Object.fromEntries(extraTools.map((t) => [t.spec.name, t.run]));
@@ -1130,6 +1131,7 @@ const answerWithModel = async ({
   for (let turn = 0; turn < 4; turn += 1) {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
+      signal,
       headers: {
         "content-type": "application/json",
         "x-api-key": process.env.ANTHROPIC_API_KEY,
@@ -1198,6 +1200,7 @@ const answerWithGemini = async ({
   lang = "ar",
   extraTools = [],
   systemExtra = "",
+  signal,
 }) => {
   const specs = [...TOOL_SPECS, ...extraTools.map((t) => t.spec)];
   const extras = Object.fromEntries(extraTools.map((t) => [t.spec.name, t.run]));
@@ -1257,6 +1260,7 @@ const answerWithGemini = async ({
               "x-goog-api-key": process.env.GEMINI_API_KEY,
             },
             body: payload(),
+            signal,
           }
         );
 
@@ -1323,6 +1327,7 @@ export const answer = async ({
   lang = "ar",
   extraTools = [],
   systemExtra = "",
+  modelTimeoutMs,
 }) => {
   /*
     An order question is answered here, never by a free model.
@@ -1354,6 +1359,7 @@ export const answer = async ({
         lang,
         extraTools,
         systemExtra,
+        signal: modelTimeoutMs ? AbortSignal.timeout(modelTimeoutMs) : undefined,
       });
       if (fromModel.text) {
         return { ...fromModel, handoff: false, suggestions: [] };
