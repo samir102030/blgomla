@@ -398,6 +398,7 @@ export const handleInbound = async (event) => {
   }
 
   await send(channel, externalId, reply);
+  if (channel === "whatsapp") console.info("[social] WhatsApp reply source:", result.source || "unknown");
 
   thread.history.push({ role: "assistant", content: reply.slice(0, 4000) });
   thread.lastOutboundAt = new Date();
