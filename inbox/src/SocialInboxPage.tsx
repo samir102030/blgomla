@@ -1,9 +1,10 @@
+import ImageUpload from "./ImageUpload";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowPathIcon, ChatBubbleLeftRightIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { isAxiosError } from "axios";
 import { axiosInstance } from "./api";
 
-type Channel = "whatsapp" | "messenger" | "instagram";
+export type Channel = "whatsapp" | "messenger" | "instagram";
 type Summary = {
   id: string;
   channel: Channel;
@@ -20,7 +21,7 @@ type Summary = {
 type Message = { role: "user" | "assistant" | "agent"; content: string; at?: string; agentEmail?: string };
 type Thread = Summary & { messages: Message[] };
 
-const channels = {
+export const channels = {
   whatsapp: "WhatsApp",
   messenger: "Messenger",
   instagram: "Instagram",
@@ -37,7 +38,7 @@ const button = "rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-
 const input = "min-w-0 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm";
 const primary = "rounded-lg bg-[var(--primary,#ed6b22)] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50";
 
-export default function SocialInboxPage() {
+export default function SocialInboxPage({ channel }: { channel: Channel }) {
   const [refreshVersion, setRefreshVersion] = useState(0);
   return (
     <section className="space-y-4 text-[var(--text)]" dir="rtl">
@@ -49,10 +50,8 @@ export default function SocialInboxPage() {
         </button>
       </header>
       <div className="overflow-x-auto pb-3">
-        <div className="grid min-w-[960px] grid-cols-3 items-stretch gap-3">
-          {(Object.keys(channels) as Channel[]).map((channel) => (
-            <ChannelColumn key={channel} channel={channel} refreshVersion={refreshVersion} />
-          ))}
+        <div className="grid items-stretch gap-3">
+          <ChannelColumn key={channel} channel={channel} refreshVersion={refreshVersion} />
         </div>
       </div>
     </section>
@@ -71,7 +70,9 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
   const [selectedId, setSelectedId] = useState("");
   const [thread, setThread] = useState<Thread | null>(null);
   const [draft, setDraft] = useState("");
+  const [imageMode, setImageMode] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const draftRequest = useRef<string | null>(null);
   const messageList = useRef<HTMLOListElement>(null);
@@ -173,13 +174,13 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
   };
 
   const sendReply = async () => {
-    if (!selected || busy || !draft.trim() || !canReply) return;
+    if (!selected || busy || uploading || !draft.trim() || !canReply) return;
     setBusy(true);
     setError("");
     draftRequest.current ??= crypto.randomUUID();
     try {
       await axiosInstance.post("/social-inbox/" + selected.id + "/replies", {
-        text: draft.trim(),
+        ...(imageMode ? { imageUrl: draft.trim() } : { text: draft.trim() }),
         requestId: draftRequest.current,
       });
       setDraft("");
@@ -197,6 +198,7 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
   const windowOpen = Boolean(selected?.replyUntil && new Date(selected.replyUntil).getTime() > Date.now());
   const canReply = Boolean(selected?.channelConnected && windowOpen);
   const errorText: Record<string, string> = {
+    INVALID_REPLY: "تأكد من النص أو استخدم رابط صورة مباشر يبدأ بـ https://.",
     LOAD_LIST: say("تعذر تحميل المحادثات.", "Could not load conversations."),
     LOAD_THREAD: say("تعذر تحميل الرسائل.", "Could not load messages."),
     ASSIGNMENT: say("تعذر تغيير المسؤول عن الرد.", "Could not update the assignment."),
@@ -287,11 +289,13 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
             {!canReply && <p className="mb-2 text-sm text-[var(--text-subtle)]">
               {!selected.channelConnected ? say("حساب الإرسال غير متوصل.", "This sending account is not connected.") : say("نافذة الرد اتقفلت. لازم العميل يبعت رسالة جديدة.", "The reply window has closed. The customer needs to send a new message.")}
             </p>}
+            <label className="mb-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={imageMode} disabled={busy} onChange={(event) => { setImageMode(event.target.checked); setDraft(""); draftRequest.current = null; }} />إرسال صورة برابط</label>
+            {imageMode && <ImageUpload disabled={!canReply || busy || uploading} onBusy={setUploading} onUploaded={(url) => { setDraft(url); draftRequest.current = null; }} />}
             <div className="flex items-end gap-2">
-              <textarea className={input + " flex-1 resize-y"} rows={2} maxLength={1000} dir="auto"
-                aria-label={say("اكتب رد", "Write a reply")} placeholder={say("اكتب رد…", "Write a reply…")} disabled={!canReply || busy}
+              <textarea className={input + " flex-1 resize-y"} rows={2} maxLength={imageMode ? 2000 : 950} dir="auto"
+                aria-label={say("اكتب رد", "Write a reply")} placeholder={imageMode ? "https://… رابط مباشر للصورة" : "اكتب رد… أو الصق رابط بوست"} disabled={!canReply || busy}
                 value={draft} onChange={(event) => { setDraft(event.target.value); draftRequest.current = null; }} />
-              <button type="submit" className={primary + " inline-flex items-center gap-2"} disabled={!canReply || busy || !draft.trim()}>
+              <button type="submit" className={primary + " inline-flex items-center gap-2"} disabled={!canReply || busy || uploading || !draft.trim()}>
                 <PaperAirplaneIcon className="size-4" />
                 {say("إرسال", "Send")}
               </button>

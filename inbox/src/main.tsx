@@ -4,14 +4,15 @@ import { isAxiosError } from "axios";
 import Team from "./Team";
 import Overview from "./Overview";
 import { ArrowLeftOnRectangleIcon, ChatBubbleLeftRightIcon, Squares2X2Icon, UserGroupIcon } from "@heroicons/react/24/outline";
-import SocialInboxPage from "./SocialInboxPage";
+import SocialInboxPage, { channels, type Channel } from "./SocialInboxPage";
+import Campaigns from "./Campaigns";
 import { axiosInstance } from "./api";
 import "./style.css";
 
 function App() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
-  const [view, setView] = useState<"overview" | "inbox" | "team">("overview");
+  const [view, setView] = useState<"overview" | Channel | "campaigns" | "team">("overview");
   const [invite, setInvite] = useState(() => new URLSearchParams(location.hash.slice(1)).get("invite") || "");
   const [loginEmail, setLoginEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +42,21 @@ function App() {
       axiosInstance.interceptors.response.eject(interceptor);
     };
   }, []);
+
+  const [alerts, setAlerts] = useState<Partial<Record<Channel, number>>>({});
+  useEffect(() => {
+    if (!email) return;
+    const controller = new AbortController();
+    const refresh = async () => {
+      try {
+        const { data } = await axiosInstance.get<{ channels: { channel: Channel; waiting: number }[] }>("/social-inbox/overview", { signal: controller.signal });
+        if (!controller.signal.aborted) setAlerts(Object.fromEntries(data.channels.map(({ channel, waiting }) => [channel, waiting])));
+      } catch { /* The next refresh will retry. */ }
+    };
+    void refresh();
+    const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 15000);
+    return () => { controller.abort(); window.clearInterval(timer); };
+  }, [email, view]);
 
   const logIn = async () => {
     setBusy(true);
@@ -93,7 +109,8 @@ function App() {
 
   const nav = [
     { id: "overview", label: "نظرة عامة", icon: Squares2X2Icon },
-    { id: "inbox", label: "محادثات العملاء", icon: ChatBubbleLeftRightIcon },
+    ...(Object.keys(channels) as Channel[]).map((channel) => ({ id: channel, label: channels[channel], icon: ChatBubbleLeftRightIcon })),
+    { id: "campaigns", label: "إرسال جماعي", icon: ChatBubbleLeftRightIcon },
     ...(role === "owner" ? [{ id: "team", label: "إدارة الفريق", icon: UserGroupIcon }] as const : []),
   ] as const;
 
@@ -107,7 +124,7 @@ function App() {
         <nav aria-label="لوحة صندوق الرسائل">
           {nav.map(({ id, label, icon: Icon }) => <button
             key={id} type="button" aria-current={view === id ? "page" : undefined} onClick={() => setView(id)}
-          ><Icon aria-hidden="true" /><span>{label}</span></button>)}
+          ><Icon aria-hidden="true" /><span>{label}</span>{id in channels && Boolean(alerts[id as Channel]) && <bdi className="ms-auto rounded-full bg-[#51d4f2] px-2 text-xs font-semibold text-[#102432]" aria-label={alerts[id as Channel] + " محادثة في انتظار الرد"} title="محادثات في انتظار الرد">{alerts[id as Channel]}</bdi>}</button>)}
         </nav>
         <div className="workspace-account">
           <bdi title={email}>{email}</bdi>
@@ -116,8 +133,9 @@ function App() {
       </aside>
       <main className="workspace-content">
         {notice && <p role="alert" className="mb-4 text-sm text-red-800">{notice}</p>}
-        {view === "overview" && <Overview openInbox={() => setView("inbox")} />}
-        <div hidden={view !== "inbox"}><SocialInboxPage /></div>
+        {view === "overview" && <Overview openInbox={() => setView("whatsapp")} />}
+        {view in channels && <SocialInboxPage key={view} channel={view as Channel} />}
+        <div hidden={view !== "campaigns"}><Campaigns /></div>
         {view === "team" && role === "owner" && <Team />}
       </main>
     </div>

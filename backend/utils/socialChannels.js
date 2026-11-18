@@ -201,6 +201,21 @@ export const sendNewOrderWhatsApp = async (orderId) => {
   if (!response.messages?.[0]?.id) throw new Error("WhatsApp did not accept the order alert");
 };
 
+export const sendImage = async (channel, to, url) => {
+  const config = channelConfig(channel);
+  if (channel === "whatsapp") {
+    return postJson(`${GRAPH}/${config.id}/messages`, {
+      messaging_product: "whatsapp", to, type: "image", image: { link: url },
+    }, { bearer: config.token });
+  }
+  if (!["instagram", "messenger"].includes(channel)) throw new Error("Unsupported image channel");
+  return postJson(`${config.base || GRAPH}/${config.id}/messages`, {
+    recipient: { id: to },
+    ...(channel === "messenger" ? { messaging_type: "RESPONSE" } : {}),
+    message: { attachment: { type: "image", payload: { url } } },
+  }, { bearer: config.token });
+};
+
 const sendOne = async (channel, to, text) => {
   const c = channelConfig(channel);
 
