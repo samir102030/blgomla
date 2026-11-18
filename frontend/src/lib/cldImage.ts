@@ -1,4 +1,9 @@
+import { backupUrl } from "./imageBackup";
+
 const CLOUDINARY_HOST = "res.cloudinary.com";
+
+const unavailableCloud = (url: string) =>
+  url.startsWith("https://res.cloudinary.com/i2l6nznn/image/upload/");
 
 const PLACEHOLDER = "/placeholder.png";
 
@@ -21,6 +26,8 @@ export interface CldOpts {
 export const cldImg = (url: string | undefined | null, opts: CldOpts = {}): string => {
   if (!url) return PLACEHOLDER;
   if (!isCloudinary(url)) return url;
+  const mirror = unavailableCloud(url) ? backupUrl(url) : null;
+  if (mirror) return mirror;
   const { w, q = "auto" } = opts;
   const parts = ["f_auto", `q_${q}`, "dpr_auto"];
   if (w) parts.push(`c_limit`, `w_${w}`);
@@ -29,6 +36,7 @@ export const cldImg = (url: string | undefined | null, opts: CldOpts = {}): stri
 
 export const cldSrcSet = (url: string | undefined | null, w: number, q: CldOpts["q"] = "auto"): string | undefined => {
   if (!url || !isCloudinary(url)) return undefined;
+  if (unavailableCloud(url) && backupUrl(url)) return undefined;
   const widths = [w, w * 2];
   return widths
     .map((width) => `${cldImg(url, { w: width, q })} ${width}w`)
