@@ -11,6 +11,7 @@ type Summary = {
   phone?: string;
   status: "bot" | "human" | "closed";
   manualHandoff: boolean;
+  handoffReason?: string;
   updatedAt: string;
   replyUntil: string | null;
   channelConnected: boolean;
@@ -239,6 +240,7 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
                 <time dateTime={item.updatedAt}>{when(item.updatedAt)}</time>
                 <span>{statusText(item)}</span>
               </span>
+              {item.handoffReason && <span className="mt-1 block truncate text-xs font-medium text-[var(--text-subtle)]">محتاج متابعة من الفريق</span>}
               {item.lastAgentEmail && <span className="mt-1 block truncate text-xs text-[var(--text-subtle)]">آخر رد من الفريق <bdi>{item.lastAgentEmail}</bdi></span>}
             </button>
           ))}
@@ -268,6 +270,7 @@ function ChannelColumn({ channel, refreshVersion }: { channel: Channel; refreshV
               {selected.status === "human" ? say("رجّع الرد للمساعد", "Resume assistant") : say("استلم المحادثة", "Take over")}
             </button>
           </div>
+          {selected.handoffReason && <p className="border-b border-[var(--border)] px-3 py-2 text-xs text-[var(--text-subtle)]">سبب التحويل: <bdi>{selected.handoffReason}</bdi></p>}
           <ol ref={messageList} className="grid h-[38vh] min-h-48 content-start gap-3 overflow-y-auto p-3 sm:p-4" aria-label={"رسائل " + channels[channel]}>
             {selected.messages.map((message, index) => (
               <li key={index} className={"max-w-[88%] rounded-xl px-3 py-2 " + (message.role === "user" ? "justify-self-start bg-[var(--surface-2)]" : "justify-self-end border border-[var(--border)] bg-[var(--surface-1)]")}>

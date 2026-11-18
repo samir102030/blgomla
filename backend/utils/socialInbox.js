@@ -260,6 +260,9 @@ const SYSTEM_EXTRA = [
   "Write like a person typing on a phone: two or three short lines, no headings, no bullet points, no markdown.",
   "When you name a product, paste the `url` the search tool returned on its own line — never invent a link.",
   "You cannot see this customer's orders unless they are signed in on the site, and here nobody is. If they ask about an order, ask for the order reference and hand them to a person.",
+  "When the customer only says they have a question, ask what it is. Never use old product mentions to answer a new, unspecified question.",
+  "Answer technical questions first. Ask one concrete follow-up if it would change the answer. Search the catalogue only if the customer asks for products, stock, or pricing.",
+  "Use request_human for cases that need a specialist to check model-specific compatibility or diagnose a problem you cannot resolve after clarification.",
   "Prices you quote are list prices; shipping is quoted from the shipping tool and nothing else.",
   "If they send a voice note, a photo or a file, say you cannot open it here and ask them to type it.",
 ].join(" ");
@@ -369,7 +372,7 @@ export const handleInbound = async (event) => {
    */
   if (result.handoff && thread.status !== "human") {
     thread.status = "human";
-    thread.handoffReason = thread.handoffReason || "assistant asked for a person";
+    thread.handoffReason = text.slice(0, 500);
     thread.handoffAt = new Date();
     if (beforeStatus !== "human") {
       await notifyTeam(

@@ -8,7 +8,7 @@ const channels = ["whatsapp", "messenger", "instagram"];
 const replyWindowMs = 24 * 60 * 60 * 1000;
 const replyMaxLength = 1000;
 const pageSize = 30;
-const summaryFields = "channel accountId displayName phone status manualHandoff lastInboundAt lastOutboundAt lastAgentEmail updatedAt";
+const summaryFields = "channel accountId displayName phone status handoffReason manualHandoff lastInboundAt lastOutboundAt lastAgentEmail updatedAt";
 
 router.use((_req, res, next) => {
   res.set("Cache-Control", "private, no-store");
@@ -36,6 +36,7 @@ const summary = (thread) => ({
   name: thread.displayName || thread.phone || "Customer",
   phone: thread.phone,
   status: thread.status,
+  handoffReason: thread.status === "human" && !thread.manualHandoff ? thread.handoffReason : undefined,
   manualHandoff: Boolean(thread.manualHandoff),
   updatedAt: thread.updatedAt,
   lastAgentEmail: thread.lastAgentEmail,

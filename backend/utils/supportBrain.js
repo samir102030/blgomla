@@ -1405,6 +1405,15 @@ const answerWithOpenAI = async ({ text, user, history = [], lang, extraTools, sy
 export const isCableCatalogueQuestion = (text) =>
   Boolean(networkCableGrade(text)) && intentOf(text) === "product" && !comparesThings(text);
 
+const technicalOpener = (text) => {
+  const normalized = normalize(text).replace(/[؟?!.،,]+/g, " ").trim();
+  return /^(?:(?:لو سمحت|من فضلك)\s+)?(?:(?:محتاج|عايز|عاوز|حابب|ممكن)\s+)?(?:اسال|عندي|عندى|في|فيه)?\s*(?:عن\s+)?(?:س[وؤ]ال|استفسار)(?:\s+(?:تقني|فني|تيكنيكال|تكنيكال))?(?:\s+(?:لو سمحت|من فضلك))?$/u.test(normalized) ||
+    /^(?:(?:can i ask|i have|i want to ask)\s+)?(?:a\s+)?technical question(?:\s+please)?$/i.test(normalized);
+};
+
+const asksForSpecialist = (text) =>
+  /(?:اكلم|اتكلم مع|محتاج|عايز|عاوز|وصلني ب|حولني ل)\s*(?:حد\s+)?(?:متخصص|مختص|فني|مهندس)|(?:speak to|talk to|connect me (?:with|to)|need)\s+(?:a\s+)?(?:specialist|technician|engineer)/iu.test(normalize(text));
+
 const isTechnicalQuestion = (text) => comparesThings(text) ||
   /(?:الفرق|ايه هو|ايه يعني|يعني ايه|ازاي|إزاي|ينفع|بيشتغل|اوصله|أوصله|متوافق|بيركب|المشكل[هة]|how (?:do|can|to|does)|what is|will it work|compatible|difference)/iu.test(normalize(text));
 
@@ -1468,6 +1477,23 @@ export const answer = async ({
   if (!conversational && isCableCatalogueQuestion(text)) {
     const catalogueAnswer = await answerProduct({ text, lang, history });
     return { suggestions: [], handoff: false, source: "rules", ...catalogueAnswer };
+  }
+
+  if (conversational && asksForSpecialist(text)) {
+    return {
+      text: say(lang, "هحوّل المحادثة لمختص من الفريق. لو تبعت موديل الجهاز أو تفاصيل المشكلة هنا، هتكون قدامه في نفس الشات.", "I’ll pass this conversation to a specialist. If you share the model or a description here, the team will have it in the same chat."),
+      suggestions: [],
+      handoff: true,
+      source: "rules",
+    };
+  }
+  if (conversational && technicalOpener(text)) {
+    return {
+      text: say(lang, "اتفضل، إيه سؤالك؟ لو عن جهاز معيّن ابعتلي موديله أو قولي إيه اللي بتحاول تعمله.", "Sure, what’s your question? If it’s about a particular device, share its model or tell me what you’re trying to do."),
+      suggestions: [],
+      handoff: false,
+      source: "rules",
+    };
   }
 
   const useOpenAI = ["whatsapp", "messenger", "instagram"].includes(channel) && whatsappUsesOpenAI();
