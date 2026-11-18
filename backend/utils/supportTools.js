@@ -803,14 +803,15 @@ export const searchProducts = async (
     ? CABLE_INTERFACE.exec(english)?.[0]
     : null;
   const constraints = [];
-  if (productType) constraints.push({ $or: [{ name: productType }, { nameAr: productType }] });
+  const requiredType = cableInterface ? PRODUCT_TYPE_PATTERNS[0] : productType;
+  if (requiredType) constraints.push({ $or: [{ name: requiredType }, { nameAr: requiredType }] });
   if (cableInterface) {
     const connector = cableInterface.replace(/[-\s]/g, "");
     const interfacePattern = new RegExp("\\b" + connector.split("").join("[-\\s]?") + "\\b", "i");
     constraints.push({ $or: [{ name: interfacePattern }, { nameAr: interfacePattern }, { sku: interfacePattern }] });
   }
   const withConstraints = (conditions) => constraints.length
-    ? { $and: [conditions, ...constraints] }
+    ? { ...conditions, $and: [...(conditions.$and || []), ...constraints] }
     : conditions;
 
   /*
