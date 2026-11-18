@@ -1405,13 +1405,32 @@ const answerWithOpenAI = async ({ text, user, history = [], lang, extraTools, sy
 export const isCableCatalogueQuestion = (text) =>
   Boolean(networkCableGrade(text)) && intentOf(text) === "product" && !comparesThings(text);
 
+const isTechnicalQuestion = (text) => comparesThings(text) ||
+  /(?:الفرق|ايه هو|ايه يعني|يعني ايه|ازاي|إزاي|ينفع|بيشتغل|اوصله|أوصله|متوافق|بيركب|المشكل[هة]|how (?:do|can|to|does)|what is|will it work|compatible|difference)/iu.test(normalize(text));
+
 const contextualTechnicalAnswer = ({ text, history = [], lang }) => {
   const prior = history.filter((turn) => turn?.role === "user").slice(-4)
     .map((turn) => normalize(turn.content)).join(" ");
   const current = normalize(text);
   const withoutPoe = /(?:من\s*غير|بدون|without|non[-\s]?)\s*poe\b/i.test(current);
   const ordinaryNvr = /(?:عادي|ordinary|regular)/.test(current) && /\bpoe\b/i.test(prior);
-  if (!/\bnvr\b/i.test(prior + " " + current) || !(withoutPoe || ordinaryNvr)) return null;
+  if (!(withoutPoe || ordinaryNvr) || !/\bnvr\b/i.test(prior + " " + current)) {
+    if (!isTechnicalQuestion(text)) return null;
+    const topic = current + " " + prior;
+    const guidance = [
+      [/\bdvr\b/i, /\bnvr\b/i,
+        "الـDVR عادةً لكاميرات الأنالوج بكابل كوآكس، والـNVR لكاميرات الـIP على الشبكة. لو عندك كاميرات بالفعل، موديلها هو اللي يحدد أنهي جهاز يناسبك.",
+        "A DVR usually records analog cameras over coax. An NVR records IP cameras over a network. If you already have cameras, their model determines which recorder fits."],
+      [/\bhdmi\b/i, /\b(?:4k|120\s*hz|144\s*hz)\b/i,
+        "عشان تشغّل الدقة والتردد المطلوبين، لازم مخرج الجهاز ومدخل الشاشة والكابل يدعموهم مع بعض. لـ4K على 120Hz دور على كابل Ultra High Speed معتمد وتأكد إن المنافذ نفسها بتدعم 4K/120. موديل الشاشة والجهاز إيه؟",
+        "The source port, display port, and cable all need to support the desired mode. For 4K at 120 Hz, look for a certified Ultra High Speed cable and verify both ports support 4K/120. What are the source and display models?"],
+      [/\bcat\s*5e\b/i, /\bcat\s*6\b/i,
+        "Cat5e وCat6 الاتنين ينفعوا لشبكة جيجابت لحد 100 متر مع تركيب سليم. Cat6 بيدي هامش أعلى للتشويش ويدعم 10 جيجابت على مسافات أقصر حسب التركيب. السرعة والمسافة عندك قد إيه؟",
+        "Cat5e and Cat6 can both carry gigabit Ethernet up to 100 m when installed correctly. Cat6 has more headroom and can support 10 GbE over shorter runs, depending on installation. What speed and distance do you need?"],
+    ];
+    const match = guidance.find(([first, second]) => first.test(topic) && second.test(topic));
+    return match ? { text: say(lang, match[2], match[3]) } : null;
+  }
 
   return {
     text: say(
@@ -1451,9 +1470,10 @@ export const answer = async ({
     return { suggestions: [], handoff: false, source: "rules", ...catalogueAnswer };
   }
 
-  const useOpenAI = channel === "whatsapp" && whatsappUsesOpenAI();
+  const useOpenAI = ["whatsapp", "messenger", "instagram"].includes(channel) && whatsappUsesOpenAI();
   const engine = useOpenAI ? answerWithOpenAI : hasClaude() ? answerWithModel : hasGemini() ? answerWithGemini : null;
-  const theirs = !useOpenAI && !hasClaude() && intentOf(text) === "order";
+  const intent = intentOf(text);
+  const theirs = !useOpenAI && !hasClaude() && intent === "order";
 
   if (engine && !theirs) {
     try {
@@ -1476,8 +1496,18 @@ export const answer = async ({
     }
   }
 
-  const contextual = conversational && contextualTechnicalAnswer({ text, history, lang });
+  const technical = conversational && [null, "product", "warranty", "shipping"].includes(intent) &&
+    (intent !== "shipping" || /\b(?:hdmi|nvr|dvr|poe|cat\s*[5-8]|usb)\b/i.test(text));
+  const contextual = technical && contextualTechnicalAnswer({ text, history, lang });
   if (contextual) return { suggestions: [], handoff: false, source: "rules", ...contextual };
+  if (technical && isTechnicalQuestion(text)) {
+    return {
+      text: say(lang,
+        "ممكن تقولّي موديل الجهاز أو إيه اللي عايز توصله ببعض؟ كده أقدر أحدد التوافق أو خطوات التوصيل.",
+        "What is the device model, or what are you trying to connect? That will help me narrow down compatibility or setup steps."),
+      suggestions: [], handoff: false, source: "rules",
+    };
+  }
   const fromRules = await answerWithRules({ text, user, lang, history });
   if (conversational && fromRules.text === fallback(lang).text) {
     fromRules.text = say(lang, "ممكن تقولّي إيه اللي بتحاول توصله أو تبعتلي موديل الجهاز؟", "What are you trying to set up, or what is the device model?");

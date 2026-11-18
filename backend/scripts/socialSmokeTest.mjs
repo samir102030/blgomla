@@ -94,6 +94,9 @@ if (!USE_REAL_DB) {
       Object.assign(doc, update.$set || {});
       return doc;
     },
+    async exists(filter) {
+      return threads.some((d) => match(d, filter));
+    },
     async findOne(filter) {
       return threads.find((d) => match(d, filter)) || null;
     },
@@ -149,6 +152,14 @@ if (!USE_REAL_DB) {
   ];
   mock.module(here("../utils/supportTools.js"), {
     namedExports: {
+      SITE_URL: "https://belgmla.com",
+      networkCableGrade: () => null,
+      namesAProduct: () => false,
+      governorateIn: () => null,
+      categoryFor: async () => null,
+      brandFor: async () => null,
+      brandShelves: async () => [],
+      namesOnlyABrand: () => false,
       normalizeArabic: (t) => String(t || "").toLowerCase(),
       orderReference: (id) => String(id).slice(-8).toUpperCase(),
       referenceIn: () => null,
@@ -585,7 +596,7 @@ console.log("\n11. A voice note");
   check("we said we cannot open it", reply.includes("مش قادر أفتحها"), reply.slice(0, 50));
   check("without spending a model call", modelCalls.at(-1)?.messages?.at(-1)?.content !== "[audio]");
   const thread = await readThread({ externalId: "201007777777" });
-  check("and a person was fetched", thread?.status === "human", thread?.status);
+  check("and the assistant remains available for the next text", thread?.status === "bot", thread?.status);
 }
 
 console.log("\n12. Delivery receipts are not messages");

@@ -312,11 +312,7 @@ export const handleInbound = async (event) => {
 
   const text = String(event.text || "").trim();
 
-  /**
-   * Voice notes are how half of Egypt writes a message, and we cannot read
-   * one. Saying so immediately — and fetching a person — is better than
-   * silence, which the customer reads as being ignored.
-   */
+  // Ask for a text description while leaving the assistant available.
   if (!text) {
     thread.history.push({
       role: "user",
@@ -324,19 +320,12 @@ export const handleInbound = async (event) => {
     });
     thread.messageCount += 1;
 
-    if (!botShouldStayQuiet(thread)) {
+    if (!botShouldStayQuiet(thread) && !await SocialThread.exists({ _id: thread._id, manualHandoff: true })) {
       const reply =
-        "وصلتني رسالتك بس مش قادر أفتحها هنا 🙏 ممكن تكتبلي اللي محتاجه؟ ولو تحب، حد من الفريق هيرد عليك حالاً.";
+        "وصلتني رسالتك بس مش قادر أفتحها هنا 🙏 ممكن تكتبلي سؤالك أو اسم الجهاز هنا؟ ولو محتاج حد من الفريق قولّي.";
       await send(channel, externalId, reply);
       thread.history.push({ role: "assistant", content: reply });
       thread.lastOutboundAt = new Date();
-      thread.status = "human";
-      thread.handoffReason = "attachment the assistant cannot read";
-      thread.handoffAt = new Date();
-      await notifyTeam(
-        `مرفق مش مقروء — ${CHANNEL_LABEL[channel] || channel}`,
-        `${thread.displayName || externalId} بعت ${event.attachmentType || "مرفق"}.`
-      );
     }
 
     await thread.save();
@@ -346,7 +335,7 @@ export const handleInbound = async (event) => {
   const history = thread.brainHistory(10);
   thread.history.push({ role: "user", content: text.slice(0, 4000) });
   thread.messageCount += 1;
-  thread.lang = detectLang(text);
+  if (/[\u0600-\u06ff]/.test(text) || !history.length) thread.lang = detectLang(text);
 
   // Keep the handoff while allowing an independent, read-only catalogue lookup.
   const catalogueLookup = channel === "whatsapp" && isCableCatalogueQuestion(text);
