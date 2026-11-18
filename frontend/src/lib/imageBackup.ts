@@ -2,7 +2,7 @@
  * Where a picture's second copy lives.
  *
  * Every photograph the shop renders is mirrored onto this repository's own
- * `images` branch by a weekly job. GitHub Raw serves the backup files directly.
+ * `images` branch by a weekly job. The storefront proxies backup files from GitHub Raw.
  *
  * A branch rather than a folder on `main`: the mirror is about a gigabyte and
  * a half, and on `main` every Vercel deployment would clone it. On its own
@@ -14,7 +14,7 @@
  * no hash, no shard, no rename:
  *
  *   live    https://res.cloudinary.com/<cloud>/image/upload/f_auto,q_auto/v1787567030/belgomla/products/6a84db…-0.webp
- *   mirror  https://raw.githubusercontent.com/samir102030/blgomla/images/files/belgomla/products/6a84db…-0.webp
+ *   mirror  /image-backup/files/belgomla/products/6a84db…-0.webp
  *
  * So the backup address is derivable from the live one with nothing to fetch,
  * nothing to cache and nothing to keep in sync — which matters, because the
@@ -30,7 +30,7 @@
 const CLOUDINARY_HOST = "res.cloudinary.com";
 
 /** Change this if the mirror ever moves. Nothing else here is site-specific. */
-export const MIRROR_ROOT = "https://raw.githubusercontent.com/samir102030/blgomla/images";
+export const MIRROR_ROOT = "/image-backup";
 
 /*
   Cloudinary pictures live under `files/`, everything else under `external/`.
