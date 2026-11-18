@@ -31,7 +31,7 @@
  * already stored. Only then the placeholder.
  */
 
-import { backupUrl, externalBackupUrl } from "./imageBackup";
+import { BACKUP_CDN, backupUrl, externalBackupUrl } from "./imageBackup";
 
 // Inline SVG: a data URI can never itself 404, which is what makes the
 // swap safe to perform unconditionally.
@@ -229,7 +229,11 @@ const watchForSilence = () => {
     for (const img of Array.from(document.images)) {
       if (img.dataset.fallbackApplied) continue;
       if (img.complete && img.naturalWidth > 0) continue;
-      if ((img.currentSrc || img.src || "").startsWith("data:")) continue;
+      const source = img.currentSrc || img.src || "";
+      if (source.startsWith("data:")) continue;
+      // Let the browser finish queued mirror requests on long catalogue pages.
+      // The error listener still handles failed requests.
+      if (source.startsWith(new URL(`${BACKUP_CDN}/`, window.location.origin).href)) continue;
       // No src yet is not a slow load — it is a picture nobody has asked for.
       if (!img.getAttribute("src") && !img.getAttribute("srcset")) continue;
       // Neither is a picture parked off screen. Clear the clock rather than
