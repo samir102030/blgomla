@@ -2,15 +2,11 @@
  * Where a picture's second copy lives.
  *
  * Every photograph the shop renders is mirrored onto this repository's own
- * `images` branch by a job that runs on its own every Sunday. jsDelivr serves
- * that branch as a CDN for free, which is what turns the mirror from a cold
- * archive into something the site can actually fall back to while a visitor is
- * looking at it.
+ * `images` branch by a weekly job. GitHub Raw serves the backup files directly.
  *
  * A branch rather than a folder on `main`: the mirror is about a gigabyte and
  * a half, and on `main` every Vercel deployment would clone it. On its own
- * branch the build never sees it, while GitHub still holds it and jsDelivr
- * still serves it.
+ * branch the build never sees it.
  *
  * ## Why this is a string transform and not a lookup
  *
@@ -18,7 +14,7 @@
  * no hash, no shard, no rename:
  *
  *   live    https://res.cloudinary.com/<cloud>/image/upload/f_auto,q_auto/v1787567030/belgomla/products/6a84db…-0.webp
- *   mirror  https://cdn.jsdelivr.net/gh/samir102030/blgomla@images/files/belgomla/products/6a84db…-0.webp
+ *   mirror  https://raw.githubusercontent.com/samir102030/blgomla/images/files/belgomla/products/6a84db…-0.webp
  *
  * So the backup address is derivable from the live one with nothing to fetch,
  * nothing to cache and nothing to keep in sync — which matters, because the
@@ -34,7 +30,7 @@
 const CLOUDINARY_HOST = "res.cloudinary.com";
 
 /** Change this if the mirror ever moves. Nothing else here is site-specific. */
-export const MIRROR_ROOT = "https://cdn.jsdelivr.net/gh/samir102030/blgomla@images";
+export const MIRROR_ROOT = "https://raw.githubusercontent.com/samir102030/blgomla/images";
 
 /*
   Cloudinary pictures live under `files/`, everything else under `external/`.
