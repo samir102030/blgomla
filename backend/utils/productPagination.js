@@ -44,7 +44,7 @@ const lookupStages = (extra = []) => [
       from: "categories",
       localField: "category",
       foreignField: "_id",
-      pipeline: [{ $project: { name: 1, slug: 1 } }],
+      pipeline: [{ $project: { name: 1, nameAr: 1, slug: 1 } }],
       as: "category",
     },
   },
@@ -75,6 +75,7 @@ const lookupStages = (extra = []) => [
 export async function paginateProducts({
   filter = {},
   sort = { createdAt: -1 },
+  rank,
   page = DEFAULT_PAGE,
   limit = DEFAULT_LIMIT,
 } = {}) {
@@ -125,10 +126,11 @@ export async function paginateProducts({
   const [data, total] = await Promise.all([
     Product.aggregate([
       { $match: scoped },
-      { $sort: sort },
+      ...(rank ? [{ $set: { catalogueRelevance: rank } }] : []),
+      { $sort: rank ? { catalogueRelevance: -1, ...sort } : sort },
       { $skip: skip },
       { $limit: limit },
-      { $project: LIST_PROJECTION },
+      { $project: rank ? { ...LIST_PROJECTION, catalogueRelevance: 0 } : LIST_PROJECTION },
       ...lookupStages(),
     ]).allowDiskUse(true),
     Product.countDocuments(scoped),

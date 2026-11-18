@@ -18,6 +18,7 @@ const SORT_PARAM: Record<string, string> = {
   "price-high": "price_desc",
   rating: "top_rated",
   newest: "newest",
+  relevance: "relevance",
   name: "name_asc",
 };
 
@@ -97,7 +98,7 @@ const toQuery = (filters: FilterState, sortBy: string) => {
   if (filters.onSale) next.set("sale", "true");
   if (filters.inStock) next.set("inStock", "true");
   if (filters.featured) next.set("featured", "true");
-  if (sortBy && sortBy !== "newest") next.set("sort", sortBy);
+  if (sortBy && sortBy !== (filters.search.trim() ? "relevance" : "newest")) next.set("sort", sortBy);
   return next;
 };
 
@@ -118,7 +119,7 @@ const fromQuery = (params: URLSearchParams) => ({
     inStock: params.get("inStock") === "true",
     featured: params.get("featured") === "true",
   } as FilterState,
-  sortBy: params.get("sort") || "newest",
+  sortBy: params.get("sort") || (params.get("search")?.trim() ? "relevance" : "newest"),
 });
 
 const ProductsContent: React.FC = () => {
@@ -284,7 +285,8 @@ const ProductsContent: React.FC = () => {
   };
 
   const handleSearchChange = (search: string) => {
-    write({ ...filters, search }, sortBy);
+    const nextSort = search.trim() ? (filters.search.trim() ? sortBy : "relevance") : (sortBy === "relevance" ? "newest" : sortBy);
+    write({ ...filters, search }, nextSort);
   };
 
   const handleSortChange = (s: string) => {
@@ -443,6 +445,7 @@ const ProductsContent: React.FC = () => {
                       aria-label={t("Sort by")}
                       className="border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs bg-[var(--surface)] text-[var(--text)] focus:ring-2 focus:ring-[var(--brand-primary)]/30 focus:border-[var(--brand-primary)] transition-all"
                     >
+                      {filters.search.trim() && <option value="relevance">{t("products.relevance", { defaultValue: "Relevance" })}</option>}
                       <option value="newest">{t("Newest First")}</option>
                       <option value="name">{t("Name A-Z")}</option>
                       <option value="price-low">{t("Price: Low → High")}</option>

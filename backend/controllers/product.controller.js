@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import { catalogueRank, catalogueSearch, productSearchClauses } from "../utils/catalogueSearch.js";
 import {
   ANY_AUDIENCE,
   HIDE_ELECTRONICS,
@@ -24,19 +25,6 @@ import { categoryFilterValue, pooledCategoryIds } from "../utils/categoryTree.js
 import mongoose from "mongoose";
 import { resolveProductStore } from "../utils/houseStore.js";
 
-// Tokenized, case-insensitive search filter: every word must appear in the
-// name, tags, or description (order-independent). Beats a single contiguous
-// regex for multi-word queries like "hikvision 4mp camera". Returns a Mongo
-// `$and` array, or null when there's nothing to search.
-// NOTE: true typo tolerance (e.g. "hikvison" → "hikvision") needs MongoDB
-// Atlas Search with a fuzzy index — a documented follow-up; not active here.
-/**
- * The department names, in both languages, kept to hand.
- *
- * 330 rows of two short strings. Read once and held for a few minutes, because
- * it is consulted on every search and it changes when somebody adds a
- * department, not between two keystrokes.
- */
 const CATEGORY_VOCAB_TTL_MS = 5 * 60 * 1000;
 let categoryVocab = { at: 0, rows: null };
 
@@ -52,50 +40,10 @@ const departmentNames = async () => {
   return rows;
 };
 
-/**
- * What a search should match.
- *
- * Every word has to appear somewhere — that is why they are separate clauses,
- * ANDed by the caller — and within a word, anywhere will do.
- *
- * The department names are searched as well as the product's own fields, and a
- * word that names a department pulls in everything filed under it. Without
- * that, Arabic search barely worked. The 6,141 products in the general
- * catalogue have no Arabic name yet, so on the live shop "لابتوب" matched
- * nothing at all while "laptop" matched 2,029; "راوتر", "هارد" and "معالج" all
- * returned zero, and "كاميرا" returned 2 against 1,407 for "camera". The
- * departments have carried both languages the whole time.
- *
- * Not a synonym list anybody has to maintain: it is the shop's own vocabulary,
- * so it is right by construction and stays right when a department is renamed.
- */
-const buildSearchFilter = async (search) => {
-  const tokens = String(search || "")
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 6);
-  if (tokens.length === 0) return null;
-  const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  const departments = await departmentNames();
-
-  return tokens.map((tok) => {
-    const rx = new RegExp(esc(tok), "i");
-    const named = departments
-      .filter((c) => rx.test(c.name || "") || rx.test(c.nameAr || ""))
-      .map((c) => c._id);
-    return {
-      $or: [
-        { name: { $regex: rx } },
-        { nameAr: { $regex: rx } },
-        { description: { $regex: rx } },
-        { descriptionAr: { $regex: rx } },
-        { tags: { $in: [rx] } },
-        ...(named.length ? [{ category: { $in: named } }] : []),
-      ],
-    };
-  });
+const buildSearchFilter = async (raw) => {
+  const search = catalogueSearch(raw);
+  if (!search.tokens.length) return null;
+  return { clauses: productSearchClauses(search, await departmentNames()), rank: catalogueRank(search) };
 };
 
 const normalizeBulkPricing = (bulkPricing = []) => {
@@ -252,10 +200,10 @@ export const getAllProducts = controllerWrapper(
   async (req, res) => {
     const { page = 1, limit = 20, search, ...filters } = req.query;
     const filter = {};
-    const searchAnd = await buildSearchFilter(search);
-    if (searchAnd) filter.$and = searchAnd;
+    const searchPlan = await buildSearchFilter(search);
+    if (searchPlan) filter.$and = searchPlan.clauses;
     // Searching by name reaches the unpublished section; browsing does not.
-    if (searchAnd) filter.audience = ANY_AUDIENCE;
+    if (searchPlan) filter.audience = ANY_AUDIENCE;
 
     // Ask for one side of the shop and get exactly that.
     //
@@ -391,8 +339,8 @@ export const getAllProducts = controllerWrapper(
 
     const result = await paginateProducts({
       filter,
-      // For searches, rank by popularity/quality; otherwise newest first.
-      sort: search ? { soldCount: -1, rating: -1 } : { createdAt: -1 },
+      rank: searchPlan?.rank,
+      sort: searchPlan ? { soldCount: -1, rating: -1, _id: 1 } : { createdAt: -1 },
       page,
       limit,
     });
@@ -420,13 +368,9 @@ export const getSearchSuggestions = controllerWrapper(
         .json({ success: true, products: [], brands: [], categories: [] });
     }
 
-    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const tokens = raw.split(/\s+/).filter(Boolean).slice(0, 6);
-    const rxs = tokens.map((tok) => new RegExp(esc(tok), "i"));
+    const search = catalogueSearch(raw, { autocomplete: true });
+    const rxs = search.tokens;
 
-    // Products: every token must hit name / nameAr / tags (AND across tokens,
-    // OR across fields) — same multi-word logic as buildSearchFilter but
-    // extended to the Arabic name so AR queries match too.
     const productFilter = {
       isActive: true,
       deleted: { $ne: true },
@@ -434,9 +378,7 @@ export const getSearchSuggestions = controllerWrapper(
       // Same rule as the full search: typing a name finds the product even
       // while its section is unpublished.
       audience: ANY_AUDIENCE,
-      $and: rxs.map((rx) => ({
-        $or: [{ name: rx }, { nameAr: rx }, { tags: { $in: [rx] } }],
-      })),
+      $and: productSearchClauses(search),
     };
 
     // Brands/categories: match any token on name or nameAr.
@@ -445,19 +387,13 @@ export const getSearchSuggestions = controllerWrapper(
     };
 
     const [products, brands, categories] = await Promise.all([
-      Product.find(productFilter)
-        /*
-          `salePrice` is a virtual, and `.select()` cannot fetch one — asking
-          for it here has never sent anything. So a suggestion arrived with
-          saleActive true and no way to work out the sale price, and the
-          dropdown printed the list price while the product page printed the
-          discounted one. `salePercentage` is the stored field the rest of the
-          shop computes from.
-        */
-        .select("name nameAr slug price salePercentage saleActive images")
-        .sort({ soldCount: -1, rating: -1 })
-        .limit(6)
-        .lean(),
+      Product.aggregate([
+        { $match: productFilter },
+        { $set: { relevance: catalogueRank(search) } },
+        { $sort: { relevance: -1, soldCount: -1, rating: -1, _id: 1 } },
+        { $limit: 6 },
+        { $project: { name: 1, nameAr: 1, slug: 1, price: 1, salePercentage: 1, saleActive: 1, images: 1 } },
+      ]),
       Brand.find(orNameFilter).select("name nameAr slug logo").limit(4).lean(),
       // Products are findable while their section is unpublished; the section
       // itself is not something to suggest browsing into.
@@ -741,9 +677,9 @@ export const getStorefrontProducts = controllerWrapper(
       approvalStatus: "approved",
     };
 
-    const searchAnd = await buildSearchFilter(search);
-    if (searchAnd) query.$and = searchAnd;
-    if (searchAnd) query.audience = ANY_AUDIENCE;
+    const searchPlan = await buildSearchFilter(search);
+    if (searchPlan) query.$and = searchPlan.clauses;
+    if (searchPlan) query.audience = ANY_AUDIENCE;
     // A category selected from the menu may be a branch rather than a leaf, and
     // products hang off the leaves. Matching the subtree is what makes clicking
     // "Laptop" show laptops instead of an empty page.
@@ -785,8 +721,8 @@ export const getStorefrontProducts = controllerWrapper(
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    // Sort options — searches default to popularity/quality ranking.
-    let sortOption = search && !sortBy ? { soldCount: -1, rating: -1 } : { createdAt: -1 };
+    const rank = searchPlan && (!sortBy || sortBy === "relevance") ? searchPlan.rank : null;
+    let sortOption = rank ? { soldCount: -1, rating: -1, _id: 1 } : { createdAt: -1, _id: 1 };
     switch (sortBy) {
       case "price_asc": sortOption = { price: 1 }; break;
       case "price_desc": sortOption = { price: -1 }; break;
@@ -802,20 +738,28 @@ export const getStorefrontProducts = controllerWrapper(
       .populate("category", "name nameAr slug")
       .sort(sortOption);
 
-    const result = await paginateQuery(page, limit, mongooseQuery);
+    const castFilter = mongooseQuery.cast(Product);
+    const filterForAggregation = castFilter.audience === undefined
+      ? { ...castFilter, ...HIDE_ELECTRONICS }
+      : castFilter;
+    const result = rank
+      ? await paginateProducts({ filter: filterForAggregation, sort: sortOption, rank, page, limit })
+      : await paginateQuery(page, limit, mongooseQuery);
 
     // Get facets (available filters) in parallel
     const [brandFacets, categoryFacets, priceRange] = await Promise.all([
       Product.aggregate([
-        { $match: { ...query, brand: { $exists: true, $ne: null } } },
+        { $match: filterForAggregation },
         { $group: { _id: "$brand", count: { $sum: 1 } } },
+        { $match: { _id: { $ne: null } } },
       ]),
       Product.aggregate([
-        { $match: { ...query, category: { $exists: true, $ne: null } } },
+        { $match: filterForAggregation },
         { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $match: { _id: { $ne: null } } },
       ]),
       Product.aggregate([
-        { $match: query },
+        { $match: filterForAggregation },
         { $group: { _id: null, min: { $min: "$price" }, max: { $max: "$price" } } },
       ]),
     ]);
@@ -2304,6 +2248,7 @@ export const getBrandFacets = controllerWrapper(
       Product.aggregate([
         { $match: match },
         { $group: { _id: "$brand", count: { $sum: 1 } } },
+        { $match: { _id: { $ne: null } } },
         { $match: { _id: { $ne: null } } },
       ]),
       Brand.find({ deleted: { $ne: true }, categories: { $in: objectIds } })
