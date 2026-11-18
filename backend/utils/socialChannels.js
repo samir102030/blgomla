@@ -78,8 +78,7 @@ export const channelReady = (channel) => {
  * not round-trip byte-for-byte, so the check has to run on the buffer Express
  * saw, which is why app.js keeps it on `req.rawBody`.
  */
-export const verifyMetaSignature = (rawBody, header) => {
-  const secret = process.env.META_APP_SECRET;
+export const verifyMetaSignature = (rawBody, header, secret = process.env.META_APP_SECRET) => {
   if (!secret) return false;
   if (!rawBody || !header) return false;
 
