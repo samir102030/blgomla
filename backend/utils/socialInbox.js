@@ -1,6 +1,6 @@
 import SocialThread from "../models/socialThread.model.js";
 import SocialLead from "../models/socialLead.model.js";
-import { answer } from "./supportBrain.js";
+import { answer, isCableCatalogueQuestion } from "./supportBrain.js";
 import { send, markRead } from "./socialChannels.js";
 
 /**
@@ -342,8 +342,9 @@ export const handleInbound = async (event) => {
   thread.messageCount += 1;
   thread.lang = detectLang(text);
 
-  // A person owns this one. Record what was said so they see it, say nothing.
-  if (botShouldStayQuiet(thread)) {
+  // Keep the handoff while allowing an independent, read-only catalogue lookup.
+  const catalogueLookup = channel === "whatsapp" && isCableCatalogueQuestion(text);
+  if (botShouldStayQuiet(thread) && !catalogueLookup) {
     await thread.save();
     return { handled: true, kind: "silent-human-owned" };
   }
