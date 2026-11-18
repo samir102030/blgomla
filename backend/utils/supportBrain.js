@@ -1088,7 +1088,9 @@ const systemPrompt = (user, lang, extra = "") =>
     "You are the support assistant for Belgomla, an Egyptian IT and networking shop.",
     "Shop facts come from the tools and nowhere else: a price, a stock level, a delivery time, a discount, an order status is whatever the tool returns. Never guess one, never round one, never describe a product the tools did not return. If a tool cannot answer a shop fact, say so plainly and offer to pass the customer to a person.",
     "General knowledge about the kit is yours to give, and you should give it. The difference between a DVR and an NVR, what PoE is for, what megapixels or IR range or colour night vision mean in practice, what a NAS does, how many cameras a shop of a given size usually needs, what to look for when choosing between two things — answer all of that from what you know, in a few plain sentences, the way someone behind the counter would. Do not say the information is unavailable: it is a technical question, not a catalogue lookup.",
-    "When a technical question has a product behind it, answer the question first and then, if it helps, call a tool and name what the shop actually has.",
+    "Treat the conversation as one exchange. Resolve short follow-ups against the customer's most recent relevant topic. Keep requirements they did not change and replace any requirement they explicitly changed. Never treat phrases like عادي or من غير PoE as standalone product names when the thread identifies the item.",
+    "Answer general technical questions directly from established technical knowledge, even without a product match. Explain what to do and why. If a missing detail materially affects the answer, give useful conditional guidance and ask at most one specific follow-up. Keep the tone natural and conversational, and identify yourself as an assistant if asked.",
+    "When a technical question has a product behind it, answer the question first. Only call a tool when current shop items, prices or stock are relevant. Recommend one or two verified matches and explain why they fit. If there is no verified match, still answer the technical question and avoid filling the reply with unrelated items.",
     `What the shop itself offers, you know only from this line and from the tools: ${SHOP_FACTS}`,
     "Anything else about how the shop operates — a service, a policy, a term, a timescale, a guarantee — you do not know and must not decide. Never answer such a question with yes or no. Say you will check with the team and offer to put the customer through. Inventing a service the shop does not run is the one mistake that reaches the counter.",
     lang === "ar"
@@ -1230,12 +1232,16 @@ const answerWithGemini = async ({
     { role: "user", parts: [{ text: String(text).slice(0, 2000) }] },
   ];
 
-  const payload = () =>
+  const payload = (model) =>
     JSON.stringify({
       systemInstruction: { parts: [{ text: systemPrompt(user, lang, systemExtra) }] },
       contents,
       tools: [{ functionDeclarations: declarations }],
-      generationConfig: { maxOutputTokens: 1600, temperature: 0.3 },
+      generationConfig: {
+        maxOutputTokens: 1600,
+        temperature: 0.3,
+        ...(signal && /^gemini-3(?:\.|-)/.test(model) ? { thinkingConfig: { thinkingLevel: "low" } } : {}),
+      },
     });
 
   /*
@@ -1259,7 +1265,7 @@ const answerWithGemini = async ({
               "content-type": "application/json",
               "x-goog-api-key": process.env.GEMINI_API_KEY,
             },
-            body: payload(),
+            body: payload(model),
             signal,
           }
         );
@@ -1320,6 +1326,23 @@ const answerWithGemini = async ({
 export const isCableCatalogueQuestion = (text) =>
   Boolean(networkCableGrade(text)) && intentOf(text) === "product" && !comparesThings(text);
 
+const contextualTechnicalAnswer = ({ text, history = [], lang }) => {
+  const prior = history.filter((turn) => turn?.role === "user").slice(-4)
+    .map((turn) => normalize(turn.content)).join(" ");
+  const current = normalize(text);
+  const withoutPoe = /(?:من\s*غير|بدون|without|non[-\s]?)\s*poe\b/i.test(current);
+  const ordinaryNvr = /(?:عادي|ordinary|regular)/.test(current) && /\bpoe\b/i.test(prior);
+  if (!/\bnvr\b/i.test(prior + " " + current) || !(withoutPoe || ordinaryNvr)) return null;
+
+  return {
+    text: say(
+      lang,
+      "ينفع تستخدم NVR عادي من غير PoE مدمج. لو الكاميرات IP وبتاخد كهربا من كابل الشبكة، وصلها على سويتش PoE خارجي ووصل الـNVR على نفس الشبكة. لو الكاميرات ليها محولات كهربا، ينفع سويتش عادي. عندك كام كاميرا أو موديلها إيه؟",
+      "A regular NVR can work without built-in PoE. Power PoE IP cameras from an external PoE switch and connect the NVR to the same network. If the cameras have their own power adapters, a regular network switch can work. How many cameras do you have?"
+    ),
+  };
+};
+
 export const answer = async ({
   text,
   user,
@@ -1328,6 +1351,7 @@ export const answer = async ({
   extraTools = [],
   systemExtra = "",
   modelTimeoutMs,
+  conversational = false,
 }) => {
   /*
     An order question is answered here, never by a free model.
@@ -1342,7 +1366,7 @@ export const answer = async ({
     With Claude's key configured the question does not arise: paid API traffic
     is not trained on, and the model answers everything.
   */
-  if (isCableCatalogueQuestion(text)) {
+  if (!conversational && isCableCatalogueQuestion(text)) {
     const catalogueAnswer = await answerProduct({ text, lang, history });
     return { suggestions: [], handoff: false, source: "rules", ...catalogueAnswer };
   }
@@ -1371,7 +1395,12 @@ export const answer = async ({
     }
   }
 
+  const contextual = conversational && contextualTechnicalAnswer({ text, history, lang });
+  if (contextual) return { suggestions: [], handoff: false, source: "rules", ...contextual };
   const fromRules = await answerWithRules({ text, user, lang, history });
+  if (conversational && fromRules.text === fallback(lang).text) {
+    fromRules.text = say(lang, "ممكن تقولّي إيه اللي بتحاول توصله أو تبعتلي موديل الجهاز؟", "What are you trying to set up, or what is the device model?");
+  }
   return { suggestions: [], handoff: false, source: "rules", ...fromRules };
 };
 
