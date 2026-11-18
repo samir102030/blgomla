@@ -155,7 +155,11 @@ const drain = async (events) => {
   for (const event of events) {
     if (!event.externalId) continue;
     try {
-      await handleInbound(event);
+      if (event.channel === "whatsapp") console.info("[social] WhatsApp inbound accepted");
+      const outcome = await handleInbound(event);
+      if (event.channel === "whatsapp") {
+        console.info("[social] WhatsApp inbound outcome:", outcome?.kind || outcome?.skipped || "unknown");
+      }
     } catch (error) {
       // One bad conversation must not take the rest of the batch with it.
       console.error(
