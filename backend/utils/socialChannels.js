@@ -178,6 +178,30 @@ const postJson = async (url, body, { bearer, timeoutMs = 15000 } = {}) => {
   }
 };
 
+// Business-initiated order alerts use an approved WhatsApp template.
+export const sendNewOrderWhatsApp = async (orderId) => {
+  const { id, token } = channelConfig("whatsapp");
+  const to = process.env.ORDER_ALERT_WHATSAPP_TO;
+  const name = process.env.ORDER_ALERT_WHATSAPP_TEMPLATE;
+  if (!id || !token || !to || !name) return;
+
+  const response = await postJson(
+    `${GRAPH}/${id}/messages`,
+    {
+      messaging_product: "whatsapp",
+      to,
+      type: "template",
+      template: {
+        name,
+        language: { code: process.env.ORDER_ALERT_WHATSAPP_LANGUAGE || "ar" },
+        components: [{ type: "body", parameters: [{ type: "text", text: orderId }] }],
+      },
+    },
+    { bearer: token, timeoutMs: 2500 }
+  );
+  if (!response.messages?.[0]?.id) throw new Error("WhatsApp did not accept the order alert");
+};
+
 const sendOne = async (channel, to, text) => {
   const c = channelConfig(channel);
 
