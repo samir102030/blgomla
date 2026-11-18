@@ -15,3 +15,84 @@
   background: #f5f8fb;
 }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.workspace {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 100dvh;
+  max-width: 1920px;
+  margin: auto;
+}
+.workspace-sidebar {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  padding: 26px 14px 16px;
+  background: #102432;
+  color: #d2e3ec;
+}
+.workspace-brand { display: flex; align-items: center; gap: 12px; padding: 0 9px 24px; }
+.workspace-brand > span {
+  display: grid; place-items: center; width: 38px; height: 38px;
+  border-radius: 12px; background: #51d4f2; color: #102432;
+  font: 800 26px/1 Georgia, serif;
+}
+.workspace-brand strong { display: block; color: white; font-size: 18px; }
+.workspace-brand small { color: #9bb4c2; font-size: 12px; }
+.workspace-sidebar nav { display: grid; gap: 4px; }
+.workspace-sidebar nav button {
+  display: flex; align-items: center; gap: 9px; width: 100%; text-align: start;
+  padding: 11px 10px; border-radius: 9px; font-size: 14px;
+}
+.workspace-sidebar nav button:hover { background: #1c3544; }
+.workspace-sidebar nav button[aria-current] { background: #264a59; color: #f0fcff; box-shadow: inset -3px 0 #58d6f5; }
+.workspace-sidebar svg { flex: 0 0 auto; width: 19px; height: 19px; }
+.workspace-sidebar :focus-visible { outline-color: #51d4f2; }
+.workspace-account {
+  display: flex; align-items: center; justify-content: space-between; gap: 5px;
+  margin-top: auto; padding: 13px 4px 0; border-top: 1px solid #38505c; font-size: 11px;
+}
+.workspace-account bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-account button { padding: 8px; border-radius: 8px; background: #1c3544; }
+.workspace-content { min-width: 0; padding: clamp(16px, 2.2vw, 36px); }
+.overview { max-width: 1240px; margin: auto; display: grid; gap: 18px; }
+.overview-hero {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 16px; padding: 26px; border-radius: 16px; background: #e2f4fb; color: #173642;
+  border: 1px solid #c3e5f1;
+}
+.overview-hero h1 { font-size: 28px; font-weight: 750; }
+.overview-hero p { margin-top: 5px; font-size: 14px; }
+.overview-hero button { padding: 10px 15px; border-radius: 9px; background: #173f51; color: white; font-size: 14px; }
+.overview-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.overview-metric, .channel-summary {
+  border: 1px solid var(--border); background: white; border-radius: 14px; padding: 18px;
+}
+.overview-metric { display: grid; gap: 5px; }
+.overview-metric svg { width: 23px; height: 23px; color: #17657c; }
+.overview-metric strong { font-size: 29px; line-height: 1.3; }
+.overview-metric span, .channel-summary-row span { font-size: 13px; color: var(--text-subtle); }
+.channel-summary > header { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 11px; }
+.channel-summary h2 { font-size: 17px; font-weight: 700; }
+.channel-summary button { border: 1px solid var(--border); border-radius: 8px; padding: 8px; }
+.channel-summary-row { display: grid; grid-template-columns: minmax(95px, 145px) minmax(0, 1fr) 42px; gap: 14px; align-items: center; padding: 13px 0; border-top: 1px solid var(--border); }
+.channel-summary-row > div:first-child { display: grid; gap: 3px; }
+.channel-track { height: 8px; background: #edf3f7; border-radius: 9px; overflow: hidden; }
+.channel-track span { display: block; height: 100%; width: calc(var(--share) * 100%); background: #258e7b; border-radius: inherit; }
+.channel-track span[data-channel="messenger"] { background: #287db8; }
+.channel-track span[data-channel="instagram"] { background: #b14a86; }
+
+@media (max-width: 950px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .workspace-sidebar { position: static; height: auto; padding: 12px; gap: 10px; }
+  .workspace-brand { padding: 0; }
+  .workspace-sidebar nav { display: flex; flex-wrap: wrap; }
+  .workspace-sidebar nav button { width: auto; padding: 8px; font-size: 13px; }
+  .workspace-account { padding-top: 8px; }
+}
+@media (max-width: 630px) {
+  .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .overview-hero, .channel-summary { padding: 15px; }
+}

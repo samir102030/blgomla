@@ -1,7 +1,7 @@
 import express from "express";
 import SocialThread from "../models/socialThread.model.js";
 import { activateMember, inviteMember, listMembers, requireInboxOwner, loginInbox, logoutInbox, rejectForeignInboxWrites, requireInboxSession } from "../middleware/socialInboxAuth.js";
-import { channelConfig, send } from "../utils/socialChannels.js";
+import { channelConfig, channelReady, send } from "../utils/socialChannels.js";
 
 const router = express.Router();
 const channels = ["whatsapp", "messenger", "instagram"];
@@ -81,6 +81,30 @@ router.get("/", handle(async (req, res) => {
     .select(summaryFields).sort({ updatedAt: -1, _id: -1 })
     .skip((page - 1) * pageSize).limit(pageSize + 1).lean();
   res.json({ items: rows.slice(0, pageSize).map(summary), hasNext: rows.length > pageSize });
+}));
+
+router.get("/overview", handle(async (_req, res) => {
+  const today = new Date();
+  const since = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+  const rows = await SocialThread.aggregate([
+    { $match: { channel: { $in: channels } } },
+    { $group: {
+      _id: "$channel",
+      total: { $sum: 1 },
+      team: { $sum: { $cond: [{ $eq: ["$status", "human"] }, 1, 0] } },
+      assistant: { $sum: { $cond: [{ $eq: ["$status", "bot"] }, 1, 0] } },
+      recent: { $sum: { $cond: [{ $gte: ["$lastInboundAt", since] }, 1, 0] } },
+    } },
+  ]);
+  const byChannel = new Map(rows.map((row) => [row._id, row]));
+  res.json({ channels: channels.map((channel) => {
+    const row = byChannel.get(channel);
+    return {
+      channel, connected: channelReady(channel),
+      total: row?.total ?? 0, team: row?.team ?? 0,
+      assistant: row?.assistant ?? 0, recent: row?.recent ?? 0,
+    };
+  }) });
 }));
 
 router.get("/:id", handle(async (req, res) => {

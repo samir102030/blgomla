@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { isAxiosError } from "axios";
 import Team from "./Team";
+import Overview from "./Overview";
+import { ArrowLeftOnRectangleIcon, ChatBubbleLeftRightIcon, Squares2X2Icon, UserGroupIcon } from "@heroicons/react/24/outline";
 import SocialInboxPage from "./SocialInboxPage";
 import { axiosInstance } from "./api";
 import "./style.css";
@@ -9,7 +11,7 @@ import "./style.css";
 function App() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("");
-  const [showTeam, setShowTeam] = useState(false);
+  const [view, setView] = useState<"overview" | "inbox" | "team">("overview");
   const [invite, setInvite] = useState(() => new URLSearchParams(location.hash.slice(1)).get("invite") || "");
   const [loginEmail, setLoginEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,7 +48,7 @@ function App() {
     try {
       const { data } = await axiosInstance.post<{ email: string; role: string }>(invite ? "/social-inbox/activate" : "/social-inbox/login", invite ? { token: invite, password } : { email: loginEmail, password });
       setRole(data.role);
-      setShowTeam(false);
+      setView("overview");
       if (invite) { history.replaceState(null, "", location.pathname + location.search); setInvite(""); }
       setEmail(data.email);
       setPassword("");
@@ -89,16 +91,36 @@ function App() {
     </main>
   );
 
+  const nav = [
+    { id: "overview", label: "نظرة عامة", icon: Squares2X2Icon },
+    { id: "inbox", label: "محادثات العملاء", icon: ChatBubbleLeftRightIcon },
+    ...(role === "owner" ? [{ id: "team", label: "إدارة الفريق", icon: UserGroupIcon }] as const : []),
+  ] as const;
+
   return (
-    <main className="mx-auto max-w-[1920px] p-3 sm:p-6">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <span className="truncate text-sm text-[var(--text-subtle)]" dir="ltr">{email}</span>
-        {role === "owner" && <button type="button" className="ms-auto rounded-lg border bg-white px-3 py-2 text-sm" onClick={() => setShowTeam(!showTeam)}>{showTeam ? "المحادثات" : "إدارة الفريق"}</button>}
-        <button type="button" className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm" onClick={() => void logOut()}>خروج</button>
-      </div>
-      {notice && <p role="alert" className="mb-4 text-sm text-red-800">{notice}</p>}
-      {showTeam && role === "owner" ? <Team /> : <SocialInboxPage />}
-    </main>
+    <div className="workspace" dir="rtl">
+      <aside className="workspace-sidebar">
+        <div className="workspace-brand">
+          <span aria-hidden="true">B</span>
+          <div><strong>بالجملة</strong><small>صندوق الرسائل</small></div>
+        </div>
+        <nav aria-label="لوحة صندوق الرسائل">
+          {nav.map(({ id, label, icon: Icon }) => <button
+            key={id} type="button" aria-current={view === id ? "page" : undefined} onClick={() => setView(id)}
+          ><Icon aria-hidden="true" /><span>{label}</span></button>)}
+        </nav>
+        <div className="workspace-account">
+          <bdi title={email}>{email}</bdi>
+          <button type="button" onClick={() => void logOut()} aria-label="تسجيل الخروج"><ArrowLeftOnRectangleIcon aria-hidden="true" /></button>
+        </div>
+      </aside>
+      <main className="workspace-content">
+        {notice && <p role="alert" className="mb-4 text-sm text-red-800">{notice}</p>}
+        {view === "overview" && <Overview openInbox={() => setView("inbox")} />}
+        <div hidden={view !== "inbox"}><SocialInboxPage /></div>
+        {view === "team" && role === "owner" && <Team />}
+      </main>
+    </div>
   );
 }
 
