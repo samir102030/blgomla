@@ -16,6 +16,8 @@ import {
   recentOrders,
   findOrder,
   searchProducts,
+  networkCableGrade,
+  SITE_URL,
   shippingFacts,
   referenceIn,
   normalizeArabic,
@@ -191,7 +193,6 @@ const statusText = (status, lang) => {
 const egp = (n, lang) => (lang === "ar" ? `${n} جنيه` : `EGP ${n}`);
 
 /** Where a link the assistant hands out has to point. */
-const SITE_URL = (process.env.SITE_URL || "https://belgmla.com").replace(/\/+$/, "");
 
 /**
  * The catalogue page, already filtered to the question that was asked.
@@ -468,6 +469,7 @@ const recalled = async ({ history, shelf, make, words }) => {
 };
 
 const answerProduct = async ({ text, lang, strict = false, history = [] }) => {
+  const cableGrade = networkCableGrade(text);
   const budget = budgetIn(text);
 
   // The words that made this a product question are not part of the product's
@@ -504,12 +506,12 @@ const answerProduct = async ({ text, lang, strict = false, history = [] }) => {
   */
   const [namedShelf, namedMake] = await Promise.all([
     categoryFor(stripped || text),
-    brandFor(stripped || text),
+    brandFor(stripped || text, { exactOnly: Boolean(cableGrade) }),
   ]);
 
   // A follow-up too short to name its own subject inherits the last one.
   const { shelf, make } = await recalled({
-    history,
+    history: cableGrade ? [] : history,
     shelf: namedShelf,
     make: namedMake,
     words,
@@ -1332,6 +1334,11 @@ export const answer = async ({
     With Claude's key configured the question does not arise: paid API traffic
     is not trained on, and the model answers everything.
   */
+  if (networkCableGrade(text) && intentOf(text) === "product" && !comparesThings(text)) {
+    const catalogueAnswer = await answerProduct({ text, lang, history });
+    return { suggestions: [], handoff: false, source: "rules", ...catalogueAnswer };
+  }
+
   const engine = hasClaude() ? answerWithModel : hasGemini() ? answerWithGemini : null;
   const theirs = !hasClaude() && intentOf(text) === "order";
 
