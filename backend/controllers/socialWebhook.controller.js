@@ -45,7 +45,7 @@ export const verify = (req, res) => {
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  if (mode === "subscribe" && token && token === process.env.META_VERIFY_TOKEN) {
+  if (mode === "subscribe" && token && (token === process.env.META_VERIFY_TOKEN || token === process.env.WHATSAPP_VERIFY_TOKEN)) {
     return res.status(200).type("text/plain").send(String(challenge));
   }
   console.warn("[social] webhook verification refused");
@@ -171,7 +171,12 @@ const drain = async (events) => {
  * webhook URL, three `object` values.
  */
 export const receiveMeta = async (req, res) => {
-  if (!verifyMetaSignature(req.rawBody, req.get("x-hub-signature-256"))) {
+  const signature = req.get("x-hub-signature-256");
+  const whatsappSecret = req.body?.object === "whatsapp_business_account"
+    ? process.env.WHATSAPP_APP_SECRET
+    : undefined;
+  const valid = verifyMetaSignature(req.rawBody, signature, whatsappSecret);
+  if (!valid) {
     console.warn("[social] rejected a webhook with a bad signature");
     return res.sendStatus(403);
   }
