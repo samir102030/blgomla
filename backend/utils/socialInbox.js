@@ -342,6 +342,7 @@ export const handleInbound = async (event) => {
     return { handled: true, kind: "attachment" };
   }
 
+  const history = thread.brainHistory(10);
   thread.history.push({ role: "user", content: text.slice(0, 4000) });
   thread.messageCount += 1;
   thread.lang = detectLang(text);
@@ -360,11 +361,12 @@ export const handleInbound = async (event) => {
     // Nobody on a social channel is authenticated. Passing null is what makes
     // the order tools refuse rather than leak — see supportTools.
     user: null,
-    history: thread.brainHistory(10),
+    history,
     lang: thread.lang,
     extraTools: [captureOrderTool(thread, notifyTeam), requestHumanTool(thread, notifyTeam)],
     systemExtra: SYSTEM_EXTRA,
-    modelTimeoutMs: 6500,
+    modelTimeoutMs: 12000,
+    conversational: true,
   });
 
   let reply = String(result.text || "").trim();
